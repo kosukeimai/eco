@@ -18,7 +18,7 @@ Ecological Inference in 2 x 2 Tables}
 
 \usage{
 eco <- function(Y, X, data = parent.frame(), n.draws = 5000, burnin = 0,
-                thin = 5, verbose = TRUE, nonpar =  TRUE, nu0 = 4, tau0 = 1,
+                thin = 5, verbose = FALSE, nonpar =  TRUE, nu0 = 4, tau0 = 1,
                 mu0 = c(0,0), S0 = diag(8,2), supplement=NULL, alpha = NULL,
                 a0 = 1, b0 = 0.1, predict = FALSE, parameter = FALSE) 
 }
@@ -112,7 +112,7 @@ eco <- function(Y, X, data = parent.frame(), n.draws = 5000, burnin = 0,
 data(reg)
 
 ## run the nonparametric model to give in-sample & out-of sample predictions
-res <- eco(Y = Y, X = X, data = reg, n.draws = 50) 
+res <- eco(Y = Y, X = X, data = reg, n.draws = 50, verbose = TRUE) 
 
 ##summarize the results
 summary(res)
