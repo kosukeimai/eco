@@ -412,13 +412,18 @@ DM.CM<--Lamda%*%solve(Gamma+t(Lamda))
 Vcom<-solve(Ioc.em)
 dV<-Vcom%*%(DM.ECM-DM.CM)%*%solve((diag(1,5)-DM.ECM))
 
+Vobs<-Vcom+dV
+
+cat("Vobs=:", "\n")
+print(Vobs)
+
 cat("Vcom=:", "\n")
 print(Vcom)
 
 cat("dV=:", "\n")
 print(dV)
 
-  res.out<-list(theta=theta.em, Vcom=Vcom, dV=dV, DM.ECM=R.t2, DM.CM=DM.CM)
+  res.out<-list(theta=theta.em, Vobs=Vobs, Vcom=Vcom, dV=dV, DM.ECM=R.t2)
   class(res.out) <- "eco"
   return(res.out)
 
