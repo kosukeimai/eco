@@ -112,8 +112,7 @@ eco <- function(Y, X, data = parent.frame(), n.draws = 5000, burnin = 0,
 data(reg)
 
 ## run the nonparametric model to give in-sample & out-of sample predictions
-res <- eco(Y=Y, X=X, data=reg, n.draws = 5000, burnin = 500,
-           thin=5, verbose=TRUE) 
+res <- eco(Y=Y, X=X, data=reg, n.draws = 5000, burnin = 500, thin=5, verbose=TRUE) 
 }
 
 
