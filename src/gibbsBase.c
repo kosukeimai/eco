@@ -143,12 +143,16 @@ void cBaseeco(int *n_gen,      /* number of gibbs draws */
     maxW1[i]=fmin2(1.0, X[i][1]/X[i][0]);
     /* number of grid points */
     /* note: 1/n_step is the length of the grid */
-    if ((maxW1[i]-minW1[i]) > (double)(2/n_step)) { 
+    dtemp=(double)1/n_step;
+    if ((maxW1[i]-minW1[i]) > (2*dtemp)) { 
       n_grid[i]=ftrunc((maxW1[i]-minW1[i])*n_step);
-      resid[i]=(maxW1[i]-minW1[i])-(double)n_grid[i]/n_step;
+      resid[i]=(maxW1[i]-minW1[i])-n_grid[i]*dtemp;
+      /*if (maxW1[i]-minW1[i]==1) resid[i]=dtemp/4;*/
       j=0; 
       while (j<n_grid[i]) {
-	W1g[i][j]=minW1[i]+(double)(j+1)/n_step-((double)1/n_step+resid[i])/2;
+	W1g[i][j]=minW1[i]+(j+1)*dtemp-(dtemp+resid[i])/2;
+	if ((W1g[i][j]-minW1[i])<resid[i]/2) W1g[i][j]+=resid[i]/2;
+	  if ((maxW1[i]-W1g[i][j])<resid[i]/2) W1g[i][j]-=resid[i]/2;
 	W2g[i][j]=(X[i][1]-X[i][0]*W1g[i][j])/(1-X[i][0]);
 	/*if (i<20) printf("\n%5d%5d%14g%14g", i, j, W1g[i][j], W2g[i][j]);*/
 	j++;
@@ -162,6 +166,15 @@ void cBaseeco(int *n_gen,      /* number of gibbs draws */
       n_grid[i]=2;
 
     }
+    /*    if (i<n_samp){
+      printf("grids\n");
+      printf("minW1 maxW1 resid\n");
+      printf("%5d%14g%14g%14g\n", i, minW1[i], maxW1[i], resid[i]);
+      for (j=0;j<n_grid[i];j++){
+	if (j<5 | j>(n_grid[i]-5))
+	  printf("%5d%5d%14g%14g\n", i, j, W1g[i][j], W2g[i][j]);
+      }
+      }*/
   }
 
   /* initialize vales of mu_ord and Sigma_ord */
@@ -224,10 +237,10 @@ void cBaseeco(int *n_gen,      /* number of gibbs draws */
 	Wstar[i][1]=-log(-log(W2g[i][j]));
       }
     }
-    /*printf("\n W data Wstar data \n");
-      for (i=0; i<10;i++)
-      printf("\n%14g%14g%14g%14g", W[i][0], W[i][1], Wstar[i][0], Wstar[i][1]);*/
-    
+    /*    printf("\n W data Wstar data \n");
+      for (i=0; i<n_samp;i++)
+	printf("\n%14g%14g%14g%14g", W[i][0], W[i][1], Wstar[i][0], Wstar[i][1]);
+    */
     /*update mu_ord, Sigma_ord given wstar */
     for (j=0;j<n_cov;j++) {
       Wstar_bar[j]=0;
@@ -248,7 +261,7 @@ void cBaseeco(int *n_gen,      /* number of gibbs draws */
 	Sn[j][k]+=(tau0*n_samp)*(Wstar_bar[j]-mu0[j])*(Wstar_bar[k]-mu0[k])/(tau0+n_samp);
     }
     dinv(Sn, n_cov, mtemp);
-    /*printf("\n mun0  mun1  Sigma00  sigmat01 Sigma11");*/
+    /*    printf("\n mun0  mun1  Sigma00  sigmat01 Sigma11");*/
     
     rWish(InvSigma_ord, mtemp, nu0+n_samp, n_cov);
     dinv(InvSigma_ord, n_cov, Sigma_ord);
@@ -258,8 +271,8 @@ void cBaseeco(int *n_gen,      /* number of gibbs draws */
     
     rMVN(mu_ord, mun, mtemp, n_cov);
     
-    /*  printf("\n%5d%14g%14g%14g%14g%14g", main_loop, mu_ord[0], mu_ord[1],
-	Sigma_ord[0][0], Sigma_ord[0][1], Sigma_ord[1][1]); */
+      printf("\n%5d%14g%14g%14g%14g%14g", main_loop, mu_ord[0], mu_ord[1],
+	Sigma_ord[0][0], Sigma_ord[0][1], Sigma_ord[1][1]); 
     
     /*store Gibbs draw after burn-in and every nth draws */      
     if (main_loop>=*burn_in){
