@@ -6,19 +6,20 @@
 #include "subroutines.h"
 #include "rand.h"
 
-void cBaseeco(int *n_gen,      /* number of gibbs draws */ 
-	      int *link,       /* one Logit transformation 
-				  two Probit transformation 
-				  three cloglog transformation */
+void cBaseeco(
+	      /*data input */
 	      double *pdX,     /* data (X, Y) */
 	      int *pin_samp,   /* sample size */
-	      int *pinu0,      /* prior df parameter for InvWish */
-	      double *pdtau0,  /* prior scale parameter for Sigma under G0*/ 
-	      double *mu0,     /* prior mean for mu under G0 */
-	      double *pdS0,    /* prior scale for Sigma */
+	      /*MCMC draws */
+	      int *n_gen,      /* number of gibbs draws */
 	      int *burn_in,    /* number of draws to be burned in */
 	      int *pinth,        /* keep every nth draw */
-	      int *pred,       /* 1 if draw posterior prediction */
+	      int *verbose,    /* 1 for output monitoring */
+	      /* prior specification*/
+	      int *pinu0,      /* prior df parameter for InvWish */
+	      double *pdtau0,  /* prior scale parameter for Sigma under G0*/
+	      double *mu0,     /* prior mean for mu under G0 */
+	      double *pdS0,    /* prior scale for Sigma */
 
 	      /*incorporating survey data */
 	      int *survey,      /*1 if survey data available (set of W_1, W_2) */
@@ -35,6 +36,9 @@ void cBaseeco(int *n_gen,      /* number of gibbs draws */
 	      int *sampx0,  /* number X=0 type areas */
 	      double *x0_W2, /* values of W_2 for X0 type areas */
 
+	      /* storage */
+	      int *pred,       /* 1 if draw posterior prediction */
+	      int *parameter,   /* 1 if save population parameter */
 
 	      /* storage for Gibbs draws of mu/sigmat*/
 	      double *pdSMu0, double *pdSMu1, 
@@ -42,9 +46,8 @@ void cBaseeco(int *n_gen,      /* number of gibbs draws */
 	      /* storage for Gibbs draws of W*/
 	      double *pdSW1, double *pdSW2,
 	      /* storage for posterior predictions of W */
-	      double *pdSWt1, double *pdSWt2,
-	      /* storage for posterior predicitons of Y */
-	      double *pdY
+	      double *pdSWt1, double *pdSWt2
+
 	      ){	   
   
   int n_samp = *pin_samp;    /* sample size */
@@ -287,12 +290,12 @@ void cBaseeco(int *n_gen,      /* number of gibbs draws */
 	/*1 project BVN(mu_ord, Sigma_ord) on the inth tomo line */
 	dtemp=0;
 	for (j=0;j<n_grid[i];j++){
-	  if (*link==1){
+	  /*  if (*link==1){ */
 	    vtemp[0]=log(W1g[i][j])-log(1-W1g[i][j]);
 	    vtemp[1]=log(W2g[i][j])-log(1-W2g[i][j]);
 	    prob_grid[j]=dMVN(vtemp, mu_ord, InvSigma_ord, 2, 1) -
 	      log(W1g[i][j])-log(W2g[i][j])-log(1-W1g[i][j])-log(1-W2g[i][j]);
-	  }
+	    /* }
 	  else if (*link==2){
 	    vtemp[0]=qnorm(W1g[i][j], 0, 1, 1, 0);
 	    vtemp[1]=qnorm(W2g[i][j], 0, 1, 1, 0);
@@ -304,7 +307,7 @@ void cBaseeco(int *n_gen,      /* number of gibbs draws */
 	    vtemp[1]=-log(-log(W2g[i][j]));
 	    prob_grid[j]=dMVN(vtemp, mu_ord, InvSigma_ord, 2, 1) -
 	      log(W1g[i][j])-log(W2g[i][j])-log(-log(W1g[i][j]))-log(-log(W2g[i][j])); 
-	  }
+	      }*/
 	  prob_grid[j]=exp(prob_grid[j]);
 	  dtemp+=prob_grid[j];
 	  prob_grid_cum[j]=dtemp;
@@ -320,10 +323,10 @@ void cBaseeco(int *n_gen,      /* number of gibbs draws */
 	W[i][0]=W1g[i][j];
 	W[i][1]=W2g[i][j];
       } /* end of *1 */
-      if (*link==1) {
+      /*   if (*link==1) {*/
 	Wstar[i][0]=log(W[i][0])-log(1-W[i][0]);
 	Wstar[i][1]=log(W[i][1])-log(1-W[i][1]);
-      }
+	/* }
       else if (*link==2) {
 	Wstar[i][0]=qnorm(W[i][0],0 ,1, 1, 0);
 	Wstar[i][1]=qnorm(W[i][1],0 ,1, 1, 0);
@@ -331,7 +334,7 @@ void cBaseeco(int *n_gen,      /* number of gibbs draws */
       else if (*link==3) {
 	Wstar[i][0]=-log(-log(W[i][0]));
 	Wstar[i][1]=-log(-log(W[i][1]));
-      }
+	}*/
     }
 
     
@@ -419,17 +422,16 @@ void cBaseeco(int *n_gen,      /* number of gibbs draws */
 	pdSSig01[itempA]=Sigma_ord[0][1];
 	pdSSig11[itempA]=Sigma_ord[1][1];
 	itempA++;
-	/*for(i=0; i<(n_samp+x1_samp+x0_samp); i++){*/
-	for(i=0; i<n_samp; i++){
+	for(i=0; i<(n_samp+x1_samp+x0_samp); i++){
 	  pdSW1[itempS]=W[i][0];
 	  pdSW2[itempS]=W[i][1];
 	  /*Wstar prediction */
 	  if (*pred) {
 	    rMVN(vtemp, mu_ord, Sigma_ord, n_cov);
-	    if (*link==1){
+	    /*  if (*link==1){*/
 	      pdSWt1[itempS]=exp(vtemp[0])/(exp(vtemp[0])+1);
 	      pdSWt2[itempS]=exp(vtemp[1])/(exp(vtemp[1])+1);
-	    }
+	      /* }
 	    else if (*link==2){
 	      pdSWt1[itempS]=pnorm(vtemp[0], 0, 1, 1, 0);
 	      pdSWt2[itempS]=pnorm(vtemp[1], 0, 1, 1, 0);
@@ -437,14 +439,19 @@ void cBaseeco(int *n_gen,      /* number of gibbs draws */
 	    else if (*link==3){
 	      pdSWt1[itempS]=exp(-exp(-vtemp[0]));
 	      pdSWt2[itempS]=exp(-exp(-vtemp[1]));
-	    }	      
-	    pdY[itempS]=pdSWt1[itempS]*X[i][0]+pdSWt2[itempS]*(1-X[i][0]);
+	      }	*/      
 	  }
 	  itempS++;
 	}
 	itempC=0;
       }
     } /*end of stroage *burn_in*/
+    if ((*verbose==1) && (ftrunc(main_loop/10000)*10000==main_loop))
+      {
+        printf("iteration  ");
+        printf("%5d\n", main_loop);
+      }
+
   } /*end of MCMC for normal */ 
 
 

@@ -2,85 +2,196 @@
   library.dynam("eco", pkg, lib)
 
 
-eco <- function(Y, X, data = parent.frame(), n.draws = 5000, nonpar =
-                TRUE, link = "logit", nu0 = 4, tau0 = 1, mu0 = c(0,0),
-                S0 = diag(10,2), alpha = NULL, burnin = 0, thin = 5,
-                predict = TRUE, a0 = 0.1, b0 = 0.1){ 
+#eco <- function(Y, X, data = parent.frame(), 
+eco <- function(Y, X,  
+		n.draws = 5000, burnin = 0, thin = 5, verbose = FALSE,
+		nonpar =  TRUE, nu0 = 4, tau0 = 1, mu0 = c(0,0),
+                S0 = diag(10,2), 
+	    	supplement=NULL,
+		alpha = NULL, a0 = 0.1, b0 = 0.1,
+                predict = TRUE, parameter = TRUE){ 
 
   ## checking inputs
-  if (link == "logit")
-   nlink <- 1
-  else if (link == "probit")
-    nlink <- 2
-  else if (link == "cloglog")
-    nlink <- 3
-  else
-    stop("Error: invalid input for `link'")
+  #if (link == "logit")
+  # nlink <- 1
+  #else if (link == "probit")
+  #  nlink <- 2
+  #else if (link == "cloglog")
+  #  nlink <- 3
+  #else
+  #  stop("Error: invalid input for `link'")
+
   if (burnin >= n.draws)
-    stop("Error: n.draws should be larger than burnin") 
-  m <- match.call()
-  ff <- as.formula(paste(m$Y, "~ -1 +", m$X))
-  if (is.matrix(eval.parent(m$data)))
-    data <- as.data.frame(data)
-  X <- model.matrix(ff, data)
-  Y <- model.response(model.frame(ff, data=data))
+    stop("Error: n.draws should be larger than burnin")
+
+#  if (dim(supplement)[1] != 2) stop("Error: use n by 2 matrix for survey data")
+###?????? 
+#  m <- match.call()
+#  ff <- as.formula(paste(m$Y, "~ -1 +", m$X))
+#  if (is.matrix(eval.parent(m$data)))
+#    data <- as.data.frame(data)
+#  X <- model.matrix(ff, data)
+#  Y <- model.response(model.frame(ff, data=data))
+##############
+
+#alpha
+alpha.update <- FALSE
+if (length(alpha)==0) 
+  { alpha.update <- TRUE 
+    alpha<-0
+  }
+
+#survey data
+if (length(supplement) == 0) {
+  survey.samp <- 0
+  survey.data <- 0
+  survey.yes<-0
+}
+else {
+  survey.samp <- length(supplement[,1])
+  survey.data <- as.matrix(supplement)
+  survey.yes<-1
+}
+
+ind<-c(1:length(X))
+X1type<-0
+X0type<-0
+samp.X1<-0
+samp.X0<-0
+X1.W1<-0
+X0.W2<-0
+
+#Xtype x=1
+X1.ind<-ind[along=(X==1)]
+if (length(X[X!=1])<length(X)){
+X1type<-1
+samp.X1<-length(X1.ind)
+X1.W1<-Y[X1.ind]
+}
+
+#Xtype x=0
+X0.ind<-ind[along=(X==0)]
+if (length(X[X!=0])<length(X)){
+X0type<-1
+samp.X0<-length(X0.ind)
+X0.W2<-Y[X0.ind]
+}
+
+XX.ind<-setdiff(ind, union(X0.ind, X1.ind))
+X.use<-X[XX.ind]
+Y.use<-Y[XX.ind]
+
+order.old<-order(c(XX.ind, X0.ind, X1.ind))
+
+cat("X1type", X1type)
+cat("\n")
+cat("samp.X1", samp.X1)
+cat("\n")
+cat("X!.w1", X1.W1)
+cat("\n")
+
+cat("X0type", X0type)
+cat("\n")
+cat("samp.X0", samp.X0)
+cat("\n")
+cat("X0.w2", X0.W2)
+cat("\n")
   
   ## fitting the model
-  n.samp <- length(Y)	 
-  d <- cbind(X, Y)
+  n.samp <- length(Y.use)	 
+  d <- cbind(X.use, Y.use)
+cat("nsamp=", n.samp)
+cat("d=", "\n")
+print(d)
   if (nonpar){	# nonparametric model
     n.a <- floor((n.draws-burnin)/thin)
-    n.par <- n.a * n.samp 
-    n.w <- n.a * n.samp
+    n.par <- n.a * (n.samp+samp.X1+samp.X0) 
+    n.w <- n.a * (n.samp+samp.X1+samp.X0) 
     unit.a <- 1
-    unit.par <- n.samp
-    unit.w <- n.samp	
-    res <- .C("cDPeco", as.integer(n.draws), as.integer(nlink),
-              as.double(d), as.integer(n.samp), as.integer(nu0),
-              as.double(tau0), as.double(mu0), as.double(S0),
-              as.integer(alpha), as.integer(burnin), as.integer(thin),
-              as.integer(predict), as.double(a0), as.double(b0),
+    unit.par <- (n.samp+samp.X1+samp.X0) 
+    unit.w <- (n.samp+samp.X1+samp.X0) 	
+    res <- .C("cDPeco", as.double(d), as.integer(n.samp),
+	      as.integer(n.draws), as.integer(burnin), as.integer(thin),
+	      as.integer(verbose),
+	      as.integer(nu0), as.double(tau0), as.double(mu0), as.double(S0),
+              as.double(alpha), as.integer(alpha.update), 
+	      as.double(a0), as.double(b0),
+	      as.integer(survey.yes), as.integer(survey.samp), as.double(survey.data),
+   	      as.integer(X1type), as.integer(samp.X1), as.double(X1.W1),
+   	      as.integer(X0type), as.integer(samp.X0), as.double(X0.W2),
+              as.integer(predict), as.integer(parameter),
               pdSMu0=double(n.par), pdSMu1=double(n.par),
               pdSSig00=double(n.par), pdSSig01=double(n.par),
-              pdSSig11=double(n.par), pdSW1=double(n.w),
-              pdSW2=double(n.w), pdSWt1=double(n.w),
-              pdSWt2=double(n.w), pdSa=double(n.a), pdSn=integer(n.a))
-    
-    mu.post <- cbind(matrix(res$pdSMu0, n.a, unit.par, byrow=T),
-                     matrix(res$pdSMu1, n.a, unit.par, byrow=T))
-    colnames(mu.post) <- c("mu1", "mu2")
-    Sigma.post <- cbind(matrix(res$pdSSig00, n.a, unit.par, byrow=T),
-                        matrix(res$pdSSig01, n.a, unit.par, byrow=T),
-                        matrix(res$pdSSig11, n.a, unit.par, byrow=T))
-    colnames(Sigma.post) <- c("Sigma11", "Sigma12", "Sigma22")
-    W.post <- cbind(matrix(res$pdSW1, n.a, unit.w, byrow=T),
-                    matrix(res$pdSW2, n.a, unit.w, byrow=T))
-    W.pred <- cbind(matrix(res$pdSWt1, n.a, unit.w, byrow=T),
-                    matrix(res$pdSWt2, n.a, unit.w, byrow=T)) 
-    colnames(W.post) <- colnames(W.pred) <- c("W1", "W2")
+              pdSSig11=double(n.par), 
+	      pdSW1=double(n.w), pdSW2=double(n.w), 
+	      pdSWt1=double(n.w), pdSWt2=double(n.w),
+	      pdSa=double(n.a), pdSn=integer(n.a))
+    if (parameter) {
+    mu1.post <- matrix(res$pdSMu0, n.a, unit.par, byrow=T)[,order.old]
+    mu2.post <- matrix(res$pdSMu1, n.a, unit.par, byrow=T)[,order.old]
+    Sigma11.post <- matrix(res$pdSSig00, n.a, unit.par, byrow=T)[,order.old]
+    Sigma12.post <- matrix(res$pdSSig01, n.a, unit.par, byrow=T)[,order.old]
+    Sigma22.post <- matrix(res$pdSSig11, n.a, unit.par, byrow=T)[,order.old]
+    }
+    W1.post <- matrix(res$pdSW1, n.a, unit.w, byrow=T)[,order.old]
+    W2.post <- matrix(res$pdSW2, n.a, unit.w, byrow=T)[,order.old]
+    if (predict) {
+    W1.pred <- matrix(res$pdSWt1, n.a, unit.w, byrow=T)[,order.old]
+    W2.pred <- matrix(res$pdSWt2, n.a, unit.w, byrow=T) [,order.old]
+    }
+   
     a.post <- matrix(res$pdSa, n.a, unit.a, byrow=T)
     nstar <- matrix(res$pdSn, n.a, unit.a, byrow=T)
-    res.out <- list(model="Dirichlet Process Prior", alpha=alpha,
+ 
+if (parameter && predict) 
+   res.out <- list(model="Dirichlet Process Prior", alpha=alpha,
                     burnin=burnin, thin=thin, X=X, Y=Y, nu0=nu0, tau0=tau0, mu0=mu0,
-                    S0=S0, a0=a0, b0=b0, mu.post=mu.post, Sigma.post=Sigma.post,
-                    W.post=W.post, W.pred=W.pred, a.post=a.post, nstar=nstar)   
+                    S0=S0, a0=a0, b0=b0, 
+		    mu1.post=mu1.post, mu2.post=mu2.post, 
+		    Sigma11.post=Sigma11.post, Sigma12.post=Sigma12.post, Sigma22.post=Sigma22.post,
+                    W1.post=W1.post, W2.post=W2.post, W1.pred=W1.pred, W2.pred=W2.pred, a.post=a.post, nstar=nstar)   
+else if (parameter && !predict) 
+   res.out <- list(model="Dirichlet Process Prior", alpha=alpha,
+                    burnin=burnin, thin=thin, X=X, Y=Y, nu0=nu0, tau0=tau0, mu0=mu0,
+                    S0=S0, a0=a0, b0=b0, 
+		    mu1.post=mu1.post, mu2.post=mu2.post, 
+		    Sigma11.post=Sigma11.post, Sigma12.post=Sigma12.post, Sigma22.post=Sigma22.post,
+                    W1.post=W1.post, W2.post=W2.post, a.post=a.post, nstar=nstar)   
+else if (!parameter && predict) 
+   res.out <- list(model="Dirichlet Process Prior", alpha=alpha,
+                    burnin=burnin, thin=thin, X=X, Y=Y, nu0=nu0, tau0=tau0, mu0=mu0,
+                    S0=S0, a0=a0, b0=b0, 
+                    W1.post=W1.post, W2.post=W2.post, W1.pred=W1.pred, W2.pred=W2.pred, a.post=a.post, nstar=nstar) 
+else if (!parameter && !predict) 
+   res.out <- list(model="Dirichlet Process Prior", alpha=alpha,
+                    burnin=burnin, thin=thin, X=X, Y=Y, nu0=nu0, tau0=tau0, mu0=mu0,
+                    S0=S0, a0=a0, b0=b0, 
+                    W1.post=W1.post, W2.post=W2.post, a.post=a.post, nstar=nstar)     
   }	 
+
   else{ # parametric model
     n.a <- floor((n.draws-burnin)/thin)
     n.par <- n.a
-    n.w <- n.a * n.samp
+    n.w <- n.a * (n.samp+samp.X1+samp.X0) 
     unit.a <- 1
     unit.par <- 1
-    unit.w <- n.samp	
-    res <- .C("cBaseeco", as.integer(n.draws), as.integer(nlink),
-              as.double(d), as.integer(n.samp), as.integer(nu0),
-              as.double(tau0), as.double(mu0),
-              as.double(S0),as.integer(burnin), as.integer(thin),
-              as.integer(predict), pdSMu0=double(n.par),
+    unit.w <- (n.samp+samp.X1+samp.X0) 	
+    res <- .C("cBaseeco", as.double(d), as.integer(n.samp),
+	      as.integer(n.draws), as.integer(burnin), as.integer(thin),
+	      as.integer(verbose),
+              as.integer(nu0), as.double(tau0), as.double(mu0),
+              as.double(S0),
+              as.integer(survey.yes), as.integer(survey.samp), as.double(survey.data),
+   	      as.integer(X1type), as.integer(samp.X1), as.double(X1.W1),
+   	      as.integer(X0type), as.integer(samp.X0), as.double(X0.W2),
+	      as.integer(predict), as.integer(parameter), 
+	      pdSMu0=double(n.par),
               pdSMu1=double(n.par), pdSSig00=double(n.par),
               pdSSig01=double(n.par), pdSSig11=double(n.par),
               pdSW1=double(n.w), pdSW2=double(n.w), 
               pdSWt1=double(n.w), pdSWt2=double(n.w))
+
+    if (parameter) {
     mu.post <- cbind(matrix(res$pdSMu0, n.a, unit.par, byrow=T),
                      matrix(res$pdSMu1, n.a, unit.par, byrow=T)) 
     colnames(mu.post) <- c("mu1", "mu2")
@@ -88,14 +199,36 @@ eco <- function(Y, X, data = parent.frame(), n.draws = 5000, nonpar =
                         matrix(res$pdSSig01, n.a, unit.par, byrow=T),
                         matrix(res$pdSSig11, n.a, unit.par, byrow=T))
     colnames(Sigma.post) <- c("Sigma11", "Sigma12", "Sigma22")
-    W.post <- cbind(matrix(res$pdSW1, n.a, unit.w, byrow=T),
-                    matrix(res$pdSW2, n.a, unit.w, byrow=T))
-    W.pred <- cbind(matrix(res$pdSWt1, n.a, unit.w, byrow=T),
-                    matrix(res$pdSWt2, n.a, unit.w, byrow=T))
-    colnames(W.post) <- colnames(W.pred) <- c("W1", "W2")
+    }
+
+    W1.post <- matrix(res$pdSW1, n.a, unit.w, byrow=T)[,order.old]
+    W2.post <- matrix(res$pdSW2, n.a, unit.w, byrow=T)[,order.old]
+
+    if (predict) {
+    W1.pred <- matrix(res$pdSWt1, n.a, unit.w, byrow=T)[,order.old]
+    W2.pred <- matrix(res$pdSWt2, n.a, unit.w, byrow=T)[,order.old] 
+    }
+
+
+if (parameter && predict)
     res.out <- list(model="Normal prior", burnin=burnin, thin = thin, X=X, Y=Y,
                     nu0=nu0, tau0=tau0, mu0=mu0, S0=S0, mu.post=mu.post,
-                    Sigma.post=Sigma.post, W.post=W.post, W.pred=W.pred)
+                    Sigma.post=Sigma.post, W1.post=W1.post, W2.post=W2.post,
+		    W1.pred=W1.pred, W2.pred=W2.pred)
+else if (parameter && !predict)
+    res.out <- list(model="Normal prior", burnin=burnin, thin = thin, X=X, Y=Y,
+                    nu0=nu0, tau0=tau0, mu0=mu0, S0=S0, mu.post=mu.post,
+                    Sigma.post=Sigma.post, W1.post=W1.post, W2.post=W2.post)
+else if (!parameter && predict)
+    res.out <- list(model="Normal prior", burnin=burnin, thin = thin, X=X, Y=Y,
+                    nu0=nu0, tau0=tau0, mu0=mu0, S0=S0,
+                    W1.post=W1.post, W2.post=W2.post, 
+		    W1.pred=W1.pred, W2.pred=W2.pred)
+else if (!parameter && !predict)
+    res.out <- list(model="Normal prior", burnin=burnin, thin = thin, X=X, Y=Y,
+                    nu0=nu0, tau0=tau0, mu0=mu0, S0=S0, 
+                    W1.post=W1.post, W2.post=W2.post)
+
   }
   class(res.out) <- "eco"
   return(res.out)
