@@ -293,6 +293,9 @@ void cEMeco(
 
      /* draw n_gen's from uniform */
   for (i=0; i<ndraw; i++) {
+    utemp[i]=0;
+  } 
+ for (i=0; i<ndraw; i++) {
     utemp[i]=unif_rand();
   }
   R_rsort(utemp, ndraw);
@@ -346,11 +349,11 @@ void cEMeco(
     for (i=0; i<n_samp; i++)
       {
 	if ( X[i][1]!=0 && X[i][1]!=1 ) {  
-	  Wstar[i][0]/=(double)ndraw;  /*E(W1i) */
-	  Wstar[i][1]/=(double)ndraw;  /*E(W2i) */
-	  Wstar[i][2]/=(double)ndraw;  /*E(W1i^2) */
-	  Wstar[i][3]/=(double)ndraw;  /*E(W1iW2i) */
-	  Wstar[i][4]/=(double)ndraw;  /*E(W2i^2) */
+	  Wstar[i][0]/=ndraw;  /*E(W1i) */
+	  Wstar[i][1]/=ndraw;  /*E(W2i) */
+	  Wstar[i][2]/=ndraw;  /*E(W1i^2) */
+	  Wstar[i][3]/=ndraw;  /*E(W1iW2i) */
+	  Wstar[i][4]/=ndraw;  /*E(W2i^2) */
 	}
       } /*for x0type, x1type and survey data, E-step is either the observed value or the analytical expectation*/
     
@@ -389,31 +392,25 @@ void cEMeco(
 
  	/*printf("\n%5d%14g%14g\n", i, Wstar[n_samp+x1_samp+i][0], W[n_samp+x1_samp+i][0]);*/ 
       }
-    
-
-
 
    
   /*M-step: same procedure as normal model */
-  for (j=0; j<5; j++) 
-    pdTheta[j]=0;
+    for (j=0; j<5; j++) 
+      {
+      pdTheta[j]=0;
+    }
 
-  for(i=0; i<t_samp; i++) {
-    pdTheta[0]+=Wstar[i][0];  /*mu1*/
-    pdTheta[1]+=Wstar[i][1];  /*mu2*/
-    pdTheta[2]+=(Wstar[i][2]-2*Wstar[i][0]*pdTheta[0]+pdTheta[0]*pdTheta[0]);  /*sigma11*/
-    pdTheta[3]+=(Wstar[i][3]-Wstar[i][0]*pdTheta[1]-Wstar[i][1]*pdTheta[0]+pdTheta[0]*pdTheta[1]); /*sigma12*/
-    pdTheta[4]+=(Wstar[i][4]-2*Wstar[i][1]*pdTheta[1]+pdTheta[1]*pdTheta[1]);  /*sigma22*/
-  }
+    for(i=0; i<t_samp; i++) {
+      pdTheta[0]+=Wstar[i][0]/t_samp;  /*mu1*/
+      pdTheta[1]+=Wstar[i][1]/t_samp;  /*mu2*/
+      pdTheta[2]+=(Wstar[i][2]-2*Wstar[i][0]*pdTheta[0]+pdTheta[0]*pdTheta[0])/t_samp;  /*sigma11*/
+      pdTheta[3]+=(Wstar[i][3]-Wstar[i][0]*pdTheta[1]-Wstar[i][1]*pdTheta[0]+pdTheta[0]*pdTheta[1])/t_samp; /*sigma12*/
+      pdTheta[4]+=(Wstar[i][4]-2*Wstar[i][1]*pdTheta[1]+pdTheta[1]*pdTheta[1])/t_samp;  /*sigma22*/
+    }
 
-  for (j=0; j<5; j++) 
-    pdTheta[j]/=(double)t_samp;
-
-  /*pdTheta[2]=log(pdTheta[2]);
-  pdTheta[4]=log(pdTheta[4]);
-  dtemp=pdTheta[3]/sqrt(pdTheta[2]*pdTheta[4]);
-  pdTheta[3]=0.5*log((1+dtemp)/(1-dtemp));*/
-
+  /*  for (j=0; j<5; j++) 
+    pdTheta[j]/=t_samp;
+  */
   /** write out the random seed **/
   PutRNGstate();
 
@@ -435,6 +432,7 @@ void cEMeco(
   free(Wstar_bar);
   free(vtemp);
   FreeMatrix(mtemp, n_cov);
-  
+  free(utemp);
+  free(mflag);  
 } /* main */
 
