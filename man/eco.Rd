@@ -3,7 +3,7 @@
 \alias{ECO}
 \alias{eco}
 
-\title{Fitting the Parametric and Nonparametric Bayesian Models for
+\title{Fitting the Parametric and Nonparametric Bayesian Models of
 Ecological Inference in 2 x 2 Tables} 
 
 \description{
@@ -56,13 +56,13 @@ eco <- function(Y, X, data = parent.frame(), n.draws = 5000, burnin = 0,
     parameter. the default is \code{4}.
   } 
   \item{tau0}{A positive integer. The prior scale parameter. The default
-    is \code{1}. 
+    is \code{2}. 
   } 
   \item{mu0}{A \eqn{2 \times 1} numeric vector. The prior mean. The
     default is \eqn{(0,0)}.
   } 
   \item{S0}{A \eqn{2 \times 2} numeric matrix, representing a positive
-    definite prior scale matrix. The default is \code{diag(8,2)}. 
+    definite prior scale matrix. The default is \code{diag(10,2)}. 
   } 
   \item{supplement}{A numeric matrix. The matrix has two columns, which
     contain additional individual-level data such as survey data for
