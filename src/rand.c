@@ -6,14 +6,15 @@
 #include "subroutines.h"
 #include "rand.h"
 
-/* Bivariate Normal density */
-double dBVN(			
+/* Multivariate Normal density */
+double dMVN(			
 	double *Y,		/* The data */
-	double *MEAN,		/* The parameters */
-	double **SIG_INV,
+	double *MEAN,		/* mean */
+	double **SIG_INV,       /* inverse of covariance matrix */ 
+	int dim,                /* dimension */
 	int give_log){          /* 1 if log_scale 0 otherwise */
   
-  int j,k,dim=2;
+  int j,k;
   double value=0;
   
   for(j=0;j<dim;j++){
@@ -21,9 +22,7 @@ double dBVN(
       value+=2*(Y[k]-MEAN[k])*(Y[j]-MEAN[j])*SIG_INV[j][k];
     value+=(Y[j]-MEAN[j])*(Y[j]-MEAN[j])*SIG_INV[j][j];
   }
-
-  value=-0.5*value - 0.5*dim*log(2*M_PI) +
-    0.5*log(SIG_INV[0][0]*SIG_INV[1][1]-SIG_INV[0][1]*SIG_INV[1][0]);
+  value=-0.5*value - 0.5*dim*log(2*M_PI)+0.5*log(ddet(SIG_INV, dim));
 
   if(give_log)  
     return(value);
@@ -32,16 +31,16 @@ double dBVN(
 }
 
 
-/* the density of Bivariate T-distribution */ 
-double dBVT(			
+/* the density of Multivariate T-distribution */ 
+double dMVT(			
 	    double *Y,		/* The data */ 
 	    double *MEAN,	/* mean */ 
 	    double **SIG_INV,   /* inverse of scale matrix */
-	    int nu,             /* Degrees of freedom */ 
+	    int nu,             /* Degrees of freedom */
+	    int dim,            /* dimension */
 	    int give_log) 	/* 1 if log_scale 0 otherwise */
 { 
   int j,k;
-  int dim=2;
   double value=0; 
 
   for(j=0;j<dim;j++){ 
@@ -50,8 +49,7 @@ double dBVT(
     value+=(Y[j]-MEAN[j])*(Y[j]-MEAN[j])*SIG_INV[j][j]; 
   } 
   
-  value=0.5*log(SIG_INV[0][0]*SIG_INV[1][1]-SIG_INV[0][1]*SIG_INV[1][0]) - 
-    0.5*dim*(log((double)nu)+log(M_PI)) - 
+  value=0.5*log(det(SIG_INV, dim)) - 0.5*dim*(log((double)nu)+log(M_PI)) - 
     0.5*((double)dim+nu)*log(1+value/(double)nu) + 
     lgammafn(0.5*(double)(nu+dim)) - lgammafn(0.5*(double)nu);   
   
