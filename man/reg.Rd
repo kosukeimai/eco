@@ -2,12 +2,13 @@
 
 \docType{data}
 
-\alias{matproii}
+\alias{registration}
 
 \title{Voter Registration in US Southern States} 
 
 \description{
-  This data set contains the voter registration information in four
+  This data set contains the voter registration information, the voters racial 
+  composition(X) and the registration turnout rate(Y),  in four
   southern states in US: Florida, Louisiana, North Carolina, and South
   Carolina.
 }
