@@ -1,11 +1,11 @@
-#transform<-function(pp) {
-#  qq<-pp
-#  qq[3]<-log(pp[3])
-#  qq[5]<-log(pp[5])
-#  qtemp<-pp[4]/sqrt(pp[3]*pp[5])
-#  qq[4]<-0.5*log((1+qtemp)/(1-qtemp))
-# return(qq)
-#}
+transform<-function(pp) {
+  qq<-pp
+  qq[3]<-log(pp[3])
+  qq[5]<-log(pp[5])
+  qtemp<-pp[4]/sqrt(pp[3]*pp[5])
+  qq[4]<-0.5*log((1+qtemp)/(1-qtemp))
+ return(qq)
+}
 
 
 eco.em <- function(Y, X, data = parent.frame(),supplement=NULL, 
@@ -241,8 +241,8 @@ while (!Rconverge && (k<iteration.max))
 
   for (j in 1:n.var)
   {
-#    R.t2[i,j]<-(transform(temp)[j]-transform(theta.em)[j])/(transform(theta.t)[i]-transform(theta.em)[i])
-    R.t2[i,j]<-(temp[j]-theta.em[j])/(theta.t[i]-theta.em[i])
+    R.t2[i,j]<-(transform(temp)[j]-transform(theta.em)[j])/(transform(theta.t)[i]-transform(theta.em)[i])
+#    R.t2[i,j]<-(temp[j]-theta.em[j])/(theta.t[i]-theta.em[i])
     rowdiff.temp<-max(abs(R.t2[i,j]-R.t1[i,j]), rowdiff.temp)    
     }   
    rowdiff[i]<-rowdiff.temp
