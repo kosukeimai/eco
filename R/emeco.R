@@ -115,7 +115,7 @@ eco.em <- function(Y, X, data = parent.frame(),supplement=NULL,
     if (printon) {
       cat(i, " ")
       if (Fisher) {cat(fisher(temp), "\n") }
-        else if (!Fisher) { cat(fisher(temp), "\n") }
+        else if (!Fisher) { cat(temp, "\n") }
     }
 
     if (!Fisher) {
@@ -405,15 +405,8 @@ eco.sem<-function(Y, X, data = parent.frame(),supplement=NULL,
   cat("Covarianace Matrix:", "\n")
   print(thetacov(theta.em))
   
-  if (Fisher) {
-    cat("Fisher transformtion:", "\n")
-    print(fisher(theta.em))
-    cat("\n", "the following matrices are at Fisher transformation scale", "\n")
-  }
 
 
-  cat("DM matrix:", "\n")
-  print(R.t2)
   
   ##missing information decomposition
   
@@ -431,6 +424,35 @@ eco.sem<-function(Y, X, data = parent.frame(),supplement=NULL,
 
   Vobs<-Vcom+dV
   
+  if (Fisher) {
+
+  cat("Fisher transformtion:", "\n")
+  print(fisher(theta.em))
+  cat("\n", "the following matrices are at Fisher transformation scale", "\n")
+
+  cat("DM matrix:", "\n")
+  print(R.t2)
+
+  cat("Vobs_fisher=:", "\n")
+  print(Vobs)
+  
+  cat("Vcom_fisher=:", "\n")
+  print(Vcom)
+  
+  cat("dV_fisher=:", "\n")
+  print(dV)
+
+  v.fish<-c(1,1, theta.em[3], theta.em[4], (1-theta.em[5]^2))
+ 
+  Vcom<-v.fish%*%t(v.fish)*Vcom
+  Vobs<-v.fish%*%t(v.fish)*Vobs
+  dV<-Vobs-Vcom 
+  } 
+  else if (!Fisher) {
+
+  cat("DM matrix:", "\n")
+  print(R.t2)
+
   cat("Vobs=:", "\n")
   print(Vobs)
   
@@ -439,7 +461,7 @@ eco.sem<-function(Y, X, data = parent.frame(),supplement=NULL,
   
   cat("dV=:", "\n")
   print(dV)
-  
+}
   res.out<-list(theta=theta.em, Vobs=Vobs, Vcom=Vcom, dV=dV, DM.ECM=R.t2)
   class(res.out) <- "eco"
   return(res.out)
