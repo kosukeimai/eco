@@ -4,7 +4,7 @@
 \alias{eco}
 
 \title{Fitting the Parametric and Nonparametric Bayesian Models for
-Ecological Inference in \eqn{2 times 2} Tables} 
+Ecological Inference in 2 x 2 Tables} 
 
 \description{
   \code{eco} is used to fit the parametric and nonparametric Bayesian
