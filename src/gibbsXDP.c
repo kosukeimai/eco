@@ -204,7 +204,7 @@ void cDPecoX(
 
 
   t_samp=n_samp+x1_samp+x0_samp+s_samp;
-
+  Rprintf("ok0\n");
   /* read the data set */
   /** Packing Y, X  **/
   itemp = 0;
@@ -253,7 +253,7 @@ void cDPecoX(
       Wstar[(n_samp+x1_samp+i)][1]=log(W[(n_samp+x1_samp+i)][1])-log(1-W[(n_samp+x1_samp+i)][1]);
     }
 
-
+  Rprintf("ok1\n");
   /*read the survey data */
 
   if (*survey==1) {
@@ -270,6 +270,7 @@ void cDPecoX(
 
   }
 
+  Rprintf("ok2\n");
   itempA=0; /* counter for alpha */
   itempS=0; /* counter for storage */
   itempC=0; /* counter to control nth draw */
@@ -319,7 +320,7 @@ void cDPecoX(
       mtemp[j][k]=tau0*(nu0-1)*S0[j][k]/(1+tau0);
   dinv(mtemp, (n_dim+1), S_tvt);
 
-
+  Rprintf("ok3\n");
   /**draw initial values of mu_i, Sigma_i under G0  for all effective sample**/
   /*1. Sigma_i under InvWish(nu0, S0^-1) with E(Sigma)=S0/(nu0-3)*/
   /*   InvSigma_i under Wish(nu0, S0^-1 */
@@ -333,7 +334,7 @@ void cDPecoX(
       for(k=0;k<=n_dim;k++) mtemp1[j][k]=Sigma[i][j][k]/tau0;
     rMVN(mu[i], mu0, mtemp1, (n_dim+1));
   }
-
+  Rprintf("ok3a\n");
   /* initialize the cluster membership */
   nstar=t_samp;  /* the # of disticnt values */
   for(i=0;i<t_samp;i++)
@@ -352,7 +353,7 @@ void cDPecoX(
           Sigma_w[j][k]-=Sigma[i][n_dim][j]/Sigma[i][n_dim][n_dim]*Sigma[i][n_dim][k];
 
       dinv(Sigma_w, n_dim, InvSigma_w);
-
+  Rprintf("ok3b\n");
       if (X[i][1]!=0 && X[i][1]!=1 && i<n_samp) {
         /*1 project BVN(mu_i, Sigma_i) on the inth tomo line */
         dtemp=0;
@@ -403,7 +404,7 @@ void cDPecoX(
         Wstar[i][1]=-log(-log(W[i][1]));
         }*/
 
-  
+    Rprintf("ok3c\n");
       if (*x1==1 && i>=n_samp && i<(n_samp+x1_samp)) {
 	dtemp=mu_w[1]+Sigma_w[0][1]/Sigma_w[0][0]*(Wstar[i][0]-mu_w[0]);
 	dtemp1=Sigma_w[1][1]*(1-Sigma_w[0][1]*Sigma_w[0][1]/(Sigma_w[0][0]*Sigma_w[1][1]));
@@ -412,7 +413,7 @@ void cDPecoX(
 	Wstar[i][1]=norm_rand()*sqrt(dtemp1)+dtemp;
 	W[i][1]=exp(Wstar[i][1])/(1+exp(Wstar[i][1]));
       }
-
+  Rprintf("ok3d\n");
       /*update W1 given W2, mu_ord and Sigma_ord in x0 homeogeneous areas */
       /*printf("W1 draws\n");*/
       if (*x0==1  && i>=(n_samp+x1_samp) && i<(n_samp+x1_samp+x0_samp)) {
@@ -422,6 +423,7 @@ void cDPecoX(
         W[i][0]=exp(Wstar[i][0])/(1+exp(Wstar[i][0]));
       }
     }
+  Rprintf("ok4\n");
 
   /**updating mu, Sigma given Wstar uisng effective sample size t_samp**/
   for (i=0; i<t_samp; i++){
@@ -552,7 +554,7 @@ void cDPecoX(
     }
     nstar++; /*finish update one distinct value*/
   } /* nstar is the number of distinct values */
-
+  Rprintf("ok5\n");
   /** updating alpha **/
   if(*pinUpdate) {
     dtemp1=(double)(alpha+1);

@@ -20,12 +20,13 @@
 double dMVN(			
 	double *Y,		/* The data */
 	double *MEAN,		/* The parameters */
-	double **SIG_INV,         /* covariance matrix */	
+	double **SIG_INV,         /* inverse of the covariance matrix */	
 	int dim,                /* dimension */
 	int give_log){          /* 1 if log_scale 0 otherwise */
   
   int j,k;
   double value=0.0;
+
   /*double **SIG_INV = doubleMatrix(dim, dim);
   
   dinv(SIGMA, dim, SIG_INV);*/
@@ -38,7 +39,7 @@ double dMVN(
 
   value=-0.5*value-0.5*dim*log(2*M_PI)+0.5*ddet(SIG_INV, dim, 1);
 
-  FreeMatrix(SIG_INV, dim);
+  /*FreeMatrix(SIG_INV, dim);*/
 
   if(give_log)  
     return(value);

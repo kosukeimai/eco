@@ -11,8 +11,8 @@ ecoX <- function(Y, X, data = parent.frame(),
   if (burnin >= n.draws)
     stop("Error: n.draws should be larger than burnin")
   
-  if ((dim(supplement)[2] != 2) && (length(supplement)>0))
-    stop("Error: use n by 2 matrix for survey data")
+#  if ((dim(supplement)[2] != 2) && (length(supplement)>0))
+#    stop("Error: use n by 2 matrix for survey data")
    
   if (contextual.effect=="indirect") {
   if (!is.null(beta0))
