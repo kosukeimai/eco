@@ -7,9 +7,9 @@
 eco <- function(Y, X, data = parent.frame(), 
 		n.draws = 5000, burnin = 0, thin = 5, verbose = FALSE,
 		nonpar =  TRUE, nu0 = 4, tau0 = 1, mu0 = c(0,0),
-                S0 = diag(10,2), 
+                S0 = diag(8,2), 
 	    	supplement=NULL,
-		alpha = NULL, a0 = 0.1, b0 = 0.1,
+		alpha = NULL, a0 = 1, b0 = 0.1,
                 predict = TRUE, parameter = TRUE){ 
 
   ## checking inputs
@@ -19,9 +19,15 @@ eco <- function(Y, X, data = parent.frame(),
   if ((dim(supplement)[2] != 2) && (length(supplement)>0))
     stop("Error: use n by 2 matrix for survey data")
   
-  m <- match.call()
-  ff <- as.formula(paste(m$Y, "~ -1 +", m$X))
-  if (is.matrix(eval.parent(m$data)))
+  call <- match.call()
+ # mf <- match.call(expand = FALSE)
+ # mf$n.draws <- mf$burnin <- mf$thin <- mf$verbose <- mf$nonpar<-mf$nu0 <- mf$tau0 <- mf$mu0 <- mf$S0 <- mf$supplement <- mf$alpha <- mf$a0 <- mf$b0 <- mf$predict <- mf$parameter <-NULL
+ # mf[[1]] <- as.name("model.frame.default")
+ #  mf$na.action <- 'na.pass'
+ # mf <- eval.parent(mf)
+
+  ff <- as.formula(paste(call$Y, "~ -1 +", call$X))
+  if (is.matrix(eval.parent(call$data)))
     data <- as.data.frame(data)
   X <- model.matrix(ff, data)
   Y <- model.response(model.frame(ff, data=data))
@@ -75,26 +81,10 @@ eco <- function(Y, X, data = parent.frame(),
 
   order.old<-order(c(XX.ind, X0.ind, X1.ind))
   
-  cat("X1type", X1type)
-  cat("\n")
-  cat("samp.X1", samp.X1)
-  cat("\n")
-  cat("X!.w1", X1.W1)
-  cat("\n")
-  
-  cat("X0type", X0type)
-  cat("\n")
-  cat("samp.X0", samp.X0)
-  cat("\n")
-  cat("X0.w2", X0.W2)
-  cat("\n")
-  
   ## fitting the model
   n.samp <- length(Y.use)	 
   d <- cbind(X.use, Y.use)
-  cat("nsamp=", n.samp)
-  cat("d=", "\n")
-  print(d)
+
   if (nonpar){	# nonparametric model
     n.a <- floor((n.draws-burnin)/thin)
     n.par <- n.a * (n.samp+samp.X1+samp.X0) 
@@ -138,26 +128,26 @@ eco <- function(Y, X, data = parent.frame(),
     if (parameter && predict) 
       res.out <- list(model="Dirichlet Process Prior", alpha=alpha,
                       burnin=burnin, thin=thin, X=X, Y=Y, nu0=nu0, tau0=tau0, mu0=mu0,
-                      S0=S0, a0=a0, b0=b0, 
+                      S0=S0, a0=a0, b0=b0, call=call,
                       mu1.post=mu1.post, mu2.post=mu2.post, 
                       Sigma11.post=Sigma11.post, Sigma12.post=Sigma12.post, Sigma22.post=Sigma22.post,
                       W1.post=W1.post, W2.post=W2.post, W1.pred=W1.pred, W2.pred=W2.pred, a.post=a.post, nstar=nstar)   
     else if (parameter && !predict) 
       res.out <- list(model="Dirichlet Process Prior", alpha=alpha,
                       burnin=burnin, thin=thin, X=X, Y=Y, nu0=nu0, tau0=tau0, mu0=mu0,
-                      S0=S0, a0=a0, b0=b0, 
+                      S0=S0, a0=a0, b0=b0, call=call,
                       mu1.post=mu1.post, mu2.post=mu2.post, 
                       Sigma11.post=Sigma11.post, Sigma12.post=Sigma12.post, Sigma22.post=Sigma22.post,
                       W1.post=W1.post, W2.post=W2.post, a.post=a.post, nstar=nstar)   
     else if (!parameter && predict) 
       res.out <- list(model="Dirichlet Process Prior", alpha=alpha,
                       burnin=burnin, thin=thin, X=X, Y=Y, nu0=nu0, tau0=tau0, mu0=mu0,
-                      S0=S0, a0=a0, b0=b0, 
+                      S0=S0, a0=a0, b0=b0, call=call,
                       W1.post=W1.post, W2.post=W2.post, W1.pred=W1.pred, W2.pred=W2.pred, a.post=a.post, nstar=nstar) 
     else if (!parameter && !predict) 
       res.out <- list(model="Dirichlet Process Prior", alpha=alpha,
                       burnin=burnin, thin=thin, X=X, Y=Y, nu0=nu0, tau0=tau0, mu0=mu0,
-                      S0=S0, a0=a0, b0=b0, 
+                      S0=S0, a0=a0, b0=b0, call=call,
                       W1.post=W1.post, W2.post=W2.post, a.post=a.post, nstar=nstar)     
   }	 
   
@@ -204,16 +194,16 @@ eco <- function(Y, X, data = parent.frame(),
     
     if (parameter && predict)
       res.out <- list(model="Normal prior", burnin=burnin, thin = thin, X=X, Y=Y,
-                      nu0=nu0, tau0=tau0, mu0=mu0, S0=S0, mu.post=mu.post,
+                      nu0=nu0, tau0=tau0, mu0=mu0, S0=S0, call=call, mu.post=mu.post,
                       Sigma.post=Sigma.post, W1.post=W1.post, W2.post=W2.post,
                       W1.pred=W1.pred, W2.pred=W2.pred)
     else if (parameter && !predict)
       res.out <- list(model="Normal prior", burnin=burnin, thin = thin, X=X, Y=Y,
-                      nu0=nu0, tau0=tau0, mu0=mu0, S0=S0, mu.post=mu.post,
+                      nu0=nu0, tau0=tau0, mu0=mu0, S0=S0, call=call, mu.post=mu.post,
                       Sigma.post=Sigma.post, W1.post=W1.post, W2.post=W2.post)
     else if (!parameter && predict)
       res.out <- list(model="Normal prior", burnin=burnin, thin = thin, X=X, Y=Y,
-                      nu0=nu0, tau0=tau0, mu0=mu0, S0=S0,
+                      nu0=nu0, tau0=tau0, mu0=mu0, S0=S0, call=call,
                       W1.post=W1.post, W2.post=W2.post, 
                       W1.pred=W1.pred, W2.pred=W2.pred)
     else if (!parameter && !predict)

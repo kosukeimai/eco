@@ -1,5 +1,6 @@
-summary.eco<-function(object, CI=c(2.5, 97.5), ...) 
+summary.eco<-function(object, long=FALSE, CI=c(2.5, 97.5), ...) 
 {
+  call<-object$call
   model<-object$model
   nobs<-ncol(object$W1.post)
   table.names<-c("mean", "std.dev", paste(min(CI), "%", sep=" "),
@@ -12,16 +13,18 @@ summary.eco<-function(object, CI=c(2.5, 97.5), ...)
 	         apply(object$W2.post, 2, quantile, min(CI)/100),
 		 apply(object$W2.post, 2, quantile, max(CI)/100))
   colnames(W2.table)<-table.names
-  region.tmp1<-cbind(mean(W1.table[,1]), sd(W1.table[,1]), 
-		 quantile(W1.table[,1], min(CI)/100), 
-		 quantile(W1.table[,1], max(CI)/100))
-  region.tmp2<-cbind(mean(W2.table[,1]), sd(W2.table[,1]), 
-		 quantile(W2.table[,1], min(CI)/100), 
-		 quantile(W2.table[,1], max(CI)/100))
+  W1.region.mean<-apply(object$W1.post, 1, mean)
+  W2.region.mean<-apply(object$W2.post, 1, mean)
+  region.tmp1<-cbind(mean(W1.region.mean), sd(W1.region.mean), 
+		 quantile(W1.region.mean, min(CI)/100), 
+		 quantile(W1.region.mean, max(CI)/100))
+  region.tmp2<-cbind(mean(W2.region.mean), sd(W2.region.mean), 
+		 quantile(W2.region.mean, min(CI)/100), 
+		 quantile(W2.region.mean, max(CI)/100))
   region.table<-rbind(region.tmp1, region.tmp2)
   colnames(region.table)<-table.names
   rownames(region.table)<-c("W1", "W2")
-  ans<- list(model=object$model, region.table=region.table, W1.table=W1.table, W2.table=W2.table, nobs=nobs)
+  ans<- list(call=object$call, model=object$model, long=long, region.table=region.table, W1.table=W1.table, W2.table=W2.table, nobs=nobs)
   class(ans) <-"summary.eco"
   return(ans)
 }
