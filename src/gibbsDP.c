@@ -189,6 +189,8 @@ void cDPeco(int *n_gen,      /* number of gibbs draws */
       j=0; 
       while (j<n_grid[i]) {
 	W1g[i][j]=minW1[i]+(j+1)*dtemp-(dtemp+resid[i])/2;
+	if ((W1g[i][j]-minW1[i])<resid[i]/2) W1g[i][j]+=resid[i]/2;
+	if ((maxW1[i]-W1g[i][j])<resid[i]/2) W1g[i][j]-=resid[i]/2;
 	W2g[i][j]=(X[i][1]-X[i][0]*W1g[i][j])/(1-X[i][0]);
 	j++;
       }
@@ -200,6 +202,12 @@ void cDPeco(int *n_gen,      /* number of gibbs draws */
       W2g[i][1]=(X[i][1]-X[i][0]*W1g[i][1])/(1-X[i][0]);
       n_grid[i]=2;
     }
+
+    /*    if (i<0){
+    printf("grids\n");
+    for (j=0; j<n_grid[i]; j++)
+    printf("%5d%5d%14g%14g\n", i, j, W1g[i][j], W2g[i][j]); }*/
+
   }
 
   if(data==1) { 
@@ -208,6 +216,7 @@ void cDPeco(int *n_gen,      /* number of gibbs draws */
       printf("%5d%14g%14g%14g%14g\n",i,X[i][1],X[i][0], minW1[i], maxW1[i]);
     fflush(stdout);
   }
+
 
   /* parmeters for Bivaraite t-distribution-unchanged in MCMC */
   for (j=0;j<n_cov;j++)
@@ -265,6 +274,15 @@ void cDPeco(int *n_gen,      /* number of gibbs draws */
       }
       for (j=0;j<n_grid[i];j++) 
 	prob_grid_cum[j]/=dtemp; /*standardize prob.grid */
+
+
+      /*
+	printf("\nmu0 mu1 sigma1 sigma2\n");
+	printf("%5d%14g%14g%14g%14g\n", i, mu[i][0], mu[i][1],InvSigma[i][0][0], InvSigma[i][1][1]);  
+      if (i<1){
+      printf("\ncum prob dist\n");
+	for (j=0; j<n_grid[i]; j++)
+	printf("%14g", prob_grid_cum[j]); }*/
       
       /*2 sample W_i on the ith tomo line */
       /*3 compute Wsta_i from W_i*/ 
@@ -273,17 +291,19 @@ void cDPeco(int *n_gen,      /* number of gibbs draws */
       while ((dtemp > prob_grid_cum[j]) && (j<(n_grid[i]-1))) j++;
       W[i][0]=W1g[i][j];
       W[i][1]=W2g[i][j];
+      /*      printf("\nW1 W2 draws\n");
+	      printf("%5d%14g%14g\n",i, W[i][0], W[i][1]);*/ 
       if (*link==1) {
-	Wstar[i][0]=log(W1g[i][j])-log(1-W1g[i][j]);
-	Wstar[i][1]=log(W2g[i][j])-log(1-W2g[i][j]);
+	Wstar[i][0]=log(W[i][0])-log(1-W[i][0]);
+	Wstar[i][1]=log(W[i][1])-log(1-W[i][1]);
       }
       else if (*link==2) {
-	Wstar[i][0]=qnorm(W1g[i][j],0 ,1, 1, 0);
-	Wstar[i][1]=qnorm(W2g[i][j],0 ,1, 1, 0);
+	Wstar[i][0]=qnorm(W[i][0],0 ,1, 1, 0);
+	Wstar[i][1]=qnorm(W[i][1],0 ,1, 1, 0);
       }
       else if (*link==3) {
-	Wstar[i][0]=-log(-log(W1g[i][j]));
-	Wstar[i][1]=-log(-log(W2g[i][j]));
+	Wstar[i][0]=-log(-log(W[i][0]));
+	Wstar[i][1]=-log(-log(W[i][1]));
       }
     }
 
@@ -329,6 +349,10 @@ void cDPeco(int *n_gen,      /* number of gibbs draws */
 	  for (l=0;l<n_cov;l++)  mtemp[k][l]=Sigma[i][k][l]/(tau0+1); 
 	}
 	rMVN(mu[i], mun, mtemp, n_cov);
+	/*          printf("mun0 mun1 sigma1 sigma2 sigma12 \n");
+		    printf("%5d%14g%14g%14g%14g\n", i, mun[0], mun[1], mtemp[0][0], mtemp[1][1], mtemp[0][1]);*/
+
+
 	C[i]=nstar;
 	nstar++;
       }
@@ -354,6 +378,8 @@ void cDPeco(int *n_gen,      /* number of gibbs draws */
     
     nstar=0;
     i=0;
+    /*      printf("mumix all\n");
+	    printf("munj0 munj1 signj00 signj11\n");*/
     while (i<n_samp){
       /*initialize the vector and matrix */
       for(k=0; k<n_cov; k++) {
@@ -405,6 +431,8 @@ void cDPeco(int *n_gen,      /* number of gibbs draws */
 	for (l=0; l<n_cov; l++)  mtemp[k][l]=Sigma_mix[k][l]/(tau0+nj);
       }
       rMVN(mu_mix, munj, mtemp, n_cov);
+      /*      printf("%5d%14g%14g%14g%14g\n", nstar, munj[0], munj[1], mtemp[0][0], mtemp[1][1]);*/
+
 
       
       /**update mu, Simgat with mu_mix, Sigmat_mix via label**/
