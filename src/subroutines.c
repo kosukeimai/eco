@@ -107,7 +107,7 @@ double ddet(double **X, int size)
   dcholdc(X, size, pdTemp);
   for(i=0;i<size;i++)
     det*=pdTemp[i][i];
-  return(sqrt(det));
 
   FreeMatrix(pdTemp, size);
+  return(det*det);
 }
