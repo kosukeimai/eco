@@ -17,7 +17,7 @@ Ecological Inference in 2 x 2 Tables}
 }
 
 \usage{
-eco <- function(Y, X, data = parent.frame(), n.draws = 5000, burnin = 0, thin = 5, verbose = TRUE, nonpar =  TRUE, nu0 = 4, tau0 = 1, mu0 = c(0,0), S0 = diag(10,2), survey=NULL, alpha = NULL, alpha.update = TRUE, a0 = 0.1, b0 = 0.1, predict = TRUE, parameter = TRUE)
+eco <- function(Y, X, data = parent.frame(), n.draws = 5000, burnin = 0, thin = 5, verbose = TRUE, nonpar =  TRUE, nu0 = 4, tau0 = 1, mu0 = c(0,0), S0 = diag(10,2), supplement=NULL, alpha = NULL, a0 = 0.1, b0 = 0.1, predict = TRUE, parameter = TRUE)
 }
 
 \arguments{
@@ -65,7 +65,13 @@ eco <- function(Y, X, data = parent.frame(), n.draws = 5000, burnin = 0, thin = 
   } 
   \item{S0}{A \eqn{2 \times 2} numeric matrix, representing a positive
     definite prior scale matrix. The default is \code{diag(8,2)}. 
-  }   
+  } 
+  \item{supplement}{A numeric matrix. The matrix has two columns, which
+    contain additional individual-level data such as survey data for
+    \eqn{W_1} and \eqn{W_2}, respectively.  If \code{NULL}, no
+    additional individual-level data are included in the model. The
+    default is \code{NULL}.
+  }    
   \item{alpha}{A positive scalar. If \code{NULL}, the concentration
     parameter \eqn{\alpha} will be updated at each Gibbs draw. The prior
     parameters \code{a0} and \code{b0} need to be specified. Otherwise,
@@ -78,12 +84,7 @@ eco <- function(Y, X, data = parent.frame(), n.draws = 5000, burnin = 0, thin = 
   \item{b0}{A positive integer. The scale parameter of the gamma prior
     for \eqn{\alpha}. The default is \code{0.1}.
   } 
-  \item{survey}{A numeric matrix. The matrix has two columns, which
-    contain additional individual-level data such as survey data for
-    \eqn{W_1} and \eqn{W_2}, respectively.  If \code{NULL}, no
-    additional individual-level data are included in the model. The
-    default is \code{NULL}.
-  }  
+
   \item{predict}{Logical. If \code{TRUE}, out-of sample predictions will
     be returned. The default is \code{TRUE}.
   } 
