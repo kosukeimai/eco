@@ -1,17 +1,37 @@
-transform<-function(pp) {
-  qq<-pp
-  qq[3]<-log(pp[3])
-  qq[5]<-log(pp[5])
-  qtemp<-pp[4]/sqrt(pp[3]*pp[5])
-  qq[4]<-0.5*log((1+qtemp)/(1-qtemp))
- return(qq)
+
+#fisher transformation of BVN(mu1, mu2, sigma1, sigma2, sigma12) into
+# (mu1, mu2, log(sigma1), log(sigma12), Zp)
+fisher<-function(X) {
+  Y<-rep(0,5)
+  Y[1]<-X[1]
+  Y[2]<-X[2]
+  Y[3]<-log(X[3])
+  Y[4]<-log(X[4])
+  rho<-X[5]/sqrt(X[3]*X[4])
+  Y[5]<-0.5*log((1+rho)/(1-rho))
+  return(Y)
+}  
+
+#backward Fisher transformation
+
+fisher.back<-function(Y) {
+  X<-rep(0,5)
+  X[1]<-Y[1]
+  X[2]<-Y[2]
+  X[3]<-exp(Y[3])
+  X[4]<-exp(Y[4])
+  rho<-(exp(2*Y[5])-1)/(exp(2*Y[5]+1))
+  X[5]<-rho*sqrt(X[3]*X[4])
+return(X)
 }
 
-
 eco.em <- function(Y, X, data = parent.frame(),supplement=NULL, 
-      theta.old=c(0,0,1,0,1), 
+      theta.old=c(0,0,1,1,0), 
       convergence=0.0001, iteration.max=20,
       n.draws = 10, by.draw=10, draw.max=200, printon=TRUE) {
+
+#theta.old=(mu1, mu2, sigma1, sigma12, sigma2) ==>Fisher transformation
+#
 
   ## checking inputs
   if ((dim(supplement)[2] != 2) && (length(supplement)>0))
@@ -76,7 +96,6 @@ eco.em <- function(Y, X, data = parent.frame(),supplement=NULL,
   em.converge<-FALSE
   i<-1
 
-  em.mat<-matrix(NA, iteration.max, 5)
 
  while ((!em.converge) && (i<iteration.max))
 {
@@ -97,25 +116,23 @@ eco.em <- function(Y, X, data = parent.frame(),supplement=NULL,
   cat(temp)
   }
 
+  theta.old.fish<-fisher(theta.old)
+  temp.fish<-fisher(temp)
+
   for (j in 1:5) 
    {   
-     if (abs(temp[j]-theta.old[j])>convergence) 
+     if (abs(temp.fish[j]-theta.old.fish[j])>convergence) 
        em.converge<-FALSE
   }
+
   #cdiff<-as.numeric(t(temp-theta.old)%*%(temp-theta.old))
 
   theta.old<-temp
-  em.mat[i,]<-theta.old
 
   i<-i+1
   if (draw<=draw.max) draw<-draw+by.draw
  
 }
-
-  em.mat<-em.mat[1:(i-1),]
-#  theta<-list(mu=c(theta.old[1], theta.old[2]), Sigma=matrix(theta.old[c(3,4,4,5)], 2,2))
-
-
 
 cat("\n")
 cat("Estimates based on EM", "\n")
@@ -123,9 +140,9 @@ cat("Mean:", "\n")
 print(theta.old[1:2])
 cat("\n")
 cat("Covarianace Matrix:", "\n")
-print(matrix(theta.old[c(3,4,4,5)],2,2))
+print(matrix(theta.old[c(3,5,5,4)],2,2))
 
-res.out<-list(theta=theta.old, em.mat=em.mat)
+res.out<-list(theta=theta.old)
   class(res.out) <- "eco"
   return(res.out)
 
@@ -133,7 +150,7 @@ res.out<-list(theta=theta.old, em.mat=em.mat)
 
 
 eco.sem<-function(Y, X, data = parent.frame(),supplement=NULL, 
-      theta.old=c(0,0,1,0,1), theta.em=NULL,
+      theta.old=c(0,0,1,1,0), theta.em=NULL,
       R.convergence=0.001, iteration.max=50,
       n.draws = 10, by.draw=10, draw.max=200, printon=TRUE) {
 
@@ -201,6 +218,7 @@ eco.sem<-function(Y, X, data = parent.frame(),supplement=NULL,
   rowdiff<-rep(1, n.var)
 
   k<-1
+  theta.em.fish<-fisher(theta.em)
 
   Rconverge<-FALSE
 
@@ -215,6 +233,8 @@ while (!Rconverge && (k<iteration.max))
               PACKAGE="eco")
 
   theta.t<-res$pdTheta
+  theta.t.fish<-fisher(theta.t)
+
   #cat("\n theta.t \n")
   #print(theta.t)
   #theta.t.i<-rep(NA, n.var)
@@ -239,10 +259,10 @@ while (!Rconverge && (k<iteration.max))
 	      pdTheta=double(n.var),
               PACKAGE="eco")$pdTheta
 
+  temp.fish<-fisher(temp)
   for (j in 1:n.var)
   {
-    R.t2[i,j]<-(transform(temp)[j]-transform(theta.em)[j])/(transform(theta.t)[i]-transform(theta.em)[i])
-#    R.t2[i,j]<-(temp[j]-theta.em[j])/(theta.t[i]-theta.em[i])
+    R.t2[i,j]<-(temp.fish[j]-theta.em.fish[j])/(theta.t.fish[i]-theta.em.fish[i])
     rowdiff.temp<-max(abs(R.t2[i,j]-R.t1[i,j]), rowdiff.temp)    
     }   
    rowdiff[i]<-rowdiff.temp
@@ -272,7 +292,7 @@ cat("Mean:", "\n")
 print(theta.em[1:2])
 cat("\n")
 cat("Covarianace Matrix:", "\n")
-print(matrix(theta.em[c(3,4,4,5)],2,2))
+print(matrix(theta.em[c(3,5,5,4)],2,2))
 cat("DM matrix:", "\n")
 print(R.t2)
 
