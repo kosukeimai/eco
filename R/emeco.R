@@ -86,7 +86,7 @@ while ((cdiff > convergence) && (i<iteration.max))
   cat(theta.old)
   }
   i<-i+1
-  if (draw<=draw.max) draw<-draw+10
+  if (draw<=draw.max) draw<-draw+50
 }
 
 #  theta<-list(mu=c(theta.old[1], theta.old[2]), Sigma=matrix(theta.old[c(3,4,4,5)], 2,2))
