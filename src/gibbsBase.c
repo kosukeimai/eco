@@ -2,6 +2,7 @@
 #include <stdio.h>      
 #include <math.h>
 #include <Rmath.h>
+#include <R_ext/Utils.h>
 #include "vector.h"
 #include "subroutines.h"
 #include "rand.h"
@@ -55,7 +56,6 @@ void cBaseeco(
   double tau0 = *pdtau0;   
   int nth=*pinth;  
 
-  int data=0;            /* one to print the data */
   int keep=1;            /* keeps every #num draw */ 
   int n_cov=2;           /* The number of covariates */
 
@@ -158,12 +158,6 @@ void cBaseeco(
     for (i = 0; i < n_samp; i++) {
       X[i][j] = pdX[itemp++];
     }
-  if(data==1) { 
-    printf("Y X\n");
-    for(i=0;i<n_samp;i++)
-      printf("%5d%14g%14g\n",i,X[i][1],X[i][0]);
-    fflush(stdout);
-  }
 
   /* initialize W, Wstar for n_samp*/
   for (j=0; j<n_cov; j++)
@@ -207,14 +201,6 @@ void cBaseeco(
 	W[(n_samp+x1_samp+x0_samp+i)][j]=S_W[i][j];
 	Wstar[(n_samp+x1_samp+x0_samp+i)][j]=S_Wstar[i][j];
       }
-
-
-    if(data==1) { 
-      printf("survey W1 W2 W1* W2*\n");
-      for(i=0;i<(n_samp+s_samp+x1_samp+x0_samp);i++)
-	printf("%5d%14g%14g%14g%14g\n",i,W[i][0],W[i][1],Wstar[i][0], Wstar[i][1]);
-      fflush(stdout);
-    }
   }
 
   itempA=0; /* counter for alpha */
@@ -448,8 +434,9 @@ void cBaseeco(
     } /*end of stroage *burn_in*/
     if ((*verbose==1) && (ftrunc(main_loop/10000)*10000==main_loop))
       {
-        printf("iteration  ");
-        printf("%5d\n", main_loop);
+        Rprintf("iteration  ");
+        Rprintf("%5d\n", main_loop);
+	R_FlushConsole();
       }
 
   } /*end of MCMC for normal */ 

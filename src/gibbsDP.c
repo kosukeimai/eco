@@ -2,6 +2,7 @@
 #include <stdio.h>      
 #include <math.h>
 #include <Rmath.h>
+#include <R_ext/Utils.h>
 #include "vector.h"
 #include "subroutines.h"
 #include "rand.h"
@@ -248,13 +249,6 @@ void cDPeco(
 
   }
 
-  if(data==1) {
-    printf("survey W1 W2 W1* W2*\n");
-    for(i=0;i<t_samp;i++)
-      printf("%5d%14g%14g%14g%14g\n",i,W[i][0],W[i][1],Wstar[i][0], Wstar[i][1]);
-    fflush(stdout);
-  }
-
   itempA=0; /* counter for alpha */
   itempS=0; /* counter for storage */
   itempC=0; /* counter to control nth draw */
@@ -298,12 +292,6 @@ void cDPeco(
     }
   }
 
-  if(data==1) {
-    printf("Y X minW1  maxW1\n");
-    for(i=0;i<n_samp;i++)
-      printf("%5d%14g%14g%14g%14g\n",i,X[i][1],X[i][0], minW1[i], maxW1[i]);
-    fflush(stdout);
-  }
   /* parmeters for Bivaraite t-distribution-unchanged in MCMC */
   for (j=0;j<n_cov;j++)
     for(k=0;k<n_cov;k++)
@@ -359,13 +347,6 @@ void cDPeco(
         }
 	for (j=0;j<n_grid[i];j++)
           prob_grid_cum[j]/=dtemp; /*standardize prob.grid */
-        /*
-        printf("\nmu0 mu1 sigma1 sigma2\n");
-        printf("%5d%14g%14g%14g%14g\n", i, mu[i][0], mu[i][1],InvSigma[i][0][0], InvSigma[i][1][1]);
-        if (i<1){
-        printf("\ncum prob dist\n");
-        for (j=0; j<n_grid[i]; j++)
-        printf("%14g", prob_grid_cum[j]); }*/
 	/*2 sample W_i on the ith tomo line */
         /*3 compute Wsta_i from W_i*/
         j=0;
@@ -373,8 +354,6 @@ void cDPeco(
         while ((dtemp > prob_grid_cum[j]) && (j<(n_grid[i]-1))) j++;
         W[i][0]=W1g[i][j];
         W[i][1]=W2g[i][j];
-        /*      printf("\nW1 W2 draws\n");
-                printf("%5d%14g%14g\n",i, W[i][0], W[i][1]);*/
       }
       /*      if (*link==1) {*/
       Wstar[i][0]=log(W[i][0])-log(1-W[i][0]);
@@ -395,7 +374,6 @@ void cDPeco(
     for (i=0; i<x1_samp; i++) {
       dtemp=mu[n_samp+i][1]+Sigma[n_samp+i][0][1]/Sigma[n_samp+i][0][0]*(Wstar[n_samp+i][0]-mu[n_samp+i][0]);
       dtemp1=Sigma[n_samp+i][1][1]*(1-Sigma[n_samp+i][0][1]*Sigma[n_samp+i][0][1]/(Sigma[n_samp+i][0][0]*Sigma[n_samp+i][1][1]));
-      /* printf("\n%14g%14g\n", dtemp, dtemp1);*/
       /*dtemp1=sqrt(dtemp1);
 	Wstar[n_samp+i][1]=rnorm(dtemp, dtemp1);*/
       Wstar[n_samp+i][1]=norm_rand()*sqrt(dtemp1)+dtemp;
@@ -612,8 +590,9 @@ void cDPeco(
   }
   if ((*verbose==1) && (ftrunc(main_loop/10000)*10000==main_loop))
     {
-      printf("iteration  ");
-      printf("%5d\n", main_loop);
+      Rprintf("iteration  ");
+      Rprintf("%5d\n", main_loop);
+      R_FlushConsole();
     }
   } /*end of MCMC for DP*/
 
