@@ -118,9 +118,8 @@ eco.em <- function(Y, X, data = parent.frame(),supplement=NULL,
   em.converge<-TRUE
 
   if (printon) {
-  cat("\ni=  ", i,  "\n")
-  #cat(theta.old)
-  cat(temp)
+  cat(i, " ")
+  cat(temp, "\n")
   }
 
  if (Fisher) {
@@ -367,7 +366,7 @@ while (!Rconverge && (k<iteration.max))
 
   theta.old<-theta.t
   if (printon) {
-  cat("\nk=  ", k, "  rowdiff=:\n")
+  cat("k=", k, "\n")
   print(rowdiff)
 
   R.t1<-R.t2
