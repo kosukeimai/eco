@@ -56,7 +56,7 @@ eco <- function(Y, X, data = parent.frame(), n.draws = 5000, nonpar =
     W.post <- cbind(matrix(res$pdSW1, n.a, unit.w, byrow=T),
                     matrix(res$pdSW2, n.a, unit.w, byrow=T))
     W.pred <- cbind(matrix(res$pdSWt1, n.a, unit.w, byrow=T),
-                    matrix(res$pdSWt2, n.a, unit.w, byrow=T) 
+                    matrix(res$pdSWt2, n.a, unit.w, byrow=T)) 
     colnames(W.post) <- colnames(W.pred) <- c("W1", "W2")
     a.post <- matrix(res$pdSa, n.a, unit.a, byrow=T)
     nstar <- matrix(res$pdSn, n.a, unit.a, byrow=T)
