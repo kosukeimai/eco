@@ -2,8 +2,7 @@
   library.dynam("eco", pkg, lib)
 
 
-#eco <- function(Y, X, data = parent.frame(), 
-eco <- function(Y, X,  
+eco <- function(Y, X, data = parent.frame(), 
 		n.draws = 5000, burnin = 0, thin = 5, verbose = FALSE,
 		nonpar =  TRUE, nu0 = 4, tau0 = 1, mu0 = c(0,0),
                 S0 = diag(10,2), 
@@ -24,14 +23,15 @@ eco <- function(Y, X,
   if (burnin >= n.draws)
     stop("Error: n.draws should be larger than burnin")
 
-#  if (dim(supplement)[1] != 2) stop("Error: use n by 2 matrix for survey data")
-###?????? 
-#  m <- match.call()
-#  ff <- as.formula(paste(m$Y, "~ -1 +", m$X))
-#  if (is.matrix(eval.parent(m$data)))
-#    data <- as.data.frame(data)
-#  X <- model.matrix(ff, data)
-#  Y <- model.response(model.frame(ff, data=data))
+  if ((dim(supplement)[2] != 2) && (length(supplement)>0)) stop("Error: use n by 2 matrix for survey data")
+
+  m <- match.call()
+  ff <- as.formula(paste(m$Y, "~ -1 +", m$X))
+  if (is.matrix(eval.parent(m$data)))
+    data <- as.data.frame(data)
+  X <- model.matrix(ff, data)
+  Y <- model.response(model.frame(ff, data=data))
+
 ##############
 
 #alpha
