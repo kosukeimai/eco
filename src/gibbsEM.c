@@ -31,8 +31,12 @@ void cEMeco(
 	      int *sampx0,  /* number X=0 type areas */
 	      double *x0_W2, /* values of W_2 for X0 type areas */
 
+	      int *Iocrun, /*1 if last run converges, do one extra to compute S_stat */
 	      /* storage */
-	      double *pdTheta  /*EM result for Theta^(t+1) */
+	      double *pdTheta,  /*EM result for Theta^(t+1) */
+	      double *Suff    /*out put suffucient statistics (E(W_1i|Y_i), E(E_1i*W_1i|Y_i..) 
+				when  conveges */
+
 	      ){	   
   
   int n_samp = *pin_samp;    /* sample size */
@@ -391,7 +395,9 @@ void cEMeco(
   for (j=0; j<5; j++) 
     {
       pdTheta[j]=0;
+      Suff[j]=0;
     }  
+
 
   for (i=0; i<t_samp; i++)
     {
@@ -403,8 +409,21 @@ void cEMeco(
   for(i=0; i<t_samp; i++)
     {
       pdTheta[2]+=(Wstar[i][2]-2*Wstar[i][0]*pdTheta[0]+pdTheta[0]*pdTheta[0])/t_samp;  /*sigma11*/
-      pdTheta[4]+=(Wstar[i][3]-Wstar[i][0]*pdTheta[1]-Wstar[i][1]*pdTheta[0]+pdTheta[0]*pdTheta[1])/t_samp; /*sigma12*/
       pdTheta[3]+=(Wstar[i][4]-2*Wstar[i][1]*pdTheta[1]+pdTheta[1]*pdTheta[1])/t_samp;  /*sigma22*/
+      pdTheta[4]+=(Wstar[i][3]-Wstar[i][0]*pdTheta[1]-Wstar[i][1]*pdTheta[0]+pdTheta[0]*pdTheta[1])/t_samp; /*sigma12*/
+    }
+
+  if (*Iocrun) 
+    {
+      Suff[0]=pdTheta[0]*t_samp;
+      Suff[1]=pdTheta[1]*t_samp;
+      for (i=0; i<t_samp; i++)
+	{
+	  Suff[2]+=Wstar[i][2];
+	  Suff[3]+=Wstar[i][3];
+	  Suff[4]+=Wstar[i][4];
+	}
+
     }
 
   /*pdTheta[2]=log(pdTheta[2]);
