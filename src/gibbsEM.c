@@ -451,8 +451,8 @@ void cEMeco(
     printf("converged!\n"); 
     d1=(w1-t_samp*pdTheta[0])/pdTheta[2]; 
     d2=(w2-t_samp*pdTheta[1])/pdTheta[3];
-    d11=(w11-2*pdTheta[0]*w1+t_samp*pdTheta[0]*pdTheta[0])/pdTheta[2]*pdTheta[2];
-    d22=(w22-2*pdTheta[1]*w2+t_samp*pdTheta[1]*pdTheta[1])/pdTheta[3]*pdTheta[3];
+    d11=(w11-2*pdTheta[0]*w1+t_samp*pdTheta[0]*pdTheta[0])/(pdTheta[2]*pdTheta[2]);
+    d22=(w22-2*pdTheta[1]*w2+t_samp*pdTheta[1]*pdTheta[1])/(pdTheta[3]*pdTheta[3]);
     d12=(w12-pdTheta[0]*w2-pdTheta[1]*w1+t_samp*pdTheta[0]*pdTheta[1])/(pdTheta[2]*pdTheta[3]);
 
     sig1=pdTheta[2];
