@@ -1,4 +1,3 @@
-
 eco <- function(Y, X, data = parent.frame(), 
 		n.draws = 5000, burnin = 0, thin = 5, verbose = FALSE,
 		nonpar =  TRUE, nu0 = 4, tau0 = 1, mu0 = c(0,0),
@@ -14,11 +13,6 @@ eco <- function(Y, X, data = parent.frame(),
     stop("Error: use n by 2 matrix for survey data")
   
   call <- match.call()
- # mf <- match.call(expand = FALSE)
- # mf$n.draws <- mf$burnin <- mf$thin <- mf$verbose <- mf$nonpar<-mf$nu0 <- mf$tau0 <- mf$mu0 <- mf$S0 <- mf$supplement <- mf$alpha <- mf$a0 <- mf$b0 <- mf$predict <- mf$parameter <-NULL
- # mf[[1]] <- as.name("model.frame.default")
- #  mf$na.action <- 'na.pass'
- # mf <- eval.parent(mf)
 
   ff <- as.formula(paste(call$Y, "~ -1 +", call$X))
   if (is.matrix(eval.parent(call$data)))
@@ -123,27 +117,30 @@ eco <- function(Y, X, data = parent.frame(),
                       burnin=burnin, thin=thin, X=X, Y=Y, nu0=nu0, tau0=tau0, mu0=mu0,
                       S0=S0, a0=a0, b0=b0, call=call,
                       mu1.post=mu1.post, mu2.post=mu2.post, 
-                      Sigma11.post=Sigma11.post, Sigma12.post=Sigma12.post, Sigma22.post=Sigma22.post,
-                      W1.post=W1.post, W2.post=W2.post, W1.pred=W1.pred, W2.pred=W2.pred, a.post=a.post, nstar=nstar)   
+                      Sigma11.post=Sigma11.post,
+                      Sigma12.post=Sigma12.post, Sigma22.post=Sigma22.post, 
+                      W1.post=W1.post, W2.post=W2.post,
+                      W1.pred=W1.pred, W2.pred=W2.pred, a.post=a.post, nstar=nstar)    
     else if (parameter && !predict) 
       res.out <- list(model="Dirichlet Process Prior", alpha=alpha,
                       burnin=burnin, thin=thin, X=X, Y=Y, nu0=nu0, tau0=tau0, mu0=mu0,
                       S0=S0, a0=a0, b0=b0, call=call,
                       mu1.post=mu1.post, mu2.post=mu2.post, 
-                      Sigma11.post=Sigma11.post, Sigma12.post=Sigma12.post, Sigma22.post=Sigma22.post,
+                      Sigma11.post=Sigma11.post,
+                      Sigma12.post=Sigma12.post, Sigma22.post=Sigma22.post, 
                       W1.post=W1.post, W2.post=W2.post, a.post=a.post, nstar=nstar)   
     else if (!parameter && predict) 
       res.out <- list(model="Dirichlet Process Prior", alpha=alpha,
                       burnin=burnin, thin=thin, X=X, Y=Y, nu0=nu0, tau0=tau0, mu0=mu0,
                       S0=S0, a0=a0, b0=b0, call=call,
-                      W1.post=W1.post, W2.post=W2.post, W1.pred=W1.pred, W2.pred=W2.pred, a.post=a.post, nstar=nstar) 
+                      W1.post=W1.post, W2.post=W2.post,
+                      W1.pred=W1.pred, W2.pred=W2.pred, a.post=a.post, nstar=nstar)  
     else if (!parameter && !predict) 
       res.out <- list(model="Dirichlet Process Prior", alpha=alpha,
                       burnin=burnin, thin=thin, X=X, Y=Y, nu0=nu0, tau0=tau0, mu0=mu0,
                       S0=S0, a0=a0, b0=b0, call=call,
                       W1.post=W1.post, W2.post=W2.post, a.post=a.post, nstar=nstar)     
   }	 
-  
   else{ # parametric model
     n.a <- floor((n.draws-burnin)/thin)
     n.par <- n.a
@@ -165,26 +162,22 @@ eco <- function(Y, X, data = parent.frame(),
               pdSSig01=double(n.par), pdSSig11=double(n.par),
               pdSW1=double(n.w), pdSW2=double(n.w), 
               pdSWt1=double(n.w), pdSWt2=double(n.w), PACKAGE="eco")
-    print("ok1")
-    
+
     if (parameter) {
       mu.post <- cbind(matrix(res$pdSMu0, n.a, unit.par, byrow=TRUE),
-                     matrix(res$pdSMu1, n.a, unit.par, byrow=TRUE)) 
+                       matrix(res$pdSMu1, n.a, unit.par, byrow=TRUE)) 
       colnames(mu.post) <- c("mu1", "mu2")
       Sigma.post <- cbind(matrix(res$pdSSig00, n.a, unit.par, byrow=TRUE), 
                           matrix(res$pdSSig01, n.a, unit.par, byrow=TRUE),
                           matrix(res$pdSSig11, n.a, unit.par, byrow=TRUE))
       colnames(Sigma.post) <- c("Sigma11", "Sigma12", "Sigma22")
     }
-        print("ok2")
     W1.post <- matrix(res$pdSW1, n.a, unit.w, byrow=TRUE)[,order.old]
     W2.post <- matrix(res$pdSW2, n.a, unit.w, byrow=TRUE)[,order.old]
-        print("ok3")
     if (predict) {
       W1.pred <- matrix(res$pdSWt1, n.a, unit.w, byrow=TRUE)[,order.old]
       W2.pred <- matrix(res$pdSWt2, n.a, unit.w, byrow=TRUE)[,order.old] 
     }
-        print("ok4")
     
     if (parameter && predict)
       res.out <- list(model="Normal prior", burnin=burnin, thin = thin, X=X, Y=Y,
