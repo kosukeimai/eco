@@ -1,9 +1,11 @@
 ecoX <- function(Y, X, data = parent.frame(), 
+		 Z = NULL, 
 		n.draws = 5000, burnin = 0, thin = 5, verbose = TRUE,
-		nonpar =  TRUE, nu0 = 4, tau0 = 1, mu0 = c(0,0),
-                S0 = diag(8,2), supplement=NULL,
+		nonpar =  TRUE, nu0 = 4, S0 = diag(10,2), 
+		beta0 = NULL, A0 = NULL,		
+		supplement=NULL,
 	        alpha = NULL, a0 = 1, b0 = 0.1,
-                predict = FALSE, parameter = FALSE, contextual=TRUE){ 
+                predict = FALSE, parameter = FALSE, contextual.effect="no"){ 
 
   ## checking inputs
   if (burnin >= n.draws)
@@ -11,7 +13,19 @@ ecoX <- function(Y, X, data = parent.frame(),
   
   if ((dim(supplement)[2] != 2) && (length(supplement)>0))
     stop("Error: use n by 2 matrix for survey data")
-  
+   
+  if (contextual.effect=="indirect") {
+  if (!is.null(beta0))
+   if (length(beta0)!=dim(Z)[2]*2)
+    stop("Error: dimension of b0 should be 2*dim(Z)[2]")
+
+  if (!is.null(A0))
+    if (dim(A0)[2]!=dim(Z)[2]*2)
+    stop("Error: dimension of A0 should be 2*dim(Z)[2]")
+}
+  if (contextual.effect=="direct")
+    if (dim(S0)[2]!=3) stop("Error: dimension of S0 should be 3")
+
   call <- match.call()
 
   ff <- as.formula(paste(call$Y, "~ -1 +", call$X))
@@ -72,7 +86,7 @@ ecoX <- function(Y, X, data = parent.frame(),
   ## fitting the model
   n.samp <- length(Y.use)	 
   d <- cbind(X.use, Y.use)
-if (!contextual) {
+if (contextual.effect=="no") {
   if (nonpar){	# nonparametric model
     n.a <- floor((n.draws-burnin)/thin)
     n.par <- n.a * (n.samp+samp.X1+samp.X0) 
@@ -80,10 +94,12 @@ if (!contextual) {
     unit.a <- 1
     unit.par <- (n.samp+samp.X1+samp.X0) 
     unit.w <- (n.samp+samp.X1+samp.X0) 	
+    if (is.null(beta0)) beta0<-c(0,0)
+    if (is.null(A0)) A0<-2
     res <- .C("cDPeco", as.double(d), as.integer(n.samp),
 	      as.integer(n.draws), as.integer(burnin), as.integer(thin),
 	      as.integer(verbose),
-	      as.integer(nu0), as.double(tau0), as.double(mu0), as.double(S0),
+	      as.integer(nu0), as.double(A0), as.double(beta0), as.double(S0),
               as.double(alpha), as.integer(alpha.update), 
 	      as.double(a0), as.double(b0),
 	      as.integer(survey.yes), as.integer(survey.samp), as.double(survey.data),
@@ -114,7 +130,7 @@ if (!contextual) {
     
     if (parameter && predict) 
       res.out <- list(model="Dirichlet Process Prior", alpha=alpha,
-                      burnin=burnin, thin=thin, X=X, Y=Y, nu0=nu0, tau0=tau0, mu0=mu0,
+                      burnin=burnin, thin=thin, X=X, Y=Y, nu0=nu0, A0=A0, beta0=beta0,
                       S0=S0, a0=a0, b0=b0, call=call,
                       mu1.post=mu1.post, mu2.post=mu2.post, 
                       Sigma11.post=Sigma11.post,
@@ -123,7 +139,7 @@ if (!contextual) {
                       W1.pred=W1.pred, W2.pred=W2.pred, a.post=a.post, nstar=nstar)    
     else if (parameter && !predict) 
       res.out <- list(model="Dirichlet Process Prior", alpha=alpha,
-                      burnin=burnin, thin=thin, X=X, Y=Y, nu0=nu0, tau0=tau0, mu0=mu0,
+                      burnin=burnin, thin=thin, X=X, Y=Y, nu0=nu0, A0=A0, beta=beta0,
                       S0=S0, a0=a0, b0=b0, call=call,
                       mu1.post=mu1.post, mu2.post=mu2.post, 
                       Sigma11.post=Sigma11.post,
@@ -131,13 +147,13 @@ if (!contextual) {
                       W1.post=W1.post, W2.post=W2.post, a.post=a.post, nstar=nstar)   
     else if (!parameter && predict) 
       res.out <- list(model="Dirichlet Process Prior", alpha=alpha,
-                      burnin=burnin, thin=thin, X=X, Y=Y, nu0=nu0, tau0=tau0, mu0=mu0,
+                      burnin=burnin, thin=thin, X=X, Y=Y, nu0=nu0, A0=A0, beta0=beta0,
                       S0=S0, a0=a0, b0=b0, call=call,
                       W1.post=W1.post, W2.post=W2.post,
                       W1.pred=W1.pred, W2.pred=W2.pred, a.post=a.post, nstar=nstar)  
     else if (!parameter && !predict) 
       res.out <- list(model="Dirichlet Process Prior", alpha=alpha,
-                      burnin=burnin, thin=thin, X=X, Y=Y, nu0=nu0, tau0=tau0, mu0=mu0,
+                      burnin=burnin, thin=thin, X=X, Y=Y, nu0=nu0, A0=A0, beta0=beta0,
                       S0=S0, a0=a0, b0=b0, call=call,
                       W1.post=W1.post, W2.post=W2.post, a.post=a.post, nstar=nstar)     
   }	 
@@ -148,10 +164,12 @@ if (!contextual) {
     unit.a <- 1
     unit.par <- 1
     unit.w <- (n.samp+samp.X1+samp.X0) 	
+    if (is.null(beta0)) beta0<-c(0,0)
+    if (is.null(A0)) A0<-2
     res <- .C("cBaseeco", as.double(d), as.integer(n.samp),
 	      as.integer(n.draws), as.integer(burnin), as.integer(thin),
 	      as.integer(verbose),
-              as.integer(nu0), as.double(tau0), as.double(mu0),
+              as.integer(nu0), as.double(A0), as.double(beta0),
               as.double(S0),
               as.integer(survey.yes), as.integer(survey.samp), as.double(survey.data),
    	      as.integer(X1type), as.integer(samp.X1), as.double(X1.W1),
@@ -181,37 +199,108 @@ if (!contextual) {
     
     if (parameter && predict)
       res.out <- list(model="Normal prior", burnin=burnin, thin = thin, X=X, Y=Y,
-                      nu0=nu0, tau0=tau0, mu0=mu0, S0=S0, call=call, mu.post=mu.post,
+                      nu0=nu0, A0=A0, beta0=beta0, S0=S0, call=call, mu.post=mu.post,
                       Sigma.post=Sigma.post, W1.post=W1.post, W2.post=W2.post,
                       W1.pred=W1.pred, W2.pred=W2.pred)
     else if (parameter && !predict)
       res.out <- list(model="Normal prior", burnin=burnin, thin = thin, X=X, Y=Y,
-                      nu0=nu0, tau0=tau0, mu0=mu0, S0=S0, call=call, mu.post=mu.post,
+                      nu0=nu0, A0=A0, beta0=beta0, S0=S0, call=call, mu.post=mu.post,
                       Sigma.post=Sigma.post, W1.post=W1.post, W2.post=W2.post)
     else if (!parameter && predict)
       res.out <- list(model="Normal prior", burnin=burnin, thin = thin, X=X, Y=Y,
-                      nu0=nu0, tau0=tau0, mu0=mu0, S0=S0, call=call,
+                      nu0=nu0, A0=A0, beta0=beta0, S0=S0, call=call,
                       W1.post=W1.post, W2.post=W2.post, 
                       W1.pred=W1.pred, W2.pred=W2.pred)
     else if (!parameter && !predict)
       res.out <- list(model="Normal prior", burnin=burnin, thin = thin, X=X, Y=Y,
-                      nu0=nu0, tau0=tau0, mu0=mu0, S0=S0, 
+                      nu0=nu0, A0=A0, beta0=beta0, S0=S0, 
                       W1.post=W1.post, W2.post=W2.post)
     
   }
 }
 
-if (contextual && !nonpar)  {
+if (contextual.effect=="indirect") {
+  if (!nonpar) {
     n.a <- floor((n.draws-burnin)/thin)
     n.par <- n.a
     n.w <- n.a * (n.samp+samp.X1+samp.X0) 
     unit.a <- 1
     unit.par <- 1
     unit.w <- (n.samp+samp.X1+samp.X0) 	
+    Zmat<-Z%x%diag(1, 2)
+    print(Zmat)
+    Zp<-dim(Zmat)[2]
+    cat("Zp", Zp)
+    if (is.null(beta0)) beta0<-rep(0, Zp)
+    if (is.null(A0)) A0<-diag(0.01, Zp)
+    print(beta0)
+    print(A0)
+    n.a.b<-n.a*Zp
+    n.a.V<-n.a*3
+    res <- .C("cBaseecoZ", as.double(d),
+		as.double(Zmat), as.integer(Zp),  
+		as.integer(n.samp),
+	      as.integer(n.draws), as.integer(burnin), as.integer(thin),
+	      as.integer(verbose),
+              as.integer(nu0), as.double(S0),
+	      as.double(beta0), as.double(A0),
+              as.integer(survey.yes), as.integer(survey.samp), as.double(survey.data),
+   	      as.integer(X1type), as.integer(samp.X1), as.double(X1.W1),
+   	      as.integer(X0type), as.integer(samp.X0), as.double(X0.W2),
+	      as.integer(predict), as.integer(parameter), 
+	      pdSBeta=double(n.a.b),
+              pdSSigma=double(n.a.V),
+              pdSW1=double(n.w), pdSW2=double(n.w), 
+              pdSWt1=double(n.w), pdSWt2=double(n.w), PACKAGE="eco")
+
+    if (parameter) {
+      beta.post <- matrix(res$pdSBeta, n.a, Zp, byrow=TRUE) 
+      Sigma.post <- matrix(res$pdSSigma, n.a, 3, byrow=TRUE)
+      colnames(Sigma.post) <- c("Sigma11", "Sigma12", "Sigma22")
+    }
+    W1.post <- matrix(res$pdSW1, n.a, unit.w, byrow=TRUE)[,order.old]
+    W2.post <- matrix(res$pdSW2, n.a, unit.w, byrow=TRUE)[,order.old]
+    if (predict) {
+      W1.pred <- matrix(res$pdSWt1, n.a, unit.w, byrow=TRUE)[,order.old]
+      W2.pred <- matrix(res$pdSWt2, n.a, unit.w, byrow=TRUE)[,order.old] 
+    }
+    
+    if (parameter && predict)
+      res.out <- list(model="Normal prior", burnin=burnin, thin = thin, X=X, Y=Y,
+                      nu0=nu0, A0=A0, beta0=beta0, S0=S0, call=call, beta.post=beta.post,
+                      Sigma.post=Sigma.post, W1.post=W1.post, W2.post=W2.post,
+                      W1.pred=W1.pred, W2.pred=W2.pred)
+    else if (parameter && !predict)
+      res.out <- list(model="Normal prior", burnin=burnin, thin = thin, X=X, Y=Y,
+                      nu0=nu0, A0=A0, beta0=beta0, S0=S0, call=call, beta.post=beta.post,
+                      Sigma.post=Sigma.post, W1.post=W1.post, W2.post=W2.post)
+    else if (!parameter && predict)
+      res.out <- list(model="Normal prior", burnin=burnin, thin = thin, X=X, Y=Y,
+                      nu0=nu0, A0=A0, beta0=beta0, S0=S0, call=call,
+                      W1.post=W1.post, W2.post=W2.post, 
+                      W1.pred=W1.pred, W2.pred=W2.pred)
+    else if (!parameter && !predict)
+      res.out <- list(model="Normal prior", burnin=burnin, thin = thin, X=X, Y=Y,
+                      nu0=nu0, A0=A0, beta0=beta0, S0=S0, 
+                      W1.post=W1.post, W2.post=W2.post)
+    
+  }
+}
+
+if (contextual.effect=="direct") {
+  if (!nonpar) {
+    n.a <- floor((n.draws-burnin)/thin)
+    n.par <- n.a
+    n.w <- n.a * (n.samp+samp.X1+samp.X0) 
+    unit.a <- 1
+    unit.par <- 1
+    unit.w <- (n.samp+samp.X1+samp.X0) 	
+    if (is.null(beta0)) beta0<-c(0,0,0)
+    if (is.null(A0)) A0<-2
     res <- .C("cBaseecoX", as.double(d), as.integer(n.samp),
 	      as.integer(n.draws), as.integer(burnin), as.integer(thin),
 	      as.integer(verbose),
-              as.integer(nu0), as.double(tau0), as.double(mu0),
+              as.integer(nu0), as.double(A0), as.double(beta0),
               as.double(S0),
               as.integer(survey.yes), as.integer(survey.samp), as.double(survey.data),
    	      as.integer(X1type), as.integer(samp.X1), as.double(X1.W1),
@@ -249,24 +338,100 @@ if (contextual && !nonpar)  {
     
     if (parameter && predict)
       res.out <- list(model="Normal prior", burnin=burnin, thin = thin, X=X, Y=Y,
-                      nu0=nu0, tau0=tau0, mu0=mu0, S0=S0, call=call, mu.post=mu.post,
+                      nu0=nu0, A0=A0, beta0=beta0, S0=S0, call=call, mu.post=mu.post,
                       Sigma.post=Sigma.post, W1.post=W1.post, W2.post=W2.post,
                       W1.pred=W1.pred, W2.pred=W2.pred)
     else if (parameter && !predict)
       res.out <- list(model="Normal prior", burnin=burnin, thin = thin, X=X, Y=Y,
-                      nu0=nu0, tau0=tau0, mu0=mu0, S0=S0, call=call, mu.post=mu.post,
+                      nu0=nu0, A0=A0, beta0=beta0, S0=S0, call=call, mu.post=mu.post,
                       Sigma.post=Sigma.post, W1.post=W1.post, W2.post=W2.post)
     else if (!parameter && predict)
       res.out <- list(model="Normal prior", burnin=burnin, thin = thin, X=X, Y=Y,
-                      nu0=nu0, tau0=tau0, mu0=mu0, S0=S0, call=call,
+                      nu0=nu0, A0=A0, beta0=beta0, S0=S0, call=call,
                       W1.post=W1.post, W2.post=W2.post, 
                       W1.pred=W1.pred, W2.pred=W2.pred)
     else if (!parameter && !predict)
       res.out <- list(model="Normal prior", burnin=burnin, thin = thin, X=X, Y=Y,
-                      nu0=nu0, tau0=tau0, mu0=mu0, S0=S0, 
+                      nu0=nu0, A0=A0, beta0=beta0, S0=S0, 
                       W1.post=W1.post, W2.post=W2.post)
     
   }
+else if (nonpar) 
+{
+    n.a <- floor((n.draws-burnin)/thin)
+    n.par <- n.a * (n.samp+samp.X1+samp.X0) 
+    n.w <- n.a * (n.samp+samp.X1+samp.X0) 
+    unit.a <- 1
+    unit.par <- (n.samp+samp.X1+samp.X0) 
+    unit.w <- (n.samp+samp.X1+samp.X0) 	
+    if (is.null(beta0)) beta0<-c(0,0,0)
+    if (is.null(A0)) A0<-2
+    res <- .C("cDPecoX", as.double(d), as.integer(n.samp),
+	      as.integer(n.draws), as.integer(burnin), as.integer(thin),
+	      as.integer(verbose),
+	      as.integer(nu0), as.double(A0), as.double(beta0), as.double(S0),
+              as.double(alpha), as.integer(alpha.update), 
+	      as.double(a0), as.double(b0),
+	      as.integer(survey.yes), as.integer(survey.samp), as.double(survey.data),
+   	      as.integer(X1type), as.integer(samp.X1), as.double(X1.W1),
+   	      as.integer(X0type), as.integer(samp.X0), as.double(X0.W2),
+              as.integer(predict), as.integer(parameter),
+              pdSMu0=double(n.par), pdSMu1=double(n.par), pdSMu2=double(n.par),
+              pdSSig00=double(n.par), pdSSig01=double(n.par), pdSSig02=double(n.par),
+              pdSSig11=double(n.par), pdSSig12=double(n.par), pdSSig22=double(n.par),
+	      pdSW1=double(n.w), pdSW2=double(n.w), 
+	      pdSWt1=double(n.w), pdSWt2=double(n.w),
+	      pdSa=double(n.a), pdSn=integer(n.a), PACKAGE="eco")
+    if (parameter) {
+      mu1.post <- matrix(res$pdSMu0, n.a, unit.par, byrow=TRUE)[,order.old]
+      mu2.post <- matrix(res$pdSMu1, n.a, unit.par, byrow=TRUE)[,order.old]
+      mu3.post <- matrix(res$pdSMu2, n.a, unit.par, byrow=TRUE)[,order.old]
+      Sigma11.post <- matrix(res$pdSSig00, n.a, unit.par, byrow=TRUE)[,order.old]
+      Sigma12.post <- matrix(res$pdSSig01, n.a, unit.par, byrow=TRUE)[,order.old]
+      Sigma22.post <- matrix(res$pdSSig11, n.a, unit.par, byrow=TRUE)[,order.old]
+      Sigma13.post <- matrix(res$pdSSig02, n.a, unit.par, byrow=TRUE)[,order.old]
+      Sigma23.post <- matrix(res$pdSSig12, n.a, unit.par, byrow=TRUE)[,order.old]
+      Sigma33.post <- matrix(res$pdSSig22, n.a, unit.par, byrow=TRUE)[,order.old]
+    }
+    W1.post <- matrix(res$pdSW1, n.a, unit.w, byrow=TRUE)[,order.old]
+    W2.post <- matrix(res$pdSW2, n.a, unit.w, byrow=TRUE)[,order.old]
+    if (predict) {
+      W1.pred <- matrix(res$pdSWt1, n.a, unit.w, byrow=TRUE)[,order.old]
+      W2.pred <- matrix(res$pdSWt2, n.a, unit.w, byrow=TRUE) [,order.old]
+    }
+    a.post <- matrix(res$pdSa, n.a, unit.a, byrow=TRUE)
+    nstar <- matrix(res$pdSn, n.a, unit.a, byrow=TRUE)
+    
+    if (parameter && predict) 
+      res.out <- list(model="Dirichlet Process Prior", alpha=alpha,
+                      burnin=burnin, thin=thin, X=X, Y=Y, nu0=nu0, A0=A0, beta0=beta0,
+                      S0=S0, a0=a0, b0=b0, call=call,
+                      mu1.post=mu1.post, mu2.post=mu2.post, mu3.post=mu3.post, 
+                      Sigma11.post=Sigma11.post, Sigma12.post=Sigma12.post, Sigma13.post=Sigma13.post,  
+                      Sigma22.post=Sigma22.post, Sigma23.post=Sigma23.post, Sigma33.post=Sigma33.post,  
+                      W1.post=W1.post, W2.post=W2.post,
+                      W1.pred=W1.pred, W2.pred=W2.pred, a.post=a.post, nstar=nstar)    
+    else if (parameter && !predict) 
+      res.out <- list(model="Dirichlet Process Prior", alpha=alpha,
+                      burnin=burnin, thin=thin, X=X, Y=Y, nu0=nu0, A0=A0, beta=beta0,
+                      S0=S0, a0=a0, b0=b0, call=call,
+                      mu1.post=mu1.post, mu2.post=mu2.post, mu3.post=mu3.post, 
+                      Sigma11.post=Sigma11.post, Sigma12.post=Sigma12.post, Sigma13.post=Sigma13.post,  
+                      Sigma22.post=Sigma22.post, Sigma23.post=Sigma23.post, Sigma33.post=Sigma33.post,  
+                      W1.post=W1.post, W2.post=W2.post, a.post=a.post, nstar=nstar)   
+    else if (!parameter && predict) 
+      res.out <- list(model="Dirichlet Process Prior", alpha=alpha,
+                      burnin=burnin, thin=thin, X=X, Y=Y, nu0=nu0, A0=A0, beta0=beta0,
+                      S0=S0, a0=a0, b0=b0, call=call,
+                      W1.post=W1.post, W2.post=W2.post,
+                      W1.pred=W1.pred, W2.pred=W2.pred, a.post=a.post, nstar=nstar)  
+    else if (!parameter && !predict) 
+      res.out <- list(model="Dirichlet Process Prior", alpha=alpha,
+                      burnin=burnin, thin=thin, X=X, Y=Y, nu0=nu0, A0=A0, beta0=beta0,
+                      S0=S0, a0=a0, b0=b0, call=call,
+                      W1.post=W1.post, W2.post=W2.post, a.post=a.post, nstar=nstar)     
+}
+}
 
   class(res.out) <- "eco"
   return(res.out)

@@ -69,7 +69,7 @@ void cDPeco(
   double tau0 = *pdtau0;   
   double a0=*pda0, b0=*pdb0;  
   int nth=*pinth;  
-  int n_cov=2;           /* The number of covariates */
+  int n_dim=2;           /* The number of covariates */
 
   double **X;	    	 /* The Y and covariates */
   double **S0;           /* The prior S parameter for InvWish */
@@ -136,12 +136,12 @@ void cDPeco(
 
   /* defining vectors and matricies */
   /* data */
-  X=doubleMatrix(n_samp,n_cov);
-  W=doubleMatrix((n_samp+x1_samp+x0_samp+s_samp),n_cov);
-  Wstar=doubleMatrix((n_samp+x1_samp+x0_samp+s_samp),n_cov);
+  X=doubleMatrix(n_samp,n_dim);
+  W=doubleMatrix((n_samp+x1_samp+x0_samp+s_samp),n_dim);
+  Wstar=doubleMatrix((n_samp+x1_samp+x0_samp+s_samp),n_dim);
 
-  S_W=doubleMatrix(s_samp,n_cov);
-  S_Wstar=doubleMatrix(s_samp,n_cov);
+  S_W=doubleMatrix(s_samp,n_dim);
+  S_Wstar=doubleMatrix(s_samp,n_dim);
 
 
   /* bounds */
@@ -151,11 +151,11 @@ void cDPeco(
   resid=doubleArray(n_samp);
 
   /*priors*/
-  S0=doubleMatrix(n_cov,n_cov);
+  S0=doubleMatrix(n_dim,n_dim);
 
   /*posteriors*/
-  Sn=doubleMatrix(n_cov,n_cov);
-  mun=doubleArray(n_cov); 
+  Sn=doubleMatrix(n_dim,n_dim);
+  mun=doubleArray(n_dim); 
 
   /*bounds condition */
   W1g=doubleMatrix(n_samp, n_step);
@@ -164,31 +164,31 @@ void cDPeco(
   prob_grid_cum=doubleArray(n_step);
 
   /*Dirichlet variables*/
-  Sigma=doubleMatrix3D((n_samp+x1_samp+x0_samp+s_samp),n_cov,n_cov);
-  InvSigma=doubleMatrix3D((n_samp+x1_samp+x0_samp+s_samp),n_cov,n_cov);
-  mu=doubleMatrix((n_samp+x1_samp+x0_samp+s_samp),n_cov);
+  Sigma=doubleMatrix3D((n_samp+x1_samp+x0_samp+s_samp),n_dim,n_dim);
+  InvSigma=doubleMatrix3D((n_samp+x1_samp+x0_samp+s_samp),n_dim,n_dim);
+  mu=doubleMatrix((n_samp+x1_samp+x0_samp+s_samp),n_dim);
 
   C=intArray((n_samp+x1_samp+x0_samp+s_samp));
   q=doubleArray((n_samp+x1_samp+x0_samp+s_samp));
   qq=doubleArray((n_samp+x1_samp+x0_samp+s_samp));
-  S_bvt=doubleMatrix(n_cov,n_cov);
+  S_bvt=doubleMatrix(n_dim,n_dim);
 
   sortC=intArray((n_samp+x1_samp+x0_samp+s_samp));
   indexC=intArray((n_samp+x1_samp+x0_samp+s_samp));
-  Wstarmix=doubleMatrix((n_samp+x1_samp+x0_samp+s_samp),n_cov);
-  Snj=doubleMatrix(n_cov,n_cov);
-  munj=doubleArray(n_cov);
+  Wstarmix=doubleMatrix((n_samp+x1_samp+x0_samp+s_samp),n_dim);
+  Snj=doubleMatrix(n_dim,n_dim);
+  munj=doubleArray(n_dim);
  
-  Wstar_bar=doubleArray(n_cov);
+  Wstar_bar=doubleArray(n_dim);
 
-  mu_mix=doubleArray(n_cov);
-  Sigma_mix=doubleMatrix(n_cov,n_cov);
-  InvSigma_mix=doubleMatrix(n_cov,n_cov);
+  mu_mix=doubleArray(n_dim);
+  Sigma_mix=doubleMatrix(n_dim,n_dim);
+  InvSigma_mix=doubleMatrix(n_dim,n_dim);
   label=intArray((n_samp+x1_samp+x0_samp+s_samp));
 
-  vtemp=doubleArray(n_cov);
-  mtemp=doubleMatrix(n_cov,n_cov);
-  mtemp1=doubleMatrix(n_cov,n_cov);
+  vtemp=doubleArray(n_dim);
+  mtemp=doubleMatrix(n_dim,n_dim);
+  mtemp1=doubleMatrix(n_dim,n_dim);
 
 
   t_samp=n_samp+x1_samp+x0_samp+s_samp;
@@ -196,15 +196,15 @@ void cDPeco(
   /* read the data set */
   /** Packing Y, X  **/
   itemp = 0;
-  for (j = 0; j < n_cov; j++) 
+  for (j = 0; j < n_dim; j++) 
     for (i = 0; i < n_samp; i++) X[i][j] = pdX[itemp++];
 
   /* priors under G0*/
   itemp=0;
-  for(k=0;k<n_cov;k++)
-    for(j=0;j<n_cov;j++) S0[j][k]=pdS0[itemp++];
+  for(k=0;k<n_dim;k++)
+    for(j=0;j<n_dim;j++) S0[j][k]=pdS0[itemp++];
 
-  for (j=0; j<n_cov; j++)
+  for (j=0; j<n_dim; j++)
     for (i=0; i<n_samp; i++) {
       W[i][j]=0;
       Wstar[i][j]=0;
@@ -234,7 +234,7 @@ void cDPeco(
 
   if (*survey==1) {
     itemp = 0;
-    for (j=0; j<n_cov; j++)
+    for (j=0; j<n_dim; j++)
       for (i=0; i<s_samp; i++) {
         S_W[i][j]=sur_W[itemp++];
         if (S_W[i][j]==0) S_W[i][j]=0.0001;
@@ -290,22 +290,22 @@ void cDPeco(
   }
 
   /* parmeters for Bivaraite t-distribution-unchanged in MCMC */
-  for (j=0;j<n_cov;j++)
-    for(k=0;k<n_cov;k++)
+  for (j=0;j<n_dim;j++)
+    for(k=0;k<n_dim;k++)
       mtemp[j][k]=tau0*(nu0-1)*S0[j][k]/(1+tau0);
-  dinv(mtemp, n_cov, S_bvt);
+  dinv(mtemp, n_dim, S_bvt);
   /**draw initial values of mu_i, Sigma_i under G0  for all effective sample**/
   /*1. Sigma_i under InvWish(nu0, S0^-1) with E(Sigma)=S0/(nu0-3)*/
   /*   InvSigma_i under Wish(nu0, S0^-1 */
   /*2. mu_i|Sigma_i under N(mu0, Sigma_i/tau0) */
-  dinv(S0, n_cov, mtemp);
+  dinv(S0, n_dim, mtemp);
   for(i=0;i<t_samp;i++){
     /*draw from wish(nu0, S0^-1) */
-    rWish(InvSigma[i], mtemp, nu0, n_cov);
-    dinv(InvSigma[i], n_cov, Sigma[i]);
-    for (j=0;j<n_cov;j++)
-      for(k=0;k<n_cov;k++) mtemp1[j][k]=Sigma[i][j][k]/tau0;
-    rMVN(mu[i], mu0, mtemp1, n_cov);
+    rWish(InvSigma[i], mtemp, nu0, n_dim);
+    dinv(InvSigma[i], n_dim, Sigma[i]);
+    for (j=0;j<n_dim;j++)
+      for(k=0;k<n_dim;k++) mtemp1[j][k]=Sigma[i][j][k]/tau0;
+    rMVN(mu[i], mu0, mtemp1, n_dim);
   }
   /* initialize the cluster membership */
   nstar=t_samp;  /* the # of disticnt values */
@@ -419,26 +419,26 @@ void cDPeco(
 	 /*   draw InvSigma_i from Wish(nun, Sn^-1) */
 	 /*2. draw mu_i from N(mun, Sigma_i) with Sigma_i/=taun */
 	 /*3. also update c[i]=nstar*/
-	 for (k=0; k<n_cov; k++)
-	   for (l=0; l<n_cov; l++)
+	 for (k=0; k<n_dim; k++)
+	   for (l=0; l<n_dim; l++)
 	     Sn[k][l]=S0[k][l]+tau0*(Wstar[i][k]-mu0[k])*(Wstar[i][l]-mu0[l])/(tau0+1);
-	 dinv(Sn, n_cov, mtemp);
-	 rWish(InvSigma[i], mtemp, nu0+1, n_cov);
-	 dinv(InvSigma[i], n_cov, Sigma[i]);
-	 for (k=0;k<n_cov;k++){
+	 dinv(Sn, n_dim, mtemp);
+	 rWish(InvSigma[i], mtemp, nu0+1, n_dim);
+	 dinv(InvSigma[i], n_dim, Sigma[i]);
+	 for (k=0;k<n_dim;k++){
 	   mun[k]=(tau0*mu0[k]+Wstar[i][k])/(tau0+1);
-	   for (l=0;l<n_cov;l++)  mtemp[k][l]=Sigma[i][k][l]/(tau0+1);
+	   for (l=0;l<n_dim;l++)  mtemp[k][l]=Sigma[i][k][l]/(tau0+1);
 	 }
-	 rMVN(mu[i], mun, mtemp, n_cov);
+	 rMVN(mu[i], mun, mtemp, n_dim);
 	 C[i]=nstar;
 	 nstar++;
        }
        else {
 	 /*1. mu_i=mu_j, Sigma_i=Sigma_j*/
 	 /*2. update C[i]=C[j] */
-	 for(k=0;k<n_cov;k++) {
+	 for(k=0;k<n_dim;k++) {
 	   mu[i][k]=mu[j][k];
-	   for(l=0;l<n_cov;l++) {
+	   for(l=0;l<n_dim;l++) {
 	     Sigma[i][k][l]=Sigma[j][k][l];
 	     InvSigma[i][k][l]=InvSigma[j][k][l];
 	   }
@@ -456,9 +456,9 @@ void cDPeco(
   i=0;
   while (i<t_samp){
     /*initialize the vector and matrix */
-    for(k=0; k<n_cov; k++) {
+    for(k=0; k<n_dim; k++) {
       Wstar_bar[k]=0;
-      for(l=0;l<n_cov;l++) Snj[k][l]=S0[k][l];
+      for(l=0;l<n_dim;l++) Snj[k][l]=S0[k][l];
     }
 
     j=sortC[i]; /*saves the first element in a block of same values */
@@ -467,7 +467,7 @@ void cDPeco(
     /* get data for remixing */
     while ((sortC[i]==j) && (i<t_samp)) {
       label[nj]=indexC[i];
-      for (k=0; k<n_cov; k++) {
+      for (k=0; k<n_dim; k++) {
 	Wstarmix[nj][k]=Wstar[label[nj]][k];
 	Wstar_bar[k]+=Wstarmix[nj][k];
       }
@@ -477,41 +477,41 @@ void cDPeco(
     /* nj records the # of obs in Psimix */
 
     /** posterior update for mu_mix, Sigma_mix based on Psimix **/
-    for (k=0; k<n_cov; k++)
+    for (k=0; k<n_dim; k++)
       Wstar_bar[k]/=nj;
     /* compute Snj */
     /*1. first two terms in Snj */
     /* Snj=S0 */
     for (j=0; j<nj; j++)
-      for (k=0; k<n_cov; k++)
-	for (l=0; l<n_cov; l++)
+      for (k=0; k<n_dim; k++)
+	for (l=0; l<n_dim; l++)
 	  Snj[k][l]+=(Wstarmix[j][k]-Wstar_bar[k])*(Wstarmix[j][l]-Wstar_bar[l]);
 
     /*2. plus third term in Snj*/
-    for (k=0;k<n_cov;k++)
-      for (l=0;l<n_cov;l++)
+    for (k=0;k<n_dim;k++)
+      for (l=0;l<n_dim;l++)
 	Snj[k][l]+=tau0*nj*(Wstar_bar[k]-mu0[k])*(Wstar_bar[l]-mu0[l])/(tau0+nj);
 
 
     /*darw unscaled InvSigma_mix ~Wish(Snj^-1) */
-    dinv(Snj, n_cov, mtemp);
-    rWish(InvSigma_mix, mtemp, nu0+nj, n_cov);
-    dinv(InvSigma_mix, n_cov, Sigma_mix);
+    dinv(Snj, n_dim, mtemp);
+    rWish(InvSigma_mix, mtemp, nu0+nj, n_dim);
+    dinv(InvSigma_mix, n_dim, Sigma_mix);
 
 
     /*2. draw mu_mix from N(munj, Sigma_mix) with Sigma_mix/=(tau0+nj) */
-    for (k=0; k<n_cov; k++){
+    for (k=0; k<n_dim; k++){
       munj[k]=(tau0*mu0[k]+nj*Wstar_bar[k])/(tau0+nj);
-      for (l=0; l<n_cov; l++)  mtemp[k][l]=Sigma_mix[k][l]/(tau0+nj);
+      for (l=0; l<n_dim; l++)  mtemp[k][l]=Sigma_mix[k][l]/(tau0+nj);
     }
-    rMVN(mu_mix, munj, mtemp, n_cov);
+    rMVN(mu_mix, munj, mtemp, n_dim);
 
     /**update mu, Simgat with mu_mix, Sigmat_mix via label**/
     for (j=0;j<nj;j++){
       C[label[j]]=nstar;  /*updating C vector with no gap */
-      for (k=0; k<n_cov; k++){
+      for (k=0; k<n_dim; k++){
 	mu[label[j]][k]=mu_mix[k];
-	for (l=0;l<n_cov;l++){
+	for (l=0;l<n_dim;l++){
 	  Sigma[label[j]][k][l]=Sigma_mix[k][l];
 	  InvSigma[label[j]][k][l]=InvSigma_mix[k][l];
 	}
@@ -557,7 +557,7 @@ void cDPeco(
 	pdSW2[itempS]=W[i][1];
 	/* Wstar prediction */
 	if (*pred) {
-	  rMVN(vtemp, mu[i], Sigma[i], n_cov);
+	  rMVN(vtemp, mu[i], Sigma[i], n_dim);
 	  /*  if (*link==1){ */
 	  pdSWt1[itempS]=exp(vtemp[0])/(exp(vtemp[0])+1);
 	  pdSWt2[itempS]=exp(vtemp[1])/(exp(vtemp[1])+1);
@@ -595,33 +595,33 @@ void cDPeco(
   free(maxW1);
   free(n_grid);
   free(resid);
-  FreeMatrix(S0, n_cov);
-  FreeMatrix(Sn, n_cov);
+  FreeMatrix(S0, n_dim);
+  FreeMatrix(Sn, n_dim);
   free(mun);
   FreeMatrix(W1g, n_samp);
   FreeMatrix(W2g, n_samp);
   free(prob_grid);
   free(prob_grid_cum);
-  Free3DMatrix(Sigma, t_samp,n_cov);
-  Free3DMatrix(InvSigma, t_samp, n_cov);
+  Free3DMatrix(Sigma, t_samp,n_dim);
+  Free3DMatrix(InvSigma, t_samp, n_dim);
   FreeMatrix(mu, t_samp);
   free(C);
   free(q);
   free(qq);
-  FreeMatrix(S_bvt, n_cov);
+  FreeMatrix(S_bvt, n_dim);
   free(sortC);
   free(indexC);
   FreeMatrix(Wstarmix, t_samp);
-  FreeMatrix(Snj, n_cov);
+  FreeMatrix(Snj, n_dim);
   free(munj);
   free(Wstar_bar);
   free(mu_mix);
-  FreeMatrix(Sigma_mix, n_cov);
-  FreeMatrix(InvSigma_mix, n_cov);
+  FreeMatrix(Sigma_mix, n_dim);
+  FreeMatrix(InvSigma_mix, n_dim);
   free(label);
   free(vtemp);
-  FreeMatrix(mtemp, n_cov);
-  FreeMatrix(mtemp1, n_cov);
+  FreeMatrix(mtemp, n_dim);
+  FreeMatrix(mtemp1, n_dim);
 
 } /* main */
 

@@ -1,68 +1,84 @@
+/******************************************************************
+  This file is a part of ECO: R Package for Estimating Fitting Bayesian 
+  Models of Ecological Inference for 2X2 tables
+  by Ying Lu and Kosuke Imai
+  Copyright: GPL version 2 or later.
+*******************************************************************/
+
 #include <stdio.h>
 #include <stdlib.h>
 #include <math.h>
-#include <Rmath.h> 
+#include <Rmath.h>
+#include <R_ext/Utils.h>
+#include <R.h>
 #include "vector.h"
 #include "subroutines.h"
 #include "rand.h"
 
+
 /* Multivariate Normal density */
 double dMVN(			
 	double *Y,		/* The data */
-	double *MEAN,		/* mean */
-	double **SIG_INV,       /* inverse of covariance matrix */ 
+	double *MEAN,		/* The parameters */
+	double **SIGMA,         /* covariance matrix */	
 	int dim,                /* dimension */
 	int give_log){          /* 1 if log_scale 0 otherwise */
   
   int j,k;
-  double value=0;
+  double value=0.0;
+  double **SIG_INV = doubleMatrix(dim, dim);
   
+  dinv(SIGMA, dim, SIG_INV);
   for(j=0;j<dim;j++){
     for(k=0;k<j;k++)
       value+=2*(Y[k]-MEAN[k])*(Y[j]-MEAN[j])*SIG_INV[j][k];
     value+=(Y[j]-MEAN[j])*(Y[j]-MEAN[j])*SIG_INV[j][j];
   }
-  value=-0.5*value - 0.5*dim*log(2*M_PI)+0.5*log(ddet(SIG_INV, dim));
+
+  value=-0.5*value-0.5*dim*log(2*M_PI)-0.5*ddet(SIGMA, dim, 1);
+
+  FreeMatrix(SIG_INV, dim);
 
   if(give_log)  
+    return(value);
+  else
+    return(exp(value));
+
+}
+
+/* the density of Multivariate T-distribution */
+double dMVT(
+            double *Y,          /* The data */
+            double *MEAN,       /* mean */
+            double **SIG_INV,   /* inverse of scale matrix */
+            int nu,             /* Degrees of freedom */
+            int dim,            /* dimension */
+            int give_log)       /* 1 if log_scale 0 otherwise */
+{
+  int j,k;
+  double value=0;
+
+  for(j=0;j<dim;j++){
+    for(k=0;k<j;k++)
+      value+=2*(Y[k]-MEAN[k])*(Y[j]-MEAN[j])*SIG_INV[j][k];
+    value+=(Y[j]-MEAN[j])*(Y[j]-MEAN[j])*SIG_INV[j][j];
+  }
+
+  value=0.5*ddet(SIG_INV, dim,1) - 0.5*dim*(log((double)nu)+log(M_PI)) -
+    0.5*((double)dim+nu)*log(1+value/(double)nu) +
+    lgammafn(0.5*(double)(nu+dim)) - lgammafn(0.5*(double)nu);
+
+  if(give_log)
     return(value);
   else
     return(exp(value));
 }
 
 
-/* the density of Multivariate T-distribution */ 
-double dMVT(			
-	    double *Y,		/* The data */ 
-	    double *MEAN,	/* mean */ 
-	    double **SIG_INV,   /* inverse of scale matrix */
-	    int nu,             /* Degrees of freedom */
-	    int dim,            /* dimension */
-	    int give_log) 	/* 1 if log_scale 0 otherwise */
-{ 
-  int j,k;
-  double value=0; 
-
-  for(j=0;j<dim;j++){ 
-    for(k=0;k<j;k++) 
-      value+=2*(Y[k]-MEAN[k])*(Y[j]-MEAN[j])*SIG_INV[j][k]; 
-    value+=(Y[j]-MEAN[j])*(Y[j]-MEAN[j])*SIG_INV[j][j]; 
-  } 
-  
-  value=0.5*log(ddet(SIG_INV, dim)) - 0.5*dim*(log((double)nu)+log(M_PI)) - 
-    0.5*((double)dim+nu)*log(1+value/(double)nu) + 
-    lgammafn(0.5*(double)(nu+dim)) - lgammafn(0.5*(double)nu);   
-  
-  if(give_log)
-    return(value);
-  else
-    return(exp(value));
-} 
-
-
-/* Sample from a univariate truncated Normal distribution: 
+/* Sample from a univariate truncated Normal distribution 
+   (truncated both from above and below): 
    if the range is too far from mu, it uses standard rejection
-   sampling algorithm with exponential envleope function. */ 
+   sampling algorithm with exponential envelope function. */ 
 double TruncNorm(
 		 double lb,  /* lower bound */ 
 		 double ub,  /* upper bound */
@@ -75,10 +91,8 @@ double TruncNorm(
   
   stlb = (lb-mu)/sqrt(var);  /* standardized lower bound */
   stub = (ub-mu)/sqrt(var);  /* standardized upper bound */
-  if(stlb >= stub){
-    printf("error in TurncNorm: lower bound is greater than upper bound\n");
-    exit(1);
-  }
+  if(stlb >= stub)
+    error("TurncNorm: lower bound is greater than upper bound\n");
   if(stub<=-2){
     flag=1;
     temp=stub;
@@ -137,35 +151,6 @@ void rMVN(
   }
   
   FreeMatrix(Model,size+1);
-}
-
-
-/* Sample from a wish dist using the multivariate Normal dist */
-void rwish(                  
-	   double **Sample,        /* The matrix with to hold the sample */
-	   double **S,             /* The parameter */
-	   int df,                 /* the degrees of freedom */
-	   int size)               /* The dimension */
-{
-  int i,j,k;
-  double *mean = doubleArray(size);
-  double **MVNdraws = doubleMatrix(df, size);
-  
-  for(j=0;j<size;j++){
-    mean[j]=0;
-    for(k=0;k<size;k++) Sample[j][k]=0;
-  }
-
-  for(i=0;i<df;i++)
-    rMVN(MVNdraws[i], mean, S, size);
-
-  for(i=0;i<df;i++)
-    for(j=0;j<size;j++)
-      for(k=0;k<size;k++)
-	Sample[j][k]+=MVNdraws[i][j]*MVNdraws[i][k];
-  
-  free(mean);
-  FreeMatrix(MVNdraws, df);
 }
 
 
