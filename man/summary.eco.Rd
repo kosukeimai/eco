@@ -40,9 +40,10 @@
 \seealso{\code{eco}}
 
 \author{
-  Kosuke Imai, Department of Politics, Princeton University
-  \email{kimai@Princeton.Edu}, 
-  Ying Lu, Woodrow Wilson School of International and Public Affairs, Princeton University \email{yinglu@princeton.edu}
+  Ying Lu, Woodrow Wilson School of International and Public Affairs,
+  Princeton University \email{yinglu@princeton.edu}; Kosuke Imai,
+  Department of Politics, Princeton University
+  \email{kimai@Princeton.Edu}, \url{http://www.princeton.edu/~kimai}
 }
 
 \keyword{methods}

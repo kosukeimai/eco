@@ -133,14 +133,26 @@ summary(res)
   \item{S0}{The prior scale matrix.}
   \item{burnin}{The number of initial burnin draws.}
   \item{thin}{Thinning interval.}
-  \item{mu1.post}{The posterior draws of the population mean parameter of \eqn{W_1}. In nonparametric model, \code{mu1.post} is a m by n matrix, where m is the number of Gibbs draws saved, n is the number of observations. In parametric model, \code{mu1.post} is a vector of length m. Export only if \code{parameter=TRUE}. }
-  \item{mu2.post}{The posterior draws of the population mean parameter of \eqn{W_2}. The dimension of \code{mu2.post} is same as \code{mu1.post}. Export only if \code{parameter=TRUE}.}
+  \item{mu1.post}{The posterior draws of the population mean parameter
+    of \eqn{W_1}. In nonparametric model, \code{mu1.post} is a m by n
+    matrix, where m is the number of Gibbs draws saved, n is the number of
+    observations. In parametric model, \code{mu1.post} is a vector of length
+    m. Export only if \code{parameter=TRUE}. }
+  \item{mu2.post}{The posterior draws of the population mean parameter
+    of \eqn{W_2}. The dimension of \code{mu2.post} is same as
+    \code{mu1.post}. Export only if \code{parameter=TRUE}.}
   \item{Sigma11.post}{The posterior draws of the population variance
-    parameter of \eqn{W_1}. In nonparametric model, \code{Sigma11.post} is a m by n matrix, where m is the number of Gibbs draws saved, n is the number of observations. In parametric model, \code{Sigma11.post} is a vector of length m. Export only if \code{parameter=TRUE}.} 
+    parameter of \eqn{W_1}. In nonparametric model, \code{Sigma11.post}
+    is a m by n matrix, where m is the number of Gibbs draws saved, n is the
+    number of observations. In parametric model, \code{Sigma11.post} is a
+    vector of length m. Export only if \code{parameter=TRUE}.}
   \item{Sigma12.post}{The posterior draws of the population covariance
-    parameter between \eqn{W_1} and \eqn{W_2}. The dimension of \code{Sigma12.post} is same as \code{Sigma11.post}. Export only if \code{parameter=TRUE}.} 
+    parameter between \eqn{W_1} and \eqn{W_2}. The dimension of
+    \code{Sigma12.post} is same as \code{Sigma11.post}. Export only if
+    \code{parameter=TRUE}.}
   \item{Sigma22.post}{The posterior draws of the population variance
-    parameter of \eqn{W_2}. The dimension of \code{Sigma22.post} is same as \code{Sigma11.post}. Export only if \code{parameter=TRUE}.} 
+    parameter of \eqn{W_2}. The dimension of \code{Sigma22.post} is same
+    as \code{Sigma11.post}. Export only if \code{parameter=TRUE}.}
   \item{W1.post}{The posterior draws or in-sample predictions of
     \eqn{W_1}.}
   \item{W2.post}{The posterior draws or in-sample predictions of
@@ -163,15 +175,16 @@ summary(res)
 }
 
 \author{
-  Kosuke Imai, Department of Politics, Princeton University
-  \email{kimai@Princeton.Edu}, \url{http://www.princeton.edu/~kimai};
   Ying Lu, Woodrow Wilson School of International and Public Affairs,
-  Princeton University \email{yinglu@Princeton.Edu}.  }
+  Princeton University \email{yinglu@Princeton.Edu};
+  Kosuke Imai, Department of Politics, Princeton University
+  \email{kimai@Princeton.Edu}, \url{http://www.princeton.edu/~kimai}}
 
 \references{
   Imai, Kosuke and Ying Lu. (2004) \dQuote{ Parametric and Nonparametric
-  Bayesian Models for Ecological Inference in \eqn{2 \times 2} Tables. }
+  Bayesian Models for Ecological Inference in \eqn{2 \times 2}
+  Tables.} Proceedings of the American Statistical Association.
   \url{http://www.princeton.edu/~kimai/research/einonpar.html} }
 
-\seealso{summary.eco}
+\seealso{\code{summary.eco}}
 \keyword{models}
