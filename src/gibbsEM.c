@@ -2,6 +2,7 @@
 #include <stdio.h>      
 #include <math.h>
 #include <Rmath.h>
+#include <R_ext/Utils.h>
 #include "vector.h"
 #include "subroutines.h"
 #include "rand.h"
@@ -54,7 +55,7 @@ void cEMeco(
   /*bounds condition variables */
   double **W;            /* The W1 and W2 matrix */
   double *minW1, *maxW1; /* The lower and upper bounds of W_1i */
-  int n_step=1000;    /* 1/The default size of grid step */  
+  int n_step=4000;    /* 1/The default size of grid step */  
   int *n_grid;           /* The number of grids for sampling on tomoline */
   double **W1g, **W2g;   /* The grids taken for W1 and W2 on tomoline */
   double *prob_grid;     /* The projected density on tomoline */
@@ -72,19 +73,22 @@ void cEMeco(
 
   /* misc variables */
   int i, j, k, l, main_loop;   /* used for various loops */
-  int itemp, itempS, itempC, itempA;
+  int ndraw, itemp, itemp0, itempS, itempC, itempA;
   double dtemp, dtemp1, temp0, temp1;
-  double *vtemp;
+  double *vtemp, *utemp;
   double **mtemp;
+  int *mflag;
 
   /* get random seed */
   GetRNGstate();
+
+  ndraw=*n_gen;
 
   /* defining vectors and matricies */
   /* data */
   X=doubleMatrix(n_samp,n_cov);
   W=doubleMatrix((n_samp+s_samp+x0_samp+x1_samp),n_cov);
-  Wstar=doubleMatrix((n_samp+s_samp+x0_samp+x1_samp),n_cov);
+  Wstar=doubleMatrix((n_samp+s_samp+x0_samp+x1_samp),5);
 
   S_W=doubleMatrix(s_samp, n_cov);
   S_Wstar=doubleMatrix(s_samp, n_cov);
@@ -111,11 +115,15 @@ void cEMeco(
   Wstar_bar=doubleArray(n_cov);
 
   vtemp=doubleArray(n_cov);
+  utemp=doubleArray(ndraw);
   mtemp=doubleMatrix(n_cov,n_cov);
 
   t_samp=n_samp+s_samp+x1_samp+x0_samp;  
 
-
+  mflag=intArray(n_step);
+  for (i=0; i<n_step; i++) {
+    mflag[i]=0;
+  }
 
   /* read the data set */
   /** Packing Y, X  **/
@@ -142,17 +150,45 @@ void cEMeco(
   dinv(Sigma_ord, n_cov, InvSigma_ord);
 
 
-  /* initialize W, Wstar for n_samp*/
-  for (j=0; j<n_cov; j++)
-    for (i=0; i< n_samp; i++) {
-      W[i][j]=0;
-      Wstar[i][j]=0;
-      if (X[i][1]==0) W[i][j]=0.000001;
-      else if (X[i][1]==1) W[i][j]=0.999999;
+  /* initialize W, Wstar for t_samp*/
+  for (i=0; i< t_samp; i++) {
+    W[i][0]=0;
+    W[i][1]=0;
+    Wstar[i][0]=0;
+    Wstar[i][1]=0;
+    Wstar[i][2]=0;
+    Wstar[i][3]=0;
+    Wstar[i][4]=0;
+  }
 
+  for (i=0; i<n_samp; i++)
+    {
+      if (X[i][1]==0) 
+	{
+	  W[i][0]=0.000001;
+	  W[i][1]=0.000001;
+	  temp0=log(W[i][0])-log(1-W[i][0]);
+	  temp1=log(W[i][1])-log(1-W[i][1]);
+	  Wstar[i][0]=temp0;
+	  Wstar[i][1]=temp1;
+	  Wstar[i][2]=temp0*temp0;
+	  Wstar[i][3]=temp0*temp1;
+	  Wstar[i][4]=temp1*temp1;
+	}
+      if (X[i][1]==1) 
+	{
+	  W[i][0]=0.999999; 
+	  W[i][1]=0.999999;
+	  temp0=log(W[i][0])-log(1-W[i][0]);
+	  temp1=log(W[i][1])-log(1-W[i][1]);
+	  Wstar[i][0]=temp0;
+	  Wstar[i][1]=temp1;
+	  Wstar[i][2]=temp0*temp0;
+	  Wstar[i][3]=temp0*temp1;
+	  Wstar[i][4]=temp1*temp1;
+	} 
     }
-
-
+  
   /*read homeogenous areas information */
   if (*x1==1) 
     for (i=0; i<x1_samp; i++) {
@@ -182,7 +218,11 @@ void cEMeco(
 	W[(n_samp+x1_samp+x0_samp+i)][j]=S_W[i][j];
 	Wstar[(n_samp+x1_samp+x0_samp+i)][j]=S_Wstar[i][j];
       }
-
+    for (i=0; i<s_samp; i++) {
+	Wstar[(n_samp+x1_samp+x0_samp+i)][2]=S_Wstar[i][0]*S_Wstar[i][0];
+	Wstar[(n_samp+x1_samp+x0_samp+i)][3]=S_Wstar[i][0]*S_Wstar[i][1];
+	Wstar[(n_samp+x1_samp+x0_samp+i)][4]=S_Wstar[i][1]*S_Wstar[i][1];
+    }
 
     if(data==1) { 
       printf("survey W1 W2 W1* W2*\n");
@@ -250,78 +290,109 @@ void cEMeco(
   }
     
   
-  /***Gibbs for  normal prior ***/
-  for(main_loop=0; main_loop<*n_gen; main_loop++){
+
+     /* draw n_gen's from uniform */
+  for (i=0; i<ndraw; i++) {
+    utemp[i]=unif_rand();
+  }
+  R_rsort(utemp, ndraw);
+  
     /**update W, Wstar given mu, Sigma in regular areas**/
     for (i=0;i<n_samp;i++){
       if ( X[i][1]!=0 && X[i][1]!=1 ) {
 	/*1 project BVN(mu_ord, Sigma_ord) on the inth tomo line */
 	dtemp=0;
 	for (j=0;j<n_grid[i];j++){
-
 	    vtemp[0]=log(W1g[i][j])-log(1-W1g[i][j]);
 	    vtemp[1]=log(W2g[i][j])-log(1-W2g[i][j]);
 	    prob_grid[j]=dMVN(vtemp, mu_ord, InvSigma_ord, 2, 1) -
 	      log(W1g[i][j])-log(W2g[i][j])-log(1-W1g[i][j])-log(1-W2g[i][j]);
-
 	  prob_grid[j]=exp(prob_grid[j]);
 	  dtemp+=prob_grid[j];
 	  prob_grid_cum[j]=dtemp;
 	}
-	for (j=0;j<n_grid[i];j++)
+	for (j=0;j<n_grid[i];j++){
 	  prob_grid_cum[j]/=dtemp; /*standardize prob.grid */ 
-	
+	}
 	/*2 sample W_i on the ith tomo line */
 	/*3 compute Wsta_i from W_i*/
+	
+	/*	for (j=0; j<n_grid[i]; j++) {
+	  printf("%5d%14g", j, prob_grid_cum[j]);
+	  }*/
+	
 	j=0;
-	dtemp=unif_rand();
-	while (dtemp > prob_grid_cum[j]) j++;
-	W[i][0]=W1g[i][j];
-	W[i][1]=W2g[i][j];
-      } /* end of *1 */
-        temp0=log(W[i][0])-log(1-W[i][0]);
-        temp1=log(W[i][1])-log(1-W[i][1]);
-    	Wstar[i][0]+=temp0;
-	Wstar[i][1]+=temp1;
+	itemp=1;
+
+	for (k=0; k<ndraw; k++){
+	  itemp0=n_grid[i];
+	  dtemp=utemp[k];
+          j=findInterval(prob_grid_cum, itemp0, dtemp, 1, 1, itemp, mflag);
+          itemp=j;
+	  W[i][0]=W1g[i][j];
+	  W[i][1]=W2g[i][j];
+	  temp0=log(W[i][0])-log(1-W[i][0]);
+	  temp1=log(W[i][1])-log(1-W[i][1]);
+	  Wstar[i][0]+=temp0;
+	  Wstar[i][1]+=temp1;
+	  Wstar[i][2]+=temp0*temp0;
+	  Wstar[i][3]+=temp0*temp1;
+	  Wstar[i][4]+=temp1*temp1;
+	}
+      }
     }
 
+    /* compute E_{W_i|Y_i} for n_samp*/
+    for (i=0; i<n_samp; i++)
+      {
+	if ( X[i][1]!=0 && X[i][1]!=1 ) {  
+	  Wstar[i][0]/=ndraw;  /*E(W1i) */
+	  Wstar[i][1]/=ndraw;  /*E(W2i) */
+	  Wstar[i][2]/=ndraw;  /*E(W1i^2) */
+	  Wstar[i][3]/=ndraw;  /*E(W1iW2i) */
+	  Wstar[i][4]/=ndraw;  /*E(W2i^2) */
+	}
+      } /*for x0type, x1type and survey data, E-step is either the observed value or the analytical expectation*/
     
-    /*update W2 given W1, mu_ord and Sigma_ord in x1 homeogeneous areas */
-    /*printf("W2 draws\n");*/
+    
+    /*analytically compute E{W2_i|Y_i} given W1_i, mu_ord and Sigma_ord in x1 homeogeneous areas */
     if (*x1==1)
       for (i=0; i<x1_samp; i++) {
 	dtemp=mu_ord[1]+Sigma_ord[0][1]/Sigma_ord[0][0]*(Wstar[n_samp+i][0]-mu_ord[0]);
-	dtemp1=Sigma_ord[1][1]*(1-Sigma_ord[0][1]*Sigma_ord[0][1]/(Sigma_ord[0][0]*Sigma_ord[1][1]));
-	dtemp1=sqrt(dtemp1);
-        temp0=log(W[i][0])-log(1-W[i][0]);
-        temp1=rnorm(dtemp, dtemp1);
-    	Wstar[n_samp+i][0]+=temp0;
-	Wstar[n_samp+i][1]+=temp1;
+	/*dtemp1=Sigma_ord[1][1]*(1-Sigma_ord[0][1]*Sigma_ord[0][1]/(Sigma_ord[0][0]*Sigma_ord[1][1]));
+	  dtemp1=sqrt(dtemp1);*/
+	temp0=log(W[n_samp+i][0])-log(1-W[n_samp+i][0]);
+	/* temp1=rnorm(dtemp, dtemp1);*/
+	temp1=dtemp;
+    	Wstar[n_samp+i][0]=temp0;
+	Wstar[n_samp+i][1]=temp1;
+	Wstar[n_samp+i][2]=temp0*temp0;
+	Wstar[n_samp+i][3]=temp0*temp1;
+	Wstar[n_samp+i][4]=temp1*temp1;
        }
     
-    /*update W1 given W2, mu_ord and Sigma_ord in x0 homeogeneous areas */
-    /*printf("W1 draws\n");*/
+    /*analytically compute E{W1_i|Y_i} given W2_i, mu_ord and Sigma_ord in x0 homeogeneous areas */
+
     if (*x0==1)
       for (i=0; i<x0_samp; i++) {
 	dtemp=mu_ord[0]+Sigma_ord[0][1]/Sigma_ord[1][1]*(Wstar[n_samp+x1_samp+i][1]-mu_ord[1]);
-	dtemp1=Sigma_ord[0][0]*(1-Sigma_ord[0][1]*Sigma_ord[0][1]/(Sigma_ord[0][0]*Sigma_ord[1][1]));
-	/* printf("\n%14g%14g\n", dtemp, dtemp1);*/
+	/*dtemp1=Sigma_ord[0][0]*(1-Sigma_ord[0][1]*Sigma_ord[0][1]/(Sigma_ord[0][0]*Sigma_ord[1][1]));
 	dtemp1=sqrt(dtemp1);
-        temp0=rnorm(dtemp, dtemp1);
-        temp1=log(W[i][1])-log(1-W[i][1]);
-        Wstar[n_samp+x1_samp+i][0]+=temp0;
-        Wstar[n_samp+x1_samp+i][1]+=temp1;
+        temp0=rnorm(dtemp, dtemp1); */
+        temp0=dtemp;
+	temp1=log(W[n_samp+x1_samp+i][1])-log(1-W[n_samp+x1_samp+i][1]);
+        Wstar[n_samp+x1_samp+i][0]=temp0;
+        Wstar[n_samp+x1_samp+i][1]=temp1;
+        Wstar[n_samp+x1_samp+i][2]=temp0*temp0;
+        Wstar[n_samp+x1_samp+i][3]=temp0*temp1;
+        Wstar[n_samp+x1_samp+i][4]=temp1*temp1;
+
  	/*printf("\n%5d%14g%14g\n", i, Wstar[n_samp+x1_samp+i][0], W[n_samp+x1_samp+i][0]);*/ 
       }
     
-  }
 
-  /* compute E_{W_i|Y_i} */
-  for (i=0; i<(n_samp+x1_samp+x0_samp); i++)
-    {
-        Wstar[i][0]/=*n_gen;
-        Wstar[i][1]/=*n_gen;
-    } /*for survey data, E-step is the same value*/
+
+
    
   /*M-step: same procedure as normal model */
   for (j=0; j<5; j++) 
@@ -331,17 +402,22 @@ void cEMeco(
 
   for (i=0; i<t_samp; i++)
     {
-      pdTheta[0]+=Wstar[i][0]/t_samp;
-      pdTheta[1]+=Wstar[i][1]/t_samp;
+      pdTheta[0]+=Wstar[i][0]/t_samp;  /*mu1*/
+      pdTheta[1]+=Wstar[i][1]/t_samp;  /*mu2*/
+      
     }   
 
   for(i=0; i<t_samp; i++)
     {
-      pdTheta[2]+=(Wstar[i][0]-pdTheta[0])*(Wstar[i][0]-pdTheta[0])/t_samp;
-      pdTheta[3]+=(Wstar[i][0]-pdTheta[0])*(Wstar[i][1]-pdTheta[1])/t_samp;
-      pdTheta[4]+=(Wstar[i][1]-pdTheta[1])*(Wstar[i][1]-pdTheta[1])/t_samp;
+      pdTheta[2]+=(Wstar[i][2]-2*Wstar[i][0]*pdTheta[0]+pdTheta[0]*pdTheta[0])/t_samp;  /*sigma11*/
+      pdTheta[3]+=(Wstar[i][3]-Wstar[i][0]*pdTheta[1]-Wstar[i][1]*pdTheta[0]+pdTheta[0]*pdTheta[1])/t_samp; /*sigma12*/
+      pdTheta[4]+=(Wstar[i][4]-2*Wstar[i][1]*pdTheta[1]+pdTheta[1]*pdTheta[1])/t_samp;  /*sigma22*/
     }
 
+  pdTheta[2]=log(pdTheta[2]);
+  pdTheta[4]=log(pdTheta[4]);
+  dtemp=pdTheta[3]/sqrt(pdTheta[2]*pdTheta[4]);
+  pdTheta[3]=0.5*log((1+dtemp)/(1-dtemp));
 
   /** write out the random seed **/
   PutRNGstate();
