@@ -161,6 +161,52 @@ if (em.converge && Ioc.yes) {
               PACKAGE="eco")
 #based on pdTheta and S compute Ioc
 
+S1<-res$S[1]
+S2<-res$S[2]
+S11<-res$S[3]
+S22<-res$S[4]
+S12<-res$S[5]
+
+u1<-res$pdTheta[1]
+u2<-res$pdTheta[2]
+v1<-res$pdTheta[3]
+v2<-res$pdTheta[4]
+r<-res$pdTheta[5]
+
+n<-n.samp+survey.samp+samp.X1+samp.X0
+
+Ioc[1,1]<- -n/((1-r^2)*v1)
+Ioc[1,2]<- n*r/((1-r^2)*sqrt(v1*v2))
+Ioc[1,3]<- 1/((1-r^2)*v1^2)*(-S1+n*u1) - r/(2*(1-r^2)*v1^(3/2)*v2^(1/2))*(-S2+n*u2)
+Ioc[1,4]<- -r/(2*(1-r^2)*v1^(1/2)*v2^(3/2))*(-S2+n*u2)
+Ioc[1,5]<- -2*r/((1-r^2)^2*v1)*(-S1+n*u1) + (1+r^2)/((1-r^2)^2*v1^(1/2)*v2^(1/2))*(-S2+n*u2)
+
+Ioc[2,2]<- -n/((1-r^2)*v2)	
+Ioc[2,3]<- -r/(2*(1-r^2)*v1^(3/2)*v2^(1/2))*(-S1+n*u1)
+Ioc[2,4]<- 1/((1-r^2)*v2^2)*(-S2+n*u2) - r/(2*(1-r^2)*v1^(1/2)*v2^(3/2))*(-S1+n*u1)
+Ioc[2,5]<- -2*r/((1-r^2)^2*v2)*(-S2+n*u2) + (1+r^2)/((1-r^2)^2*v1^(1/2)*v2^(1/2))*(-S1+n*u1)
+
+Ioc[3,3]<- n/(2*v1^2) - 1/((1-r^2)*v1^3)*(S11-2*u1*S1+n*u1^2) + 3*r/(4*(1-r^2)*v1^(5/2)*v2^(1/2))*(S12-u1*S2-u2*S1+n*u1*u2)
+Ioc[3,4]<- r/(4*(1-r^2)*v1^(3/2)*v2^(3/2))*(S12-u1*S2-u2*S1+n*u1*u2)
+Ioc[3,5]<- r/((1-r^2)^2*v1^2)*(S11-2*u1*S1+n*u1^2) - (1+r^2)/(2*(1-r^2)^2*v1^(3/2)*v2^(1/2))*(S12-u1*S2-u2*S1+n*u1*u2)
+
+Ioc[4,4]<- n/(2*v2^2) - 1/((1-r^2)*v2^3)*(S22-2*u2*S2+n*u2^2) + 3*r/(4*(1-r^2)*v1^(1/2)*v2^(5/2))*(S12-u1*S2-u2*S1+n*u1*u2)
+Ioc[4,5]<- r/((1-r^2)^2*v2^2)*(S22-2*u2*S2+n*u2^2) - (1+r^2)/(2*(1-r^2)^2*v1^(1/2)*v2^(3/2))*(S12-u1*S2-u2*S1+n*u1*u2)
+
+Ioc[5,5]<- n*(1+r^2)/(1-r^2)^2 - (1+3*r^2)/((1-r^2)^3*v1)*(S11-2*u1*S1+n*u1^2) - (1+3*r^2)/((1-r^2)^3*v2)*(S22-2*u2*S2+n*u2^2) + (2*r^3+6*r)/((1-r^2)^3*v1^(1/2)*v2^(1/2))*(S12-u1*S2-u2*S1+n*u1*u2)
+
+Ioc[2,1]<-Ioc[1,2]
+Ioc[3,1]<-Ioc[1,3]
+Ioc[3,2]<-Ioc[2,3]
+Ioc[4,1]<-Ioc[1,4]
+Ioc[4,2]<-Ioc[2,4]
+Ioc[4,3]<-Ioc[3,4]
+Ioc[5,1]<-Ioc[1,5]
+Ioc[5,2]<-Ioc[2,5]
+Ioc[5,3]<-Ioc[3,5]
+Ioc[5,4]<-Ioc[4,5]
+
+Ioc<- -Ioc
 }
 
 
@@ -178,8 +224,6 @@ cat("Fisher transformtion:", "\n")
 print(fisher(theta.old))
 }
 
-cat("Ioc matrix:", "\n")
-print(Ioc)
 
 if (!Ioc.yes) {
    res.out<-list(theta=theta.old)
@@ -187,6 +231,9 @@ if (!Ioc.yes) {
 else if (Ioc.yes) {
 cat("sufficient statistics", "\n")
 print(res$S)
+cat("Ioc matrix:", "\n")
+print(Ioc)
+
    res.out<-list(theta=theta.old, Ioc=Ioc)
    }
   class(res.out) <- "eco"
@@ -196,7 +243,7 @@ print(res$S)
 
 
 eco.sem<-function(Y, X, data = parent.frame(),supplement=NULL, 
-      theta.old=c(0,0,1,1,0), theta.em=NULL,
+      theta.old=c(0,0,1,1,0), theta.em=NULL, Ioc.em=NULL,
       R.convergence=0.001, iteration.max=50, Fisher=FALSE,
       n.draws = 10, by.draw=10, draw.max=200, printon=TRUE) {
 
@@ -351,7 +398,22 @@ print(fisher(theta.em))
 cat("DM matrix:", "\n")
 print(R.t2)
 
-  res.out<-list(theta=theta.em, DM=R.t2)
+##missing information decomposition
+
+DM.ECM<-R.t2
+
+Gamma<-matrix(0,5,5)
+Gamma[1:2, 1:2]<-Ioc.em[1:2,1:2]
+Gamma[3:5,3:5]<-Ioc.em[3:5,3:5]
+Lamda<-matrix(0,5,5)
+Lamda[3:5, 1:2]<-Ioc.em[3:5, 1:2]
+DM.CM<--Lamda%*%solve(Gamma+t(Lamda))
+
+Vcom<-solve(Ioc.em)
+dV<-Vcom%*%(DM.ECM-DM.CM)%*%solve((diag(1,5)-DM.ECM))
+
+
+  res.out<-list(theta=theta.em, Vcom=Vcom, dV=dV, DM.ECM=R.t2, DM.CM=DM.CM)
   class(res.out) <- "eco"
   return(res.out)
 
