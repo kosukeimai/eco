@@ -1,0 +1,11 @@
+Package: eco
+Version: 0.9-6
+Date: 2004-03-25
+Title: eco: R package for Nonparametric Bayesian Ecological Inference 
+Author: Kosuke Imai <kimai@princeton.edu>, 
+        Ying Lu <yinglu@princeton.edu>
+Maintainer: Kosuke Imai <kimai@princeton.edu>
+Depends: R (>= 1.8)
+Description: 
+License: GPL (version 2 or later)
+URL: http://www.princeton.edu/~kimai/
