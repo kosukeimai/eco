@@ -204,7 +204,7 @@ void cDPecoX(
 
 
   t_samp=n_samp+x1_samp+x0_samp+s_samp;
-  Rprintf("ok0\n");
+
   /* read the data set */
   /** Packing Y, X  **/
   itemp = 0;
@@ -256,7 +256,7 @@ void cDPecoX(
       Wstar[(n_samp+x1_samp+i)][1]=log(W[(n_samp+x1_samp+i)][1])-log(1-W[(n_samp+x1_samp+i)][1]);
     }
 
-  Rprintf("ok1\n");
+
   /*read the survey data */
 
   if (*survey==1) {
@@ -272,10 +272,6 @@ void cDPecoX(
       }
 
   }
-
-  for (i=0; i<t_samp; i++)
-    Rprintf("%5d%14g%14g%14g\n", i, Wstar[i][0], Wstar[i][1], Wstar[i][2]);
-
 
   itempA=0; /* counter for alpha */
   itempS=0; /* counter for storage */
@@ -323,19 +319,15 @@ void cDPecoX(
   /* parmeters for Trivaraite t-distribution-unchanged in MCMC */
   for (j=0;j<=n_dim;j++)
     for(k=0;k<=n_dim;k++)
-      mtemp[j][k]=tau0*(nu0-1)*S0[j][k]/(1+tau0);
+      mtemp[j][k]=S0[j][k]*(1+tau0)/(tau0*(nu0-(n_dim+1)+1));
   dinv(mtemp, (n_dim+1), S_tvt);
-
-  Rprintf("S_tvt");
-  Rprintf("%14g%14g%14g%14g%14g%14g\n", S_tvt[0][0], S_tvt[0][1], S_tvt[0][2], S_tvt[1][1], S_tvt[1][2], S_tvt[2][2]);
 
   /**draw initial values of mu_i, Sigma_i under G0  for all effective sample**/
   /*1. Sigma_i under InvWish(nu0, S0^-1) with E(Sigma)=S0/(nu0-3)*/
   /*   InvSigma_i under Wish(nu0, S0^-1 */
   /*2. mu_i|Sigma_i under N(mu0, Sigma_i/tau0) */
   dinv(S0, (n_dim+1), mtemp);
-  Rprintf("S0inverse\n");
-  Rprintf("%14g%14g%14g%14g%14g%14g\n", mtemp[0][0], mtemp[0][1], mtemp[0][2], mtemp[1][1], mtemp[1][2], mtemp[2][2]);
+
   for(i=0;i<t_samp;i++){
     /*draw from wish(nu0, S0^-1) */
     rWish(InvSigma[i], mtemp, nu0, (n_dim+1));
@@ -346,29 +338,27 @@ void cDPecoX(
   }
 
   
-  Rprintf("ok3a\n");
+
   /* initialize the cluster membership */
   nstar=t_samp;  /* the # of disticnt values */
   for(i=0;i<t_samp;i++)
     C[i]=i; /*cluster is from 0...n_samp-1 */
 
-  for (i=0; i<60; i++)
-    Rprintf("%5d%14g%14g%14g%14g%14g%14g\n",i, mu[i][0], mu[i][1], mu[i][2], Sigma[i][0][0], Sigma[i][1][1], Sigma[i][2][2]);
-
+  Rprintf("\n%5d%5d%5d%5d%5d\n", n_samp, *x1, *x0, s_samp, t_samp);
   for(main_loop=0; main_loop<*n_gen; main_loop++){
     /**update W, Wstar given mu, Sigma only for the unknown W/Wstar**/
-    for (i=0;i<t_samp;i++){
+    for (i=0; i<t_samp; i++){
       for (j=0; j<n_dim; j++) {
         mu_w[j]=mu[i][j]+Sigma[i][n_dim][j]/Sigma[i][n_dim][n_dim]*(Wstar[i][n_dim]-mu[i][n_dim]);
-      }
+     }
       for (j=0; j<n_dim; j++)
         for (k=0; k<n_dim; k++) {
           Sigma_w[j][k]=Sigma[i][j][k]-Sigma[i][n_dim][j]/Sigma[i][n_dim][n_dim]*Sigma[i][n_dim][k];
 	}
       dinv(Sigma_w, n_dim, InvSigma_w);
 
-      if (X[i][1]!=0 && X[i][1]!=1 && i<n_samp) {
-
+      if (i<n_samp) 
+      if (X[i][1]!=0 && X[i][1]!=1) {
         /*1 project BVN(mu_i, Sigma_i) on the inth tomo line */
         dtemp=0;
         for (j=0;j<n_grid[i];j++){
@@ -404,24 +394,13 @@ void cDPecoX(
         while ((dtemp > prob_grid_cum[j]) && (j<(n_grid[i]-1))) j++;
         W[i][0]=W1g[i][j];
         W[i][1]=W2g[i][j];
-      }
+      
       /*      if (*link==1) {*/
       Wstar[i][0]=log(W[i][0])-log(1-W[i][0]);
       Wstar[i][1]=log(W[i][1])-log(1-W[i][1]);
-      /* }
-      else if (*link==2) {
-        Wstar[i][0]=qnorm(W[i][0],0 ,1, 1, 0);
-        Wstar[i][1]=qnorm(W[i][1],0 ,1, 1, 0);
       }
-      else if (*link==3) {
-        Wstar[i][0]=-log(-log(W[i][0]));
-        Wstar[i][1]=-log(-log(W[i][1]));
-        }*/
-
 
       if (*x1==1 && i>=n_samp && i<(n_samp+x1_samp)) {
-    Rprintf("ok3c\n");
-  Rprintf("%5d\n", i);
 	dtemp=mu_w[1]+Sigma_w[0][1]/Sigma_w[0][0]*(Wstar[i][0]-mu_w[0]);
 	dtemp1=Sigma_w[1][1]*(1-Sigma_w[0][1]*Sigma_w[0][1]/(Sigma_w[0][0]*Sigma_w[1][1]));
 	/*dtemp1=sqrt(dtemp1);
@@ -433,15 +412,12 @@ void cDPecoX(
       /*update W1 given W2, mu_ord and Sigma_ord in x0 homeogeneous areas */
       /*printf("W1 draws\n");*/
       if (*x0==1  && i>=(n_samp+x1_samp) && i<(n_samp+x1_samp+x0_samp)) {
-  Rprintf("ok3d\n");
-  Rprintf("%5d\n", i);
         dtemp=mu_w[0]+Sigma_w[0][1]/Sigma_w[1][1]*(Wstar[i][1]-mu_w[1]);
         dtemp1=Sigma_w[0][0]*(1-Sigma_w[0][1]*Sigma_w[0][1]/(Sigma_w[0][0]*Sigma_w[1][1]));
         Wstar[i][0]=norm_rand()*sqrt(dtemp1)+dtemp;
         W[i][0]=exp(Wstar[i][0])/(1+exp(Wstar[i][0]));
       }
     }
-
 
   /**updating mu, Sigma given Wstar uisng effective sample size t_samp**/
   for (i=0; i<t_samp; i++){
@@ -452,7 +428,7 @@ void cDPecoX(
 	 if (j!=i)
 	   q[j]=dMVN(Wstar[i], mu[j], InvSigma[j], (n_dim+1), 0);
 	 else
-	   q[j]=alpha*dMVT(Wstar[i], mu0, S_tvt, (nu0-1), (n_dim+1), 0);
+	   q[j]=alpha*dMVT(Wstar[i], mu0, S_tvt, (nu0-(n_dim+1)+1), (n_dim+1), 0);
 	 dtemp+=q[j];
 	 qq[j]=dtemp;    /*compute qq, the cumlative of q*/
        }
@@ -572,7 +548,7 @@ void cDPecoX(
     }
     nstar++; /*finish update one distinct value*/
   } /* nstar is the number of distinct values */
-  Rprintf("ok5\n");
+
   /** updating alpha **/
   if(*pinUpdate) {
     dtemp1=(double)(alpha+1);

@@ -292,7 +292,7 @@ void cDPeco(
   /* parmeters for Bivaraite t-distribution-unchanged in MCMC */
   for (j=0;j<n_dim;j++)
     for(k=0;k<n_dim;k++)
-      mtemp[j][k]=tau0*(nu0-1)*S0[j][k]/(1+tau0);
+      mtemp[j][k]=S0[j][k]*(1+tau0)/(tau0*(nu0-n_dim+1));
   dinv(mtemp, n_dim, S_bvt);
   /**draw initial values of mu_i, Sigma_i under G0  for all effective sample**/
   /*1. Sigma_i under InvWish(nu0, S0^-1) with E(Sigma)=S0/(nu0-3)*/
@@ -399,7 +399,7 @@ void cDPeco(
        	 if (j!=i)
 	   q[j]=dMVN(Wstar[i], mu[j], InvSigma[j], 2, 0);
 	 else
-	 q[j]=alpha*dMVT(Wstar[i], mu0, S_bvt, nu0-1, 2, 0);
+	 q[j]=alpha*dMVT(Wstar[i], mu0, S_bvt, nu0-n_dim+11, 2, 0);
 
 	 dtemp+=q[j];
 	 qq[j]=dtemp;    /*compute qq, the cumlative of q*/
