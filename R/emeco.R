@@ -1,10 +1,17 @@
-
+#transform<-function(pp) {
+#  qq<-pp
+#  qq[3]<-log(pp[3])
+#  qq[5]<-log(pp[5])
+#  qtemp<-pp[4]/sqrt(pp[3]*pp[5])
+#  qq[4]<-0.5*log((1+qtemp)/(1-qtemp))
+# return(qq)
+#}
 
 
 eco.em <- function(Y, X, data = parent.frame(),supplement=NULL, 
       theta.old=c(0,0,1,0,1), 
       convergence=0.0001, iteration.max=20,
-      n.draws = 10, draw.max=200, printon=TRUE) {
+      n.draws = 10, by.draw=10, draw.max=200, printon=TRUE) {
 
   ## checking inputs
   if ((dim(supplement)[2] != 2) && (length(supplement)>0))
@@ -66,9 +73,12 @@ eco.em <- function(Y, X, data = parent.frame(),supplement=NULL,
   n.var<-5
 
   cdiff<-1
+  em.converge<-FALSE
   i<-1
 
-while ((cdiff > convergence) && (i<iteration.max))
+  em.mat<-matrix(NA, iteration.max, 5)
+
+ while ((!em.converge) && (i<iteration.max))
 {
   res <- .C("cEMeco", as.double(d), as.double(theta.old),
 	      as.integer(n.samp),  as.integer(n.draws), 
@@ -79,16 +89,30 @@ while ((cdiff > convergence) && (i<iteration.max))
               PACKAGE="eco")
 
   temp<-res$pdTheta
-  cdiff<-as.numeric(t(temp-theta.old)%*%(temp-theta.old))
-  theta.old<-temp
+  em.converge<-TRUE
+
   if (printon) {
-  cat("\ni=  ", i, "  cdiff=", cdiff, "\n")
-  cat(theta.old)
+  cat("\ni=  ", i,  "\n")
+  #cat(theta.old)
+  cat(temp)
   }
+
+  for (j in 1:5) 
+   {   
+     if (abs(temp[j]-theta.old[j])>convergence) 
+       em.converge<-FALSE
+  }
+  #cdiff<-as.numeric(t(temp-theta.old)%*%(temp-theta.old))
+
+  theta.old<-temp
+  em.mat[i,]<-theta.old
+
   i<-i+1
-  if (draw<=draw.max) draw<-draw+50
+  if (draw<=draw.max) draw<-draw+by.draw
+ 
 }
 
+  em.mat<-em.mat[1:(i-1),]
 #  theta<-list(mu=c(theta.old[1], theta.old[2]), Sigma=matrix(theta.old[c(3,4,4,5)], 2,2))
 
 
@@ -101,7 +125,7 @@ cat("\n")
 cat("Covarianace Matrix:", "\n")
 print(matrix(theta.old[c(3,4,4,5)],2,2))
 
-res.out<-list(theta=theta.old)
+res.out<-list(theta=theta.old, em.mat=em.mat)
   class(res.out) <- "eco"
   return(res.out)
 
@@ -111,7 +135,7 @@ res.out<-list(theta=theta.old)
 eco.sem<-function(Y, X, data = parent.frame(),supplement=NULL, 
       theta.old=c(0,0,1,0,1), theta.em=NULL,
       R.convergence=0.001, iteration.max=50,
-      n.draws = 10, draw.max=200, printon=TRUE) {
+      n.draws = 10, by.draw=10, draw.max=200, printon=TRUE) {
 
   ## checking inputs
   if ((dim(supplement)[2] != 2) && (length(supplement)>0))
@@ -217,8 +241,9 @@ while (!Rconverge && (k<iteration.max))
 
   for (j in 1:n.var)
   {
+#    R.t2[i,j]<-(transform(temp)[j]-transform(theta.em)[j])/(transform(theta.t)[i]-transform(theta.em)[i])
     R.t2[i,j]<-(temp[j]-theta.em[j])/(theta.t[i]-theta.em[i])
-    rowdiff.temp<-abs(R.t2[i,j]-R.t1[i,j])+rowdiff.temp    
+    rowdiff.temp<-max(abs(R.t2[i,j]-R.t1[i,j]), rowdiff.temp)    
     }   
    rowdiff[i]<-rowdiff.temp
  }
@@ -236,7 +261,7 @@ while (!Rconverge && (k<iteration.max))
   print(theta.old)
   }
   k<-k+1
-  if (draw<=draw.max) draw<-draw+10
+  if (draw<=draw.max) draw<-draw+by.draw
 }
 
 
