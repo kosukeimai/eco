@@ -25,7 +25,7 @@ eco <- function(Y, X, data = parent.frame(), n.draws = 5000, burnin = 0,
 
 \arguments{
   \item{Y}{A numeric vector of proportions, representing the
-    weighted average of the missing internal cells of an \eqn{2 \times  
+    weighted average of the missing internal cells of a \eqn{2 \times  
       2} ecological table.
   } 
   \item{X}{A numeric vector of proportions, representing the weights.
@@ -86,7 +86,7 @@ eco <- function(Y, X, data = parent.frame(), n.draws = 5000, burnin = 0,
   \item{predict}{Logical. If \code{TRUE}, out-of sample predictions will
     be returned. The default is \code{FALSE}.
   } 
-  \item{parameter}{Logical. If \code{TRUE}, the gibbs draws of the population
+  \item{parameter}{Logical. If \code{TRUE}, the Gibbs draws of the population
     parameters such as mu and sigma are returned. The default is \code{FALSE}.
   } 
 }
