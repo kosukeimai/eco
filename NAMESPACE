@@ -1,6 +1,6 @@
 useDynLib(eco)
 
-export(eco, eco.em, eco.sem, summary.eco, print.summary.eco)
+export(eco, ecoX, eco.em, eco.sem, summary.eco, print.summary.eco)
 
 S3method(summary, eco)
 S3method(print, summary.eco)
