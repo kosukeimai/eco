@@ -215,8 +215,10 @@ void cDPecoX(
   /* priors under G0*/
   itemp=0;
   for(k=0;k<=n_dim;k++)
-    for(j=0;j<=n_dim;j++) S0[j][k]=pdS0[itemp++];
-
+    for(j=0;j<=n_dim;j++) {
+    S0[j][k]=pdS0[itemp++];
+    Rprintf("%14g\n", S0[j][k]);
+    }
 
   for (i=0; i<n_samp; i++) {
     for (j=0; j<n_dim; j++)
@@ -235,6 +237,7 @@ void cDPecoX(
 	{  Wstar[i][2]=log(X[i][0]/(1-X[i][0])); }
     }
   }
+
 
   /*read homeogenous areas information */
   if (*x1==1)
@@ -270,7 +273,10 @@ void cDPecoX(
 
   }
 
-  Rprintf("ok2\n");
+  for (i=0; i<t_samp; i++)
+    Rprintf("%5d%14g%14g%14g\n", i, Wstar[i][0], Wstar[i][1], Wstar[i][2]);
+
+
   itempA=0; /* counter for alpha */
   itempS=0; /* counter for storage */
   itempC=0; /* counter to control nth draw */
@@ -320,12 +326,16 @@ void cDPecoX(
       mtemp[j][k]=tau0*(nu0-1)*S0[j][k]/(1+tau0);
   dinv(mtemp, (n_dim+1), S_tvt);
 
-  Rprintf("ok3\n");
+  Rprintf("S_tvt");
+  Rprintf("%14g%14g%14g%14g%14g%14g\n", S_tvt[0][0], S_tvt[0][1], S_tvt[0][2], S_tvt[1][1], S_tvt[1][2], S_tvt[2][2]);
+
   /**draw initial values of mu_i, Sigma_i under G0  for all effective sample**/
   /*1. Sigma_i under InvWish(nu0, S0^-1) with E(Sigma)=S0/(nu0-3)*/
   /*   InvSigma_i under Wish(nu0, S0^-1 */
   /*2. mu_i|Sigma_i under N(mu0, Sigma_i/tau0) */
   dinv(S0, (n_dim+1), mtemp);
+  Rprintf("S0inverse\n");
+  Rprintf("%14g%14g%14g%14g%14g%14g\n", mtemp[0][0], mtemp[0][1], mtemp[0][2], mtemp[1][1], mtemp[1][2], mtemp[2][2]);
   for(i=0;i<t_samp;i++){
     /*draw from wish(nu0, S0^-1) */
     rWish(InvSigma[i], mtemp, nu0, (n_dim+1));
@@ -334,27 +344,31 @@ void cDPecoX(
       for(k=0;k<=n_dim;k++) mtemp1[j][k]=Sigma[i][j][k]/tau0;
     rMVN(mu[i], mu0, mtemp1, (n_dim+1));
   }
+
+  
   Rprintf("ok3a\n");
   /* initialize the cluster membership */
   nstar=t_samp;  /* the # of disticnt values */
   for(i=0;i<t_samp;i++)
     C[i]=i; /*cluster is from 0...n_samp-1 */
 
+  for (i=0; i<60; i++)
+    Rprintf("%5d%14g%14g%14g%14g%14g%14g\n",i, mu[i][0], mu[i][1], mu[i][2], Sigma[i][0][0], Sigma[i][1][1], Sigma[i][2][2]);
+
   for(main_loop=0; main_loop<*n_gen; main_loop++){
     /**update W, Wstar given mu, Sigma only for the unknown W/Wstar**/
     for (i=0;i<t_samp;i++){
       for (j=0; j<n_dim; j++) {
         mu_w[j]=mu[i][j]+Sigma[i][n_dim][j]/Sigma[i][n_dim][n_dim]*(Wstar[i][n_dim]-mu[i][n_dim]);
-        for (k=0; k<n_dim; k++)
-          Sigma_w[j][k]=Sigma[i][j][k];
       }
       for (j=0; j<n_dim; j++)
-        for (k=0; k<n_dim; k++)
-          Sigma_w[j][k]-=Sigma[i][n_dim][j]/Sigma[i][n_dim][n_dim]*Sigma[i][n_dim][k];
-
+        for (k=0; k<n_dim; k++) {
+          Sigma_w[j][k]=Sigma[i][j][k]-Sigma[i][n_dim][j]/Sigma[i][n_dim][n_dim]*Sigma[i][n_dim][k];
+	}
       dinv(Sigma_w, n_dim, InvSigma_w);
-  Rprintf("ok3b\n");
+
       if (X[i][1]!=0 && X[i][1]!=1 && i<n_samp) {
+
         /*1 project BVN(mu_i, Sigma_i) on the inth tomo line */
         dtemp=0;
         for (j=0;j<n_grid[i];j++){
@@ -404,8 +418,10 @@ void cDPecoX(
         Wstar[i][1]=-log(-log(W[i][1]));
         }*/
 
-    Rprintf("ok3c\n");
+
       if (*x1==1 && i>=n_samp && i<(n_samp+x1_samp)) {
+    Rprintf("ok3c\n");
+  Rprintf("%5d\n", i);
 	dtemp=mu_w[1]+Sigma_w[0][1]/Sigma_w[0][0]*(Wstar[i][0]-mu_w[0]);
 	dtemp1=Sigma_w[1][1]*(1-Sigma_w[0][1]*Sigma_w[0][1]/(Sigma_w[0][0]*Sigma_w[1][1]));
 	/*dtemp1=sqrt(dtemp1);
@@ -413,17 +429,19 @@ void cDPecoX(
 	Wstar[i][1]=norm_rand()*sqrt(dtemp1)+dtemp;
 	W[i][1]=exp(Wstar[i][1])/(1+exp(Wstar[i][1]));
       }
-  Rprintf("ok3d\n");
+
       /*update W1 given W2, mu_ord and Sigma_ord in x0 homeogeneous areas */
       /*printf("W1 draws\n");*/
       if (*x0==1  && i>=(n_samp+x1_samp) && i<(n_samp+x1_samp+x0_samp)) {
+  Rprintf("ok3d\n");
+  Rprintf("%5d\n", i);
         dtemp=mu_w[0]+Sigma_w[0][1]/Sigma_w[1][1]*(Wstar[i][1]-mu_w[1]);
         dtemp1=Sigma_w[0][0]*(1-Sigma_w[0][1]*Sigma_w[0][1]/(Sigma_w[0][0]*Sigma_w[1][1]));
         Wstar[i][0]=norm_rand()*sqrt(dtemp1)+dtemp;
         W[i][0]=exp(Wstar[i][0])/(1+exp(Wstar[i][0]));
       }
     }
-  Rprintf("ok4\n");
+
 
   /**updating mu, Sigma given Wstar uisng effective sample size t_samp**/
   for (i=0; i<t_samp; i++){

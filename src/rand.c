@@ -27,10 +27,6 @@ double dMVN(
   int j,k;
   double value=0.0;
 
-  /*double **SIG_INV = doubleMatrix(dim, dim);
-  
-  dinv(SIGMA, dim, SIG_INV);*/
-
   for(j=0;j<dim;j++){
     for(k=0;k<j;k++)
       value+=2*(Y[k]-MEAN[k])*(Y[j]-MEAN[j])*SIG_INV[j][k];
@@ -39,7 +35,6 @@ double dMVN(
 
   value=-0.5*value-0.5*dim*log(2*M_PI)+0.5*ddet(SIG_INV, dim, 1);
 
-  /*FreeMatrix(SIG_INV, dim);*/
 
   if(give_log)  
     return(value);
