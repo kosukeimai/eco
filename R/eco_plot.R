@@ -25,7 +25,7 @@ tomoplot<-function(X,Y,truep=NA, truer=NA)
 
 	if ((!is.na(truep)) & (!is.na(truer)))
 	{
-		points(truep, truer, pch=20, cex=0.5)
+		points(truep, truer, pch=20, cex=0.7, col="red")
 	}
 	}
 }
