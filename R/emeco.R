@@ -33,9 +33,10 @@ thetacov<-function(Z) {
 
 
 eco.em <- function(Y, X, data = parent.frame(),supplement=NULL, 
-                   theta.old=c(0,0,1,1,0), convergence=0.0001,
-                   iteration.max=20, Ioc.yes=TRUE, Fisher=FALSE, 
-                   n.draws = 10, by.draw=10, draw.max=200, printon=TRUE) {
+                   theta.old=c(0,0,1,1,0), convergence=0.000001,
+                   iteration.max=1000, Ioc.yes=TRUE, Fisher=FALSE, 
+                   n.draws = 100000, by.draw=100000,
+                   draw.max=10000000, printon=TRUE) { 
 
   ## checking inputs
   if ((dim(supplement)[2] != 2) && (length(supplement)>0))
@@ -134,6 +135,11 @@ eco.em <- function(Y, X, data = parent.frame(),supplement=NULL,
     theta.old<-temp
     
     i<-i+1
+    if (em.converge & draw < draw.max) {
+      em.converge <- FALSE
+      draw <- draw.max
+    }
+      
     if (draw<=draw.max) draw<-draw+by.draw
   }
   
@@ -302,7 +308,6 @@ eco.sem<-function(Y, X, data = parent.frame(),supplement=NULL,
 
   Rconverge<-FALSE
 
-
   while (!Rconverge && (k<iteration.max)) {
     res <- .C("cEMeco", as.double(d), as.double(theta.old),
               as.integer(n.samp),  as.integer(n.draws), 
@@ -344,6 +349,11 @@ eco.sem<-function(Y, X, data = parent.frame(),supplement=NULL,
         }   
         rowdiff[i]<-rowdiff.temp
       }
+      else if (draw < draw.max) {
+        Rconvergence <- FALSE
+        draw <- draw.max
+        rowdiff[i] <- 1
+      }
     }
     
     theta.old<-theta.t
@@ -358,6 +368,7 @@ eco.sem<-function(Y, X, data = parent.frame(),supplement=NULL,
       print(theta.old)
     }
     k<-k+1
+    
     if (draw<=draw.max) draw<-draw+by.draw
   }
   
