@@ -2,7 +2,7 @@
 
 \docType{data}
 
-\alias{registration}
+\alias{reg}
 
 \title{Voter Registration in US Southern States} 
 

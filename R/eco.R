@@ -107,23 +107,23 @@ eco <- function(Y, X, data = parent.frame(),
               pdSSig11=double(n.par), 
 	      pdSW1=double(n.w), pdSW2=double(n.w), 
 	      pdSWt1=double(n.w), pdSWt2=double(n.w),
-	      pdSa=double(n.a), pdSn=integer(n.a))
+	      pdSa=double(n.a), pdSn=integer(n.a), PACKAGE="eco")
     if (parameter) {
-      mu1.post <- matrix(res$pdSMu0, n.a, unit.par, byrow=T)[,order.old]
-      mu2.post <- matrix(res$pdSMu1, n.a, unit.par, byrow=T)[,order.old]
-      Sigma11.post <- matrix(res$pdSSig00, n.a, unit.par, byrow=T)[,order.old]
-      Sigma12.post <- matrix(res$pdSSig01, n.a, unit.par, byrow=T)[,order.old]
-      Sigma22.post <- matrix(res$pdSSig11, n.a, unit.par, byrow=T)[,order.old]
+      mu1.post <- matrix(res$pdSMu0, n.a, unit.par, byrow=TRUE)[,order.old]
+      mu2.post <- matrix(res$pdSMu1, n.a, unit.par, byrow=TRUE)[,order.old]
+      Sigma11.post <- matrix(res$pdSSig00, n.a, unit.par, byrow=TRUE)[,order.old]
+      Sigma12.post <- matrix(res$pdSSig01, n.a, unit.par, byrow=TRUE)[,order.old]
+      Sigma22.post <- matrix(res$pdSSig11, n.a, unit.par, byrow=TRUE)[,order.old]
     }
-    W1.post <- matrix(res$pdSW1, n.a, unit.w, byrow=T)[,order.old]
-    W2.post <- matrix(res$pdSW2, n.a, unit.w, byrow=T)[,order.old]
+    W1.post <- matrix(res$pdSW1, n.a, unit.w, byrow=TRUE)[,order.old]
+    W2.post <- matrix(res$pdSW2, n.a, unit.w, byrow=TRUE)[,order.old]
     if (predict) {
-      W1.pred <- matrix(res$pdSWt1, n.a, unit.w, byrow=T)[,order.old]
-      W2.pred <- matrix(res$pdSWt2, n.a, unit.w, byrow=T) [,order.old]
+      W1.pred <- matrix(res$pdSWt1, n.a, unit.w, byrow=TRUE)[,order.old]
+      W2.pred <- matrix(res$pdSWt2, n.a, unit.w, byrow=TRUE) [,order.old]
     }
    
-    a.post <- matrix(res$pdSa, n.a, unit.a, byrow=T)
-    nstar <- matrix(res$pdSn, n.a, unit.a, byrow=T)
+    a.post <- matrix(res$pdSa, n.a, unit.a, byrow=TRUE)
+    nstar <- matrix(res$pdSn, n.a, unit.a, byrow=TRUE)
     
     if (parameter && predict) 
       res.out <- list(model="Dirichlet Process Prior", alpha=alpha,
@@ -171,24 +171,24 @@ eco <- function(Y, X, data = parent.frame(),
               pdSMu1=double(n.par), pdSSig00=double(n.par),
               pdSSig01=double(n.par), pdSSig11=double(n.par),
               pdSW1=double(n.w), pdSW2=double(n.w), 
-              pdSWt1=double(n.w), pdSWt2=double(n.w))
+              pdSWt1=double(n.w), pdSWt2=double(n.w), PACKAGE="eco")
     
     if (parameter) {
-      mu.post <- cbind(matrix(res$pdSMu0, n.a, unit.par, byrow=T),
-                     matrix(res$pdSMu1, n.a, unit.par, byrow=T)) 
+      mu.post <- cbind(matrix(res$pdSMu0, n.a, unit.par, byrow=TRUE),
+                     matrix(res$pdSMu1, n.a, unit.par, byrow=TRUE)) 
       colnames(mu.post) <- c("mu1", "mu2")
-      Sigma.post <- cbind(matrix(res$pdSSig00, n.a, unit.par, byrow=T), 
-                          matrix(res$pdSSig01, n.a, unit.par, byrow=T),
-                          matrix(res$pdSSig11, n.a, unit.par, byrow=T))
+      Sigma.post <- cbind(matrix(res$pdSSig00, n.a, unit.par, byrow=TRUE), 
+                          matrix(res$pdSSig01, n.a, unit.par, byrow=TRUE),
+                          matrix(res$pdSSig11, n.a, unit.par, byrow=TRUE))
       colnames(Sigma.post) <- c("Sigma11", "Sigma12", "Sigma22")
     }
     
-    W1.post <- matrix(res$pdSW1, n.a, unit.w, byrow=T)[,order.old]
-    W2.post <- matrix(res$pdSW2, n.a, unit.w, byrow=T)[,order.old]
+    W1.post <- matrix(res$pdSW1, n.a, unit.w, byrow=TRUE)[,order.old]
+    W2.post <- matrix(res$pdSW2, n.a, unit.w, byrow=TRUE)[,order.old]
     
     if (predict) {
-      W1.pred <- matrix(res$pdSWt1, n.a, unit.w, byrow=T)[,order.old]
-      W2.pred <- matrix(res$pdSWt2, n.a, unit.w, byrow=T)[,order.old] 
+      W1.pred <- matrix(res$pdSWt1, n.a, unit.w, byrow=TRUE)[,order.old]
+      W2.pred <- matrix(res$pdSWt2, n.a, unit.w, byrow=TRUE)[,order.old] 
     }
     
     
