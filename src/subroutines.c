@@ -95,3 +95,19 @@ void dcholdc(double **X, int size, double **L)
   free(pdTemp);
 } 
 
+
+/* calculate the determinant of the positive definite symmetric matrix
+   using the Cholesky decomposition  */
+double ddet(double **X, int size)
+{
+  int i;
+  double det=1.0;
+  double **pdTemp = doubleMatrix(size, size);
+  
+  dcholdc(X, size, pdTemp);
+  for(i=0;i<size;i++)
+    det*=pdTemp[i][i];
+  return(sqrt(det));
+
+  FreeMatrix(pdTemp, size);
+}
