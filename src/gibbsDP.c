@@ -130,6 +130,7 @@ void cDPeco(
   /* misc variables */
   int i, j, k, l, main_loop;   /* used for various loops */
   int itemp, itempS, itempC, itempA;
+  int progress = 1, itempP = ftrunc((double) *n_gen/10);
   double dtemp, dtemp1, dtemp2;
   double *vtemp;
   double **mtemp, **mtemp1;
@@ -391,7 +392,6 @@ void cDPeco(
           Wstar[n_samp+x1_samp+i][0]=rnorm(dtemp, dtemp1);*/
         Wstar[n_samp+i][0]=norm_rand()*sqrt(dtemp1)+dtemp;
         W[n_samp+x1_samp+i][0]=exp(Wstar[n_samp+x1_samp+i][0])/(1+exp(Wstar[n_samp+x1_samp+i][0]));
-        /*printf("\n%5d%14g%14g\n", i, Wstar[n_samp+x1_samp+i][0], W[n_samp+x1_samp+i][0]);*/
     }
 
   /**updating mu, Sigma given Wstar uisng effective sample size t_samp**/
@@ -434,9 +434,6 @@ void cDPeco(
 	   for (l=0;l<n_cov;l++)  mtemp[k][l]=Sigma[i][k][l]/(tau0+1);
 	 }
 	 rMVN(mu[i], mun, mtemp, n_cov);
-	 /*          printf("mun0 mun1 sigma1 sigma2 sigma12 \n");
-		     printf("%5d%14g%14g%14g%14g\n", i, mun[0], mun[1], mtemp[0][0], mtemp[1][1], mtemp[0][1]);*/
-
 	 C[i]=nstar;
 	 nstar++;
        }
@@ -461,8 +458,6 @@ void cDPeco(
 
   nstar=0;
   i=0;
-  /*      printf("mumix all\n");
-	  printf("munj0 munj1 signj00 signj11\n");*/
   while (i<t_samp){
     /*initialize the vector and matrix */
     for(k=0; k<n_cov; k++) {
@@ -514,9 +509,6 @@ void cDPeco(
       for (l=0; l<n_cov; l++)  mtemp[k][l]=Sigma_mix[k][l]/(tau0+nj);
     }
     rMVN(mu_mix, munj, mtemp, n_cov);
-    /*      printf("%5d%14g%14g%14g%14g\n", nstar, munj[0], munj[1], mtemp[0][0], mtemp[1][1]);*/
-
-
 
     /**update mu, Simgat with mu_mix, Sigmat_mix via label**/
     for (j=0;j<nj;j++){
@@ -547,10 +539,10 @@ void cDPeco(
       dtemp2=(double)(a0+nstar-1);
       alpha=rgamma(dtemp2, 1/dtemp);
     }
-    /*     printf("%5d%14g%5d\n", main_loop, alpha, nstar); */
   }
 
   /*store Gibbs draws after burn_in */
+  R_CheckUserInterrupt();
   if (main_loop>=*burn_in) {
     itempC++;
     if (itempC==nth){
@@ -588,14 +580,14 @@ void cDPeco(
       itempC=0;
     }
   }
-  if ((*verbose==1) && (ftrunc(main_loop/10000)*10000==main_loop))
-    {
-      Rprintf("iteration  ");
-      Rprintf("%5d\n", main_loop);
+  if (*verbose)
+    if (itempP == main_loop) {
+      Rprintf("%3d percent done.\n", progress*10);
+      itempP+=ftrunc((double) *n_gen/10); progress++;
       R_FlushConsole();
     }
   } /*end of MCMC for DP*/
-
+  
   /** write out the random seed **/
   PutRNGstate();
 

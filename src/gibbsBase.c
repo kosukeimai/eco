@@ -96,6 +96,7 @@ void cBaseeco(
   /* misc variables */
   int i, j, k, l, main_loop;   /* used for various loops */
   int itemp, itempS, itempC, itempA;
+  int progress = 1, itempP = ftrunc((double) *n_gen/10);
   double dtemp, dtemp1;
   double *vtemp;
   double **mtemp;
@@ -248,15 +249,6 @@ void cBaseeco(
 	n_grid[i]=2;
 	
       }
-      /*    if (i<n_samp){
-	    printf("grids\n");
-	    printf("minW1 maxW1 resid\n");
-	    printf("%5d%14g%14g%14g\n", i, minW1[i], maxW1[i], resid[i]);
-	    for (j=0;j<n_grid[i];j++){
-	    if (j<5 | j>(n_grid[i]-5))
-	    printf("%5d%5d%14g%14g\n", i, j, W1g[i][j], W2g[i][j]);
-	    }
-	    }*/
     }
   }
     
@@ -322,7 +314,6 @@ void cBaseeco(
 	Wstar[i][1]=-log(-log(W[i][1]));
 	}*/
     }
-
     
     /*update W2 given W1, mu_ord and Sigma_ord in x1 homeogeneous areas */
     /*printf("W2 draws\n");*/
@@ -334,7 +325,6 @@ void cBaseeco(
 	dtemp1=sqrt(dtemp1);
 	Wstar[n_samp+i][1]=rnorm(dtemp, dtemp1);
 	W[n_samp+i][1]=exp(Wstar[n_samp+i][1])/(1+exp(Wstar[n_samp+i][1]));
-	/* printf("\n%5d%14g%14g\n", i, Wstar[n_samp+i][1], W[n_samp+i][1]);*/ 
       }
     
     /*update W1 given W2, mu_ord and Sigma_ord in x0 homeogeneous areas */
@@ -343,65 +333,43 @@ void cBaseeco(
       for (i=0; i<x0_samp; i++) {
 	dtemp=mu_ord[0]+Sigma_ord[0][1]/Sigma_ord[1][1]*(Wstar[n_samp+x1_samp+i][1]-mu_ord[1]);
 	dtemp1=Sigma_ord[0][0]*(1-Sigma_ord[0][1]*Sigma_ord[0][1]/(Sigma_ord[0][0]*Sigma_ord[1][1]));
-	/* printf("\n%14g%14g\n", dtemp, dtemp1);*/
 	dtemp1=sqrt(dtemp1);
 	Wstar[n_samp+x1_samp+i][0]=rnorm(dtemp, dtemp1);
 	W[n_samp+x1_samp+i][0]=exp(Wstar[n_samp+x1_samp+i][0])/(1+exp(Wstar[n_samp+x1_samp+i][0]));
-	/*printf("\n%5d%14g%14g\n", i, Wstar[n_samp+x1_samp+i][0], W[n_samp+x1_samp+i][0]);*/ 
       }
     
-    /*        printf("\n W data Wstar data \n");
-      for (i=0; i<t_samp;i++)
-	printf("\n%14g%14g%14g%14g", W[i][0], W[i][1], Wstar[i][0], Wstar[i][1]);
-    */
-
-
     /*update mu_ord, Sigma_ord given wstar using effective sample of Wstar*/
     for (j=0;j<n_cov;j++) {
       Wstar_bar[j]=0;
       for (k=0;k<n_cov;k++)
 	Sn[j][k]=S0[j][k];
     }
-
-
-
     for (j=0;j<n_cov;j++) 
       for (i=0;i<t_samp;i++)
 	Wstar_bar[j]+=Wstar[i][j]/t_samp;
-      
-
     for (j=0;j<n_cov;j++)
       for (k=0;k<n_cov;k++)
 	for (i=0;i<t_samp;i++)
 	  Sn[j][k]+=(Wstar[i][j]-Wstar_bar[j])*(Wstar[i][k]-Wstar_bar[k]);
+    for (j=0;j<n_cov;j++){
+      mun[j]=(tau0*mu0[j]+t_samp*Wstar_bar[j])/(tau0+t_samp);
+      for (k=0;k<n_cov;k++)
+	Sn[j][k]+=(tau0*t_samp)*(Wstar_bar[j]-mu0[j])*(Wstar_bar[k]-mu0[k])/(tau0+t_samp);
+    }
+    dinv(Sn, n_cov, mtemp); 
       
-      for (j=0;j<n_cov;j++){
-	mun[j]=(tau0*mu0[j]+t_samp*Wstar_bar[j])/(tau0+t_samp);
-	for (k=0;k<n_cov;k++)
-	  Sn[j][k]+=(tau0*t_samp)*(Wstar_bar[j]-mu0[j])*(Wstar_bar[k]-mu0[k])/(tau0+t_samp);
-      }
-      dinv(Sn, n_cov, mtemp); 
-      /*    printf("\n mun0  mun1  Sigma00  sigmat01 Sigma11");*/
-      
-      rWish(InvSigma_ord, mtemp, nu0+t_samp, n_cov);
-      dinv(InvSigma_ord, n_cov, Sigma_ord);
-      
-      for(j=0;j<n_cov;j++)
-	for(k=0;k<n_cov;k++) mtemp[j][k]=Sigma_ord[j][k]/(tau0+t_samp);
-      
-      rMVN(mu_ord, mun, mtemp, n_cov);
-
-
-     
-
-      /*    printf("\n%5d%14g%14g%14g%14g%14g", main_loop, mu_ord[0], mu_ord[1], Sigma_ord[0][0], Sigma_ord[0][1], Sigma_ord[1][1]); */
-  
+    rWish(InvSigma_ord, mtemp, nu0+t_samp, n_cov);
+    dinv(InvSigma_ord, n_cov, Sigma_ord);
+    
+    for(j=0;j<n_cov;j++)
+      for(k=0;k<n_cov;k++) mtemp[j][k]=Sigma_ord[j][k]/(tau0+t_samp);
+    rMVN(mu_ord, mun, mtemp, n_cov);
+    
     /*store Gibbs draw after burn-in and every nth draws */      
+    R_CheckUserInterrupt();
     if (main_loop>=*burn_in){
       itempC++;
       if (itempC==nth){
-	/*	printf("%5d\n", main_loop);*/
-	fflush(stdout);
 	pdSMu0[itempA]=mu_ord[0];
 	pdSMu1[itempA]=mu_ord[1];
 	pdSSig00[itempA]=Sigma_ord[0][0];
@@ -432,15 +400,14 @@ void cBaseeco(
 	itempC=0;
       }
     } /*end of stroage *burn_in*/
-    if ((*verbose==1) && (ftrunc(main_loop/10000)*10000==main_loop))
-      {
-        Rprintf("iteration  ");
-        Rprintf("%5d\n", main_loop);
-	R_FlushConsole();
+    if (*verbose)
+      if (itempP == main_loop) {
+	Rprintf("%3d percent done.\n", progress*10);
+	itempP+=ftrunc((double) *n_gen/10); progress++;
+      R_FlushConsole();
       }
-
   } /*end of MCMC for normal */ 
-
+  
 
 
   /** write out the random seed **/
