@@ -17,7 +17,10 @@ Ecological Inference in 2 x 2 Tables}
 }
 
 \usage{
-eco <- function(Y, X, data = parent.frame(), n.draws = 5000, burnin = 0, thin = 5, verbose = TRUE, nonpar =  TRUE, nu0 = 4, tau0 = 1, mu0 = c(0,0), S0 = diag(10,2), supplement=NULL, alpha = NULL, a0 = 0.1, b0 = 0.1, predict = TRUE, parameter = TRUE)
+eco <- function(Y, X, data = parent.frame(), n.draws = 5000, burnin = 0,
+                thin = 5, verbose = TRUE, nonpar =  TRUE, nu0 = 4, tau0 = 1,
+                mu0 = c(0,0), S0 = diag(10,2), supplement=NULL, alpha = NULL,
+                a0 = 0.1, b0 = 0.1, predict = TRUE, parameter = TRUE) 
 }
 
 \arguments{
@@ -49,11 +52,6 @@ eco <- function(Y, X, data = parent.frame(), n.draws = 5000, burnin = 0, thin = 
     model will be fit. Otherwise, the parametric model will be
     estimated. The default is \code{TRUE}.
   } 
-
-%  \item{link}{The choice of link function used for the transformation;
-%    i.e., \eqn{g(\cdot)} of \eqn{W_i^*=g(W_i)}. \code{logit}, \code{probit},
-%    and \code{cloglog} are available. The default is \code{logit}.
-%  } 
   \item{nu0}{A positive integer. The prior degrees of freedom
     parameter. the default is \code{4}.
   } 
@@ -99,24 +97,24 @@ eco <- function(Y, X, data = parent.frame(), n.draws = 5000, burnin = 0, thin = 
   \tabular{lccc}{
     \tab black voters  \tab white voters \tab \cr
     Voted \tab \eqn{W_{1i}}  \tab \eqn{W_{2i}} \tab \eqn{Y_i} \cr
-    Not Voted \tab \eqn{1-W_{1i}}  \tab \eqn{1-W_{2i}} \tab \eqn{1-Y_i}  \cr
+    Not voted \tab \eqn{1-W_{1i}}  \tab \eqn{1-W_{2i}} \tab \eqn{1-Y_i}  \cr
     \tab \eqn{X_i} \tab \eqn{1-X_i} \tab 
   }
   where \eqn{Y_i} and \eqn{X_i} represent the observed margins, and
   \eqn{W_1} and \eqn{W_2} are unknown variables. The following
   deterministic relationship holds for each \eqn{i}:
-  \eqn{Y_i=X W_1i+(1-X_i)W_2i}
-
+  \eqn{Y_i=X W_{1i}+(1-X_i)W_{2i}}
 }
 
 \examples{
-## load the matproii data data(matproii) 
-## run the nonparametric model to produce in-sample and out-of sample predictions.
 
-data(register)
+## load the registration data
+data(reg)
 
-test <- eco(Y=Y, X=X, data=register, n.draws = 20000, burnin = 5000, thin=10, verbose=TRUE, nonpar = TRUE, S0 = S, nu0 = 1, tau0 = 4, a0 = 1, b0 = 0.1, predict=TRUE, parameter=FALSE)
-
+## run the nonparametric model to give in-sample & out-of sample predictions
+res <- eco(Y=Y, X=X, data=reg, n.draws = 20000, burnin = 5000,
+           thin=10, verbose=TRUE, nonpar = TRUE, S0 = S, nu0 = 1, tau0 = 4,
+           a0 = 1, b0 = 0.1, predict=TRUE, parameter=FALSE) 
 }
 
 
@@ -152,16 +150,14 @@ test <- eco(Y=Y, X=X, data=register, n.draws = 20000, burnin = 5000, thin=10, ve
   \item{W2.pred}{The posterior predictive draws or out-of-sample
     predictions of \eqn{W_2} if \code{predict=TRUE}.
   }
-
-
   The following additional elements are included in the output when the
   nonparametric model is fit:
   \item{alpha}{Whether \eqn{\alpha} is being updated at each Gibbs
     draw.}
   \item{a0}{The prior shape parameter.}
   \item{b0}{The prior scale parameter.}
-  \item{a.post}{ The Gibbs draws of \eqn{\alpha}.}
-  \item{nstar}{ The number of clusters at each Gibbs draw.}
+  \item{a.post}{The Gibbs draws of \eqn{\alpha}.}
+  \item{nstar}{The number of clusters at each Gibbs draw.}
 }
 
 \author{
@@ -175,5 +171,5 @@ test <- eco(Y=Y, X=X, data=register, n.draws = 20000, burnin = 5000, thin=10, ve
   Bayesian Models for Ecological Inference in \eqn{2 \times 2} Tables. }
   \url{http://www.princeton.edu/~kimai/research/einonpar.html} }
 
-\seealso{}
+\seealso{summary.eco}
 \keyword{ecological inferences}
