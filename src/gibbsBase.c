@@ -269,7 +269,7 @@ void cBaseeco(
 	  /*  if (*link==1){ */
 	    vtemp[0]=log(W1g[i][j])-log(1-W1g[i][j]);
 	    vtemp[1]=log(W2g[i][j])-log(1-W2g[i][j]);
-	    prob_grid[j]=dMVN(vtemp, mu_ord, InvSigma_ord, 2, 1) -
+	    prob_grid[j]=dMVN(vtemp, mu_ord, InvSigma_ord, n_dim, 1) -
 	      log(W1g[i][j])-log(W2g[i][j])-log(1-W1g[i][j])-log(1-W2g[i][j]);
 	    /* }
 	  else if (*link==2){

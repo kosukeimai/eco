@@ -146,8 +146,8 @@ void cDPecoX(
   W=doubleMatrix((n_samp+x1_samp+x0_samp+s_samp),n_dim);
   Wstar=doubleMatrix((n_samp+x1_samp+x0_samp+s_samp),(n_dim+1));
 
-  S_W=doubleMatrix(s_samp,n_dim);
-  S_Wstar=doubleMatrix(s_samp,n_dim);
+  S_W=doubleMatrix(s_samp,n_dim+1);
+  S_Wstar=doubleMatrix(s_samp,n_dim+1);
 
 
   /* bounds */
@@ -258,13 +258,13 @@ void cDPecoX(
 
   if (*survey==1) {
     itemp = 0;
-    for (j=0; j<n_dim; j++)
+    for (j=0; j<=n_dim; j++)
       for (i=0; i<s_samp; i++) {
         S_W[i][j]=sur_W[itemp++];
         if (S_W[i][j]==0) S_W[i][j]=0.0001;
         if (S_W[i][j]==1) S_W[i][j]=0.9999;
         S_Wstar[i][j]=log(S_W[i][j])-log(1-S_W[i][j]);
-	W[n_samp+x1_samp+x0_samp+i][j]=S_W[i][j];
+        if (j<n_dim) W[n_samp+x1_samp+x0_samp+i][j]=S_W[i][j];
 	Wstar[n_samp+x1_samp+x0_samp+i][j]=S_Wstar[i][j];
       }
 
@@ -343,7 +343,7 @@ void cDPecoX(
     /**update W, Wstar given mu, Sigma only for the unknown W/Wstar**/
     for (i=0;i<t_samp;i++){
       for (j=0; j<n_dim; j++) {
-        mu_w[j]=mu[i][j]+Sigma[i][n_dim][j]/Sigma[i][n_dim][n_dim]*(X[i][0]-mu[i][n_dim]);
+        mu_w[j]=mu[i][j]+Sigma[i][n_dim][j]/Sigma[i][n_dim][n_dim]*(Wstar[i][n_dim]-mu[i][n_dim]);
         for (k=0; k<n_dim; k++)
           Sigma_w[j][k]=Sigma[i][j][k];
       }
@@ -664,7 +664,8 @@ void cDPecoX(
   free(vtemp1);
   FreeMatrix(mtemp, n_dim+1);
   FreeMatrix(mtemp1, n_dim+1);
-
+  FreeMatrix(S_W, s_samp);
+  FreeMatrix(S_Wstar, s_samp);
 } /* main */
 
 

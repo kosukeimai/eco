@@ -102,7 +102,7 @@ void cBaseecoX(
   int itemp, itempS, itempC, itempA;
   int progress = 1, itempP = ftrunc((double) *n_gen/10);
   double dtemp, dtemp1;
-  double *vtemp;
+  double *vtemp, *vtemp2;
   double **mtemp;
 
   /* get random seed */
@@ -114,8 +114,8 @@ void cBaseecoX(
   W=doubleMatrix((n_samp+s_samp+x0_samp+x1_samp),n_dim);
   Wstar=doubleMatrix((n_samp+s_samp+x0_samp+x1_samp),n_dim+1);
 
-  S_W=doubleMatrix(s_samp, n_dim);
-  S_Wstar=doubleMatrix(s_samp, n_dim);
+  S_W=doubleMatrix(s_samp, n_dim+1);
+  S_Wstar=doubleMatrix(s_samp, n_dim+1);
 
 
   /* bounds */
@@ -147,13 +147,17 @@ void cBaseecoX(
 
   Wstar_bar=doubleArray(n_dim+1);
 
-  vtemp=doubleArray(n_dim+1);
+  vtemp=doubleArray(n_dim);
+  vtemp2=doubleArray(n_dim+1);
   mtemp=doubleMatrix((n_dim+1),(n_dim+1));
 
   /* priors under G0*/
   itemp=0;
   for(k=0;k<(n_dim+1);k++)
-    for(j=0;j<(n_dim+1);j++) S0[j][k]=pdS0[itemp++];
+    for(j=0;j<(n_dim+1);j++) 
+   {
+     S0[j][k]=pdS0[itemp++];
+   }
 
   t_samp=n_samp+s_samp+x1_samp+x0_samp;  
 
@@ -166,6 +170,7 @@ void cBaseecoX(
     for (i = 0; i < n_samp; i++) {
       X[i][j] = pdX[itemp++];
     }
+
 
   /* initialize W, Wstar for n_samp*/
   for (j=0; j<n_dim; j++)
@@ -184,7 +189,6 @@ void cBaseecoX(
     Wstar[i][2]=log(X[i][0])-log(1-X[i][0]);
     Wstar_bar[2]+=Wstar[i][2]/n_samp;
   }
-
 
   /*read homeogenous areas information */
   if (*x1==1) 
@@ -208,16 +212,22 @@ void cBaseecoX(
 
   if (*survey==1) {
     itemp = 0;
-    for (j=0; j<n_dim; j++)
+    for (j=0; j<=n_dim; j++)
       for (i=0; i<s_samp; i++) {
 	S_W[i][j]=sur_W[itemp++];
 	if (S_W[i][j]==0) S_W[i][j]=0.0001;
 	if (S_W[i][j]==1) S_W[i][j]=0.9999;
 	S_Wstar[i][j]=log(S_W[i][j])-log(1-S_W[i][j]);
-	W[(n_samp+x1_samp+x0_samp+i)][j]=S_W[i][j];
+	if (j<n_dim) {
+        W[(n_samp+x1_samp+x0_samp+i)][j]=S_W[i][j];
 	Wstar[(n_samp+x1_samp+x0_samp+i)][j]=S_Wstar[i][j];
+        }
+	else Wstar[(n_samp+x1_samp+x0_samp+i)][j]=S_Wstar[i][j];
+
+        Rprintf("%14g\n", Wstar[(n_samp+x1_samp+x0_samp+i)][j]);
       }
   }
+
 
   itempA=0; /* counter for alpha */
   itempS=0; /* counter for storage */
@@ -252,7 +262,7 @@ void cBaseecoX(
 	  if ((W1g[i][j]-minW1[i])<resid[i]/2) W1g[i][j]+=resid[i]/2;
 	  if ((maxW1[i]-W1g[i][j])<resid[i]/2) W1g[i][j]-=resid[i]/2;
 	  W2g[i][j]=(X[i][1]-X[i][0]*W1g[i][j])/(1-X[i][0]);
-	  /*if (i<20) printf("\n%5d%5d%14g%14g", i, j, W1g[i][j], W2g[i][j]);*/
+	  /* if (i<20) printf("\n%5d%5d%14g%14g", i, j, W1g[i][j], W2g[i][j]);*/
 	  j++;
 	}
       }
@@ -273,33 +283,33 @@ void cBaseecoX(
     for(k=0;k<(n_dim+1);k++)
       Sigma_ord[j][k]=S0[j][k];
   }
-  printf("ok1");
+
   dinv(Sigma_ord, (n_dim+1), InvSigma_ord);
   
   /***Gibbs for  normal prior ***/
   for(main_loop=0; main_loop<*n_gen; main_loop++){
-
+    for (j=0; j<n_dim; j++) 
+      for (k=0; k<n_dim; k++) {
+	Sigma_ord_w[j][k]=Sigma_ord[j][k]-Sigma_ord[n_dim][j]/Sigma_ord[n_dim][n_dim]*Sigma_ord[n_dim][k];
+      }
+	dinv(Sigma_ord_w, n_dim, InvSigma_ord_w);    
 
     /**update W, Wstar given mu, Sigma in regular areas**/
-    for (i=0;i<n_samp;i++){
+    for (i=0; i<n_samp; i++){
+
       for (j=0; j<n_dim; j++) {
-	mu_ord_w[j]=mu_ord[j]+Sigma_ord[n_dim][j]/Sigma_ord[n_dim][n_dim]*(X[i][0]-mu_ord[n_dim]);
-	for (k=0; k<n_dim; k++)
-	  Sigma_ord_w[j][k]=Sigma_ord[j][k];
+	mu_ord_w[j]=mu_ord[j]+Sigma_ord[n_dim][j]/Sigma_ord[n_dim][n_dim]*(Wstar[i][2]-mu_ord[n_dim]);
       }
-      for (j=0; j<n_dim; j++) 
-	for (k=0; k<n_dim; k++)
-	  Sigma_ord_w[j][k]-=Sigma_ord[n_dim][j]/Sigma_ord[n_dim][n_dim]*Sigma_ord[n_dim][k];
 
 
       if ( X[i][1]!=0 && X[i][1]!=1 ) {
 	/*1 project BVN(mu_ord, Sigma_ord) on the inth tomo line */
-	dinv(Sigma_ord_w, n_dim, InvSigma_ord_w);
+
 	dtemp=0;
 	for (j=0;j<n_grid[i];j++){
 	    vtemp[0]=log(W1g[i][j])-log(1-W1g[i][j]);
 	    vtemp[1]=log(W2g[i][j])-log(1-W2g[i][j]);
-	    prob_grid[j]=dMVN(vtemp, mu_ord_w, InvSigma_ord_w, 2, 1) -
+	    prob_grid[j]=dMVN(vtemp, mu_ord_w, InvSigma_ord_w, n_dim, 1) -
 	      log(W1g[i][j])-log(W2g[i][j])-log(1-W1g[i][j])-log(1-W2g[i][j]);
 	  prob_grid[j]=exp(prob_grid[j]);
 	  dtemp+=prob_grid[j];
@@ -315,12 +325,20 @@ void cBaseecoX(
 	while (dtemp > prob_grid_cum[j]) j++;
 	W[i][0]=W1g[i][j];
 	W[i][1]=W2g[i][j];
+	/*        if (i==0) {
+	  for (k=0; k<n_grid[i]; k++)
+	    Rprintf("%10g", prob_grid_cum[k]);
+          Rprintf("\n%5d%14g\n", j, dtemp); 
+	  }*/
       } /* end of *1 */
 
 	Wstar[i][0]=log(W[i][0])-log(1-W[i][0]);
 	Wstar[i][1]=log(W[i][1])-log(1-W[i][1]);
     }
-    
+  
+    /*    for (i=0; i<20; i++)
+      Rprintf("%14g%14g%14g%14g\n", W[i][0], W[i][1], Wstar[i][0], Wstar[i][1]);
+    */
     /*update W2 given W1, mu_ord and Sigma_ord in x1 homeogeneous areas */
     /*printf("W2 draws\n");*/
     if (*x1==1)
@@ -345,14 +363,17 @@ void cBaseecoX(
       }
     
     /*update mu_ord, Sigma_ord given wstar using effective sample of Wstar*/
-    for (j=0;j<(n_dim+1);j++) {
+    for (j=0;j<n_dim;j++) 
       Wstar_bar[j]=0;
-      for (k=0;k<(n_dim+1);k++)
-	Sn[j][k]=S0[j][k];
-    }
+
     for (j=0;j<n_dim;j++) 
       for (i=0;i<t_samp;i++)
 	Wstar_bar[j]+=Wstar[i][j]/t_samp;
+
+    for (j=0;j<(n_dim+1);j++) 
+      for (k=0;k<(n_dim+1);k++)
+	Sn[j][k]=S0[j][k];
+
     for (j=0;j<(n_dim+1);j++)
       for (k=0;k<(n_dim+1);k++)
 	for (i=0;i<t_samp;i++)
@@ -362,15 +383,27 @@ void cBaseecoX(
       for (k=0;k<(n_dim+1);k++)
 	Sn[j][k]+=(tau0*t_samp)*(Wstar_bar[j]-mu0[j])*(Wstar_bar[k]-mu0[k])/(tau0+t_samp);
     }
-    dinv(Sn, n_dim+1, mtemp); 
-      
+
+    dinv(Sn, (n_dim+1), mtemp); 
+ 
     rWish(InvSigma_ord, mtemp, nu0+t_samp, n_dim+1);
-    dinv(InvSigma_ord, 3, Sigma_ord);
+    dinv(InvSigma_ord, n_dim+1, Sigma_ord);
     
     for(j=0;j<(n_dim+1); j++)
       for(k=0;k<(n_dim+1); k++) mtemp[j][k]=Sigma_ord[j][k]/(tau0+t_samp);
-    rMVN(mu_ord, mun, mtemp, n_dim+1);
-    
+
+   rMVN(mu_ord, mun, mtemp, n_dim+1);
+   /*
+   Rprintf("Wstar_bar\n");
+   Rprintf("%14g%14g%14g\n", Wstar_bar[0], Wstar_bar[1], Wstar_bar[2]);
+   Rprintf("mun\n");
+   Rprintf("%14g%14g%14g\n", mun[0], mun[1], mun[2]);
+   Rprintf("mu_ord\n");
+   Rprintf("%14g%14g%14g\n", mu_ord[0], mu_ord[1], mu_ord[2]);
+   Rprintf("Sigma_ord\n");
+   Rprintf("%14g%14g%14g\n", Sigma_ord[0][0], Sigma_ord[1][1], Sigma_ord[2][2]);
+   */
+
     /*store Gibbs draw after burn-in and every nth draws */      
     R_CheckUserInterrupt();
     if (main_loop>=*burn_in){
@@ -384,7 +417,7 @@ void cBaseecoX(
 	pdSSig01[itempA]=Sigma_ord[0][1];
 	pdSSig02[itempA]=Sigma_ord[0][2];
 	pdSSig11[itempA]=Sigma_ord[1][1];
-	pdSSig12[itempA]=Sigma_ord[0][2];
+	pdSSig12[itempA]=Sigma_ord[1][2];
 	pdSSig22[itempA]=Sigma_ord[2][2];
 
 	itempA++;
@@ -393,9 +426,9 @@ void cBaseecoX(
 	  pdSW2[itempS]=W[i][1];
 	  /*Wstar prediction */
 	  if (*pred) {
-	    rMVN(vtemp, mu_ord, Sigma_ord, (n_dim+1));
-	      pdSWt1[itempS]=exp(vtemp[0])/(exp(vtemp[0])+1);
-	      pdSWt2[itempS]=exp(vtemp[1])/(exp(vtemp[1])+1);
+	    rMVN(vtemp2, mu_ord, Sigma_ord, (n_dim+1));
+	      pdSWt1[itempS]=exp(vtemp2[0])/(exp(vtemp2[0])+1);
+	      pdSWt2[itempS]=exp(vtemp2[1])/(exp(vtemp2[1])+1);
 	  }
 	  itempS++;
 	}
@@ -427,6 +460,8 @@ void cBaseecoX(
   FreeMatrix(Sn, (n_dim+1));
   FreeMatrix(W1g, n_samp);
   FreeMatrix(W2g, n_samp);
+  FreeMatrix(S_W, s_samp);
+  FreeMatrix(S_Wstar, s_samp);
   free(prob_grid);
   free(prob_grid_cum);
   free(mu_ord);
@@ -436,6 +471,7 @@ void cBaseecoX(
   FreeMatrix(InvSigma_ord_w, n_dim);
   free(Wstar_bar);
   free(vtemp);
+  free(vtemp2);
   FreeMatrix(mtemp, (n_dim+1));
   
 } /* main */
