@@ -4,7 +4,7 @@
 \alias{eco}
 
 \title{Fitting the Parametric and Nonparametric Bayesian Models of
-Ecological Inference in 2 x 2 Tables} 
+Ecological Inference in 2 by 2 Tables} 
 
 \description{
   \code{eco} is used to fit the parametric and nonparametric Bayesian
@@ -175,7 +175,7 @@ summary(res)
 }
 
 \author{
-  Ying Lu, Woodrow Wilson School of International and Public Affairs,
+  Ying Lu, Office of Population Research, Woodrow Wilson School of International and Public Affairs,
   Princeton University \email{yinglu@Princeton.Edu};
   Kosuke Imai, Department of Politics, Princeton University
   \email{kimai@Princeton.Edu}, \url{http://www.princeton.edu/~kimai}}

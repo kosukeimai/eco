@@ -3,7 +3,7 @@
 \alias{summary.eco}
 \alias{print.summary.eco}
 
-\title{Summarizing the results for the nonparametric and parametric models for ecological inference in 2x2 tables }
+\title{Summarizing the results for the nonparametric and parametric models for ecological inference in 2 by 2 tables }
 
 \description{
   \code{summary} method for class \code{eco}.
@@ -40,7 +40,7 @@
 \seealso{\code{eco}}
 
 \author{
-  Ying Lu, Woodrow Wilson School of International and Public Affairs,
+  Ying Lu, Office of Population Research, Woodrow Wilson School of International and Public Affairs,
   Princeton University \email{yinglu@princeton.edu}; Kosuke Imai,
   Department of Politics, Princeton University
   \email{kimai@Princeton.Edu}, \url{http://www.princeton.edu/~kimai}
