@@ -1,6 +1,8 @@
 ".First.lib" <- function(lib, pkg) 
-  library.dynam("eco", pkg, lib)
-
+{  cat("\neco: R package for ecological inference in 2X2 tables")
+   cat("\nversion 1.1")
+   library.dynam("eco", pkg, lib)
+}
 
 eco <- function(Y, X, data = parent.frame(), 
 		n.draws = 5000, burnin = 0, thin = 5, verbose = FALSE,
