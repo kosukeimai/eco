@@ -206,7 +206,7 @@ Ioc[5,2]<-Ioc[2,5]
 Ioc[5,3]<-Ioc[3,5]
 Ioc[5,4]<-Ioc[4,5]
 
-Ioc<- -Ioc
+Ioc<- -Ioc/n
 }
 
 
@@ -412,6 +412,11 @@ DM.CM<--Lamda%*%solve(Gamma+t(Lamda))
 Vcom<-solve(Ioc.em)
 dV<-Vcom%*%(DM.ECM-DM.CM)%*%solve((diag(1,5)-DM.ECM))
 
+cat("Vcom=:", "\n")
+print(Vcom)
+
+cat("dV=:", "\n")
+print(dV)
 
   res.out<-list(theta=theta.em, Vcom=Vcom, dV=dV, DM.ECM=R.t2, DM.CM=DM.CM)
   class(res.out) <- "eco"
