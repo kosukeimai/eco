@@ -114,25 +114,23 @@ eco.em <- function(Y, X, data = parent.frame(),supplement=NULL,
     
     if (printon) {
       cat(i, " ")
-      if (Fisher) {cat(fisher(temp), "\n") }
-       if (!Fisher) { cat(temp, "\n") }
+      if (Fisher)
+        cat(fisher(temp), "\n")
+      else
+        cat(temp, "\n") 
     }
 
     if (!Fisher) {
-    for (j in 1:5) {   
-      print(abs(temp[j]-theta.old[j]))
-      if (abs(temp[j]-theta.old[j]) > convergence) em.converge<-FALSE
-     }
+      for (j in 1:5) {   
+        if (abs(temp[j]-theta.old[j]) > convergence) em.converge<-FALSE
+      }
     }
   
-    print(em.converge)
-
- if (Fisher) {
-     for (j in 1:5) {   
-      if (abs(fisher(temp)[j]-fisher(theta.old)[j])>convergence) em.converge<-FALSE
-     }
-   }
-
+    if (Fisher) {
+      for (j in 1:5) {   
+        if (abs(fisher(temp)[j]-fisher(theta.old)[j])>convergence) em.converge<-FALSE
+      }
+    }
 
     theta.old<-temp
     
@@ -140,13 +138,10 @@ eco.em <- function(Y, X, data = parent.frame(),supplement=NULL,
     if (em.converge & (draw < draw.max)) {
       em.converge <- FALSE
       draw <- draw.max
+      print("hi")
     }
-      
     if (draw<=draw.max) draw<-draw+by.draw
-    print(em.converge) 
-    print(i)
-    print(Fisher)
- }
+  }
   
   Ioc<-matrix(NA, n.var, n.var)
   
@@ -373,11 +368,6 @@ eco.sem<-function(Y, X, data = parent.frame(),supplement=NULL,
         }   
         rowdiff[i]<-rowdiff.temp
       }
-      else if (draw < draw.max) {
-        Rconvergence <- FALSE
-        draw <- draw.max
-        rowdiff[i] <- 1
-      }
     }
     
     theta.old<-theta.t
@@ -392,12 +382,17 @@ eco.sem<-function(Y, X, data = parent.frame(),supplement=NULL,
       print(theta.old)
     }
     k<-k+1
-    
-    if (draw<=draw.max) draw<-draw+by.draw
+
+    if (draw < draw.max & min(rowdiff)< R.convergence) {
+      Rconvergence <- FALSE
+      draw <- draw.max
+      rowdiff[rowdiff==min(rowdiff)] <- 1
+      print("hi")
+    }
+    if (draw < draw.max)
+      draw<-min(draw+by.draw, draw.max)
   }
-  
-  
-  
+
   cat("\n")
   cat("Estimates based on EM", "\n")
   cat("Mean:", "\n")
