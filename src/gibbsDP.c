@@ -242,19 +242,19 @@ void cDPeco(int *n_gen,      /* number of gibbs draws */
 	if (*link==1){
 	  vtemp[0]=log(W1g[i][j])-log(1-W1g[i][j]);
 	  vtemp[1]=log(W2g[i][j])-log(1-W2g[i][j]);
-	  prob_grid[j]=dBVN(vtemp, mu[i], InvSigma[i], 1) -
+	  prob_grid[j]=dMVN(vtemp, mu[i], InvSigma[i], 2, 1) -
 	    log(W1g[i][j])-log(W2g[i][j])-log(1-W1g[i][j])-log(1-W2g[i][j]);
 	}
 	else if (*link==2){
 	  vtemp[0]=qnorm(W1g[i][j], 0, 1, 1, 0);
 	  vtemp[1]=qnorm(W2g[i][j], 0, 1, 1, 0);
-	  prob_grid[j]=dBVN(vtemp, mu[i], InvSigma[i], 1) -
+	  prob_grid[j]=dMVN(vtemp, mu[i], InvSigma[i], 2, 1) -
 	    dnorm(vtemp[0], 0, 1, 1)-dnorm(vtemp[1], 0, 1, 1);
 	}
 	else if (*link==3) {
 	  vtemp[0]=-log(-log(W1g[i][j]));
 	  vtemp[1]=-log(-log(W2g[i][j]));
-	  prob_grid[j]=dBVN(vtemp, mu[i], InvSigma[i], 1) -
+	  prob_grid[j]=dMVN(vtemp, mu[i], InvSigma[i], 2, 1) -
 	    log(W1g[i][j])-log(W2g[i][j])-log(-log(W1g[i][j]))-log(-log(W2g[i][j]));
 	}
 	prob_grid[j]=exp(prob_grid[j]);
@@ -291,9 +291,9 @@ void cDPeco(int *n_gen,      /* number of gibbs draws */
       dtemp=0;
       for (j=0; j<n_samp; j++){
 	if (j!=i)
-	  q[j]=dBVN(Wstar[i], mu[j], InvSigma[j], 0);
+	  q[j]=dMVN(Wstar[i], mu[j], InvSigma[j], 2, 0);
 	else 
-	  q[j]=alpha*dBVT(Wstar[i], mu0, S_bvt, nu0-1, 0);
+	  q[j]=alpha*dMVT(Wstar[i], mu0, S_bvt, nu0-1, 2, 0);
 	dtemp+=q[j];
 	qq[j]=dtemp;	/*compute qq, the cumlative of q*/
       }

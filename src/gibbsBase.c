@@ -182,19 +182,19 @@ void cBaseeco(int *n_gen,      /* number of gibbs draws */
 	if (*link==1){
 	  vtemp[0]=log(W1g[i][j])-log(1-W1g[i][j]);
 	  vtemp[1]=log(W2g[i][j])-log(1-W2g[i][j]);
-	  prob_grid[j]=dBVN(vtemp, mu_ord, InvSigma_ord, 1) -
+	  prob_grid[j]=dMVN(vtemp, mu_ord, InvSigma_ord, 2, 1) -
 	    log(W1g[i][j])-log(W2g[i][j])-log(1-W1g[i][j])-log(1-W2g[i][j]);
 	}
 	else if (*link==2){
 	  vtemp[0]=qnorm(W1g[i][j], 0, 1, 1, 0);
 	  vtemp[1]=qnorm(W2g[i][j], 0, 1, 1, 0);
-	  prob_grid[j]=dBVN(vtemp, mu_ord, InvSigma_ord, 1) -
+	  prob_grid[j]=dMVN(vtemp, mu_ord, InvSigma_ord, 2, 1) -
 	    dnorm(vtemp[0], 0, 1, 1)-dnorm(vtemp[1], 0, 1, 1);
 	}
 	else if (*link==3) {
 	  vtemp[0]=-log(-log(W1g[i][j]));
 	  vtemp[1]=-log(-log(W2g[i][j]));
-	  prob_grid[j]=dBVN(vtemp, mu_ord, InvSigma_ord, 1) -
+	  prob_grid[j]=dMVN(vtemp, mu_ord, InvSigma_ord, 2, 1) -
 	    log(W1g[i][j])-log(W2g[i][j])-log(-log(W1g[i][j]))-log(-log(W2g[i][j])); 
 	}
 	prob_grid[j]=exp(prob_grid[j]);
