@@ -9,7 +9,7 @@
 void cEMeco(
 	      /*data input */
 	      double *pdX,     /* data (X, Y) */
-              double *pdTheta_in  /* Theta^ t */
+              double *pdTheta_in,  /* Theta^ t */
 
 	      int *pin_samp,   /* sample size */
 	      /*MCMC draws */
