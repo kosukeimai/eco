@@ -9,7 +9,7 @@ transform<-function(pp) {
 
 
 eco.em <- function(Y, X, data = parent.frame(),supplement=NULL, 
-      theta.old=c(0,0,1,1,0), 
+      theta.old=c(0,0,1,0,1), 
       convergence=0.0001, iteration.max=20,
       n.draws = 10, by.draw=10, draw.max=200, printon=TRUE) {
 
@@ -71,32 +71,61 @@ eco.em <- function(Y, X, data = parent.frame(),supplement=NULL,
   n.samp <- length(Y.use)	 
   d <- cbind(X.use, Y.use)
   n.var<-5
-  n.Imat<-n.var*(n.var+1)/2
 
+  cdiff<-1
+  em.converge<-FALSE
+  i<-1
+
+  em.mat<-matrix(NA, iteration.max, 5)
+
+ while ((!em.converge) && (i<iteration.max))
+{
   res <- .C("cEMeco", as.double(d), as.double(theta.old),
 	      as.integer(n.samp),  as.integer(n.draws), 
-	      as.integer(by.draw), as.integer(draw.max),
-	      as.double(convergence), as.integer(iteration.max),
               as.integer(survey.yes), as.integer(survey.samp), as.double(survey.data),
    	      as.integer(X1type), as.integer(samp.X1), as.double(X1.W1),
    	      as.integer(X0type), as.integer(samp.X0), as.double(X0.W2),
-	      pdTheta=double(n.var), Ioc=double(n.Imat), 
+	      pdTheta=double(n.var),
               PACKAGE="eco")
 
-  theta.em<-res$pdTheta
-  em.Ioc<-res$Ioc
+  temp<-res$pdTheta
+  em.converge<-TRUE
 
-if (printon)
-{  
+  if (printon) {
+  cat("\ni=  ", i,  "\n")
+  #cat(theta.old)
+  cat(temp)
+  }
+
+  for (j in 1:5) 
+   {   
+     if (abs(temp[j]-theta.old[j])>convergence) 
+       em.converge<-FALSE
+  }
+  #cdiff<-as.numeric(t(temp-theta.old)%*%(temp-theta.old))
+
+  theta.old<-temp
+  em.mat[i,]<-theta.old
+
+  i<-i+1
+  if (draw<=draw.max) draw<-draw+by.draw
+ 
+}
+
+  em.mat<-em.mat[1:(i-1),]
+#  theta<-list(mu=c(theta.old[1], theta.old[2]), Sigma=matrix(theta.old[c(3,4,4,5)], 2,2))
+
+
+
 cat("\n")
 cat("Estimates based on EM", "\n")
-cat("Mean, std, correlation", "\n")
-print(theta.em)
+cat("Mean:", "\n")
+print(theta.old[1:2])
 cat("\n")
-#cat("Covarianace Matrix:", "\n")
-#print(matrix(theta.old[c(3,4,4,5)],2,2))
-}
-res.out<-list(theta=theta.em, em.Ioc=em.Ioc)
+cat("Covarianace Matrix:", "\n")
+print(matrix(theta.old[c(3,4,4,5)],2,2))
+
+res.out<-list(theta=theta.old, em.mat=em.mat)
   class(res.out) <- "eco"
   return(res.out)
 
@@ -166,7 +195,6 @@ eco.sem<-function(Y, X, data = parent.frame(),supplement=NULL,
   n.samp <- length(Y.use)	 
   d <- cbind(X.use, Y.use)
   n.var<-5
-  n.Imat<-n.var*(n.var+1)/2
 
   R.t1<-matrix(0, n.var, n.var)
   R.t2<-matrix(0, n.var, n.var)
@@ -175,22 +203,21 @@ eco.sem<-function(Y, X, data = parent.frame(),supplement=NULL,
   k<-1
 
   Rconverge<-FALSE
-  convergence<-0.0000001
-  max<-1
 
 while (!Rconverge && (k<iteration.max))
 {
   res <- .C("cEMeco", as.double(d), as.double(theta.old),
-	      as.integer(n.samp),  as.integer(n.draws),
-	      as.integer(by.draw), as.integer(draw.max),
-	      as.integer(convergence), as.integer(max), 
+	      as.integer(n.samp),  as.integer(n.draws), 
               as.integer(survey.yes), as.integer(survey.samp), as.double(survey.data),
    	      as.integer(X1type), as.integer(samp.X1), as.double(X1.W1),
    	      as.integer(X0type), as.integer(samp.X0), as.double(X0.W2),
-	      pdTheta=double(n.var), Ioc=double(n.Imat),
+	      pdTheta=double(n.var),
               PACKAGE="eco")
 
   theta.t<-res$pdTheta
+  #cat("\n theta.t \n")
+  #print(theta.t)
+  #theta.t.i<-rep(NA, n.var)
 
   Rconverge<-TRUE
 
@@ -201,15 +228,15 @@ while (!Rconverge && (k<iteration.max))
     Rconverge<-FALSE
     theta.t.i<-theta.em
     theta.t.i[i]<-theta.t[i]
+   #cat("\n theta.t.i \n")
+   #print(theta.t.i)
 
     temp<-.C("cEMeco", as.double(d), as.double(theta.t.i),
 	      as.integer(n.samp),  as.integer(n.draws), 
-	      as.integer(by.draw), as.integer(draw.max),
-	      as.integer(convergence), as.integer(max), 
               as.integer(survey.yes), as.integer(survey.samp), as.double(survey.data),
    	      as.integer(X1type), as.integer(samp.X1), as.double(X1.W1),
    	      as.integer(X0type), as.integer(samp.X0), as.double(X0.W2),
-	      pdTheta=double(n.var), Ioc=double(n.Imat),
+	      pdTheta=double(n.var),
               PACKAGE="eco")$pdTheta
 
   for (j in 1:n.var)
@@ -234,24 +261,9 @@ while (!Rconverge && (k<iteration.max))
   print(theta.old)
   }
   k<-k+1
-  if (n.draws<=draw.max-by.draw) n.draws<-n.draws+by.draw
+  if (draw<=draw.max) draw<-draw+by.draw
 }
 
-###compute 
-ff<-FALSE
-if (ff) {
-DM.ECM<-R.t2
-
-Gamma<-matrix(0,5,5)
-Gamma[1:2,1:2]<-Ioc[1:2,1:2]
-Gamma[3:5,3:5]<-Ioc[3:5,3:5]
-Lamda<-matrix(0,5,5)
-Lamda[3:5, 1:2]<-Ioc[3:5, 1:2]
-DM.CM<--Lamda%*%solve(Gamma+t(Lamda))
-
-Vcom<-solve(Ioc)
-dV<-Vcom%*%(DM.ECM-DM.CM)%*%solve((diag(1,5)-DM.ECM))
-}
 
 
 cat("\n")
@@ -269,6 +281,4 @@ print(R.t2)
   return(res.out)
 
 }
-
-
   
