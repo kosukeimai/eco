@@ -115,19 +115,21 @@ eco.em <- function(Y, X, data = parent.frame(),supplement=NULL,
     if (printon) {
       cat(i, " ")
       if (Fisher) {cat(fisher(temp), "\n") }
-        else if (!Fisher) { cat(temp, "\n") }
+       if (!Fisher) { cat(temp, "\n") }
     }
 
     if (!Fisher) {
     for (j in 1:5) {   
-      if (abs(temp[j]-theta.old[j])>convergence) 
-        em.converge<-FALSE
+      print(abs(temp[j]-theta.old[j]))
+      if (abs(temp[j]-theta.old[j]) > convergence) em.converge<-FALSE
      }
     }
-    else if (Fisher) {
+  
+    print(em.converge)
+
+ if (Fisher) {
      for (j in 1:5) {   
-      if (abs(fisher(temp)[j]-fisher(theta.old)[j])>convergence) 
-        em.converge<-FALSE
+      if (abs(fisher(temp)[j]-fisher(theta.old)[j])>convergence) em.converge<-FALSE
      }
    }
 
@@ -135,13 +137,16 @@ eco.em <- function(Y, X, data = parent.frame(),supplement=NULL,
     theta.old<-temp
     
     i<-i+1
-    if (em.converge & draw < draw.max) {
+    if (em.converge & (draw < draw.max)) {
       em.converge <- FALSE
       draw <- draw.max
     }
       
     if (draw<=draw.max) draw<-draw+by.draw
-  }
+    print(em.converge) 
+    print(i)
+    print(Fisher)
+ }
   
   Ioc<-matrix(NA, n.var, n.var)
   
@@ -440,9 +445,19 @@ eco.sem<-function(Y, X, data = parent.frame(),supplement=NULL,
 
   v.fish<-c(1,1, theta.em[3], theta.em[4], (1-theta.em[5]^2))
  
-  Vcom<-v.fish%*%t(v.fish)*Vcom
-  Vobs<-v.fish%*%t(v.fish)*Vobs
-  dV<-Vobs-Vcom 
+  Vcom.orig<-v.fish%*%t(v.fish)*Vcom
+  Vobs.orig<-v.fish%*%t(v.fish)*Vobs
+  dV.orig<-Vobs.orig-Vcom.orig 
+
+  cat("Vobs_orig=:", "\n")
+  print(Vobs.orig)
+  
+  cat("Vcom_orig=:", "\n")
+  print(Vcom.orig)
+  
+  cat("dV_orig=:", "\n")
+  print(dV.orig)
+
   } 
   else if (!Fisher) {
 
