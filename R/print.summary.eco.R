@@ -1,7 +1,7 @@
 print.summary.eco <- function(x, digits=max(3, getOption("digits")
                                    -3), ...) {
   cat("\nCall:") 
-  cat(paste(depar se(x$call), spe="\n", collapse="\n"), "\n", spe=" ")
+  cat(paste(deparse(x$call), spe="\n", collapse="\n"), "\n", spe=" ")
  
   cat("\nModel:")
   cat(paste(deparse(x$model), spe="\n", collapse="\n"), "\n", spe=" ")
