@@ -406,6 +406,9 @@ eco.sem<-function(Y, X, data = parent.frame(),supplement=NULL,
   
   ##missing information decomposition
   
+  SECM.yes<-FALSE
+
+  if (SECM.yes) {
   DM.ECM<-R.t2
   
   Gamma<-matrix(0,5,5)
@@ -417,6 +420,19 @@ eco.sem<-function(Y, X, data = parent.frame(),supplement=NULL,
   
   Vcom<-solve(Ioc.em)
   dV<-Vcom%*%(DM.ECM-DM.CM)%*%solve((diag(1,5)-DM.ECM))
+}
+  if(!SECM.yes) {
+  DM<-R.t2
+  
+  Gamma<-matrix(0,5,5)
+  Gamma[1:2, 1:2]<-Ioc.em[1:2,1:2]
+  Gamma[3:5,3:5]<-Ioc.em[3:5,3:5]
+  Lamda<-matrix(0,5,5)
+  Lamda[3:5, 1:2]<-Ioc.em[3:5, 1:2]
+    
+  Vcom<-solve(Ioc.em)
+  dV<-Vcom%*%DM%*%solve(diag(1,5)-DM)
+}
 
   Vobs<-Vcom+dV
   
@@ -468,7 +484,7 @@ eco.sem<-function(Y, X, data = parent.frame(),supplement=NULL,
   cat("dV=:", "\n")
   print(dV)
 }
-  res.out<-list(theta=theta.em, Vobs=Vobs, Vcom=Vcom, dV=dV, DM.ECM=R.t2)
+  res.out<-list(theta=theta.em, Vobs=Vobs, Vcom=Vcom, dV=dV, DM=R.t2)
   class(res.out) <- "eco"
   return(res.out)
 }

@@ -1,7 +1,7 @@
 eco <- function(Y, X, data = parent.frame(), 
 		n.draws = 5000, burnin = 0, thin = 5, verbose = FALSE,
-		nonpar =  TRUE, nu0 = 4, tau0 = 1, mu0 = c(0,0),
-                S0 = diag(8,2), supplement=NULL,
+		nonpar =  TRUE, nu0 = 4, tau0 = 2, mu0 = c(0,0),
+                S0 = diag(10,2), supplement=NULL,
 	        alpha = NULL, a0 = 1, b0 = 0.1,
                 predict = FALSE, parameter = FALSE){ 
 
@@ -112,7 +112,8 @@ eco <- function(Y, X, data = parent.frame(),
     a.post <- matrix(res$pdSa, n.a, unit.a, byrow=TRUE)
     nstar <- matrix(res$pdSn, n.a, unit.a, byrow=TRUE)
     
-    if (parameter && predict) 
+    if (parameter && predict) {
+    cat("yes1")
       res.out <- list(model="Dirichlet Process Prior", alpha=alpha,
                       burnin=burnin, thin=thin, X=X, Y=Y, nu0=nu0, tau0=tau0, mu0=mu0,
                       S0=S0, a0=a0, b0=b0, call=call,
@@ -120,26 +121,30 @@ eco <- function(Y, X, data = parent.frame(),
                       Sigma11.post=Sigma11.post,
                       Sigma12.post=Sigma12.post, Sigma22.post=Sigma22.post, 
                       W1.post=W1.post, W2.post=W2.post,
-                      W1.pred=W1.pred, W2.pred=W2.pred, a.post=a.post, nstar=nstar)    
-    else if (parameter && !predict) 
+                      W1.pred=W1.pred, W2.pred=W2.pred, a.post=a.post, nstar=nstar) }   
+    else if (parameter && !predict) {
+cat("yes2")
       res.out <- list(model="Dirichlet Process Prior", alpha=alpha,
                       burnin=burnin, thin=thin, X=X, Y=Y, nu0=nu0, tau0=tau0, mu0=mu0,
                       S0=S0, a0=a0, b0=b0, call=call,
                       mu1.post=mu1.post, mu2.post=mu2.post, 
                       Sigma11.post=Sigma11.post,
                       Sigma12.post=Sigma12.post, Sigma22.post=Sigma22.post, 
-                      W1.post=W1.post, W2.post=W2.post, a.post=a.post, nstar=nstar)   
+                      W1.post=W1.post, W2.post=W2.post, a.post=a.post, nstar=nstar)   }
     else if (!parameter && predict) 
+{
+cat("yes3")
       res.out <- list(model="Dirichlet Process Prior", alpha=alpha,
                       burnin=burnin, thin=thin, X=X, Y=Y, nu0=nu0, tau0=tau0, mu0=mu0,
                       S0=S0, a0=a0, b0=b0, call=call,
                       W1.post=W1.post, W2.post=W2.post,
-                      W1.pred=W1.pred, W2.pred=W2.pred, a.post=a.post, nstar=nstar)  
-    else if (!parameter && !predict) 
+                      W1.pred=W1.pred, W2.pred=W2.pred, a.post=a.post, nstar=nstar)  }
+    else {
+     cat("yes")
       res.out <- list(model="Dirichlet Process Prior", alpha=alpha,
                       burnin=burnin, thin=thin, X=X, Y=Y, nu0=nu0, tau0=tau0, mu0=mu0,
                       S0=S0, a0=a0, b0=b0, call=call,
-                      W1.post=W1.post, W2.post=W2.post, a.post=a.post, nstar=nstar)     
+                      W1.post=W1.post, W2.post=W2.post, a.post=a.post, nstar=nstar)     }
   }	 
   else{ # parametric model
     n.a <- floor((n.draws-burnin)/thin)
