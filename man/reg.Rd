@@ -1,4 +1,4 @@
-\name{matproii}
+\name{reg}
 
 \docType{data}
 
@@ -12,9 +12,9 @@
   Carolina.
 }
 
-\usage{data(matproii)}
+\usage{data(reg)}
 
-\format{A matrix containing 7 variables and 275 observations}
+\format{A matrix containing 2 variables and 275 observations}
 
 \references{Gary King (1997) \dQuote{A Solution to the Ecological
     Inference Problem: Reconstructing Individual Behavior from Aggregate
