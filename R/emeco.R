@@ -104,8 +104,6 @@ eco.em <- function(Y, X, data = parent.frame(),supplement=NULL,
   em.converge<-FALSE
   i<-1
   
-Iocrun<-0
-
  while ((!em.converge) && (i<iteration.max))
 {
   res <- .C("cEMeco", as.double(d), as.double(theta.old),
@@ -113,7 +111,6 @@ Iocrun<-0
               as.integer(survey.yes), as.integer(survey.samp), as.double(survey.data),
    	      as.integer(X1type), as.integer(samp.X1), as.double(X1.W1),
    	      as.integer(X0type), as.integer(samp.X0), as.double(X0.W2),
-	      as.integer(Iocrun),
 	      pdTheta=double(n.var), S=double(n.var),
               PACKAGE="eco")
 
@@ -155,13 +152,11 @@ Ioc<-matrix(NA, n.var, n.var)
 
 if (em.converge && Ioc.yes) {
 #output Ioc 
-Iocrun<-1
   res <- .C("cEMeco", as.double(d), as.double(theta.old),
 	      as.integer(n.samp),  as.integer(n.draws), 
               as.integer(survey.yes), as.integer(survey.samp), as.double(survey.data),
    	      as.integer(X1type), as.integer(samp.X1), as.double(X1.W1),
    	      as.integer(X0type), as.integer(samp.X0), as.double(X0.W2),
-	      as.integer(Iocrun),
 	      pdTheta=double(n.var), S=double(n.var),
               PACKAGE="eco")
 #based on pdTheta and S compute Ioc
@@ -274,7 +269,6 @@ eco.sem<-function(Y, X, data = parent.frame(),supplement=NULL,
 
   Rconverge<-FALSE
 
-Iocrun<-0
 
 while (!Rconverge && (k<iteration.max))
 {
@@ -283,7 +277,6 @@ while (!Rconverge && (k<iteration.max))
               as.integer(survey.yes), as.integer(survey.samp), as.double(survey.data),
    	      as.integer(X1type), as.integer(samp.X1), as.double(X1.W1),
    	      as.integer(X0type), as.integer(samp.X0), as.double(X0.W2),
-     	      as.integer(Iocrun),
 	      pdTheta=double(n.var), S=double(n.var),
               PACKAGE="eco")
 
@@ -305,7 +298,6 @@ while (!Rconverge && (k<iteration.max))
               as.integer(survey.yes), as.integer(survey.samp), as.double(survey.data),
    	      as.integer(X1type), as.integer(samp.X1), as.double(X1.W1),
    	      as.integer(X0type), as.integer(samp.X0), as.double(X0.W2),
-     	      as.integer(Iocrun),
 	      pdTheta=double(n.var), S=double(n.var),
               PACKAGE="eco")$pdTheta
 
