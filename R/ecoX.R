@@ -433,6 +433,54 @@ else if (nonpar)
 }
 }
 
+if (contextual.effect=="regtemp") {
+  if (!nonpar) {
+    n.a <- floor((n.draws-burnin)/thin)
+    n.par <- n.a
+    n.w <- n.a * (n.samp+samp.X1+samp.X0) 
+    unit.a <- 1
+    unit.par <- 1
+    unit.w <- (n.samp+samp.X1+samp.X0) 	
+    Zmat<-Z%x%diag(1, 2)
+#Zmat<-diag(1, 2)%x%Z
+    print(Zmat)
+    Zp<-dim(Zmat)[2]
+    cat("Zp", Zp)
+    if (is.null(beta0)) beta0<-rep(0, Zp)
+    if (is.null(A0)) A0<-diag(0.01, Zp)
+    print(beta0)
+    print(A0)
+    n.a.b<-n.a*Zp
+    n.a.V<-n.a*3
+    res <- .C("cBasetempZ", as.double(d),
+		as.double(Zmat), as.integer(Zp),  
+		as.integer(n.samp),
+	      as.integer(n.draws), as.integer(burnin), as.integer(thin),
+	      as.integer(verbose),
+              as.integer(nu0), as.double(S0),
+	      as.double(beta0), as.double(A0),
+              as.integer(survey.yes), as.integer(survey.samp), as.double(survey.data),
+   	      as.integer(X1type), as.integer(samp.X1), as.double(X1.W1),
+   	      as.integer(X0type), as.integer(samp.X0), as.double(X0.W2),
+	      as.integer(predict), as.integer(parameter), 
+	      pdSBeta=double(n.a.b),
+              pdSSigma=double(n.a.V), PACKAGE="eco")
+
+    if (parameter) {
+      beta.post <- matrix(res$pdSBeta, n.a, Zp, byrow=TRUE) 
+      Sigma.post <- matrix(res$pdSSigma, n.a, 3, byrow=TRUE)
+print("ok")
+      colnames(Sigma.post) <- c("Sigma11", "Sigma12", "Sigma22")
+    }
+    print("ok")
+      res.out <- list(model="reg temp", burnin=burnin, thin = thin, X=X, Y=Y,
+                      nu0=nu0, A0=A0, beta0=beta0, S0=S0, call=call, beta.post=beta.post,
+                      Sigma.post=Sigma.post)
+    
+  }
+}
+
+
   class(res.out) <- "eco"
   return(res.out)
 }

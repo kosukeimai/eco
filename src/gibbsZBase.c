@@ -214,7 +214,7 @@ void cBaseecoZ(
   for (k=0; k<n_cov; k++)
     for (j=0; j<n_dim; j++)
       for (i=0; i<t_samp; i++)
-	Z[i*n_dim+j][k]=pdZ[itemp++];
+	Z[j*t_samp+i][k]=pdZ[itemp++];
 
 
   /* add prior information to Z*/
@@ -484,9 +484,9 @@ void cBaseecoZ(
 
 
     /*SWEEP to get posterior mean anf variance for beta */
-    for (j=0; j<=n_cov; j++) 
+    for (j=0; j<n_cov; j++) 
       SWP(SS,j,n_cov+1);
-    Rprintf("ok1\n");
+
     /*draw alpha2 given Sigma and W */
     /*ss+=SS[n_cov][n_cov];
       alpha2=ss/(double)rchisq((double)(n_samp+nu0)*n_dim);*/

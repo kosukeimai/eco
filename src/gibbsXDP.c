@@ -343,7 +343,7 @@ void cDPecoX(
     /**update W, Wstar given mu, Sigma only for the unknown W/Wstar**/
     for (i=0;i<t_samp;i++){
       for (j=0; j<n_dim; j++) {
-        mu_w[j]=mu[i][j]+Sigma[i][n_dim][j]/Sigma[i][n_dim][n_dim]*(mu[i][n_dim]-X[i][0]);
+        mu_w[j]=mu[i][j]+Sigma[i][n_dim][j]/Sigma[i][n_dim][n_dim]*(X[i][0]-mu[i][n_dim]);
         for (k=0; k<n_dim; k++)
           Sigma_w[j][k]=Sigma[i][j][k];
       }

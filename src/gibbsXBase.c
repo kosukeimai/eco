@@ -283,7 +283,7 @@ void cBaseecoX(
     /**update W, Wstar given mu, Sigma in regular areas**/
     for (i=0;i<n_samp;i++){
       for (j=0; j<n_dim; j++) {
-	mu_ord_w[j]=mu_ord[j]+Sigma_ord[n_dim][j]/Sigma_ord[n_dim][n_dim]*(mu_ord[n_dim]-X[i][0]);
+	mu_ord_w[j]=mu_ord[j]+Sigma_ord[n_dim][j]/Sigma_ord[n_dim][n_dim]*(X[i][0]-mu_ord[n_dim]);
 	for (k=0; k<n_dim; k++)
 	  Sigma_ord_w[j][k]=Sigma_ord[j][k];
       }
