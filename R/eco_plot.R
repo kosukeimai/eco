@@ -5,27 +5,27 @@ tomoplot<-function(X,Y,truep=NA, truer=NA)
 	{
 	if ((X[i]<1/2) & (Y[i]>X[i]) & (Y[i]<(1-X[i])))
 	{
-		lines(c(0,1), c(Y[i]/(1-X[i]), (Y[i]-X[i])/(1-X[i])), lwd=0.8)
+		lines(c(0,1), c(Y[i]/(1-X[i]), (Y[i]-X[i])/(1-X[i])), lwd=0.5)
 	}
 
 	if ((Y[i]>1/2) & (X[i]<Y[i]) & ((1-Y[i])<X[i]))
 	{
-		lines(c((X[i]+Y[i]-1)/X[i], 1), c(1, (Y[i]-X[i])/(1-X[i])), lwd=0.8)
+		lines(c((X[i]+Y[i]-1)/X[i], 1), c(1, (Y[i]-X[i])/(1-X[i])), lwd=0.5)
 	}
 
 	if ((X[i]>1/2) & (X[i]>Y[i]) & (Y[i]>(1-X[i])))
 	{
-		lines(c((X[i]+Y[i]-1)/X[i], Y[i]/X[i]), c(1,0), lwd=0.8)
+		lines(c((X[i]+Y[i]-1)/X[i], Y[i]/X[i]), c(1,0), lwd=0.5)
 	}
 
 	if ((Y[i]<1/2) & (Y[i]<X[i]) & (X[i]<(1-Y[i])))
 	{
-		lines(c(0, Y[i]/X[i]), c(Y[i]/(1-X[i]), 0), lwd=0.8)
+		lines(c(0, Y[i]/X[i]), c(Y[i]/(1-X[i]), 0), lwd=0.5)
 	}
 
 	if ((!is.na(truep)) & (!is.na(truer)))
 	{
-		points(truep, truer, pch=20, cex=0.8)
+		points(truep, truer, pch=20, cex=0.5)
 	}
 	}
 }
@@ -122,4 +122,26 @@ title(main="W contour-a vary", sub=paste("simulate data  ", simdata))
 #title(main="Mu contour", sub=paste("simulate data  ", simdata))
 
 dev.off()
+}
+
+
+
+##bounds conditions
+
+bounds<-function(X,Y) {
+    temp<-(X+Y-1)/X
+    temp<-as.matrix(temp)
+    W1.min<-apply(temp,1,max,0)
+    temp<-Y/X
+    temp<-as.matrix(temp)
+    W1.max<-apply(temp,1,min, 1)
+    temp<-(Y-X)/(1-X)
+    temp<-as.matrix(temp)
+    W2.min<-apply(temp, 1, max, 0)
+    temp<-Y/(1-X)
+    temp<-as.matrix(temp)
+    W2.max<-apply(temp, 1, min, 1)
+
+    bounds<-as.data.frame(cbind(W1.min, W1.max, W2.min, W2.max))
+    return(bounds)
 }
