@@ -218,7 +218,6 @@ void cDPecoX(
   for(k=0;k<=n_dim;k++)
     for(j=0;j<=n_dim;j++) {
     S0[j][k]=pdS0[itemp++];
-    Rprintf("%14g\n", S0[j][k]);
     }
 
   for (i=0; i<n_samp; i++) {
@@ -369,19 +368,6 @@ void cDPecoX(
 	  prob_grid[j]=dMVN(vtemp, mu_w, InvSigma_w, n_dim, 1) -
 	    log(W1g[i][j])-log(W2g[i][j])-log(1-W1g[i][j])-log(1-W2g[i][j]);
 	 
-          /*{
-          else if (*link==2){
-            vtemp[0]=qnorm(W1g[i][j], 0, 1, 1, 0);
-            vtemp[1]=qnorm(W2g[i][j], 0, 1, 1, 0);
-            prob_grid[j]=dMVN(vtemp, mu[i], InvSigma[i], 2, 1) -
-              dnorm(vtemp[0], 0, 1, 1)-dnorm(vtemp[1], 0, 1, 1);
-          }
-          else if (*link==3) {
-            vtemp[0]=-log(-log(W1g[i][j]));
-            vtemp[1]=-log(-log(W2g[i][j]));
-            prob_grid[j]=dMVN(vtemp, mu[i], InvSigma[i], 2, 1) -
-              log(W1g[i][j])-log(W2g[i][j])-log(-log(W1g[i][j]))-log(-log(W2g[i][j]));
-              }*/
           prob_grid[j]=exp(prob_grid[j]);
           dtemp+=prob_grid[j];
           prob_grid_cum[j]=dtemp;
@@ -439,6 +425,7 @@ void cDPecoX(
        }
 
        /** draw the configuration parameter **/
+
        /* j=i means to draw from posterior baseline */
        /* j=i' means to replace with i' obs */
        j=0; dtemp=unif_rand();
