@@ -31,7 +31,6 @@ void cEMeco(
 	      int *sampx0,  /* number X=0 type areas */
 	      double *x0_W2, /* values of W_2 for X0 type areas */
 
-	      int *Iocrun, /*1 if last run converges, do one extra to compute S_stat */
 	      /* storage */
 	      double *pdTheta,  /*EM result for Theta^(t+1) */
 	      double *Suff    /*out put suffucient statistics (E(W_1i|Y_i), E(E_1i*W_1i|Y_i..) 
@@ -399,40 +398,24 @@ void cEMeco(
       Suff[j]=0;
     }  
 
+  /* compute sufficient statistics */
 
   for (i=0; i<t_samp; i++)
     {
-      pdTheta[0]+=Wstar[i][0]/t_samp;  /*mu1*/
-      pdTheta[1]+=Wstar[i][1]/t_samp;  /*mu2*/
-      
-    }   
-
-  for(i=0; i<t_samp; i++)
-    {
-      pdTheta[2]+=(Wstar[i][2]-2*Wstar[i][0]*pdTheta[0]+pdTheta[0]*pdTheta[0])/t_samp;  /*sigma11*/
-      pdTheta[3]+=(Wstar[i][4]-2*Wstar[i][1]*pdTheta[1]+pdTheta[1]*pdTheta[1])/t_samp;  /*sigma22*/
-      pdTheta[4]+=(Wstar[i][3]-Wstar[i][0]*pdTheta[1]-Wstar[i][1]*pdTheta[0]+pdTheta[0]*pdTheta[1])/t_samp; /*sigma12*/
+      Suff[0]+=Wstar[i][0];  /* sumE(W_i1|Y_i) */
+      Suff[1]+=Wstar[i][1];  /* sumE(W_i2|Y_i) */
+      Suff[2]+=Wstar[i][2];  /* sumE(W_i1^2|Y_i) */
+      Suff[3]+=Wstar[i][4];  /* sumE(W_i2^2|Y_i) */
+      Suff[4]+=Wstar[i][3];  /* sumE(W_i1^W_i2|Y_i) */
     }
 
+  pdTheta[0]=Suff[0]/t_samp;  /*mu1*/
+  pdTheta[1]=Suff[1]/t_samp;  /*mu2*/
+  pdTheta[2]=(Suff[2]-2*Suff[0]*pdTheta[0]+t_samp*pdTheta[0]*pdTheta[0])/t_samp;  /*sigma11*/
+  pdTheta[3]=(Suff[3]-2*Suff[1]*pdTheta[1]+t_samp*pdTheta[1]*pdTheta[1])/t_samp;  /*sigma22*/
+  pdTheta[4]=(Suff[4]-Suff[0]*pdTheta[1]-Suff[1]*pdTheta[0]+t_samp*pdTheta[0]*pdTheta[1])/t_samp; /*sigma12*/
   pdTheta[4]=pdTheta[4]/sqrt(pdTheta[2]*pdTheta[3]); /*rho*/
 
-  if (*Iocrun) 
-    {
-      Suff[0]=pdTheta[0]*t_samp;
-      Suff[1]=pdTheta[1]*t_samp;
-      for (i=0; i<t_samp; i++)
-	{
-	  Suff[2]+=Wstar[i][2];
-	  Suff[3]+=Wstar[i][3];
-	  Suff[4]+=Wstar[i][4];
-	}
-
-    }
-
-  /*pdTheta[2]=log(pdTheta[2]);
-  pdTheta[4]=log(pdTheta[4]);
-  dtemp=pdTheta[3]/sqrt(pdTheta[2]*pdTheta[4]);
-  pdTheta[3]=0.5*log((1+dtemp)/(1-dtemp));*/
 
   /** write out the random seed **/
   PutRNGstate();
