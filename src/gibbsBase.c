@@ -55,8 +55,6 @@ void cBaseeco(
   int nu0 = *pinu0;          /* prior parameters */ 
   double tau0 = *pdtau0;   
   int nth=*pinth;  
-
-  int keep=1;            /* keeps every #num draw */ 
   int n_cov=2;           /* The number of covariates */
 
   double **X;	    	 /* The Y and covariates */
@@ -94,7 +92,7 @@ void cBaseeco(
   double **Sn;           /* The posterior S parameter for InvWish */
 
   /* misc variables */
-  int i, j, k, l, main_loop;   /* used for various loops */
+  int i, j, k, main_loop;   /* used for various loops */
   int itemp, itempS, itempC, itempA;
   int progress = 1, itempP = ftrunc((double) *n_gen/10);
   double dtemp, dtemp1;

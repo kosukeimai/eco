@@ -69,9 +69,6 @@ void cDPeco(
   double tau0 = *pdtau0;   
   double a0=*pda0, b0=*pdb0;  
   int nth=*pinth;  
-
-  int data=0;            /* one to print the data */
-  int keep=1;            /* keeps every #num draw */ 
   int n_cov=2;           /* The number of covariates */
 
   double **X;	    	 /* The Y and covariates */
@@ -120,7 +117,6 @@ void cDPeco(
   int *indexC;            /* track original obs id */
   double **Wstarmix;      /* extracted data matrix used in remix step */ 
 
-  int which_obs;          /* pass index values */
   int *label;             /* store index values */
   double *mu_mix;         /* store mu update from remixing step */
   double **Sigma_mix;    /* store Sigma update from remixing step */
