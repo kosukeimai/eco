@@ -291,14 +291,11 @@ void cEMeco(
     
   
 
-     /* draw n_gen's from uniform */
-  for (i=0; i<ndraw; i++) {
-    utemp[i]=0;
-  } 
- for (i=0; i<ndraw; i++) {
-    utemp[i]=unif_rand();
-  }
-  R_rsort(utemp, ndraw);
+     /* draw n_gen's from uniform 
+	for (i=0; i<ndraw; i++) {
+	utemp[i]=unif_rand();
+	}
+	R_rsort(utemp, ndraw); */
   
     /**update W, Wstar given mu, Sigma in regular areas**/
     for (i=0;i<n_samp;i++){
@@ -328,9 +325,9 @@ void cEMeco(
 	itemp=1;
 
 	for (k=0; k<ndraw; k++){
-	  itemp0=n_grid[i];
-	  dtemp=utemp[k];
-          j=findInterval(prob_grid_cum, itemp0, dtemp, 1, 1, itemp, mflag);
+	  /* dtemp=utemp[k]; */
+          j=findInterval(prob_grid_cum, n_grid[i],
+			 (double)(1+k)/(ndraw+1), 1, 1, itemp, mflag); 
           itemp=j;
 	  W[i][0]=W1g[i][j];
 	  W[i][1]=W2g[i][j];
@@ -392,25 +389,36 @@ void cEMeco(
 
  	/*printf("\n%5d%14g%14g\n", i, Wstar[n_samp+x1_samp+i][0], W[n_samp+x1_samp+i][0]);*/ 
       }
+    
+
+
 
    
   /*M-step: same procedure as normal model */
-    for (j=0; j<5; j++) 
-      {
+  for (j=0; j<5; j++) 
+    {
       pdTheta[j]=0;
-    }
+    }  
 
-    for(i=0; i<t_samp; i++) {
+  for (i=0; i<t_samp; i++)
+    {
       pdTheta[0]+=Wstar[i][0]/t_samp;  /*mu1*/
       pdTheta[1]+=Wstar[i][1]/t_samp;  /*mu2*/
+      
+    }   
+
+  for(i=0; i<t_samp; i++)
+    {
       pdTheta[2]+=(Wstar[i][2]-2*Wstar[i][0]*pdTheta[0]+pdTheta[0]*pdTheta[0])/t_samp;  /*sigma11*/
       pdTheta[3]+=(Wstar[i][3]-Wstar[i][0]*pdTheta[1]-Wstar[i][1]*pdTheta[0]+pdTheta[0]*pdTheta[1])/t_samp; /*sigma12*/
       pdTheta[4]+=(Wstar[i][4]-2*Wstar[i][1]*pdTheta[1]+pdTheta[1]*pdTheta[1])/t_samp;  /*sigma22*/
     }
 
-  /*  for (j=0; j<5; j++) 
-    pdTheta[j]/=t_samp;
-  */
+  /*pdTheta[2]=log(pdTheta[2]);
+  pdTheta[4]=log(pdTheta[4]);
+  dtemp=pdTheta[3]/sqrt(pdTheta[2]*pdTheta[4]);
+  pdTheta[3]=0.5*log((1+dtemp)/(1-dtemp));*/
+
   /** write out the random seed **/
   PutRNGstate();
 
@@ -432,7 +440,6 @@ void cEMeco(
   free(Wstar_bar);
   free(vtemp);
   FreeMatrix(mtemp, n_cov);
-  free(utemp);
-  free(mflag);  
+  
 } /* main */
 
