@@ -414,10 +414,10 @@ void cEMeco(
       pdTheta[4]+=(Wstar[i][4]-2*Wstar[i][1]*pdTheta[1]+pdTheta[1]*pdTheta[1])/t_samp;  /*sigma22*/
     }
 
-  pdTheta[2]=log(pdTheta[2]);
+  /*pdTheta[2]=log(pdTheta[2]);
   pdTheta[4]=log(pdTheta[4]);
   dtemp=pdTheta[3]/sqrt(pdTheta[2]*pdTheta[4]);
-  pdTheta[3]=0.5*log((1+dtemp)/(1-dtemp));
+  pdTheta[3]=0.5*log((1+dtemp)/(1-dtemp));*/
 
   /** write out the random seed **/
   PutRNGstate();
