@@ -10,8 +10,8 @@
 void cEMeco(
 	      /*data input */
 	      double *pdX,     /* data (X, Y) */
-              double *pdTheta_in,  /* Theta^ t */
-
+              double *pdTheta_in,  /* Theta^ t 
+				      mu1, mu2, var1, var2, rho */
 	      int *pin_samp,   /* sample size */
 	      /*MCMC draws */
 	      int *n_gen,      /* number of gibbs draws */
@@ -144,9 +144,10 @@ void cEMeco(
   mu_ord[0] = pdTheta_in[0];
   mu_ord[1] = pdTheta_in[1];
   Sigma_ord[0][0] = pdTheta_in[2];
-  Sigma_ord[0][1] = pdTheta_in[4];
-  Sigma_ord[1][0] = pdTheta_in[4];
   Sigma_ord[1][1] = pdTheta_in[3];
+  Sigma_ord[0][1] = pdTheta_in[4]*sqrt(pdTheta_in[2]*pdTheta_in[3]);
+  Sigma_ord[1][0] = Sigma_ord[0][1];
+
 
   dinv(Sigma_ord, n_cov, InvSigma_ord);
 
@@ -412,6 +413,8 @@ void cEMeco(
       pdTheta[3]+=(Wstar[i][4]-2*Wstar[i][1]*pdTheta[1]+pdTheta[1]*pdTheta[1])/t_samp;  /*sigma22*/
       pdTheta[4]+=(Wstar[i][3]-Wstar[i][0]*pdTheta[1]-Wstar[i][1]*pdTheta[0]+pdTheta[0]*pdTheta[1])/t_samp; /*sigma12*/
     }
+
+  pdTheta[4]=pdTheta[4]/sqrt(pdTheta[2]*pdTheta[3]); /*rho*/
 
   if (*Iocrun) 
     {
