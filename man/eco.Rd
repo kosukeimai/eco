@@ -112,13 +112,12 @@ eco <- function(Y, X, data = parent.frame(), n.draws = 5000, burnin = 0,
 data(reg)
 
 ## run the nonparametric model to give in-sample & out-of sample predictions
-
-data(reg)
 res <- eco(Y=Y, X=X, data=reg, n.draws = 2000, burnin = 500,
            thin=5, nonpar = TRUE, predict=TRUE, parameter=FALSE)
+
+##summarize the results
 summary(reg)
 }
-
 
 \value{
   An object of class \code{eco} containing the following elements:
