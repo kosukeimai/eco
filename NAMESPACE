@@ -1,0 +1,6 @@
+useDynLib(eco)
+
+export(eco, summary.eco, print.summary.eco)
+
+S3method(summary, eco)
+S3method(print, summary.eco)
