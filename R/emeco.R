@@ -1,6 +1,8 @@
 
+
+
 eco.em <- function(Y, X, data = parent.frame(), 
-		n.draws = 300, supplement=NULL, theta.t=c(0,0,1,0,1)){ 
+		n.draws = 300, supplement=NULL, theta.old=c(0,0,1,0,1)){ 
 
   ## checking inputs
   if ((dim(supplement)[2] != 2) && (length(supplement)>0))
@@ -60,18 +62,19 @@ eco.em <- function(Y, X, data = parent.frame(),
   n.samp <- length(Y.use)	 
   d <- cbind(X.use, Y.use)
 
-  res <- .C("cEMeco", as.double(d), as.double(theta.t),
+  res <- .C("cEMeco", as.double(d), as.double(theta.old),
 	      as.integer(n.samp),  as.integer(n.draws), 
               as.integer(survey.yes), as.integer(survey.samp), as.double(survey.data),
    	      as.integer(X1type), as.integer(samp.X1), as.double(X1.W1),
    	      as.integer(X0type), as.integer(samp.X0), as.double(X0.W2),
 	      pdTheta=double(5),
               PACKAGE="eco")
-    res.out < -pdTheta     
-    
- 
+
+  theta.new<-res$pdTheta
+  res.out< -list(theta.new=theta.new, theta.old=theta.old)     
   class(res.out) <- "eco"
   return(res.out)
+
   }
 
   

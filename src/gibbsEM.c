@@ -36,7 +36,7 @@ void cEMeco(
   
   int n_samp = *pin_samp;    /* sample size */
 
-  int data=0;            /* one to print the data */
+  int data=1;            /* one to print the data */
   int keep=1;            /* keeps every #num draw */ 
   int n_cov=2;           /* The number of covariates */
 
