@@ -175,4 +175,4 @@ summary(res)
   \url{http://www.princeton.edu/~kimai/research/einonpar.html} }
 
 \seealso{summary.eco}
-\keyword{ecological inferences}
+\keyword{models}
