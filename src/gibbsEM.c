@@ -132,12 +132,12 @@ void cEMeco(
   }
 
   /** assigm mu_org, Simga_ord **/
-  mu_ord[0] = *pdTheta_in[0];
-  mu_ord[1] = *pdTheta_in[1];
-  Sigma_ord[0][0] = *pdTheta_in[2];
-  Sigma_ord[0][1] = *pdTheta_in[3];
-  Sigma_ord[1][0] = *pdTheta_in[3];
-  Sigma_ord[1][1] = *pdTheta_in[4];
+  mu_ord[0] = pdTheta_in[0];
+  mu_ord[1] = pdTheta_in[1];
+  Sigma_ord[0][0] = pdTheta_in[2];
+  Sigma_ord[0][1] = pdTheta_in[3];
+  Sigma_ord[1][0] = pdTheta_in[3];
+  Sigma_ord[1][1] = pdTheta_in[4];
 
   dinv(Sigma_ord, n_cov, InvSigma_ord);
 

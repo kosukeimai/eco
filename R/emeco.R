@@ -69,10 +69,9 @@ eco.em <- function(Y, X, data = parent.frame(),
               PACKAGE="eco")
     res.out < -pdTheta     
     
-  }
+ 
   class(res.out) <- "eco"
   return(res.out)
-}
-
+  }
 
   
