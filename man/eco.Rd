@@ -17,9 +17,7 @@ Ecological Inference in 2 x 2 Tables}
 }
 
 \usage{
-eco(Y, X, data = parent.frame(), nonpar = TRUE, link = "logit", nu0 = 4, tau0 = 1, 
-    mu0 = c(0,0), S0 = diag(8,2), alpha = NULL, a0 = 0.1, b0 = 0.1, n.draws = 5000, 
-    burnin = 0, thin = 5, predict = TRUE, survey = NULL)
+eco <- function(Y, X, data = parent.frame(), n.draws = 5000, burnin = 0, thin = 5, verbose = TRUE, nonpar =  TRUE, nu0 = 4, tau0 = 1, mu0 = c(0,0), S0 = diag(10,2), survey=NULL, alpha = NULL, alpha.update = TRUE, a0 = 0.1, b0 = 0.1, predict = TRUE, parameter = TRUE)
 }
 
 \arguments{
@@ -33,17 +31,29 @@ eco(Y, X, data = parent.frame(), nonpar = TRUE, link = "logit", nu0 = 4, tau0 = 
     in \code{Y} and \code{X}. The default is the environment in which
     \code{eco} is called. 
   }  
+  \item{n.draws}{A positive integer. The number of MCMC draws.
+    The default is \code{5000}.
+  }
+  \item{burnin}{A positive integer. The burnin interval for the Markov
+    chain; i.e. the number of initial draws that should not be stored. The
+    default is \code{0}.
+  }   
+  \item{thin}{A positive integer. The thinning interval for the
+    Markov chain; i.e. the number of Gibbs draws between the recorded
+    values that are skipped. The default is \code{5}.
+  } 
+  \item{verbose}{Logical. If \code{TRUE}, the progress of the gibbs 
+   sampler is printed to the screen. The default is \code{FALSE}.
+  }
   \item{nonpar}{Logical. If \code{TRUE}, the nonparametric
     model will be fit. Otherwise, the parametric model will be
     estimated. The default is \code{TRUE}.
   } 
-  \item{n.draws}{A positive integer. The number of MCMC draws.
-    The default is \code{5000}.
-  }
-  \item{link}{The choice of link function used for the transformation;
-    i.e., \eqn{g(\cdot)} of \eqn{W_i^*=g(W_i)}. \code{logit}, \code{probit},
-    and \code{cloglog} are available. The default is \code{logit}.
-  } 
+
+%  \item{link}{The choice of link function used for the transformation;
+%    i.e., \eqn{g(\cdot)} of \eqn{W_i^*=g(W_i)}. \code{logit}, \code{probit},
+%    and \code{cloglog} are available. The default is \code{logit}.
+%  } 
   \item{nu0}{A positive integer. The prior degrees of freedom
     parameter. the default is \code{4}.
   } 
@@ -59,18 +69,8 @@ eco(Y, X, data = parent.frame(), nonpar = TRUE, link = "logit", nu0 = 4, tau0 = 
   \item{alpha}{A positive scalar. If \code{NULL}, the concentration
     parameter \eqn{\alpha} will be updated at each Gibbs draw. The prior
     parameters \code{a0} and \code{b0} need to be specified. Otherwise,
-    \eqn{\alpha} is fixed at a given value. The default is \code{NULL}.
-  } 
-  \item{burnin}{A positive integer. The burnin interval for the Markov
-    chain; i.e. the number of initial draws that should not be stored. The
-    default is \code{0}.
-  }   
-  \item{thin}{A positive integer. The thinning interval for the
-    Markov chain; i.e. the number of Gibbs draws between the recorded
-    values that are skipped. The default is \code{5}.
-  } 
-  \item{predict}{Logical. If \code{TRUE}, out-of sample predictions will
-    be returned. The default is \code{TRUE}.
+    \eqn{\alpha} is fixed at a user specified value. 
+    The default is \code{NULL}.
   } 
   \item{a0}{A positive integer. The shape parameter of the gamma prior
     for \eqn{\alpha}. The default is \code{0.1}.
@@ -84,6 +84,12 @@ eco(Y, X, data = parent.frame(), nonpar = TRUE, link = "logit", nu0 = 4, tau0 = 
     additional individual-level data are included in the model. The
     default is \code{NULL}.
   }  
+  \item{predict}{Logical. If \code{TRUE}, out-of sample predictions will
+    be returned. The default is \code{TRUE}.
+  } 
+  \item{parameter}{Logical. If \code{TRUE}, the gibbs draws of the population
+    parameters such as mu and sigma are returned. The default is \code{FALSE}.
+  } 
 }
 
 \details{
@@ -98,30 +104,18 @@ eco(Y, X, data = parent.frame(), nonpar = TRUE, link = "logit", nu0 = 4, tau0 = 
   where \eqn{Y_i} and \eqn{X_i} represent the observed margins, and
   \eqn{W_1} and \eqn{W_2} are unknown variables. The following
   deterministic relationship holds for each \eqn{i}:
-  \eqn{Y=X W_1+(1-X)W_2}
+  \eqn{Y_i=X W_1i+(1-X_i)W_2i}
 
-  Use \code{logit} for the choice of \code{link} in the beta version.
-
-  Always specify \code{alpha=NULL} in the beta version.
 }
 
 \examples{
 ## load the matproii data data(matproii) 
 ## run the nonparametric model to produce in-sample and out-of sample predictions.
 
-data(matproii)
-data<-cbind(matproii[,1:2], matproii[, 4:5])
-names(data)<-c(``X'', ``Y'', ``BB'', ``BW'')
+data(register)
 
-Y <- data[,2]
-X <- data[,1]
+test <- eco(Y=Y, X=X, data=register, n.draws = 20000, burnin = 5000, thin=10, verbose=TRUE, nonpar = TRUE, S0 = S, nu0 = 1, tau0 = 4, a0 = 1, b0 = 0.1, predict=TRUE, parameter=FALSE)
 
-test <- eco(n.draws = 20000, nonpar = TRUE, link = 1, predict = TRUE, burnin = 5000,
-            thin = 5, S0 = S,Y, X, nu0 = nu, tau0 = tau,
-            alpha = alpha, a0 = 1, b0 = 0.1)
-
-W1.post <- colMeans(test$w1.post) #create in-sample predictions of \eqn{W_1}
-W2.post <- colMeans(test$w2.post) #create in-sample predictions of \eqn{W_2}
 }
 
 
@@ -129,8 +123,8 @@ W2.post <- colMeans(test$w2.post) #create in-sample predictions of \eqn{W_2}
   An object of class \code{eco} containing the following elements:
   \item{model}{The name of the model is used to produce the
     predictions. If the nonparametric model is used, \code{
-      model=''Dirichlet Process prior''}; if the parametric model is used,
-    \code{ model=''Normal prior''}.
+      model=``Dirichlet Process prior''}; if the parametric model is used,
+    \code{ model=``Normal prior''}.
   } 
   \item{X}{The vector of data \eqn{X}.}
   \item{Y}{The vector of data \eqn{Y}.}
@@ -140,18 +134,24 @@ W2.post <- colMeans(test$w2.post) #create in-sample predictions of \eqn{W_2}
   \item{S0}{The prior scale matrix.}
   \item{burnin}{The number of initial burnin draws.}
   \item{thin}{Thinning interval.}
-  \item{mu.post}{The posterior draws of the population mean parameter.
+  \item{mu.post}{The posterior draws of the population mean parameter if \code{parameter=TRUE}.-->note now the nonpara and para are different, should keep consistent?
   } 
   \item{Sigma.post}{The posterior draws of the population variance
-    parameter.
+    parameter if \code{parameter=TRUE}.
   } 
-  \item{W.post}{The posterior draws or in-sample predictions of
-    \eqn{W_1}and \eqn{W_2}.
+  \item{W1.post}{The posterior draws or in-sample predictions of
+    \eqn{W_1}.
   }
-  \item{W.pred}{The posterior predictive draws or out-of-sample
-    predictions of \eqn{W_1} and \eqn{W_2}.
+  \item{W2.post}{The posterior draws or in-sample predictions of
+    \eqn{W_2}.
   }
-  \item{Y.pred}{ The posterior predictive draws of \eqn{Y}.}
+  \item{W1.pred}{The posterior predictive draws or out-of-sample
+    predictions of \eqn{W_1} if \code{predict=TRUE}.
+  }
+  \item{W2.pred}{The posterior predictive draws or out-of-sample
+    predictions of \eqn{W_2} if \code{predict=TRUE}.
+  }
+
 
   The following additional elements are included in the output when the
   nonparametric model is fit:
