@@ -211,24 +211,24 @@ void cDPeco(
     for (i=0; i<n_samp; i++) {
       W[i][j]=0;
       Wstar[i][j]=0;
-      if (X[i][1]==0) W[i][j]=0.000001;
-      else if (X[i][1]==1) W[i][j]=0.999999;
+      if (X[i][1]==0) W[i][j]=0.0001;
+      else if (X[i][1]==1) W[i][j]=0.9999;
     }
 
   /*read homeogenous areas information */
   if (*x1==1)
     for (i=0; i<x1_samp; i++) {
       W[(n_samp+i)][0]=x1_W1[i];
-      if (W[(n_samp+i)][0]==0) W[(n_samp+i)][0]=0.000001;
-      if (W[(n_samp+i)][0]==1) W[(n_samp+i)][0]=0.999999;
+      if (W[(n_samp+i)][0]==0) W[(n_samp+i)][0]=0.0001;
+      if (W[(n_samp+i)][0]==1) W[(n_samp+i)][0]=0.9999;
       Wstar[(n_samp+i)][0]=log(W[(n_samp+i)][0])-log(1-W[(n_samp+i)][0]);
     }
 
   if (*x0==1)
     for (i=0; i<x0_samp; i++) {
       W[(n_samp+x1_samp+i)][1]=x0_W2[i];
-      if (W[(n_samp+x1_samp+i)][1]==0) W[(n_samp+x1_samp+i)][1]=0.000001;
-      if (W[(n_samp+x1_samp+i)][1]==1) W[(n_samp+x1_samp+i)][1]=0.999999;
+      if (W[(n_samp+x1_samp+i)][1]==0) W[(n_samp+x1_samp+i)][1]=0.0001;
+      if (W[(n_samp+x1_samp+i)][1]==1) W[(n_samp+x1_samp+i)][1]=0.9999;
       Wstar[(n_samp+x1_samp+i)][1]=log(W[(n_samp+x1_samp+i)][1])-log(1-W[(n_samp+x1_samp+i)][1]);
     }
 
@@ -240,8 +240,8 @@ void cDPeco(
     for (j=0; j<n_cov; j++)
       for (i=0; i<s_samp; i++) {
         S_W[i][j]=sur_W[itemp++];
-        if (S_W[i][j]==0) S_W[i][j]=0.000001;
-        if (S_W[i][j]==1) S_W[i][j]=0.999999;
+        if (S_W[i][j]==0) S_W[i][j]=0.0001;
+        if (S_W[i][j]==1) S_W[i][j]=0.9999;
         S_Wstar[i][j]=log(S_W[i][j])-log(1-S_W[i][j]);
 	W[n_samp+x1_samp+x0_samp+i][j]=S_W[i][j];
 	Wstar[n_samp+x1_samp+x0_samp+i][j]=S_Wstar[i][j];
