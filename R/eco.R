@@ -108,20 +108,16 @@ eco <- function(Y, X, data = parent.frame(),
       Sigma11.post <- matrix(res$pdSSig00, n.a, unit.par, byrow=TRUE)[,order.old]
       Sigma12.post <- matrix(res$pdSSig01, n.a, unit.par, byrow=TRUE)[,order.old]
       Sigma22.post <- matrix(res$pdSSig11, n.a, unit.par, byrow=TRUE)[,order.old]
-      print("ok1")
     }
     W1.post <- matrix(res$pdSW1, n.a, unit.w, byrow=TRUE)[,order.old]
     W2.post <- matrix(res$pdSW2, n.a, unit.w, byrow=TRUE)[,order.old]
-    print("ok2")
     if (predict) {
       W1.pred <- matrix(res$pdSWt1, n.a, unit.w, byrow=TRUE)[,order.old]
       W2.pred <- matrix(res$pdSWt2, n.a, unit.w, byrow=TRUE) [,order.old]
     }
-    print("ok3")
     a.post <- matrix(res$pdSa, n.a, unit.a, byrow=TRUE)
     nstar <- matrix(res$pdSn, n.a, unit.a, byrow=TRUE)
     
-    print("ok4")
     if (parameter && predict) 
       res.out <- list(model="Dirichlet Process Prior", alpha=alpha,
                       burnin=burnin, thin=thin, X=X, Y=Y, nu0=nu0, tau0=tau0, mu0=mu0,
