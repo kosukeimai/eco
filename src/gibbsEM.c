@@ -113,6 +113,7 @@ void cEMeco(
   for (i=0; i<n_step; i++) {
     mflag[i]=0;
   }
+  
 
   /* read the data set */
   /** Packing Y, X  **/
@@ -150,8 +151,8 @@ void cEMeco(
 
   for (i=0; i<n_samp; i++) {
     if (X[i][1]==0) {
-      W[i][0]=0.000001;
-      W[i][1]=0.000001;
+      W[i][0]=0.0001;
+      W[i][1]=0.0001;
       temp0=log(W[i][0])-log(1-W[i][0]);
       temp1=log(W[i][1])-log(1-W[i][1]);
       Wstar[i][0]=temp0;

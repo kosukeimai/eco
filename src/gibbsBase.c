@@ -164,8 +164,8 @@ void cBaseeco(
     for (i=0; i< n_samp; i++) {
       W[i][j]=0;
       Wstar[i][j]=0;
-      if (X[i][1]==0) W[i][j]=0.000001;
-      else if (X[i][1]==1) W[i][j]=0.999999;
+      if (X[i][1]==0) W[i][j]=0.0001;
+      else if (X[i][1]==1) W[i][j]=0.9999;
 
     }
 
