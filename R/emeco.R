@@ -34,7 +34,7 @@ thetacov<-function(Z) {
 
 eco.em <- function(Y, X, data = parent.frame(),supplement=NULL, 
                    theta.old=c(0,0,1,1,0), convergence=0.000001,
-                   iteration.max=1000, Ioc.yes=TRUE, Fisher=FALSE, 
+                   iteration.max=1000, Ioc.yes=TRUE, Fisher=TRUE,
                    n.draws = 100000, by.draw=100000,
                    draw.max=10000000, printon=TRUE) { 
 
@@ -98,6 +98,7 @@ eco.em <- function(Y, X, data = parent.frame(),supplement=NULL,
   cdiff<-1
   em.converge<-FALSE
   i<-1
+
   
   while ((!em.converge) && (i<iteration.max)) {
     res <- .C("cEMeco", as.double(d), as.double(theta.old),
@@ -113,25 +114,24 @@ eco.em <- function(Y, X, data = parent.frame(),supplement=NULL,
     
     if (printon) {
       cat(i, " ")
-      cat(temp, "\n")
+      if (Fisher) {cat(fisher(temp), "\n") }
+        else if (!Fisher) { cat(fisher(temp), "\n") }
     }
-    
-    if (Fisher) {
-      theta.old.fish<-fisher(theta.old)
-      temp.fish<-fisher(temp)
-      
-      for (j in 1:5) {   
-        if (abs(temp.fish[j]-theta.old.fish[j])>convergence) 
-          em.converge<-FALSE
-      }
+
+    if (!Fisher) {
+    for (j in 1:5) {   
+      if (abs(temp[j]-theta.old[j])>convergence) 
+        em.converge<-FALSE
+     }
     }
-    else if (!Fisher) {
-      for (j in 1:5) {   
-        if (abs(temp[j]-theta.old[j])>convergence) 
-          em.converge<-FALSE
-      }
-    }
-    
+    else if (Fisher) {
+     for (j in 1:5) {   
+      if (abs(fisher(temp)[j]-fisher(theta.old)[j])>convergence) 
+        em.converge<-FALSE
+     }
+   }
+
+
     theta.old<-temp
     
     i<-i+1
@@ -201,7 +201,34 @@ eco.em <- function(Y, X, data = parent.frame(),supplement=NULL,
       (1+3*r^2)/((1-r^2)^3*v2)*(S22-2*u2*S2+n*u2^2) +
       (2*r^3+6*r)/((1-r^2)^3*v1^(1/2)*v2^(1/2))*(S12-u1*S2-u2*S1+n*u1*u2) 
     
-    Ioc<- -Ioc/n
+
+   if (Fisher) {
+     dv1<- -n/(2*v1) + 1/(2*(1-r^2)*v1^2)*(S11-2*u1*S1+n*u1^2) - r/(2*(1-r^2)*v1^(3/2)*v2^(1/2))*(S12-u1*S2-u2*S1+n*u1*u2)
+     dv2<- -n/(2*v2) + 1/(2*(1-r^2)*v2^2)*(S22-2*u2*S2+n*u2^2) - r/(2*(1-r^2)*v1^(1/2)*v2^(3/2))*(S12-u1*S2-u2*S1+n*u1*u2)
+     dr<- n*r/(1-r^2) - r/((1-r^2)^2*v1)*(S11-2*u1*S1+n*u1^2) + (1+r^2)/((1-r^2)^2*v1^(1/2)*v2^(1/2))*(S12-u1*S2-u2*S1+n*u1*u2) - r/((1-r^2)^2*v2)*(S22-2*u2*S2+n*u2^2)
+
+    Ioc[1,3]<- Ioc[3,1] <- Ioc[1,3]*v1
+    Ioc[1,4]<- Ioc[4,1] <- Ioc[1,4]*v2
+    Ioc[1,5]<- Ioc[5,1] <- Ioc[1,5]*(1-r^2)
+    
+    Ioc[2,3]<- Ioc[3,2] <- Ioc[2,3]*v1
+    Ioc[2,4]<- Ioc[4,2] <- Ioc[2,4]*v2
+    Ioc[2,5]<- Ioc[5,2] <- Ioc[2,5]*(1-r^2)
+    
+    Ioc[3,3]<- Ioc[3,3]*v1^2 + dv1*v1
+    Ioc[3,4]<- Ioc[4,3] <- Ioc[3,4]*v1*v2
+    Ioc[3,5]<- Ioc[5,3] <- Ioc[3,5]*v1*(1-r^2)
+
+    Ioc[4,4]<- Ioc[4,4]*v2^2 + dv2*v2
+    Ioc[4,5]<- Ioc[5,4] <- Ioc[4,5]*v2*(1-r^2)
+    
+    Ioc[5,5]<- Ioc[5,5]*(1-r^2)^2 - dr*2*r*(1-r^2)
+
+   }
+   
+  Ioc<- -Ioc/n
+
+
   }
   
   cat("\n")
@@ -221,9 +248,8 @@ eco.em <- function(Y, X, data = parent.frame(),supplement=NULL,
     res.out<-list(theta=theta.old)
   }
   else if (Ioc.yes) {
-    cat("sufficient statistics", "\n")
-    print(res$S)
-    cat("Ioc matrix:", "\n")
+    if (Fisher) cat("Ioc matrix at Fisher transformation scale:", "\n")
+    else cat("Ioc matrix:", "\n")
     print(Ioc)
     
     res.out<-list(theta=theta.old, Ioc=Ioc)
@@ -236,7 +262,7 @@ eco.em <- function(Y, X, data = parent.frame(),supplement=NULL,
 
 eco.sem<-function(Y, X, data = parent.frame(),supplement=NULL, 
                   theta.old=c(0,0,1,1,0), theta.em=NULL, Ioc.em=NULL,
-                  R.convergence=0.001, iteration.max=50, Fisher=FALSE,
+                  R.convergence=0.001, iteration.max=50, Fisher=TRUE,
                   n.draws = 10, by.draw=10, draw.max=200, printon=TRUE) {
   
   ## checking inputs
@@ -304,7 +330,6 @@ eco.sem<-function(Y, X, data = parent.frame(),supplement=NULL,
   rowdiff<-rep(1, n.var)
 
   k<-1
-  theta.em.fish<-fisher(theta.em)
 
   Rconverge<-FALSE
 
@@ -318,7 +343,6 @@ eco.sem<-function(Y, X, data = parent.frame(),supplement=NULL,
               PACKAGE="eco")
     
     theta.t<-res$pdTheta
-    theta.t.fish<-fisher(theta.t)
     
     Rconverge<-TRUE
     
@@ -337,10 +361,9 @@ eco.sem<-function(Y, X, data = parent.frame(),supplement=NULL,
                  pdTheta=double(n.var), S=double(n.var),
                  PACKAGE="eco")$pdTheta
         
-        temp.fish<-fisher(temp)
         for (j in 1:n.var) {
           if (Fisher) {
-            R.t2[i,j]<-(temp.fish[j]-theta.em.fish[j])/(theta.t.fish[i]-theta.em.fish[i])
+            R.t2[i,j]<-(fisher(temp)[j]-fisher(theta.em)[j])/(fisher(theta.t)[i]-fisher(theta.em)[i])
           }
           else if (!Fisher) {
             R.t2[i,j]<-(temp[j]-theta.em[j])/(theta.t[i]-theta.em[i])
@@ -385,7 +408,9 @@ eco.sem<-function(Y, X, data = parent.frame(),supplement=NULL,
   if (Fisher) {
     cat("Fisher transformtion:", "\n")
     print(fisher(theta.em))
+    cat("\n", "the following matrices are at Fisher transformation scale", "\n")
   }
+
 
   cat("DM matrix:", "\n")
   print(R.t2)
