@@ -19,8 +19,8 @@ Ecological Inference in 2 x 2 Tables}
 \usage{
 eco <- function(Y, X, data = parent.frame(), n.draws = 5000, burnin = 0,
                 thin = 5, verbose = TRUE, nonpar =  TRUE, nu0 = 4, tau0 = 1,
-                mu0 = c(0,0), S0 = diag(10,2), supplement=NULL, alpha = NULL,
-                a0 = 0.1, b0 = 0.1, predict = TRUE, parameter = TRUE) 
+                mu0 = c(0,0), S0 = diag(8,2), supplement=NULL, alpha = NULL,
+                a0 = 1, b0 = 0.1, predict = TRUE, parameter = TRUE) 
 }
 
 \arguments{
@@ -77,7 +77,7 @@ eco <- function(Y, X, data = parent.frame(), n.draws = 5000, burnin = 0,
     The default is \code{NULL}.
   } 
   \item{a0}{A positive integer. The shape parameter of the gamma prior
-    for \eqn{\alpha}. The default is \code{0.1}.
+    for \eqn{\alpha}. The default is \code{1}.
   } 
   \item{b0}{A positive integer. The scale parameter of the gamma prior
     for \eqn{\alpha}. The default is \code{0.1}.
@@ -112,7 +112,11 @@ eco <- function(Y, X, data = parent.frame(), n.draws = 5000, burnin = 0,
 data(reg)
 
 ## run the nonparametric model to give in-sample & out-of sample predictions
-res <- eco(Y=Y, X=X, data=reg, n.draws = 5000, burnin = 500, thin=5, verbose=TRUE) 
+
+data(reg)
+res <- eco(Y=Y, X=X, data=reg, n.draws = 2000, burnin = 500,
+           thin=5, nonpar = TRUE, predict=TRUE, parameter=FALSE)
+summary(reg)
 }
 
 
@@ -131,22 +135,24 @@ res <- eco(Y=Y, X=X, data=reg, n.draws = 5000, burnin = 500, thin=5, verbose=TRU
   \item{S0}{The prior scale matrix.}
   \item{burnin}{The number of initial burnin draws.}
   \item{thin}{Thinning interval.}
-  \item{mu.post}{The posterior draws of the population mean parameter if \code{parameter=TRUE}.-->note now the nonpara and para are different, should keep consistent?
-  } 
-  \item{Sigma.post}{The posterior draws of the population variance
-    parameter if \code{parameter=TRUE}.
-  } 
+  \item{mu1.post}{The posterior draws of the population mean parameter of \eqn{W_1}. In nonparametric model, \code{mu1.post} is a m by n matrix, where m is the number of Gibbs draws saved, n is the number of observations. In parametric model, \code{mu1.post} is a vector of length m. Export only if \code{parameter=TRUE}. }
+  \item{mu2.post}{The posterior draws of the population mean parameter of \eqn{W_2}. The dimension of \code{mu2.post} is same as \code{mu1.post}. Export only if \code{parameter=TRUE}.}
+  \item{Sigma11.post}{The posterior draws of the population variance
+    parameter of \eqn{W_1}. In nonparametric model, \code{Sigma11.post} is a m by n matrix, where m is the number of Gibbs draws saved, n is the number of observations. In parametric model, \code{Sigma11.post} is a vector of length m. Export only if \code{parameter=TRUE}.} 
+  \item{Sigma12.post}{The posterior draws of the population covariance
+    parameter between \eqn{W_1} and \eqn{W_2}. The dimension of \code{Sigma12.post} is same as \code{Sigma11.post}. Export only if \code{parameter=TRUE}.} 
+  \item{Sigma22.post}{The posterior draws of the population variance
+    parameter of \eqn{W_2}. The dimension of \code{Sigma22.post} is same as \code{Sigma11.post}. Export only if \code{parameter=TRUE}.} 
   \item{W1.post}{The posterior draws or in-sample predictions of
-    \eqn{W_1}.
-  }
+    \eqn{W_1}.}
   \item{W2.post}{The posterior draws or in-sample predictions of
     \eqn{W_2}.
   }
   \item{W1.pred}{The posterior predictive draws or out-of-sample
-    predictions of \eqn{W_1} if \code{predict=TRUE}.
+    predictions of \eqn{W_1}. Export only if \code{predict=TRUE}.
   }
   \item{W2.pred}{The posterior predictive draws or out-of-sample
-    predictions of \eqn{W_2} if \code{predict=TRUE}.
+    predictions of \eqn{W_2}. Export only if \code{predict=TRUE}.
   }
   The following additional elements are included in the output when the
   nonparametric model is fit:
