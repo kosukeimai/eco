@@ -440,6 +440,10 @@ void cEMeco(
   for (j=0; j<5; j++) {
     pdTheta[j]=ttemp[j];
   }
+  
+  for (j=0; j<15; j++) {
+    Ioc[j]=0;
+  }
 
   d1=0;
   d2=0;
