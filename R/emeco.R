@@ -1,8 +1,10 @@
 
 
 
-eco.em <- function(Y, X, data = parent.frame(), 
-		n.draws = 300, supplement=NULL, theta.old=c(0,0,1,0,1)){ 
+eco.em <- function(Y, X, data = parent.frame(),supplement=NULL, 
+      theta.old=c(0,0,1,0,1), 
+      convergence=0.0001, iteration.max=20,
+      n.draws = 10, draw.max=200, printon=TRUE) {
 
   ## checking inputs
   if ((dim(supplement)[2] != 2) && (length(supplement)>0))
@@ -62,6 +64,12 @@ eco.em <- function(Y, X, data = parent.frame(),
   n.samp <- length(Y.use)	 
   d <- cbind(X.use, Y.use)
   n.var<-5
+
+  cdiff<-1
+  i<-1
+
+while ((cdiff > convergence) && (i<iteration.max))
+{
   res <- .C("cEMeco", as.double(d), as.double(theta.old),
 	      as.integer(n.samp),  as.integer(n.draws), 
               as.integer(survey.yes), as.integer(survey.samp), as.double(survey.data),
@@ -70,11 +78,33 @@ eco.em <- function(Y, X, data = parent.frame(),
 	      pdTheta=double(n.var),
               PACKAGE="eco")
 
-  theta.new<-res$pdTheta
-  res.out<-list(theta.new=theta.new, theta.old=theta.old)
-  class(res.out) <- "eco"
-  return(res.out)
-
+  temp<-res$pdTheta
+  cdiff<-as.numeric(t(temp-theta.old)%*%(temp-theta.old))
+  theta.old<-temp
+  if (printon) {
+  cat("\ni=  ", i, "  cdiff=", cdiff, "\n")
+  cat(theta.old)
   }
+  i<-i+1
+  if (draw<=draw.max) draw<-draw+10
+}
+
+  theta<-list(mu=c(theta.old[1], theta.old[2]), Sigma=matrix(theta.old[c(3,4,4,5)], 2,2))
+
+cat("\n")
+cat("Estimates based on EM", "\n")
+cat("Mean:", "\n")
+cat(theta$mu)
+cat("\n")
+cat("Covarianace Matrix:", "\n")
+cat(theta$Sigma)
+
+
+  class(theta) <- "eco"
+  return(theta)
+
+}
+
+
 
   
