@@ -1,6 +1,6 @@
 tomoplot<-function(X,Y,truep=NA, truer=NA)
 {
-	plot(c(0,0), c(0,0), type="l", xlim=c(0,1), ylim=c(0,1), xlab=expression(theta), ylab=expression(xi))
+	plot(c(0,0), c(0,0), type="l", xlim=c(0,1), ylim=c(0,1), xlab=expression(W[1]), ylab=expression(W[2]))
 	for (i in 1:length(X))
 	{
 	if ((X[i]<1/2) & (Y[i]>X[i]) & (Y[i]<(1-X[i])))
@@ -25,7 +25,7 @@ tomoplot<-function(X,Y,truep=NA, truer=NA)
 
 	if ((!is.na(truep)) & (!is.na(truer)))
 	{
-		points(truep, truer, pch=20)
+		points(truep, truer, pch=20, cex=0.8)
 	}
 	}
 }
