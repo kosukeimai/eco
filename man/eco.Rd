@@ -20,7 +20,7 @@ Ecological Inference in 2 x 2 Tables}
 eco <- function(Y, X, data = parent.frame(), n.draws = 5000, burnin = 0,
                 thin = 5, verbose = TRUE, nonpar =  TRUE, nu0 = 4, tau0 = 1,
                 mu0 = c(0,0), S0 = diag(8,2), supplement=NULL, alpha = NULL,
-                a0 = 1, b0 = 0.1, predict = TRUE, parameter = TRUE) 
+                a0 = 1, b0 = 0.1, predict = FALSE, parameter = FALSE) 
 }
 
 \arguments{
@@ -84,7 +84,7 @@ eco <- function(Y, X, data = parent.frame(), n.draws = 5000, burnin = 0,
   } 
 
   \item{predict}{Logical. If \code{TRUE}, out-of sample predictions will
-    be returned. The default is \code{TRUE}.
+    be returned. The default is \code{FALSE}.
   } 
   \item{parameter}{Logical. If \code{TRUE}, the gibbs draws of the population
     parameters such as mu and sigma are returned. The default is \code{FALSE}.
@@ -112,8 +112,7 @@ eco <- function(Y, X, data = parent.frame(), n.draws = 5000, burnin = 0,
 data(reg)
 
 ## run the nonparametric model to give in-sample & out-of sample predictions
-res <- eco(Y=Y, X=X, data=reg, n.draws = 50, burnin = 0,
-           thin=1, nonpar = TRUE, predict=FALSE, parameter=FALSE)
+res <- eco(Y = Y, X = X, data = reg, n.draws = 50) 
 
 ##summarize the results
 summary(res)

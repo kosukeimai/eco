@@ -2,10 +2,9 @@
 eco <- function(Y, X, data = parent.frame(), 
 		n.draws = 5000, burnin = 0, thin = 5, verbose = FALSE,
 		nonpar =  TRUE, nu0 = 4, tau0 = 1, mu0 = c(0,0),
-                S0 = diag(8,2), 
-	    	supplement=NULL,
-		alpha = NULL, a0 = 1, b0 = 0.1,
-                predict = TRUE, parameter = TRUE){ 
+                S0 = diag(8,2), supplement=NULL,
+	        alpha = NULL, a0 = 1, b0 = 0.1,
+                predict = FALSE, parameter = FALSE){ 
 
   ## checking inputs
   if (burnin >= n.draws)
