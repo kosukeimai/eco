@@ -10,12 +10,14 @@
 void cEMeco(
 	      /*data input */
 	      double *pdX,     /* data (X, Y) */
-              double *pdTheta_in,  /* Theta^ t */
+              double *pdTheta_old,  /* Theta^ t */
 
 	      int *pin_samp,   /* sample size */
-	      /*MCMC draws */
 	      int *n_gen,      /* number of gibbs draws */
-
+	      int *by_draw,    /* increase of draws at each iteration */
+	      int *max_draw,   /* max # of draws */
+	      double *converge, /*convergence criterion */
+	      int *max_iter, /*maximum # of iteration before convergence*/
 	      /*incorporating survey data */
 	      int *survey,      /*1 if survey data available (set of W_1, W_2) */
 	                       /*0 not*/
@@ -32,15 +34,16 @@ void cEMeco(
 	      double *x0_W2, /* values of W_2 for X0 type areas */
 
 	      /* storage */
-	      double *pdTheta  /*EM result for Theta^(t+1) */
+	      double *pdTheta,  /*EM result for Theta^(t+1) */
+	      double *Ioc /*Ioc matrix given converged theta values */
 	      ){	   
   
   int n_samp = *pin_samp;    /* sample size */
 
   int data=0;            /* one to print the data */
-  int keep=1;            /* keeps every #num draw */ 
+  int cflag;            /* one if satisfy the convergence criterion */
   int n_cov=2;           /* The number of covariates */
-
+  int trapod=0;          /* one if use trapozodial approx */
   double **X;	    	 /* The Y and covariates */
   
   int s_samp= *sur_samp;   /* sample size of survey data */ 
@@ -68,14 +71,15 @@ void cEMeco(
   double *mu_ord;        /* The posterior mean of psi (ordinary)*/
 
   double **Wstar;        /* The pseudo data  */
-  double *Wstar_bar;
 
 
   /* misc variables */
   int i, j, k, l, main_loop;   /* used for various loops */
-  int ndraw, itemp, itemp0, itempS, itempC, itempA;
+  int ndraw, itemp, itemp0;
   double dtemp, dtemp1, temp0, temp1;
-  double *vtemp, *utemp;
+  double w1, w2, w11, w12, w22;
+  double d1, d2, d11, d12, d22, rho, rho2, sig1, sig2;
+  double *vtemp, *utemp, *ttemp;
   double **mtemp;
   int *mflag;
 
@@ -112,10 +116,9 @@ void cEMeco(
   Sigma_ord=doubleMatrix(n_cov,n_cov);
   InvSigma_ord=doubleMatrix(n_cov,n_cov);
 
-  Wstar_bar=doubleArray(n_cov);
-
   vtemp=doubleArray(n_cov);
   utemp=doubleArray(ndraw);
+  ttemp=doubleArray(5);
   mtemp=doubleMatrix(n_cov,n_cov);
 
   t_samp=n_samp+s_samp+x1_samp+x0_samp;  
@@ -140,12 +143,12 @@ void cEMeco(
   }
 
   /** assigm mu_org, Simga_ord **/
-  mu_ord[0] = pdTheta_in[0];
-  mu_ord[1] = pdTheta_in[1];
-  Sigma_ord[0][0] = pdTheta_in[2];
-  Sigma_ord[0][1] = pdTheta_in[3];
-  Sigma_ord[1][0] = pdTheta_in[3];
-  Sigma_ord[1][1] = pdTheta_in[4];
+  mu_ord[0] = pdTheta_old[0];
+  mu_ord[1] = pdTheta_old[1];
+  Sigma_ord[0][0] = pdTheta_old[2]*pdTheta_old[2];
+  Sigma_ord[1][1] = pdTheta_old[3]*pdTheta_old[3];
+  Sigma_ord[0][1] = pdTheta_old[4]*pdTheta_old[2]*pdTheta_old[3];
+  Sigma_ord[1][0] = Sigma_ord[0][1];
 
   dinv(Sigma_ord, n_cov, InvSigma_ord);
 
@@ -232,9 +235,6 @@ void cEMeco(
     }
   }
 
-  itempA=0; /* counter for alpha */
-  itempS=0; /* counter for storage */
-  itempC=0; /* counter to control nth draw */
 
   /*initialize W and Wstar */
 
@@ -277,147 +277,205 @@ void cEMeco(
 	n_grid[i]=2;
 	
       }
-      /*    if (i<n_samp){
-	    printf("grids\n");
-	    printf("minW1 maxW1 resid\n");
-	    printf("%5d%14g%14g%14g\n", i, minW1[i], maxW1[i], resid[i]);
-	    for (j=0;j<n_grid[i];j++){
-	    if (j<5 | j>(n_grid[i]-5))
-	    printf("%5d%5d%14g%14g\n", i, j, W1g[i][j], W2g[i][j]);
-	    }
-	    }*/
     }
   }
     
-  
+
 
      /* draw n_gen's from uniform 
 	for (i=0; i<ndraw; i++) {
 	utemp[i]=unif_rand();
 	}
 	R_rsort(utemp, ndraw); */
-  
-    /**update W, Wstar given mu, Sigma in regular areas**/
-    for (i=0;i<n_samp;i++){
-      if ( X[i][1]!=0 && X[i][1]!=1 ) {
-	/*1 project BVN(mu_ord, Sigma_ord) on the inth tomo line */
-	dtemp=0;
-	for (j=0;j<n_grid[i];j++){
+
+  cflag=0;
+  main_loop=0;
+
+  /* EM interation until cflag==1 or exceed max_iter*/
+  while ((cflag==0) && (main_loop<*max_iter)) 
+    {
+      /**update W, Wstar given mu, Sigma in regular areas**/
+      for (i=0;i<n_samp;i++){
+	if ( X[i][1]!=0 && X[i][1]!=1 ) {
+	  /*1 project BVN(mu_ord, Sigma_ord) on the inth tomo line */
+	  dtemp=0;
+	  for (j=0;j<n_grid[i];j++){
 	    vtemp[0]=log(W1g[i][j])-log(1-W1g[i][j]);
 	    vtemp[1]=log(W2g[i][j])-log(1-W2g[i][j]);
 	    prob_grid[j]=dMVN(vtemp, mu_ord, InvSigma_ord, 2, 1) -
 	      log(W1g[i][j])-log(W2g[i][j])-log(1-W1g[i][j])-log(1-W2g[i][j]);
-	  prob_grid[j]=exp(prob_grid[j]);
-	  dtemp+=prob_grid[j];
-	  prob_grid_cum[j]=dtemp;
-	}
-	for (j=0;j<n_grid[i];j++){
-	  prob_grid_cum[j]/=dtemp; /*standardize prob.grid */ 
-	}
-	/*2 sample W_i on the ith tomo line */
-	/*3 compute Wsta_i from W_i*/
-	
-	/*	for (j=0; j<n_grid[i]; j++) {
-	  printf("%5d%14g", j, prob_grid_cum[j]);
-	  }*/
-	
-	j=0;
-	itemp=1;
-
-	for (k=0; k<ndraw; k++){
-	  /* dtemp=utemp[k]; */
-          j=findInterval(prob_grid_cum, n_grid[i],
-			 (double)(1+k)/(ndraw+1), 1, 1, itemp, mflag); 
-          itemp=j;
-	  W[i][0]=W1g[i][j];
-	  W[i][1]=W2g[i][j];
-	  temp0=log(W[i][0])-log(1-W[i][0]);
-	  temp1=log(W[i][1])-log(1-W[i][1]);
-	  Wstar[i][0]+=temp0;
-	  Wstar[i][1]+=temp1;
-	  Wstar[i][2]+=temp0*temp0;
-	  Wstar[i][3]+=temp0*temp1;
-	  Wstar[i][4]+=temp1*temp1;
+	    prob_grid[j]=exp(prob_grid[j]);
+	    dtemp+=prob_grid[j];
+	    prob_grid_cum[j]=dtemp;
+	  }
+	  for (j=0;j<n_grid[i];j++){
+	    prob_grid_cum[j]/=dtemp; /*standardize prob.grid */ 
+	  }
+	  /*2 sample W_i on the ith tomo line */
+	  /*3 compute Wsta_i from W_i*/
+	  
+	  j=0;
+	  itemp=1;
+	  
+	  for (k=0; k<ndraw; k++){
+	    /* dtemp=utemp[k]; */
+	    j=findInterval(prob_grid_cum, n_grid[i],
+			   (double)(1+k)/(ndraw+1), 1, 1, itemp, mflag); 
+	    itemp=j;
+	    if (j==0 || trapod==0) {
+	      W[i][0]=W1g[i][j];
+	      W[i][1]=W2g[i][j];
+	    }
+	    else if (j>=1 && trapod==1) {
+	      dtemp1=((double)(1+k)/(ndraw+1)-prob_grid_cum[(j-1)])/(prob_grid_cum[j]-prob_grid_cum[j-1]);
+	      W[i][0]=dtemp1*(W1g[i][j]-W1g[i][(j-1)])+W1g[i][(j-1)];
+	      W[i][1]=dtemp1*(W2g[i][j]-W2g[i][(j-1)])+W2g[i][(j-1)];
+	    }
+	    temp0=log(W[i][0])-log(1-W[i][0]);
+	    temp1=log(W[i][1])-log(1-W[i][1]);
+	    Wstar[i][0]+=temp0;
+	    Wstar[i][1]+=temp1;
+	    Wstar[i][2]+=temp0*temp0;
+	    Wstar[i][3]+=temp0*temp1;
+	    Wstar[i][4]+=temp1*temp1;
+	  }
 	}
       }
-    }
-
-    /* compute E_{W_i|Y_i} for n_samp*/
-    for (i=0; i<n_samp; i++)
-      {
-	if ( X[i][1]!=0 && X[i][1]!=1 ) {  
-	  Wstar[i][0]/=ndraw;  /*E(W1i) */
-	  Wstar[i][1]/=ndraw;  /*E(W2i) */
-	  Wstar[i][2]/=ndraw;  /*E(W1i^2) */
-	  Wstar[i][3]/=ndraw;  /*E(W1iW2i) */
-	  Wstar[i][4]/=ndraw;  /*E(W2i^2) */
-	}
-      } /*for x0type, x1type and survey data, E-step is either the observed value or the analytical expectation*/
-    
-    
-    /*analytically compute E{W2_i|Y_i} given W1_i, mu_ord and Sigma_ord in x1 homeogeneous areas */
-    if (*x1==1)
-      for (i=0; i<x1_samp; i++) {
-	dtemp=mu_ord[1]+Sigma_ord[0][1]/Sigma_ord[0][0]*(Wstar[n_samp+i][0]-mu_ord[0]);
-	/*dtemp1=Sigma_ord[1][1]*(1-Sigma_ord[0][1]*Sigma_ord[0][1]/(Sigma_ord[0][0]*Sigma_ord[1][1]));
-	  dtemp1=sqrt(dtemp1);*/
-	temp0=log(W[n_samp+i][0])-log(1-W[n_samp+i][0]);
-	/* temp1=rnorm(dtemp, dtemp1);*/
-	temp1=dtemp;
-    	Wstar[n_samp+i][0]=temp0;
-	Wstar[n_samp+i][1]=temp1;
-	Wstar[n_samp+i][2]=temp0*temp0;
-	Wstar[n_samp+i][3]=temp0*temp1;
-	Wstar[n_samp+i][4]=temp1*temp1;
-       }
-    
-    /*analytically compute E{W1_i|Y_i} given W2_i, mu_ord and Sigma_ord in x0 homeogeneous areas */
-
-    if (*x0==1)
-      for (i=0; i<x0_samp; i++) {
-	dtemp=mu_ord[0]+Sigma_ord[0][1]/Sigma_ord[1][1]*(Wstar[n_samp+x1_samp+i][1]-mu_ord[1]);
-	/*dtemp1=Sigma_ord[0][0]*(1-Sigma_ord[0][1]*Sigma_ord[0][1]/(Sigma_ord[0][0]*Sigma_ord[1][1]));
-	dtemp1=sqrt(dtemp1);
-        temp0=rnorm(dtemp, dtemp1); */
-        temp0=dtemp;
-	temp1=log(W[n_samp+x1_samp+i][1])-log(1-W[n_samp+x1_samp+i][1]);
-        Wstar[n_samp+x1_samp+i][0]=temp0;
-        Wstar[n_samp+x1_samp+i][1]=temp1;
-        Wstar[n_samp+x1_samp+i][2]=temp0*temp0;
-        Wstar[n_samp+x1_samp+i][3]=temp0*temp1;
-        Wstar[n_samp+x1_samp+i][4]=temp1*temp1;
-
- 	/*printf("\n%5d%14g%14g\n", i, Wstar[n_samp+x1_samp+i][0], W[n_samp+x1_samp+i][0]);*/ 
-      }
-    
-
-
-
-   
-  /*M-step: same procedure as normal model */
-  for (j=0; j<5; j++) 
-    {
-      pdTheta[j]=0;
-    }  
-
-  for (i=0; i<t_samp; i++)
-    {
-      pdTheta[0]+=Wstar[i][0]/t_samp;  /*mu1*/
-      pdTheta[1]+=Wstar[i][1]/t_samp;  /*mu2*/
       
-    }   
+      /* compute E_{W_i|Y_i} for n_samp*/
+      for (i=0; i<n_samp; i++)
+	{
+	  if ( X[i][1]!=0 && X[i][1]!=1 ) {  
+	    Wstar[i][0]/=ndraw;  /*E(W1i) */
+	    Wstar[i][1]/=ndraw;  /*E(W2i) */
+	    Wstar[i][2]/=ndraw;  /*E(W1i^2) */
+	    Wstar[i][3]/=ndraw;  /*E(W1iW2i) */
+	    Wstar[i][4]/=ndraw;  /*E(W2i^2) */
+	  }
+	} /*for x0type, x1type and survey data, E-step is either the observed value or the analytical expectation*/
+      
+      
+      /*analytically compute E{W2_i|Y_i} given W1_i, mu_ord and Sigma_ord in x1 homeogeneous areas */
+      if (*x1==1)
+	for (i=0; i<x1_samp; i++) {
+	  dtemp=mu_ord[1]+Sigma_ord[0][1]/Sigma_ord[0][0]*(Wstar[n_samp+i][0]-mu_ord[0]);
+	  temp0=log(W[n_samp+i][0])-log(1-W[n_samp+i][0]);
+	  temp1=dtemp;
+	  Wstar[n_samp+i][0]=temp0;
+	  Wstar[n_samp+i][1]=temp1;
+	  Wstar[n_samp+i][2]=temp0*temp0;
+	  Wstar[n_samp+i][3]=temp0*temp1;
+	  Wstar[n_samp+i][4]=temp1*temp1;
+	}
+      
+      /*analytically compute E{W1_i|Y_i} given W2_i, mu_ord and Sigma_ord in x0 homeogeneous areas */
+      
+      if (*x0==1)
+	for (i=0; i<x0_samp; i++) {
+	  dtemp=mu_ord[0]+Sigma_ord[0][1]/Sigma_ord[1][1]*(Wstar[n_samp+x1_samp+i][1]-mu_ord[1]);
+	  temp0=dtemp;
+	  temp1=log(W[n_samp+x1_samp+i][1])-log(1-W[n_samp+x1_samp+i][1]);
+	  Wstar[n_samp+x1_samp+i][0]=temp0;
+	  Wstar[n_samp+x1_samp+i][1]=temp1;
+	  Wstar[n_samp+x1_samp+i][2]=temp0*temp0;
+	  Wstar[n_samp+x1_samp+i][3]=temp0*temp1;
+	  Wstar[n_samp+x1_samp+i][4]=temp1*temp1;
+	}
+      
+      
+      
+      
+      
+      /*M-step: same procedure as normal model */
+      for (j=0; j<5; j++) 
+	{
+	  ttemp[j]=0;
+	}
+      w1=0;
+      w2=0;
+      w11=0;
+      w12=0;
+      w22=0;
+      
+      for (i=0; i<t_samp; i++)
+	{
+	  w1+=Wstar[i][0];   /*sum E(W_1i) */
+	  w2+=Wstar[i][1];   /*sum E(W_2i) */
+	  w11+=Wstar[i][0]*Wstar[i][0];   /*sum E(W_1i*W_1i) */
+	  w12+=Wstar[i][0]*Wstar[i][1];   /*sum E(W_1i*W_2i) */
+	  w22+=Wstar[i][1]*Wstar[i][1];   /*sum E(W_2i*W_2i) */
+	}
+      
+      ttemp[0]=(double)w1/t_samp;  /*mu1*/
+      ttemp[1]=(double)w2/t_samp;  /*mu2*/
+      ttemp[2]=(double)sqrt((w11-2*ttemp[0]*w1+t_samp*ttemp[0]*ttemp[0])/t_samp); /*sigma11^0.5 */ 
+      ttemp[3]=(double)sqrt((w22-2*ttemp[1]*w2+t_samp*ttemp[1]*ttemp[1])/t_samp); /*sigma22^0.5 */
+      ttemp[4]=(double)((w12-ttemp[1]*w1-ttemp[0]*w2+t_samp*ttemp[0]*ttemp[1])/t_samp)/(ttemp[2]*ttemp[3]); /*pho */
+   
+      
+      cflag=1;
+      printf("\n%5d", main_loop);
+      for (j=0; j<5; j++) {
+	dtemp=ttemp[j]-pdTheta_old[j];
+	if ((dtemp > *converge) || (-dtemp > *converge)) { cflag=0; }
+	pdTheta_old[j]=ttemp[j];
+	printf("%15g", ttemp[j]);
+      }
 
-  for(i=0; i<t_samp; i++)
-    {
-      pdTheta[2]+=(Wstar[i][2]-2*Wstar[i][0]*pdTheta[0]+pdTheta[0]*pdTheta[0])/t_samp;  /*sigma11*/
-      pdTheta[3]+=(Wstar[i][3]-Wstar[i][0]*pdTheta[1]-Wstar[i][1]*pdTheta[0]+pdTheta[0]*pdTheta[1])/t_samp; /*sigma12*/
-      pdTheta[4]+=(Wstar[i][4]-2*Wstar[i][1]*pdTheta[1]+pdTheta[1]*pdTheta[1])/t_samp;  /*sigma22*/
+      mu_ord[0] = pdTheta_old[0];
+      mu_ord[1] = pdTheta_old[1];
+      Sigma_ord[0][0] = pdTheta_old[2]*pdTheta_old[2];
+      Sigma_ord[1][1] = pdTheta_old[3]*pdTheta_old[3];
+      Sigma_ord[0][1] = pdTheta_old[4]*pdTheta_old[2]*pdTheta_old[3];
+      Sigma_ord[1][0] = Sigma_ord[0][1];
+      
+      dinv(Sigma_ord, n_cov, InvSigma_ord);
+
+      if (ndraw<(*max_draw-*by_draw)) ndraw+=*by_draw;
+  
+      main_loop++;
     }
 
-  /*pdTheta[2]=log(pdTheta[2]);
-  pdTheta[4]=log(pdTheta[4]);
-  dtemp=pdTheta[3]/sqrt(pdTheta[2]*pdTheta[4]);
-  pdTheta[3]=0.5*log((1+dtemp)/(1-dtemp));*/
+
+  for (j=0; j<5; j++) {
+    pdTheta[j]=ttemp[j];
+  }
+
+  d1=0;
+  d2=0;
+  d11=0;
+  d12=0;
+  d22=0;
+  
+  if (cflag==1) {
+    printf("converged!\n"); 
+    d1=(w1-t_samp*pdTheta[0])/pdTheta[2]; 
+    d2=(w2-t_samp*pdTheta[1])/pdTheta[3];
+    d11=(w11-2*pdTheta[0]*w1+t_samp*pdTheta[0]*pdTheta[0])/pdTheta[2]*pdTheta[2];
+    d22=(w22-2*pdTheta[1]*w2+t_samp*pdTheta[1]*pdTheta[1])/pdTheta[3]*pdTheta[3];
+    d12=(w12-pdTheta[0]*w2-pdTheta[1]*w1+t_samp*pdTheta[0]*pdTheta[1])/(pdTheta[2]*pdTheta[3]);
+
+    sig1=pdTheta[2];
+    sig2=pdTheta[3];
+    rho=pdTheta[4];
+    rho2=1-pdTheta[4]*pdTheta[4];
+
+    Ioc[0]=(double)t_samp/(rho2*sig1*sig1);
+    Ioc[1]=(double)-t_samp*rho/(rho2*sig1*sig2);
+    Ioc[2]=(double)1/(rho2*sig1*sig1)*(2*d1-rho*d2);
+    Ioc[3]=(double)-rho/rho2/(sig1*sig2)*d2;
+    Ioc[4]=(double)-1/(rho2*rho2*sig1)*(2*rho*d1-(1+rho*rho)*d2);
+    Ioc[5]=(double)t_samp/(rho2*sig2*sig2);
+    Ioc[6]=(double)-rho/rho2/(sig1*sig2)*d1;
+    Ioc[7]=(double)1/(rho2*sig2*sig2)*(2*d2-rho*d1);
+    Ioc[8]=(double)-1/(rho2*rho2*sig2)*(2*rho*d2-(1+rho*rho)*d1);
+    Ioc[9]=(double)-t_samp/(sig1*sig1)+1/(rho2*sig1*sig1)*(3*d11-2*rho*d12);
+    Ioc[10]=(double)-rho/(rho2*sig1*sig2)*d12;
+    Ioc[11]=(double)-1/(rho2*rho2*sig1)*(2*rho*d11-(1+rho*rho)*d12);
+    Ioc[12]=(double)-t_samp/(sig2*sig2)+1/(rho2*sig2*sig2)*(3*d22-2*rho*d12);
+    Ioc[13]=(double)-1/(rho2*rho2*sig2)*(2*rho*d22-(1+rho*rho)*d12);
+    Ioc[14]=(double)-t_samp*(1+rho*rho)/(rho2*rho2)+1/(rho2*rho2*rho2)*((3*rho*rho+1)*(d11+d22)-2*rho*(3+rho*rho)*d12);
+  }
 
   /** write out the random seed **/
   PutRNGstate();
@@ -437,7 +495,6 @@ void cEMeco(
   free(mu_ord);
   FreeMatrix(Sigma_ord,n_cov);
   FreeMatrix(InvSigma_ord, n_cov);
-  free(Wstar_bar);
   free(vtemp);
   FreeMatrix(mtemp, n_cov);
   
