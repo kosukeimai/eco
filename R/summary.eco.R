@@ -1,7 +1,5 @@
-summary.eco<-function(object, long=FALSE, CI=c(2.5, 97.5), ...) 
-{
-  call<-object$call
-  model<-object$model
+summary.eco <- function(object, long=FALSE, CI=c(2.5, 97.5), ...) {
+  
   nobs<-ncol(object$W1.post)
   table.names<-c("mean", "std.dev", paste(min(CI), "%", sep=" "),
 			paste(max(CI), "%", sep=" "))
@@ -24,7 +22,9 @@ summary.eco<-function(object, long=FALSE, CI=c(2.5, 97.5), ...)
   region.table<-rbind(region.tmp1, region.tmp2)
   colnames(region.table)<-table.names
   rownames(region.table)<-c("W1", "W2")
-  ans<- list(call=object$call, model=object$model, long=long, region.table=region.table, W1.table=W1.table, W2.table=W2.table, nobs=nobs)
+  ans<- list(call=object$call, model=object$model, long=long,
+             region.table=region.table, W1.table=W1.table, W2.table=W2.table,
+             nobs=nobs) 
   class(ans) <-"summary.eco"
   return(ans)
 }
