@@ -36,7 +36,7 @@ void cEMeco(
   
   int n_samp = *pin_samp;    /* sample size */
 
-  int data=1;            /* one to print the data */
+  int data=0;            /* one to print the data */
   int keep=1;            /* keeps every #num draw */ 
   int n_cov=2;           /* The number of covariates */
 
@@ -342,11 +342,6 @@ void cEMeco(
       pdTheta[4]+=(Wstar[i][1]-pdTheta[1])*(Wstar[i][1]-pdTheta[1])/t_samp;
     }
 
-
-  for (j=0; j<5; j++)
-    {
-      printf("\n%14g", pdTheta[j]);
-    }
 
   /** write out the random seed **/
   PutRNGstate();
