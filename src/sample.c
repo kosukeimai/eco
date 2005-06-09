@@ -42,7 +42,6 @@ void rGrid(
     prob_grid[j]=exp(prob_grid[j]);
     dtemp+=prob_grid[j];
     prob_grid_cum[j]=dtemp;
-    printf("ok here\n");
   }
   for (j=0;j<ni_grid;j++)
     prob_grid_cum[j]/=dtemp; /*standardize prob.grid */
