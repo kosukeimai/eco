@@ -7,6 +7,7 @@
 #include "vector.h"
 #include "subroutines.h"
 #include "rand.h"
+#include "sample.h"
 
 void cDPeco(
 	    /*data input */
@@ -91,8 +92,8 @@ void cDPeco(
   int n_step=1000;    /* 1/The default size of grid step */  
   int *n_grid;           /* The number of grids for sampling on tomoline */
   double **W1g, **W2g;   /* The grids taken for W1 and W2 on tomoline */
-  double *prob_grid;     /* The projected density on tomoline */
-  double *prob_grid_cum; /* The projected cumulative density on tomoline */
+  /* double *prob_grid;      The projected density on tomoline */
+  /*double *prob_grid_cum;  The projected cumulative density on tomoline */
   double *resid;         /* The centralizing vector for grids */
 
   /* dirichlet variables */
@@ -161,8 +162,8 @@ void cDPeco(
   /*bounds condition */
   W1g=doubleMatrix(n_samp, n_step);
   W2g=doubleMatrix(n_samp, n_step);
-  prob_grid=doubleArray(n_step);
-  prob_grid_cum=doubleArray(n_step);
+  /* prob_grid=doubleArray(n_step);
+     prob_grid_cum=doubleArray(n_step);*/
 
   /*Dirichlet variables*/
   Sigma=doubleMatrix3D((n_samp+x1_samp+x0_samp+s_samp),n_dim,n_dim);
@@ -318,53 +319,36 @@ void cDPeco(
     for (i=0;i<n_samp;i++){
       if (X[i][1]!=0 && X[i][1]!=1) {
         /*1 project BVN(mu_i, Sigma_i) on the inth tomo line */
+	/*2 sample W_i on the ith tomo line */
+	rGrid(W[i], W1g[i], W2g[i], n_grid[i], mu[i], InvSigma[i], n_dim);
+
+	/*
         dtemp=0;
         for (j=0;j<n_grid[i];j++){
-          /*  if (*link==1){*/
+
 	  vtemp[0]=log(W1g[i][j])-log(1-W1g[i][j]);
 	  vtemp[1]=log(W2g[i][j])-log(1-W2g[i][j]);
 	  prob_grid[j]=dMVN(vtemp, mu[i], InvSigma[i], 2, 1) -
 	    log(W1g[i][j])-log(W2g[i][j])-log(1-W1g[i][j])-log(1-W2g[i][j]);
 
-          /*{
-          else if (*link==2){
-            vtemp[0]=qnorm(W1g[i][j], 0, 1, 1, 0);
-            vtemp[1]=qnorm(W2g[i][j], 0, 1, 1, 0);
-            prob_grid[j]=dMVN(vtemp, mu[i], InvSigma[i], 2, 1) -
-              dnorm(vtemp[0], 0, 1, 1)-dnorm(vtemp[1], 0, 1, 1);
-          }
-          else if (*link==3) {
-            vtemp[0]=-log(-log(W1g[i][j]));
-            vtemp[1]=-log(-log(W2g[i][j]));
-            prob_grid[j]=dMVN(vtemp, mu[i], InvSigma[i], 2, 1) -
-              log(W1g[i][j])-log(W2g[i][j])-log(-log(W1g[i][j]))-log(-log(W2g[i][j]));
-              }*/
           prob_grid[j]=exp(prob_grid[j]);
           dtemp+=prob_grid[j];
           prob_grid_cum[j]=dtemp;
         }
 	for (j=0;j<n_grid[i];j++)
-          prob_grid_cum[j]/=dtemp; /*standardize prob.grid */
-	/*2 sample W_i on the ith tomo line */
-        /*3 compute Wsta_i from W_i*/
+          prob_grid_cum[j]/=dtemp; 
+
+
         j=0;
         dtemp=unif_rand();
         while ((dtemp > prob_grid_cum[j]) && (j<(n_grid[i]-1))) j++;
         W[i][0]=W1g[i][j];
-        W[i][1]=W2g[i][j];
+        W[i][1]=W2g[i][j]; */
       }
-      /*      if (*link==1) {*/
+
+        /*3 compute Wsta_i from W_i*/
       Wstar[i][0]=log(W[i][0])-log(1-W[i][0]);
       Wstar[i][1]=log(W[i][1])-log(1-W[i][1]);
-      /* }
-      else if (*link==2) {
-        Wstar[i][0]=qnorm(W[i][0],0 ,1, 1, 0);
-        Wstar[i][1]=qnorm(W[i][1],0 ,1, 1, 0);
-      }
-      else if (*link==3) {
-        Wstar[i][0]=-log(-log(W[i][0]));
-        Wstar[i][1]=-log(-log(W[i][1]));
-        }*/
 
     }
   
@@ -603,8 +587,8 @@ void cDPeco(
   free(mun);
   FreeMatrix(W1g, n_samp);
   FreeMatrix(W2g, n_samp);
-  free(prob_grid);
-  free(prob_grid_cum);
+  /*  free(prob_grid);
+      free(prob_grid_cum);*/
   Free3DMatrix(Sigma, t_samp,n_dim);
   Free3DMatrix(InvSigma, t_samp, n_dim);
   FreeMatrix(mu, t_samp);
