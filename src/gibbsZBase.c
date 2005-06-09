@@ -45,6 +45,10 @@ void cBaseecoZ(
 	      int *sampx0,  /* number X=0 type areas */
 	      double *x0_W2, /* values of W_2 for X0 type areas */
 
+              /*options to take initial values of W*/
+              int *Winitial,
+              double *ini_W,
+
 	      /* storage */
 	      int *pred,       /* 1 if draw posterior prediction */
 	      int *parameter,   /* 1 if save population parameter */
@@ -55,7 +59,8 @@ void cBaseecoZ(
 	      /* storage for Gibbs draws of W*/
 	      double *pdSW1, double *pdSW2,
 	      /* storage for posterior predictions of W */
-	      double *pdSWt1, double *pdSWt2
+	      double *pdSWt1, double *pdSWt2,
+	      double *pdSY
 	      ){	   
   
   int n_samp = *pin_samp;    /* sample size */
@@ -244,6 +249,16 @@ void cBaseecoZ(
       else if (X[i][1]==1) W[i][j]=0.9999;
     }
 
+  if (*Winitial==1) {
+    itemp=0;
+    for (j=0; j<n_dim; j++)
+      for (i=0; i<n_samp; i++) {
+        W[i][j]=ini_W[itemp++];
+        Wstar[i][j]=log(W[i][j])-log(1-W[i][j]);
+	Z[i*n_dim+j][n_cov]=Wstar[i][j];
+      }
+  }
+
   for (j=0; j<n_dim; j++)
     Wstar_bar[j]=0;
 
@@ -348,6 +363,8 @@ void cBaseecoZ(
   /***Gibbs for  normal prior ***/
   for(main_loop=0; main_loop<*n_gen; main_loop++){
 
+    if ((*Winitial==0) || (main_loop>0)) {
+
     for (i=0; i<t_samp; i++)
       for (j=0; j<n_dim; j++) 
 	mu_ord[i][j]=0;
@@ -438,6 +455,7 @@ void cBaseecoZ(
       Rprintf("%14g", InvSigma_ord[j][k]);*/
 
     dcholdc(InvSigma_ord, n_dim, mtemp);
+    }
 
     for (i=0; i<t_samp*n_dim; i++)
       for (j=0; j<=n_cov; j++)
@@ -551,6 +569,12 @@ void cBaseecoZ(
 	    rMVN(vtemp, mu_ord[i], Sigma_ord, n_dim);
 	      pdSWt1[itempS]=exp(vtemp[0])/(exp(vtemp[0])+1);
 	      pdSWt2[itempS]=exp(vtemp[1])/(exp(vtemp[1])+1);
+	      if (i<n_samp)
+                pdSY[itempS]=pdSWt1[itempS]*X[i][0]+pdSWt2[itempS]*(1-X[i][0]);
+              else if ((i>=n_samp) && (i<n_samp+x1_samp))
+                pdSY[itempS]=pdSWt1[itempS];
+              else if ((i>=n_samp+x1_samp) && (i<n_samp+x1_samp+x0_samp))
+                pdSY[itempS]=pdSWt2[itempS];
 	  }
 	  itempS++;
 	}

@@ -14,7 +14,7 @@
 #include "vector.h"
 #include "subroutines.h"
 #include "rand.h"
-
+#include "sample.h"
 
 /* Multivariate Normal density */
 double dMVN(			

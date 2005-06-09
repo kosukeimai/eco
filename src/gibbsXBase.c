@@ -37,6 +37,10 @@ void cBaseecoX(
 	      int *sampx0,  /* number X=0 type areas */
 	      double *x0_W2, /* values of W_2 for X0 type areas */
 
+	      /*options to take initial values of W*/
+              int *Winitial,
+              double *ini_W,
+
 	      /* storage */
 	      int *pred,       /* 1 if draw posterior prediction */
 	      int *parameter,   /* 1 if save population parameter */
@@ -48,8 +52,8 @@ void cBaseecoX(
 	      /* storage for Gibbs draws of W*/
 	      double *pdSW1, double *pdSW2,
 	      /* storage for posterior predictions of W */
-	      double *pdSWt1, double *pdSWt2
-
+	      double *pdSWt1, double *pdSWt2,
+	      double *pdSY
 	      ){	   
   
   int n_samp = *pin_samp;    /* sample size */
@@ -180,6 +184,28 @@ void cBaseecoX(
       else if (X[i][1]==1) W[i][j]=0.9999;
     }
 
+  for (i=0; i<n_samp; i++)
+    {
+      if (X[i][0]==0)
+        { Wstar[i][2]=log(0.0001/0.9999); }
+      else {
+        if (X[i][0]==1)
+          { Wstar[i][2]=log(0.9999/0.0001); }
+        else
+          {  Wstar[i][2]=log(X[i][0])-log(1-X[i][0]); }
+      }
+    }
+
+  if (*Winitial==1) {
+    itemp=0;
+    for (j=0; j<n_dim; j++)
+      for (i=0; i<n_samp; i++) {
+        W[i][j]=ini_W[itemp++];
+        Wstar[i][j]=log(W[i][j])-log(1-W[i][j]);
+      }
+  }
+
+
   for (j=0; j<(n_dim+1); j++)
     Wstar_bar[j]=0;
 
@@ -288,6 +314,8 @@ void cBaseecoX(
   
   /***Gibbs for  normal prior ***/
   for(main_loop=0; main_loop<*n_gen; main_loop++){
+
+    if ((*Winitial==0) || (main_loop>0)) {
     for (j=0; j<n_dim; j++) 
       for (k=0; k<n_dim; k++) {
 	Sigma_ord_w[j][k]=Sigma_ord[j][k]-Sigma_ord[n_dim][j]/Sigma_ord[n_dim][n_dim]*Sigma_ord[n_dim][k];
@@ -361,6 +389,7 @@ void cBaseecoX(
 	Wstar[n_samp+x1_samp+i][0]=rnorm(dtemp, dtemp1);
 	W[n_samp+x1_samp+i][0]=exp(Wstar[n_samp+x1_samp+i][0])/(1+exp(Wstar[n_samp+x1_samp+i][0]));
       }
+    }
     
     /*update mu_ord, Sigma_ord given wstar using effective sample of Wstar*/
     for (j=0;j<n_dim;j++) 
@@ -429,6 +458,12 @@ void cBaseecoX(
 	    rMVN(vtemp2, mu_ord, Sigma_ord, (n_dim+1));
 	      pdSWt1[itempS]=exp(vtemp2[0])/(exp(vtemp2[0])+1);
 	      pdSWt2[itempS]=exp(vtemp2[1])/(exp(vtemp2[1])+1);
+	      if (i<n_samp)
+                pdSY[itempS]=pdSWt1[itempS]*X[i][0]+pdSWt2[itempS]*(1-X[i][0]);
+              else if ((i>=n_samp) && (i<n_samp+x1_samp))
+                pdSY[itempS]=pdSWt1[itempS];
+              else if ((i>=n_samp+x1_samp) && (i<n_samp+x1_samp+x0_samp))
+                pdSY[itempS]=pdSWt2[itempS];
 	  }
 	  itempS++;
 	}

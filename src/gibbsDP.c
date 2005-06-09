@@ -41,6 +41,10 @@ void cDPeco(
 	    int *x0,       /* 1 if X=0 type areas available W_2 known, W_1 unknown */
 	    int *sampx0,  /* number X=0 type areas */
 	    double *x0_W2, /* values of W_2 for X0 type areas */
+
+	    /*options to take initial values of W*/
+	    int *Winitial,
+	    double *ini_W,
            
 	    /* storage */
 	    int *pred,       /* 1 if draw posterior prediction */
@@ -57,12 +61,12 @@ void cDPeco(
 	    double *pdSW1, double *pdSW2,
 	    /* storage for posterior predictions of W */
 	    double *pdSWt1, double *pdSWt2,
+	    /*  storage for posterior predictions of Y */ 
+	    double *pdSY,
 	    /* storage for Gibbs draws of alpha */
 	    double *pdSa,
 	    /* storage for nstar at each Gibbs draw*/
 	    int *pdSn
-	    /* unused: storage for posterior predictions of Y 
-	    double *pdY,*/
  	    ){	   
   
   int n_samp = *pin_samp;    /* sample size */
@@ -213,6 +217,16 @@ void cDPeco(
       else if (X[i][1]==1) W[i][j]=0.9999;
     }
 
+
+  if (*Winitial==1) {
+    itemp=0;
+    for (j=0; j<n_dim; j++)
+      for (i=0; i<n_samp; i++) {
+        W[i][j]=ini_W[itemp++];
+        Wstar[i][j]=log(W[i][j])-log(1-W[i][j]);
+      }
+  }
+
   /*read homeogenous areas information */
   if (*x1==1)
     for (i=0; i<x1_samp; i++) {
@@ -315,6 +329,7 @@ void cDPeco(
   
   for(main_loop=0; main_loop<*n_gen; main_loop++){
     /**update W, Wstar given mu, Sigma only for the unknown W/Wstar**/
+    if ((*Winitial==0) || (main_loop>0)) {
     for (i=0;i<n_samp;i++){
       if (X[i][1]!=0 && X[i][1]!=1) {
         /*1 project BVN(mu_i, Sigma_i) on the inth tomo line */
@@ -390,7 +405,7 @@ void cDPeco(
         Wstar[n_samp+i][0]=norm_rand()*sqrt(dtemp1)+dtemp;
         W[n_samp+x1_samp+i][0]=exp(Wstar[n_samp+x1_samp+i][0])/(1+exp(Wstar[n_samp+x1_samp+i][0]));
     }
-
+    }
   /**updating mu, Sigma given Wstar uisng effective sample size t_samp**/
   for (i=0; i<t_samp; i++){
 
@@ -400,7 +415,7 @@ void cDPeco(
        	 if (j!=i)
 	   q[j]=dMVN(Wstar[i], mu[j], InvSigma[j], 2, 0);
 	 else
-	 q[j]=alpha*dMVT(Wstar[i], mu0, S_bvt, nu0-n_dim+11, 2, 0);
+	 q[j]=alpha*dMVT(Wstar[i], mu0, S_bvt, nu0-n_dim+1, 2, 0);
 
 	 dtemp+=q[j];
 	 qq[j]=dtemp;    /*compute qq, the cumlative of q*/
@@ -564,6 +579,12 @@ void cDPeco(
 	  /*  if (*link==1){ */
 	  pdSWt1[itempS]=exp(vtemp[0])/(exp(vtemp[0])+1);
 	  pdSWt2[itempS]=exp(vtemp[1])/(exp(vtemp[1])+1);
+	  if (i<n_samp)
+	    pdSY[itempS]=pdSWt1[itempS]*X[i][0]+pdSWt2[itempS]*(1-X[i][0]);
+	  else if ((i>=n_samp) && (i<n_samp+x1_samp))
+	    pdSY[itempS]=pdSWt1[itempS];
+	  else if ((i>=n_samp+x1_samp) && (i<n_samp+x1_samp+x0_samp))
+	    pdSY[itempS]=pdSWt2[itempS];
 	  /* }
             else if (*link==2){
               pdSWt1[itempS]=pnorm(vtemp[0], 0, 1, 1, 0);
@@ -625,6 +646,8 @@ void cDPeco(
   free(vtemp);
   FreeMatrix(mtemp, n_dim);
   FreeMatrix(mtemp1, n_dim);
+  FreeMatrix(S_W, s_samp);
+  FreeMatrix(S_Wstar, s_samp);
 
 } /* main */
 

@@ -41,6 +41,10 @@ void cDPecoX(
 	    int *x0,       /* 1 if X=0 type areas available W_2 known, W_1 unknown */
 	    int *sampx0,  /* number X=0 type areas */
 	    double *x0_W2, /* values of W_2 for X0 type areas */
+
+	    /*options to take initial values of W*/
+	    int *Winitial,
+	    double *ini_W,
            
 	    /* storage */
 	    int *pred,       /* 1 if draw posterior prediction */
@@ -58,12 +62,12 @@ void cDPecoX(
 	    double *pdSW1, double *pdSW2,
 	    /* storage for posterior predictions of W */
 	    double *pdSWt1, double *pdSWt2,
+	    /*  storage for posterior predictions of Y */ 
+	    double *pdSY,
 	    /* storage for Gibbs draws of alpha */
 	    double *pdSa,
 	    /* storage for nstar at each Gibbs draw*/
 	    int *pdSn
-	    /* unused: storage for posterior predictions of Y 
-	    double *pdY,*/
  	    ){	   
   
   int n_samp = *pin_samp;    /* sample size */
@@ -220,24 +224,35 @@ void cDPecoX(
     S0[j][k]=pdS0[itemp++];
     }
 
-  for (i=0; i<n_samp; i++) {
-    for (j=0; j<n_dim; j++)
-      {
-	W[i][j]=0;
-	Wstar[i][j]=0;
+  itemp=0;
+  for (j=0; j<n_dim; j++)
+    for (i=0; i<n_samp; i++) {
+	W[i][j]=0; 
 	if (X[i][1]==0) W[i][j]=0.0001;
 	else if (X[i][1]==1) W[i][j]=0.9999;
-      }
-    if (X[i][0]==0) 
-      { Wstar[i][2]=log(0.0001/0.9999); }
-    else {
-      if (X[i][0]==1) 
-	{ Wstar[i][2]=log(0.9999/0.0001); }
-      else 
-	{  Wstar[i][2]=log(X[i][0]/(1-X[i][0])); }
+	Wstar[i][j]=0; 
     }
-  }
 
+  for (i=0; i<n_samp; i++)
+    {
+      if (X[i][0]==0) 
+	{ Wstar[i][2]=log(0.0001/0.9999); }
+      else {
+	if (X[i][0]==1) 
+	  { Wstar[i][2]=log(0.9999/0.0001); }
+	else 
+	  {  Wstar[i][2]=log(X[i][0])-log(1-X[i][0]); }
+      }
+    }
+
+    if (*Winitial==1) {
+      itemp=0;
+      for (j=0; j<n_dim; j++) 
+	for (i=0; i<n_samp; i++) {
+	  W[i][j]=ini_W[itemp++];
+	  Wstar[i][j]=log(W[i][j])-log(1-W[i][j]);  
+	}
+    }
 
   /*read homeogenous areas information */
   if (*x1==1)
@@ -345,65 +360,68 @@ void cDPecoX(
     C[i]=i; /*cluster is from 0...n_samp-1 */
 
   Rprintf("\n%5d%5d%5d%5d%5d\n", n_samp, *x1, *x0, s_samp, t_samp);
+
   for(main_loop=0; main_loop<*n_gen; main_loop++){
     /**update W, Wstar given mu, Sigma only for the unknown W/Wstar**/
     for (i=0; i<t_samp; i++){
+      /* compute the conditional mean for drawing */
       for (j=0; j<n_dim; j++) {
-        mu_w[j]=mu[i][j]+Sigma[i][n_dim][j]/Sigma[i][n_dim][n_dim]*(Wstar[i][n_dim]-mu[i][n_dim]);
-     }
-      for (j=0; j<n_dim; j++)
-        for (k=0; k<n_dim; k++) {
-          Sigma_w[j][k]=Sigma[i][j][k]-Sigma[i][n_dim][j]/Sigma[i][n_dim][n_dim]*Sigma[i][n_dim][k];
-	}
-      dinv(Sigma_w, n_dim, InvSigma_w);
-
-      if (i<n_samp) 
-      if (X[i][1]!=0 && X[i][1]!=1) {
-        /*1 project BVN(mu_i, Sigma_i) on the inth tomo line */
-        dtemp=0;
-        for (j=0;j<n_grid[i];j++){
-          /*  if (*link==1){*/
-	  vtemp[0]=log(W1g[i][j])-log(1-W1g[i][j]);
-	  vtemp[1]=log(W2g[i][j])-log(1-W2g[i][j]);
-	  prob_grid[j]=dMVN(vtemp, mu_w, InvSigma_w, n_dim, 1) -
-	    log(W1g[i][j])-log(W2g[i][j])-log(1-W1g[i][j])-log(1-W2g[i][j]);
-	 
-          prob_grid[j]=exp(prob_grid[j]);
-          dtemp+=prob_grid[j];
-          prob_grid_cum[j]=dtemp;
-        }
-	for (j=0;j<n_grid[i];j++)
-          prob_grid_cum[j]/=dtemp; /*standardize prob.grid */
-	/*2 sample W_i on the ith tomo line */
-        /*3 compute Wsta_i from W_i*/
-        j=0;
-        dtemp=unif_rand();
-        while ((dtemp > prob_grid_cum[j]) && (j<(n_grid[i]-1))) j++;
-        W[i][0]=W1g[i][j];
-        W[i][1]=W2g[i][j];
-      
-      /*      if (*link==1) {*/
-      Wstar[i][0]=log(W[i][0])-log(1-W[i][0]);
-      Wstar[i][1]=log(W[i][1])-log(1-W[i][1]);
+	  mu_w[j]=mu[i][j]+Sigma[i][n_dim][j]/Sigma[i][n_dim][n_dim]*(Wstar[i][n_dim]-mu[i][n_dim]);
+	  for (k=0; k<n_dim; k++) {
+	    Sigma_w[j][k]=Sigma[i][j][k]-Sigma[i][n_dim][j]/Sigma[i][n_dim][n_dim]*Sigma[i][n_dim][k];
+	  }
       }
-
-      if (*x1==1 && i>=n_samp && i<(n_samp+x1_samp)) {
+      dinv(Sigma_w, n_dim, InvSigma_w);
+ 
+      /* if initial values are given, skip the draws in first loop*/
+      if ((*Winitial==0) || (main_loop>0))  
+	if (i<n_samp)
+	  if (X[i][1]!=0 && X[i][1]!=1) {
+	  /*1 project BVN(mu_i, Sigma_i) on the inth tomo line */
+	  dtemp=0;
+	  for (j=0;j<n_grid[i];j++){
+	    /*  if (*link==1){*/
+	    vtemp[0]=log(W1g[i][j])-log(1-W1g[i][j]);
+	    vtemp[1]=log(W2g[i][j])-log(1-W2g[i][j]);
+	    prob_grid[j]=dMVN(vtemp, mu_w, InvSigma_w, n_dim, 1) -
+	      log(W1g[i][j])-log(W2g[i][j])-log(1-W1g[i][j])-log(1-W2g[i][j]);
+	    
+	    prob_grid[j]=exp(prob_grid[j]);
+	    dtemp+=prob_grid[j];
+	    prob_grid_cum[j]=dtemp;
+	  }
+	  for (j=0;j<n_grid[i];j++)
+	    prob_grid_cum[j]/=dtemp; /*standardize prob.grid */
+	  /*2 sample W_i on the ith tomo line */
+	  /*3 compute Wsta_i from W_i*/
+	  j=0;
+	  dtemp=unif_rand();
+	  while ((dtemp > prob_grid_cum[j]) && (j<(n_grid[i]-1))) j++;
+	  W[i][0]=W1g[i][j];
+	  W[i][1]=W2g[i][j];
+	  Wstar[i][0]=log(W[i][0])-log(1-W[i][0]);
+	  Wstar[i][1]=log(W[i][1])-log(1-W[i][1]);
+	  }
+    
+      if (*x1==1)
+       if ((i>=n_samp) && (i<(n_samp+x1_samp))) {
 	dtemp=mu_w[1]+Sigma_w[0][1]/Sigma_w[0][0]*(Wstar[i][0]-mu_w[0]);
 	dtemp1=Sigma_w[1][1]*(1-Sigma_w[0][1]*Sigma_w[0][1]/(Sigma_w[0][0]*Sigma_w[1][1]));
 	/*dtemp1=sqrt(dtemp1);
 	  Wstar[n_samp+i][1]=rnorm(dtemp, dtemp1);*/
 	Wstar[i][1]=norm_rand()*sqrt(dtemp1)+dtemp;
 	W[i][1]=exp(Wstar[i][1])/(1+exp(Wstar[i][1]));
-      }
+       }
 
       /*update W1 given W2, mu_ord and Sigma_ord in x0 homeogeneous areas */
       /*printf("W1 draws\n");*/
-      if (*x0==1  && i>=(n_samp+x1_samp) && i<(n_samp+x1_samp+x0_samp)) {
+      if (*x0==1)
+	if ((i>=(n_samp+x1_samp)) && (i<(n_samp+x1_samp+x0_samp))) {
         dtemp=mu_w[0]+Sigma_w[0][1]/Sigma_w[1][1]*(Wstar[i][1]-mu_w[1]);
         dtemp1=Sigma_w[0][0]*(1-Sigma_w[0][1]*Sigma_w[0][1]/(Sigma_w[0][0]*Sigma_w[1][1]));
         Wstar[i][0]=norm_rand()*sqrt(dtemp1)+dtemp;
         W[i][0]=exp(Wstar[i][0])/(1+exp(Wstar[i][0]));
-      }
+	}
     }
 
   /**updating mu, Sigma given Wstar uisng effective sample size t_samp**/
@@ -561,9 +579,9 @@ void cDPecoX(
     if (itempC==nth){
       if(*pinUpdate) {
 	pdSa[itempA]=alpha;
+      }
 	pdSn[itempA]=nstar;
 	itempA++;
-      }
 
       for(i=0; i<(n_samp+x1_samp+x0_samp); i++) {
 	pdSMu0[itempS]=mu[i][0];
@@ -583,6 +601,12 @@ void cDPecoX(
 	  /*  if (*link==1){ */
 	  pdSWt1[itempS]=exp(vtemp1[0])/(exp(vtemp1[0])+1);
 	  pdSWt2[itempS]=exp(vtemp1[1])/(exp(vtemp1[1])+1);
+	  if (i<n_samp)
+	    pdSY[itempS]=pdSWt1[itempS]*X[i][0]+pdSWt2[itempS]*(1-X[i][0]);
+	  else if ((i>=n_samp) && (i<n_samp+x1_samp))
+	    pdSY[itempS]=pdSWt1[itempS];
+	  else if ((i>=n_samp+x1_samp) && (i<n_samp+x1_samp+x0_samp))
+	    pdSY[itempS]=pdSWt2[itempS];
 	  /* }
             else if (*link==2){
               pdSWt1[itempS]=pnorm(vtemp[0], 0, 1, 1, 0);
