@@ -285,9 +285,7 @@ void cBaseeco(
 	  /*1 project BVN(mu_ord, Sigma_ord) on the inth tomo line */
 	  /*2 sample W_i on the ith tomo line */
 	  /*1 and 2 done in Grid method */
-          Rprintf("%5d%5d\n", i, main_loop);
  	  rGrid(W[i],W1g[i], W2g[i], n_grid[i], mu_ord, InvSigma_ord, n_dim);
-          Rprintf("ok \n");
           /*
 	  dtemp=0;
 	  for (j=0;j<n_grid[i];j++){
