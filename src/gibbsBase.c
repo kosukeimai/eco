@@ -6,8 +6,6 @@
 #include "vector.h"
 #include "subroutines.h"
 #include "rand.h"
-#include "sample.h"
-
 
 void cBaseeco(
 	      /*data input */
@@ -39,10 +37,6 @@ void cBaseeco(
 	      int *sampx0,  /* number X=0 type areas */
 	      double *x0_W2, /* values of W_2 for X0 type areas */
 
-	      /*options to take initial values of W*/
-	      int *Winitial,
-	      double *ini_W,
-
 	      /* storage */
 	      int *pred,       /* 1 if draw posterior prediction */
 	      int *parameter,   /* 1 if save population parameter */
@@ -53,9 +47,8 @@ void cBaseeco(
 	      /* storage for Gibbs draws of W*/
 	      double *pdSW1, double *pdSW2,
 	      /* storage for posterior predictions of W */
-	      double *pdSWt1, double *pdSWt2,
-	      /* storage for posteriors prediction of Y */
-	      double *pdSY
+	      double *pdSWt1, double *pdSWt2
+
 	      ){	   
   
   int n_samp = *pin_samp;    /* sample size */
@@ -82,8 +75,8 @@ void cBaseeco(
   int n_step=1000;    /* 1/The default size of grid step */  
   int *n_grid;           /* The number of grids for sampling on tomoline */
   double **W1g, **W2g;   /* The grids taken for W1 and W2 on tomoline */
-  /*  double *prob_grid;      The projected density on tomoline */
-  /*double *prob_grid_cum;  The projected cumulative density on tomoline */
+  double *prob_grid;     /* The projected density on tomoline */
+  double *prob_grid_cum; /* The projected cumulative density on tomoline */
   double *resid;         /* The centralizing vector for grids */
 
   /* ordinary model variables */
@@ -135,8 +128,8 @@ void cBaseeco(
   /*bounds condition */
   W1g=doubleMatrix(n_samp, n_step);
   W2g=doubleMatrix(n_samp, n_step);
-  /*prob_grid=doubleArray(n_step);
-    prob_grid_cum=doubleArray(n_step);*/
+  prob_grid=doubleArray(n_step);
+  prob_grid_cum=doubleArray(n_step);
 
   /*ordinary model */
   mu_ord=doubleArray(n_dim);
@@ -174,16 +167,6 @@ void cBaseeco(
       else if (X[i][1]==1) W[i][j]=0.9999;
 
     }
-
-
-  if (*Winitial==1) {
-    itemp=0;
-    for (j=0; j<n_dim; j++)
-      for (i=0; i<n_samp; i++) {
-	W[i][j]=ini_W[itemp++];
-	Wstar[i][j]=log(W[i][j])-log(1-W[i][j]);
-      }
-  }
 
 
   /*read homeogenous areas information */
@@ -278,43 +261,57 @@ void cBaseeco(
   /***Gibbs for  normal prior ***/
   for(main_loop=0; main_loop<*n_gen; main_loop++){
     /**update W, Wstar given mu, Sigma in regular areas**/
-
-    /* if initial values are given, skip the draws in first loop*/
-    if ((*Winitial==0) || (main_loop>0)) {
-      for (i=0;i<n_samp;i++){
-	if ( X[i][1]!=0 && X[i][1]!=1 ) {
-	  /*1 project BVN(mu_ord, Sigma_ord) on the inth tomo line */
-	  /*2 sample W_i on the ith tomo line */
-	  /*1 and 2 done in Grid method */
- 	  rGrid(W[i],W1g[i], W2g[i], n_grid[i], mu_ord, InvSigma_ord, n_dim);
-          /*
-	  dtemp=0;
-	  for (j=0;j<n_grid[i];j++){
+    for (i=0;i<n_samp;i++){
+      if ( X[i][1]!=0 && X[i][1]!=1 ) {
+	/*1 project BVN(mu_ord, Sigma_ord) on the inth tomo line */
+	dtemp=0;
+	for (j=0;j<n_grid[i];j++){
+	  /*  if (*link==1){ */
 	    vtemp[0]=log(W1g[i][j])-log(1-W1g[i][j]);
 	    vtemp[1]=log(W2g[i][j])-log(1-W2g[i][j]);
 	    prob_grid[j]=dMVN(vtemp, mu_ord, InvSigma_ord, n_dim, 1) -
 	      log(W1g[i][j])-log(W2g[i][j])-log(1-W1g[i][j])-log(1-W2g[i][j]);
-	    prob_grid[j]=exp(prob_grid[j]);
-	    dtemp+=prob_grid[j];
-	    prob_grid_cum[j]=dtemp;
+	    /* }
+	  else if (*link==2){
+	    vtemp[0]=qnorm(W1g[i][j], 0, 1, 1, 0);
+	    vtemp[1]=qnorm(W2g[i][j], 0, 1, 1, 0);
+	    prob_grid[j]=dMVN(vtemp, mu_ord, InvSigma_ord, 2, 1) -
+	      dnorm(vtemp[0], 0, 1, 1)-dnorm(vtemp[1], 0, 1, 1);
 	  }
-	  for (j=0;j<n_grid[i];j++)
-	    prob_grid_cum[j]/=dtemp; 
-	  
-
-
-	  j=0;
-	  dtemp=unif_rand();
-	  while (dtemp > prob_grid_cum[j]) j++;
-	  W[i][0]=W1g[i][j];
-	  W[i][1]=W2g[i][j];*/
-
-	  } 
-
-	  /*3 compute Wsta_i from W_i*/
+	  else if (*link==3) {
+	    vtemp[0]=-log(-log(W1g[i][j]));
+	    vtemp[1]=-log(-log(W2g[i][j]));
+	    prob_grid[j]=dMVN(vtemp, mu_ord, InvSigma_ord, 2, 1) -
+	      log(W1g[i][j])-log(W2g[i][j])-log(-log(W1g[i][j]))-log(-log(W2g[i][j])); 
+	      }*/
+	  prob_grid[j]=exp(prob_grid[j]);
+	  dtemp+=prob_grid[j];
+	  prob_grid_cum[j]=dtemp;
+	}
+	for (j=0;j<n_grid[i];j++)
+	  prob_grid_cum[j]/=dtemp; /*standardize prob.grid */ 
+	
+	/*2 sample W_i on the ith tomo line */
+	/*3 compute Wsta_i from W_i*/
+	j=0;
+	dtemp=unif_rand();
+	while (dtemp > prob_grid_cum[j]) j++;
+	W[i][0]=W1g[i][j];
+	W[i][1]=W2g[i][j];
+      } /* end of *1 */
+      /*   if (*link==1) {*/
 	Wstar[i][0]=log(W[i][0])-log(1-W[i][0]);
 	Wstar[i][1]=log(W[i][1])-log(1-W[i][1]);
+	/* }
+      else if (*link==2) {
+	Wstar[i][0]=qnorm(W[i][0],0 ,1, 1, 0);
+	Wstar[i][1]=qnorm(W[i][1],0 ,1, 1, 0);
       }
+      else if (*link==3) {
+	Wstar[i][0]=-log(-log(W[i][0]));
+	Wstar[i][1]=-log(-log(W[i][1]));
+	}*/
+    }
     
     /*update W2 given W1, mu_ord and Sigma_ord in x1 homeogeneous areas */
     /*printf("W2 draws\n");*/
@@ -338,7 +335,6 @@ void cBaseeco(
 	Wstar[n_samp+x1_samp+i][0]=rnorm(dtemp, dtemp1);
 	W[n_samp+x1_samp+i][0]=exp(Wstar[n_samp+x1_samp+i][0])/(1+exp(Wstar[n_samp+x1_samp+i][0]));
       }
-    }
     
     /*update mu_ord, Sigma_ord given wstar using effective sample of Wstar*/
     for (j=0;j<n_dim;j++) {
@@ -366,8 +362,6 @@ void cBaseeco(
     for(j=0;j<n_dim;j++)
       for(k=0;k<n_dim;k++) mtemp[j][k]=Sigma_ord[j][k]/(tau0+t_samp);
     rMVN(mu_ord, mun, mtemp, n_dim);
-
-
     
     /*store Gibbs draw after burn-in and every nth draws */      
     R_CheckUserInterrupt();
@@ -380,24 +374,24 @@ void cBaseeco(
 	pdSSig01[itempA]=Sigma_ord[0][1];
 	pdSSig11[itempA]=Sigma_ord[1][1];
 	itempA++;
-
 	for(i=0; i<(n_samp+x1_samp+x0_samp); i++){
 	  pdSW1[itempS]=W[i][0];
 	  pdSW2[itempS]=W[i][1];
 	  /*Wstar prediction */
 	  if (*pred) {
-     	    rMVN(vtemp, mu_ord, Sigma_ord, n_dim);
-	
-	    dtemp=exp(vtemp[0])/(exp(vtemp[0])+1);
-	    pdSWt1[itempS]=dtemp;	
-	    dtemp1=exp(vtemp[1])/(exp(vtemp[1])+1);
-	    pdSWt2[itempS]=dtemp1;
-	    if (i<n_samp) 
-	      pdSY[itempS]=dtemp*X[i][0]+dtemp1*(1-X[i][0]);
-	    if ((i>=n_samp) && (i<n_samp+x1_samp))
-	      pdSY[itempS]=dtemp; 
-	    if ((i>=n_samp+x1_samp) && (i<n_samp+x1_samp+x0_samp))
-	      pdSY[itempS]=dtemp1;
+	    rMVN(vtemp, mu_ord, Sigma_ord, n_dim);
+	    /*  if (*link==1){*/
+	      pdSWt1[itempS]=exp(vtemp[0])/(exp(vtemp[0])+1);
+	      pdSWt2[itempS]=exp(vtemp[1])/(exp(vtemp[1])+1);
+	      /* }
+	    else if (*link==2){
+	      pdSWt1[itempS]=pnorm(vtemp[0], 0, 1, 1, 0);
+	      pdSWt2[itempS]=pnorm(vtemp[1], 0, 1, 1, 0);
+	    }
+	    else if (*link==3){
+	      pdSWt1[itempS]=exp(-exp(-vtemp[0]));
+	      pdSWt2[itempS]=exp(-exp(-vtemp[1]));
+	      }	*/      
 	  }
 	  itempS++;
 	}
@@ -421,8 +415,6 @@ void cBaseeco(
   FreeMatrix(X, n_samp);
   FreeMatrix(W, t_samp);
   FreeMatrix(Wstar, t_samp);
-  FreeMatrix(S_W, s_samp);
-  FreeMatrix(S_Wstar, s_samp);
   free(minW1);
   free(maxW1);
   free(n_grid);
@@ -431,14 +423,14 @@ void cBaseeco(
   FreeMatrix(Sn, n_dim);
   FreeMatrix(W1g, n_samp);
   FreeMatrix(W2g, n_samp);
-  /*  free(prob_grid);
-      free(prob_grid_cum);*/
-  free(mun);
+  free(prob_grid);
+  free(prob_grid_cum);
   free(mu_ord);
   FreeMatrix(Sigma_ord,n_dim);
   FreeMatrix(InvSigma_ord, n_dim);
   free(Wstar_bar);
   free(vtemp);
   FreeMatrix(mtemp, n_dim);
+  
 } /* main */
 
