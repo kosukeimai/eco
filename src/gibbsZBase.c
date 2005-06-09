@@ -6,6 +6,7 @@
 #include "vector.h"
 #include "subroutines.h"
 #include "rand.h"
+#include "sample.h"
 
 void cBaseecoZ(
 	      /*data input */
@@ -89,8 +90,8 @@ void cBaseecoZ(
   int n_step=1000;    /* 1/The default size of grid step */  
   int *n_grid;           /* The number of grids for sampling on tomoline */
   double **W1g, **W2g;   /* The grids taken for W1 and W2 on tomoline */
-  double *prob_grid;     /* The projected density on tomoline */
-  double *prob_grid_cum; /* The projected cumulative density on tomoline */
+  /* double *prob_grid;      The projected density on tomoline */
+  /* double *prob_grid_cum;  The projected cumulative density on tomoline */
   double *resid;         /* The centralizing vector for grids */
 
   /* pseudo data Wstar */
@@ -145,8 +146,8 @@ void cBaseecoZ(
   /*bounds condition */
   W1g=doubleMatrix(n_samp, n_step);
   W2g=doubleMatrix(n_samp, n_step);
-  prob_grid=doubleArray(n_step);
-  prob_grid_cum=doubleArray(n_step);
+  /* prob_grid=doubleArray(n_step);
+     prob_grid_cum=doubleArray(n_step);*/
 
 
   /*priors of beta/sigma*/
@@ -361,6 +362,10 @@ void cBaseecoZ(
     for (i=0; i<n_samp; i++) {
       if ( X[i][1]!=0 && X[i][1]!=1 ) {
 	/*1 project BVN(mu_ord, Sigma_ord) on the inth tomo line */
+	/*2 sample W_i on the ith tomo line */
+
+	rGrid(W[i], W1g[i], W2g[i], n_grid[i], mu_ord[i], InvSigma_ord, n_dim);
+	/*
 	dtemp=0;
 	for (j=0;j<n_grid[i];j++){
 	    vtemp[0]=log(W1g[i][j])-log(1-W1g[i][j]);
@@ -372,17 +377,17 @@ void cBaseecoZ(
 	  prob_grid_cum[j]=dtemp;
 	}
 	for (j=0;j<n_grid[i];j++)
-	  prob_grid_cum[j]/=dtemp; /*standardize prob.grid */ 
-	/*    Rprintf("ok9\n");*/
-	/*2 sample W_i on the ith tomo line */
-	/*3 compute Wsta_i from W_i*/
+	  prob_grid_cum[j]/=dtemp; 
+
+
+
 	j=0;
 	dtemp=unif_rand();
 	while (dtemp > prob_grid_cum[j]) j++;
 	W[i][0]=W1g[i][j];
-	W[i][1]=W2g[i][j];
-      } /* end of *1 */
-
+	W[i][1]=W2g[i][j]; */
+      } 
+	/*3 compute Wsta_i from W_i*/
 	Wstar[i][0]=log(W[i][0])-log(1-W[i][0]);
 	Wstar[i][1]=log(W[i][1])-log(1-W[i][1]);
 	Z[i*n_dim][n_cov]=Wstar[i][0];
@@ -583,8 +588,8 @@ void cBaseecoZ(
   FreeMatrix(S0, n_dim);
   FreeMatrix(W1g, n_samp);
   FreeMatrix(W2g, n_samp);
-  free(prob_grid);
-  free(prob_grid_cum);
+  /*  free(prob_grid);
+      free(prob_grid_cum); */
   FreeMatrix(mu_ord,t_samp);
   FreeMatrix(Sigma_ord,n_dim);
   FreeMatrix(InvSigma_ord, n_dim);
