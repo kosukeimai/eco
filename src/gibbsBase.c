@@ -8,6 +8,7 @@
 #include "rand.h"
 #include "sample.h"
 
+
 void cBaseeco(
 	      /*data input */
 	      double *pdX,     /* data (X, Y) */
