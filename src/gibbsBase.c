@@ -267,7 +267,12 @@ void cBaseeco(
 
          /*1 project BVN(mu_ord, Sigma_ord) on the inth tomo line */
 	/*2 sample W_i on the ith tomo line */
-        rGrid(W[i], W1g[i], W2g[i], n_grid[i], mu_ord, InvSigma_ord, n_dim);
+        /*rGrid(W[i], W1g[i], W2g[i], n_grid[i], mu_ord, InvSigma_ord, n_dim);*/
+        rMH(vtemp, W[i], X[i], minW1[i], maxW1[i],  mu_ord, InvSigma_ord, n_dim); 
+ 
+       W[i][0]=vtemp[0];
+        W[i][1]=vtemp[1];
+
 	/*
 	dtemp=0;
 	for (j=0;j<n_grid[i];j++){
