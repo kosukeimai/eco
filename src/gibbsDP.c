@@ -320,8 +320,8 @@ void cDPeco(
       if (X[i][1]!=0 && X[i][1]!=1) {
         /*1 project BVN(mu_i, Sigma_i) on the inth tomo line */
 	/*2 sample W_i on the ith tomo line */
-	rGrid(W[i], W1g[i], W2g[i], n_grid[i], mu[i], InvSigma[i], n_dim);
-
+	/*	rGrid(W[i], W1g[i], W2g[i], n_grid[i], mu[i], InvSigma[i], n_dim);*/
+	rMH(vtemp, W[i], X[i], minW1[i], maxW1[i],  mu[i], InvSigma[i], n_dim);
 	/*
         dtemp=0;
         for (j=0;j<n_grid[i];j++){
