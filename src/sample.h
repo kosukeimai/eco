@@ -6,3 +6,6 @@
 *******************************************************************/
 void rGrid( double *Sample, double *W1gi, double *W2gi, 
 	    int ni_grid, double *mu, double **InvSigma, int n_dim); 
+void rMH( double *Sample, double *W, double *XY,
+          double W1min, double W1max, double *mu0, double **InvSigma0,
+	  int n_dim);

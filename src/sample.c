@@ -59,4 +59,49 @@ void rGrid(
 
 }
 
+/* sample W via MH */
+void rMH(
+	  double *Sample,         /* W_i sampled from each tomography line */                 
+          double *W,              /* the previous draws */
+	  double *XY,               /*  X_i and Y_i */
+	  double W1min,           /* The grid lines of W1[i] */
+	  double W1max,           /* The grid lines of W2[i] */
+          double *mu0,             /* mean vector for normal */ 
+          double **InvSigma0,         /* Inverse covariance matrix for normal */
+          int n_dim)               /* dimension of parameters */
+{
+  double dens1, dens2;
+  double ratio;
+  int j;
+  double *vtemp;
+
+  vtemp=doubleArray(n_dim);
+  
+  /* draw Sample[0] (W_1) from unif(W1min, W1max) */
+  Sample[0]=W1min+unif_rand()*(W1max-W1min);
+  Sample[1]=XY[1]/(1-XY[0])-Sample[0]*XY[0]/(1-XY[0]);
+  
+  for (j=0; j<n_dim; j++) 
+    vtemp[j]=log(Sample[j])-log(1-Sample[j]);  
+
+  dens1 = dMVN(Sample, mu0, InvSigma0, n_dim, 1) -
+    log(Sample[0])-log(Sample[1])-log(1-Sample[0])-log(1-Sample[1]);
+  dens2 = dMVN(W, mu0, InvSigma0, n_dim, 1) -
+    log(W[0])-log(W[1])-log(1-W[0])-log(1-W[1]);
+
+  ratio=exp(dens1-dens2);
+
+  if (ratio>1) ratio=1;
+
+
+  /* translate p(acceptance=1) into p(ratio< runif(1)) */
+  if (ratio < unif_rand() ) {
+    for (j=0; j<n_dim; j++)
+      Sample[j]=W[j];
+  }
+  printf("%14g%14g%14g\n", ratio, Sample[0], W[0]);
+  
+  free(vtemp);
+
+}
 
