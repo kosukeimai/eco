@@ -1,6 +1,6 @@
 /******************************************************************
-  This file is a part of ECO: R Package for Estimating Fitting Bayesian 
-  Models of Ecological Inference for 2X2 tables
+  This file is a part of eco: R Package for Estimating Fitting 
+  Bayesian Models of Ecological Inference for 2X2 tables
   by Ying Lu and Kosuke Imai
   Copyright: GPL version 2 or later.
 *******************************************************************/
@@ -214,3 +214,19 @@ void rWish(
   FreeMatrix(mtemp, size);
 }
 
+/* Sample from a Dirichlet distribution */
+void rDirich(
+	     double *Sample, /* Vector for the sample */
+	     double *theta,  /* parameters */
+	     int size)       /* The dimension */
+{
+  int j;
+  double dtemp=0;
+  
+  for (j=0; j<size; j++) {
+    Sample[j] = rgamma(theta[j], 1.0);
+    dtemp += Sample[j];
+  }
+  for (j=0 ; j<size; j++)
+    Sample[j] /= dtemp;
+}

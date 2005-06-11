@@ -1,6 +1,6 @@
 /******************************************************************
-  This file is a part of ECO: R Package for Estimating Fitting Bayesian 
-  Models of Ecological Inference for 2X2 tables
+  This file is a part of eco: R Package for Estimating Fitting 
+  Bayesian Models of Ecological Inference for 2X2 tables
   by Ying Lu and Kosuke Imai
   Copyright: GPL version 2 or later.
 *******************************************************************/
@@ -63,12 +63,12 @@ void rGrid(
 void rMH(
 	  double *Sample,         /* W_i sampled from each tomography line */                 
           double *W,              /* the previous draws */
-	  double *XY,               /*  X_i and Y_i */
+	  double *XY,             /*  X_i and Y_i */
 	  double W1min,           /* The grid lines of W1[i] */
 	  double W1max,           /* The grid lines of W2[i] */
-          double *mu0,             /* mean vector for normal */ 
-          double **InvSigma0,         /* Inverse covariance matrix for normal */
-          int n_dim)               /* dimension of parameters */
+          double *mu0,            /* mean vector for normal */ 
+          double **InvSigma0,     /* Inverse covariance matrix for normal */
+          int n_dim)              /* dimension of parameters */
 {
   double dens1, dens2;
   double ratio;
@@ -95,6 +95,8 @@ void rMH(
   if (ratio < unif_rand()) 
     for (j=0; j<n_dim; j++)
       Sample[j]=W[j];
+  /* for (j=0; j<n_dim; j++)
+     printf("%3d%14g%14g\n", j, Sample[j], W[j]); */
 
   free(vtemp);
   free(vtemp1);

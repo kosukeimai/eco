@@ -1,7 +1,7 @@
 /******************************************************************
-  This file is a part of ECO: R Package for Fitting Bayesian Models 
-  of Ecological Inference for 2X2 Tables
-   by Ying Lu and Kosuke Imai
+  This file is a part of eco: R Package for Estimating Fitting 
+  Bayesian Models of Ecological Inference for 2X2 tables
+  by Ying Lu and Kosuke Imai
   Copyright: GPL version 2 or later.
 *******************************************************************/
 

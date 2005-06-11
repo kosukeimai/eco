@@ -1,3 +1,10 @@
+/******************************************************************
+  This file is a part of eco: R Package for Estimating Fitting 
+  Bayesian Models of Ecological Inference for 2X2 tables
+  by Ying Lu and Kosuke Imai
+  Copyright: GPL version 2 or later.
+*******************************************************************/
+
 #include <stddef.h>
 #include <stdio.h>      
 #include <math.h>
@@ -269,6 +276,7 @@ void cBaseeco(
 	  rMH(vtemp, W[i], X[i], minW1[i], maxW1[i],  mu_ord,
 	      InvSigma_ord, n_dim);
 	  W[i][0]=vtemp[0]; W[i][1]=vtemp[1];
+	  /* printf("%3d%14g%14g\n", i, W[i][0], W[i][1]); */
 	}
 	else
 	  rGrid(W[i], W1g[i], W2g[i], n_grid[i], mu_ord, InvSigma_ord,
