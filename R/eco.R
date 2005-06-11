@@ -1,9 +1,9 @@
-eco <- function(Y, X, data = parent.frame(), 
-		n.draws = 5000, burnin = 0, thin = 5, verbose = FALSE,
-		nonpar =  TRUE, nu0 = 4, tau0 = 2, mu0 = c(0,0),
+eco <- function(Y, X, data = parent.frame(), nonpar = TRUE, metropolis = TRUE,
+                n.draws = 5000, burnin = 0, thin = 5, 
+                nu0 = 4, tau0 = 2, mu0 = c(0,0),
                 S0 = diag(10,2), supplement=NULL,
 	        alpha = NULL, a0 = 1, b0 = 0.1,
-                predict = FALSE, parameter = FALSE){ 
+                predict = FALSE, parameter = FALSE, verbose = FALSE){ 
 
   ## checking inputs
   if (burnin >= n.draws)
@@ -89,7 +89,7 @@ eco <- function(Y, X, data = parent.frame(),
 	      as.integer(survey.yes), as.integer(survey.samp), as.double(survey.data),
    	      as.integer(X1type), as.integer(samp.X1), as.double(X1.W1),
    	      as.integer(X0type), as.integer(samp.X0), as.double(X0.W2),
-              as.integer(predict), as.integer(parameter),
+              as.integer(predict), as.integer(parameter), as.integer(metropolis),
               pdSMu0=double(n.par), pdSMu1=double(n.par),
               pdSSig00=double(n.par), pdSSig01=double(n.par),
               pdSSig11=double(n.par), 
@@ -157,7 +157,7 @@ eco <- function(Y, X, data = parent.frame(),
               as.integer(survey.yes), as.integer(survey.samp), as.double(survey.data),
    	      as.integer(X1type), as.integer(samp.X1), as.double(X1.W1),
    	      as.integer(X0type), as.integer(samp.X0), as.double(X0.W2),
-	      as.integer(predict), as.integer(parameter), 
+	      as.integer(predict), as.integer(parameter), as.integer(metropolis), 
 	      pdSMu0=double(n.par),
               pdSMu1=double(n.par), pdSSig00=double(n.par),
               pdSSig01=double(n.par), pdSSig11=double(n.par),
@@ -196,7 +196,7 @@ eco <- function(Y, X, data = parent.frame(),
                       W1.pred=W1.pred, W2.pred=W2.pred)
     else if (!parameter && !predict)
       res.out <- list(model="Normal prior", burnin=burnin, thin = thin, X=X, Y=Y,
-                      nu0=nu0, tau0=tau0, mu0=mu0, S0=S0, 
+                      nu0=nu0, tau0=tau0, mu0=mu0, S0=S0, call=call,
                       W1.post=W1.post, W2.post=W2.post)
     
   }

@@ -16,7 +16,7 @@ void cDPeco(
 	    /*MCMC draws */
 	    int *n_gen,      /* number of gibbs draws */ 
 	    int *burn_in,    /* number of draws to be burned in */
-	    int *pinth,        /* keep every nth draw */
+	    int *pinth,      /* keep every nth draw */
 	    int *verbose,    /* 1 for output monitoring */
 	    /* prior specification*/
 	    int *pinu0,      /* prior df parameter for InvWish */
@@ -24,28 +24,29 @@ void cDPeco(
 	    double *mu0,     /* prior mean for mu under G0 */
 	    double *pdS0,    /* prior scale for Sigma */
 
-	    double *alpha0,   /* precision parameter, can be fixed or updated*/
+	    double *alpha0,  /* precision parameter, can be fixed or updated*/
 	    int *pinUpdate,  /* 1 if alpha gets updated */
 	    double *pda0, double *pdb0, /* prior for alpha if alpha updated*/  
 
 	    /*incorporating survey data */
 	    int *survey,      /*1 if survey data available (set of W_1, W_2) */
 	                      /*0 otherwise*/
-	    int *sur_samp,     /*sample size of survey data*/
+	    int *sur_samp,    /*sample size of survey data*/
 	    double *sur_W,    /*set of known W_1, W_2 */
 
 	    /*incorporating homeogenous areas */
 	    int *x1,       /* 1 if X=1 type areas available W_1 known, W_2 unknown */
-	    int *sampx1,  /* number X=1 type areas */
+	    int *sampx1,   /* number X=1 type areas */
 	    double *x1_W1, /* values of W_1 for X1 type areas */
 
 	    int *x0,       /* 1 if X=0 type areas available W_2 known, W_1 unknown */
-	    int *sampx0,  /* number X=0 type areas */
+	    int *sampx0,   /* number X=0 type areas */
 	    double *x0_W2, /* values of W_2 for X0 type areas */
            
 	    /* storage */
-	    int *pred,       /* 1 if draw posterior prediction */
-	    int *parameter,   /* 1 if save population parameter */
+	    int *pred,     /* 1 if draw posterior prediction */
+	    int *parameter,/* 1 if save population parameter */
+	    int *Metro,
 
 	    /*  unused:	    int *link,       one Logit transformation 
 				two Probit transformation 
@@ -71,15 +72,15 @@ void cDPeco(
   double tau0 = *pdtau0;   
   double a0=*pda0, b0=*pdb0;  
   int nth=*pinth;  
-  int n_dim=2;           /* The number of covariates */
+  int n_dim=2;               /* The number of covariates */
 
-  double **X;	    	 /* The Y and covariates */
-  double **S0;           /* The prior S parameter for InvWish */
+  double **X;	    	     /* The Y and covariates */
+  double **S0;               /* The prior S parameter for InvWish */
 
-  double alpha=*alpha0;  /*precision parameter*/
-  int s_samp= *sur_samp;   /* sample size of survey data */
-  double **S_W;            /*The known W1 and W2 matrix*/
-  double **S_Wstar;        /*The inverse logit transformation of S_W*/
+  double alpha=*alpha0;      /* precision parameter*/
+  int s_samp= *sur_samp;     /* sample size of survey data */
+  double **S_W;              /* The known W1 and W2 matrix*/
+  double **S_Wstar;          /* The inverse logit transformation of S_W*/
 
   int x1_samp=*sampx1;
   int x0_samp=*sampx0;
@@ -89,11 +90,9 @@ void cDPeco(
   /*bounds condition variables */
   double **W;            /* The W1 and W2 matrix */
   double *minW1, *maxW1; /* The lower and upper bounds of W_1i */
-  int n_step=1000;    /* 1/The default size of grid step */  
+  int n_step=1000;       /* 1/The default size of grid step */  
   int *n_grid;           /* The number of grids for sampling on tomoline */
   double **W1g, **W2g;   /* The grids taken for W1 and W2 on tomoline */
-  /* double *prob_grid;      The projected density on tomoline */
-  /*double *prob_grid_cum;  The projected cumulative density on tomoline */
   double *resid;         /* The centralizing vector for grids */
 
   /* dirichlet variables */
@@ -101,8 +100,8 @@ void cDPeco(
                          /*The unidentified parameters */
   double **Sn;           /* The posterior S parameter for InvWish */
   double *mun;           /* The posterior mean of mu under G0*/
-  double ***Sigma;      /* The covarince matrix of psi (nsamp,cov,cov)*/
-  double ***InvSigma;   /* The inverse of Sigma*/
+  double ***Sigma;       /* The covarince matrix of psi (nsamp,cov,cov)*/
+  double ***InvSigma;    /* The inverse of Sigma*/
   double **mu;           /* The mean of psi (nsamp,cov)  */
 
   int *C;    	         /* vector of cluster membership */
@@ -112,18 +111,18 @@ void cDPeco(
   double **S_bvt;        /* The matrix paramter for BVT in q0 part */
 
   /* variables defined in remixing step */
-  double **Snj;           /* The posterior S parameter for InvWish */
-  double *munj;           /* The posterior mean of mu under G0*/
-  int nj;                 /* track the number of obs in each cluster */
-  int *sortC;             /* track original obs id */
-  int *indexC;            /* track original obs id */
-  double **Wstarmix;      /* extracted data matrix used in remix step */ 
+  double **Snj;          /* The posterior S parameter for InvWish */
+  double *munj;          /* The posterior mean of mu under G0*/
+  int nj;                /* track the number of obs in each cluster */
+  int *sortC;            /* track original obs id */
+  int *indexC;           /* track original obs id */
+  double **Wstarmix;     /* extracted data matrix used in remix step */ 
 
-  int *label;             /* store index values */
-  double *mu_mix;         /* store mu update from remixing step */
+  int *label;            /* store index values */
+  double *mu_mix;        /* store mu update from remixing step */
   double **Sigma_mix;    /* store Sigma update from remixing step */
   double **InvSigma_mix; /* store InvSigma update from remixing step */
-  double *Wstar_bar;      /* mean of Psi_nj at remixing step */
+  double *Wstar_bar;     /* mean of Psi_nj at remixing step */
 
   /* misc variables */
   int i, j, k, l, main_loop;   /* used for various loops */
@@ -162,8 +161,6 @@ void cDPeco(
   /*bounds condition */
   W1g=doubleMatrix(n_samp, n_step);
   W2g=doubleMatrix(n_samp, n_step);
-  /* prob_grid=doubleArray(n_step);
-     prob_grid_cum=doubleArray(n_step);*/
 
   /*Dirichlet variables*/
   Sigma=doubleMatrix3D((n_samp+x1_samp+x0_samp+s_samp),n_dim,n_dim);
@@ -191,7 +188,6 @@ void cDPeco(
   vtemp=doubleArray(n_dim);
   mtemp=doubleMatrix(n_dim,n_dim);
   mtemp1=doubleMatrix(n_dim,n_dim);
-
 
   t_samp=n_samp+x1_samp+x0_samp+s_samp;
 
@@ -231,9 +227,7 @@ void cDPeco(
       Wstar[(n_samp+x1_samp+i)][1]=log(W[(n_samp+x1_samp+i)][1])-log(1-W[(n_samp+x1_samp+i)][1]);
     }
 
-
   /*read the survey data */
-
   if (*survey==1) {
     itemp = 0;
     for (j=0; j<n_dim; j++)
@@ -245,13 +239,11 @@ void cDPeco(
 	W[n_samp+x1_samp+x0_samp+i][j]=S_W[i][j];
 	Wstar[n_samp+x1_samp+x0_samp+i][j]=S_Wstar[i][j];
       }
-
   }
 
   itempA=0; /* counter for alpha */
   itempS=0; /* counter for storage */
   itempC=0; /* counter to control nth draw */
-
 
   /*initialize W1g and W2g */
   for(i=0; i<n_samp; i++)
@@ -296,6 +288,7 @@ void cDPeco(
     for(k=0;k<n_dim;k++)
       mtemp[j][k]=S0[j][k]*(1+tau0)/(tau0*(nu0-n_dim+1));
   dinv(mtemp, n_dim, S_bvt);
+
   /**draw initial values of mu_i, Sigma_i under G0  for all effective sample**/
   /*1. Sigma_i under InvWish(nu0, S0^-1) with E(Sigma)=S0/(nu0-3)*/
   /*   InvSigma_i under Wish(nu0, S0^-1 */
@@ -309,6 +302,7 @@ void cDPeco(
       for(k=0;k<n_dim;k++) mtemp1[j][k]=Sigma[i][j][k]/tau0;
     rMVN(mu[i], mu0, mtemp1, n_dim);
   }
+
   /* initialize the cluster membership */
   nstar=t_samp;  /* the # of disticnt values */
   for(i=0;i<t_samp;i++)
@@ -318,35 +312,14 @@ void cDPeco(
     /**update W, Wstar given mu, Sigma only for the unknown W/Wstar**/
     for (i=0;i<n_samp;i++){
       if (X[i][1]!=0 && X[i][1]!=1) {
-        /*1 project BVN(mu_i, Sigma_i) on the inth tomo line */
-	/*2 sample W_i on the ith tomo line */
-	/*	rGrid(W[i], W1g[i], W2g[i], n_grid[i], mu[i], InvSigma[i], n_dim);*/
-	rMH(vtemp, W[i], X[i], minW1[i], maxW1[i],  mu[i], InvSigma[i], n_dim);
-	/*
-        dtemp=0;
-        for (j=0;j<n_grid[i];j++){
-
-	  vtemp[0]=log(W1g[i][j])-log(1-W1g[i][j]);
-	  vtemp[1]=log(W2g[i][j])-log(1-W2g[i][j]);
-	  prob_grid[j]=dMVN(vtemp, mu[i], InvSigma[i], 2, 1) -
-	    log(W1g[i][j])-log(W2g[i][j])-log(1-W1g[i][j])-log(1-W2g[i][j]);
-
-          prob_grid[j]=exp(prob_grid[j]);
-          dtemp+=prob_grid[j];
-          prob_grid_cum[j]=dtemp;
-        }
-	for (j=0;j<n_grid[i];j++)
-          prob_grid_cum[j]/=dtemp; 
-
-
-        j=0;
-        dtemp=unif_rand();
-        while ((dtemp > prob_grid_cum[j]) && (j<(n_grid[i]-1))) j++;
-        W[i][0]=W1g[i][j];
-        W[i][1]=W2g[i][j]; */
+	if (*Metro) {
+	  rMH(vtemp, W[i], X[i], minW1[i], maxW1[i],  mu[i], InvSigma[i], n_dim);
+	  W[i][0]=vtemp[0]; W[i][1]=vtemp[1];
+	}
+	else
+	  rGrid(W[i], W1g[i], W2g[i], n_grid[i], mu[i], InvSigma[i], n_dim);
       }
-
-        /*3 compute Wsta_i from W_i*/
+      /*3 compute Wsta_i from W_i*/
       Wstar[i][0]=log(W[i][0])-log(1-W[i][0]);
       Wstar[i][1]=log(W[i][1])-log(1-W[i][1]);
 
@@ -362,6 +335,7 @@ void cDPeco(
       W[n_samp+i][1]=exp(Wstar[n_samp+i][1])/(1+exp(Wstar[n_samp+i][1]));
       /* printf("\n%5d%14g%14g\n", i, Wstar[n_samp+i][1], W[n_samp+i][1]);*/
     }
+
   /*update W1 given W2, mu_ord and Sigma_ord in x0 homeogeneous areas */
   /*printf("W1 draws\n");*/
   if (*x0==1)
@@ -377,7 +351,6 @@ void cDPeco(
 
   /**updating mu, Sigma given Wstar uisng effective sample size t_samp**/
   for (i=0; i<t_samp; i++){
-
        /* generate weight vector q */
        dtemp=0;
        for (j=0; j<t_samp; j++){
@@ -385,7 +358,6 @@ void cDPeco(
 	   q[j]=dMVN(Wstar[i], mu[j], InvSigma[j], 2, 0);
 	 else
 	 q[j]=alpha*dMVT(Wstar[i], mu0, S_bvt, nu0-n_dim+11, 2, 0);
-
 	 dtemp+=q[j];
 	 qq[j]=dtemp;    /*compute qq, the cumlative of q*/
        }
@@ -484,7 +456,6 @@ void cDPeco(
     rWish(InvSigma_mix, mtemp, nu0+nj, n_dim);
     dinv(InvSigma_mix, n_dim, Sigma_mix);
 
-
     /*2. draw mu_mix from N(munj, Sigma_mix) with Sigma_mix/=(tau0+nj) */
     for (k=0; k<n_dim; k++){
       munj[k]=(tau0*mu0[k]+nj*Wstar_bar[k])/(tau0+nj);
@@ -570,6 +541,9 @@ void cDPeco(
       R_FlushConsole();
     }
   } /*end of MCMC for DP*/
+
+  if (*verbose)
+  Rprintf("100 percent done.\n");
   
   /** write out the random seed **/
   PutRNGstate();
@@ -587,8 +561,6 @@ void cDPeco(
   free(mun);
   FreeMatrix(W1g, n_samp);
   FreeMatrix(W2g, n_samp);
-  /*  free(prob_grid);
-      free(prob_grid_cum);*/
   Free3DMatrix(Sigma, t_samp,n_dim);
   Free3DMatrix(InvSigma, t_samp, n_dim);
   FreeMatrix(mu, t_samp);

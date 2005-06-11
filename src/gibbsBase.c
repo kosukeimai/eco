@@ -12,11 +12,13 @@ void cBaseeco(
 	      /*data input */
 	      double *pdX,     /* data (X, Y) */
 	      int *pin_samp,   /* sample size */
+
 	      /*MCMC draws */
 	      int *n_gen,      /* number of gibbs draws */
 	      int *burn_in,    /* number of draws to be burned in */
-	      int *pinth,        /* keep every nth draw */
+	      int *pinth,      /* keep every nth draw */
 	      int *verbose,    /* 1 for output monitoring */
+
 	      /* prior specification*/
 	      int *pinu0,      /* prior df parameter for InvWish */
 	      double *pdtau0,  /* prior scale parameter for Sigma under G0*/
@@ -33,7 +35,6 @@ void cBaseeco(
 	      int *x1,       /* 1 if X=1 type areas available W_1 known, W_2 unknown */
 	      int *sampx1,  /* number X=1 type areas */
 	      double *x1_W1, /* values of W_1 for X1 type areas */
-
 	      int *x0,       /* 1 if X=0 type areas available W_2 known, W_1 unknown */
 	      int *sampx0,  /* number X=0 type areas */
 	      double *x0_W2, /* values of W_2 for X0 type areas */
@@ -41,51 +42,52 @@ void cBaseeco(
 	      /* storage */
 	      int *pred,       /* 1 if draw posterior prediction */
 	      int *parameter,   /* 1 if save population parameter */
+	      int *Metro,         /* 1 if Metropolis algorithm is used*/
 
 	      /* storage for Gibbs draws of mu/sigmat*/
 	      double *pdSMu0, double *pdSMu1, 
-	      double *pdSSig00, double *pdSSig01, double *pdSSig11,           
+	      double *pdSSig00, double *pdSSig01, double *pdSSig11,
+           
 	      /* storage for Gibbs draws of W*/
 	      double *pdSW1, double *pdSW2,
+
 	      /* storage for posterior predictions of W */
 	      double *pdSWt1, double *pdSWt2
-
 	      ){	   
   
   int n_samp = *pin_samp;    /* sample size */
   int nu0 = *pinu0;          /* prior parameters */ 
   double tau0 = *pdtau0;   
   int nth=*pinth;  
-  int n_dim=2;           /* The number of covariates */
+  int n_dim=2;               /* The number of covariates */
 
-  double **X;	    	 /* The Y and covariates */
-  double **S0;           /* The prior S parameter for InvWish */
+  double **X;	    	     /* The Y and covariates */
+  double **S0;               /* The prior S parameter for InvWish */
   
-  int s_samp= *sur_samp;   /* sample size of survey data */ 
-  double **S_W;            /*The known W1 and W2 matrix*/
-  double **S_Wstar;        /*The inverse logit transformation of S_W*/
+  int s_samp= *sur_samp;     /* sample size of survey data */ 
+  double **S_W;              /*The known W1 and W2 matrix*/
+  double **S_Wstar;          /*The inverse logit transformation of S_W*/
 
   int x1_samp=*sampx1;
   int x0_samp=*sampx0;
 
-  int t_samp;              /* total effective sample size =n_samp+s_samp;*/
+  int t_samp;                /* total effective sample size =n_samp+s_samp;*/
 
   /*bounds condition variables */
-  double **W;            /* The W1 and W2 matrix */
-  double *minW1, *maxW1; /* The lower and upper bounds of W_1i */
-  int n_step=1000;    /* 1/The default size of grid step */  
-  int *n_grid;           /* The number of grids for sampling on tomoline */
-  double **W1g, **W2g;   /* The grids taken for W1 and W2 on tomoline */
-  /*  double *prob_grid;      The projected density on tomoline */
-  /*   double *prob_grid_cum;  The projected cumulative density on tomoline */
-  double *resid;         /* The centralizing vector for grids */
+  double **W;                /* The W1 and W2 matrix */
+  double *minW1, *maxW1;     /* The lower and upper bounds of W_1i */
+  int n_step=1000;           /* 1/The default size of grid step */  
+  int *n_grid;               /* The number of grids for sampling on tomoline */
+  double **W1g, **W2g;       /* The grids taken for W1 and W2 on tomoline */
+  double *resid;             /* The centralizing vector for grids */
 
   /* ordinary model variables */
-  double **Sigma_ord;   /* The posterior covariance matrix of psi (oridinary)*/
+  double **Sigma_ord;        /* The posterior covariance matrix of psi (oridinary)*/
   double **InvSigma_ord;
-  double *mu_ord;        /* The posterior mean of psi (ordinary)*/
+  double *mu_ord;            /* The posterior mean of psi (ordinary)*/
 
-  double **Wstar;        /* The pseudo data  */
+  /* The pseudo data  */
+  double **Wstar;        
   double *Wstar_bar;
 
   /*posterior variables */
@@ -112,7 +114,6 @@ void cBaseeco(
   S_W=doubleMatrix(s_samp, n_dim);
   S_Wstar=doubleMatrix(s_samp, n_dim);
 
-
   /* bounds */
   minW1=doubleArray(n_samp);
   maxW1=doubleArray(n_samp);
@@ -129,8 +130,6 @@ void cBaseeco(
   /*bounds condition */
   W1g=doubleMatrix(n_samp, n_step);
   W2g=doubleMatrix(n_samp, n_step);
-  /*  prob_grid=doubleArray(n_step);
-      prob_grid_cum=doubleArray(n_step); */
 
   /*ordinary model */
   mu_ord=doubleArray(n_dim);
@@ -264,47 +263,20 @@ void cBaseeco(
     /**update W, Wstar given mu, Sigma in regular areas**/
     for (i=0;i<n_samp;i++){
       if ( X[i][1]!=0 && X[i][1]!=1 ) {
-
-         /*1 project BVN(mu_ord, Sigma_ord) on the inth tomo line */
+	/*1 project BVN(mu_ord, Sigma_ord) on the inth tomo line */
 	/*2 sample W_i on the ith tomo line */
-        /*rGrid(W[i], W1g[i], W2g[i], n_grid[i], mu_ord, InvSigma_ord, n_dim);*/
-        rMH(vtemp, W[i], X[i], minW1[i], maxW1[i],  mu_ord, InvSigma_ord, n_dim); 
- 
-       W[i][0]=vtemp[0];
-        W[i][1]=vtemp[1];
-
-	/*
-	dtemp=0;
-	for (j=0;j<n_grid[i];j++){
-	  
-	    vtemp[0]=log(W1g[i][j])-log(1-W1g[i][j]);
-	    vtemp[1]=log(W2g[i][j])-log(1-W2g[i][j]);
-	    prob_grid[j]=dMVN(vtemp, mu_ord, InvSigma_ord, n_dim, 1) -
-	      log(W1g[i][j])-log(W2g[i][j])-log(1-W1g[i][j])-log(1-W2g[i][j]);
-	  prob_grid[j]=exp(prob_grid[j]);
-	  dtemp+=prob_grid[j];
-	  prob_grid_cum[j]=dtemp;
+	if (*Metro) {
+	  rMH(vtemp, W[i], X[i], minW1[i], maxW1[i],  mu_ord,
+	      InvSigma_ord, n_dim);
+	  W[i][0]=vtemp[0]; W[i][1]=vtemp[1];
 	}
-	for (j=0;j<n_grid[i];j++)
-	  prob_grid_cum[j]/=dtemp;
-	
-
-	
-	j=0;
-	dtemp=unif_rand();
-	while (dtemp > prob_grid_cum[j]) j++;
-	W[i][0]=W1g[i][j];
-	W[i][1]=W2g[i][j];
-	*/
-
+	else
+	  rGrid(W[i], W1g[i], W2g[i], n_grid[i], mu_ord, InvSigma_ord,
+		n_dim);
       } 
-
-/*3 compute Wsta_i from W_i*/
-  
-
-	Wstar[i][0]=log(W[i][0])-log(1-W[i][0]);
-	Wstar[i][1]=log(W[i][1])-log(1-W[i][1]);
-
+      /*3 compute Wsta_i from W_i*/
+      Wstar[i][0]=log(W[i][0])-log(1-W[i][0]);
+      Wstar[i][1]=log(W[i][1])-log(1-W[i][1]);
     }
     
     /*update W2 given W1, mu_ord and Sigma_ord in x1 homeogeneous areas */
@@ -399,8 +371,9 @@ void cBaseeco(
       R_FlushConsole();
       }
   } /*end of MCMC for normal */ 
-  
 
+  if(*verbose)
+    Rprintf("100 percent done.\n");
 
   /** write out the random seed **/
   PutRNGstate();
@@ -417,8 +390,6 @@ void cBaseeco(
   FreeMatrix(Sn, n_dim);
   FreeMatrix(W1g, n_samp);
   FreeMatrix(W2g, n_samp);
-  /* free(prob_grid);
-     free(prob_grid_cum);*/
   free(mu_ord);
   FreeMatrix(Sigma_ord,n_dim);
   FreeMatrix(InvSigma_ord, n_dim);
