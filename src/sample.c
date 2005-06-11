@@ -59,22 +59,21 @@ void rGrid(
 
 }
 
-/* sample W via MH */
+/* sample W via MH for 2x2 table */
 void rMH(
-	  double *Sample,         /* W_i sampled from each tomography line */                 
-          double *W,              /* the previous draws */
-	  double *XY,             /*  X_i and Y_i */
-	  double W1min,           /* The grid lines of W1[i] */
-	  double W1max,           /* The grid lines of W2[i] */
-          double *mu0,            /* mean vector for normal */ 
-          double **InvSigma0,     /* Inverse covariance matrix for normal */
-          int n_dim)              /* dimension of parameters */
+	 double *Sample,         /* sample of W_i */                 
+	 double *W,              /* previous draws */
+	 double *XY,             /* X_i and Y_i */
+	 double W1min,           /* lower bound for W1 */
+	 double W1max,           /* upper bound for W1 */
+	 double *mu0,            /* mean vector for normal */ 
+	 double **InvSigma0,     /* Inverse covariance matrix for normal */
+	 int n_dim)              /* dimension of parameters */
 {
-  double dens1, dens2;
-  double ratio;
+  int j;
+  double dens1, dens2, ratio;
   double *vtemp=doubleArray(n_dim);
   double *vtemp1=doubleArray(n_dim);
-  int j;
   
   /* draw Sample[0] (W_1) from unif(W1min, W1max) */
   Sample[0]=W1min+unif_rand()*(W1max-W1min);
@@ -83,21 +82,19 @@ void rMH(
     vtemp[j]=log(Sample[j])-log(1-Sample[j]);
     vtemp1[j]=log(W[j])-log(1-W[j]);
   }
-
+  
+  /* acceptance ratio */
   dens1 = dMVN(vtemp, mu0, InvSigma0, n_dim, 1) -
     log(Sample[0])-log(Sample[1])-log(1-Sample[0])-log(1-Sample[1]);
   dens2 = dMVN(vtemp1, mu0, InvSigma0, n_dim, 1) -
     log(W[0])-log(W[1])-log(1-W[0])-log(1-W[1]);
-
   ratio=fmin2(1, exp(dens1-dens2));
-
-  /* translate p(acceptance=1) into p(ratio< runif(1)) */
+  
+  /* reject */
   if (ratio < unif_rand()) 
     for (j=0; j<n_dim; j++)
       Sample[j]=W[j];
-  /* for (j=0; j<n_dim; j++)
-     printf("%3d%14g%14g\n", j, Sample[j], W[j]); */
-
+  
   free(vtemp);
   free(vtemp1);
 }
