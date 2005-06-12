@@ -33,23 +33,26 @@ void cBaseeco(
 	      double *pdS0,    /* prior scale for Sigma */
 
 	      /*incorporating survey data */
-	      int *survey,      /*1 if survey data available (set of W_1, W_2) */
+	      int *survey,     /*1 if survey data available (set of W_1, W_2) */
 	                       /*0 not*/
-	      int *sur_samp,     /*sample size of survey data*/
-	      double *sur_W,    /*set of known W_1, W_2 */ 
+	      int *sur_samp,   /*sample size of survey data*/
+	      double *sur_W,   /*set of known W_1, W_2 */ 
 				  
 	      /*incorporating homeogenous areas */
-	      int *x1,       /* 1 if X=1 type areas available W_1 known, W_2 unknown */
-	      int *sampx1,  /* number X=1 type areas */
-	      double *x1_W1, /* values of W_1 for X1 type areas */
-	      int *x0,       /* 1 if X=0 type areas available W_2 known, W_1 unknown */
-	      int *sampx0,  /* number X=0 type areas */
-	      double *x0_W2, /* values of W_2 for X0 type areas */
+	      int *x1,         /* 1 if X=1 type areas available 
+				  W_1 known, W_2 unknown */
+	      int *sampx1,     /* number X=1 type areas */
+	      double *x1_W1,   /* values of W_1 for X1 type areas */
+	      int *x0,         /* 1 if X=0 type areas available 
+				  W_2 known, W_1 unknown */
+	      int *sampx0,     /* number X=0 type areas */
+	      double *x0_W2,   /* values of W_2 for X0 type areas */
 
 	      /* storage */
 	      int *pred,       /* 1 if draw posterior prediction */
-	      int *parameter,   /* 1 if save population parameter */
-	      int *Metro,         /* 1 if Metropolis algorithm is used*/
+	      int *parameter,  /* 1 if save population parameter */
+	      int *Grid,       /* 1 if Grid algorithm is used; 0 for
+				  Metropolis */
 
 	      /* storage for Gibbs draws of mu/sigmat*/
 	      double *pdSMu0, double *pdSMu1, 
@@ -62,36 +65,36 @@ void cBaseeco(
 	      double *pdSWt1, double *pdSWt2
 	      ){	   
   
-  int n_samp = *pin_samp;    /* sample size */
-  int nu0 = *pinu0;          /* prior parameters */ 
+  int n_samp = *pin_samp;      /* sample size */
+  int nu0 = *pinu0;            /* prior parameters */ 
   double tau0 = *pdtau0;   
   int nth=*pinth;  
-  int n_dim=2;               /* The number of covariates */
+  int n_dim=2;                 /* The number of covariates */
 
-  double **X;	    	     /* The Y and covariates */
-  double **S0;               /* The prior S parameter for InvWish */
+  double **X;	    	       /* The Y and covariates */
+  double **S0;                 /* The prior S parameter for InvWish */
   
-  int s_samp= *sur_samp;     /* sample size of survey data */ 
-  double **S_W;              /*The known W1 and W2 matrix*/
-  double **S_Wstar;          /*The inverse logit transformation of S_W*/
+  int s_samp= *sur_samp;       /* sample size of survey data */ 
+  double **S_W;                /* The known W1 and W2 matrix*/
+  double **S_Wstar;            /* The inverse logit transformation of S_W*/
 
   int x1_samp=*sampx1;
   int x0_samp=*sampx0;
 
-  int t_samp;                /* total effective sample size =n_samp+s_samp;*/
+  int t_samp;                  /* total effective sample size =n_samp+s_samp;*/
 
   /*bounds condition variables */
-  double **W;                /* The W1 and W2 matrix */
-  double *minW1, *maxW1;     /* The lower and upper bounds of W_1i */
-  int n_step=1000;           /* 1/The default size of grid step */  
-  int *n_grid;               /* The number of grids for sampling on tomoline */
-  double **W1g, **W2g;       /* The grids taken for W1 and W2 on tomoline */
-  double *resid;             /* The centralizing vector for grids */
+  double **W;                  /* The W1 and W2 matrix */
+  double *minW1, *maxW1;       /* The lower and upper bounds of W_1i */
+  int n_step=1000;             /* 1/The default size of grid step */  
+  int *n_grid;                 /* The number of grids for sampling on tomoline */
+  double **W1g, **W2g;         /* The grids taken for W1 and W2 on tomoline */
+  double *resid;               /* The centralizing vector for grids */
 
   /* ordinary model variables */
-  double **Sigma_ord;        /* The posterior covariance matrix of psi (oridinary)*/
+  double **Sigma_ord;          /* The posterior covariance matrix of psi (oridinary)*/
   double **InvSigma_ord;
-  double *mu_ord;            /* The posterior mean of psi (ordinary)*/
+  double *mu_ord;              /* The posterior mean of psi (ordinary)*/
 
   /* The pseudo data  */
   double **Wstar;        
@@ -270,17 +273,14 @@ void cBaseeco(
     /**update W, Wstar given mu, Sigma in regular areas**/
     for (i=0;i<n_samp;i++){
       if ( X[i][1]!=0 && X[i][1]!=1 ) {
-	/*1 project BVN(mu_ord, Sigma_ord) on the inth tomo line */
-	/*2 sample W_i on the ith tomo line */
-	if (*Metro) {
+	if (*Grid)
+	  rGrid(W[i], W1g[i], W2g[i], n_grid[i], mu_ord, InvSigma_ord,
+		n_dim);
+	else {
 	  rMH(vtemp, W[i], X[i], minW1[i], maxW1[i],  mu_ord,
 	      InvSigma_ord, n_dim);
 	  W[i][0]=vtemp[0]; W[i][1]=vtemp[1];
-	  /* printf("%3d%14g%14g\n", i, W[i][0], W[i][1]); */
 	}
-	else
-	  rGrid(W[i], W1g[i], W2g[i], n_grid[i], mu_ord, InvSigma_ord,
-		n_dim);
       } 
       /*3 compute Wsta_i from W_i*/
       Wstar[i][0]=log(W[i][0])-log(1-W[i][0]);

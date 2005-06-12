@@ -1,9 +1,8 @@
-eco <- function(Y, X, data = parent.frame(), nonpar = TRUE, metropolis = TRUE,
-                n.draws = 5000, burnin = 0, thin = 5, 
-                nu0 = 4, tau0 = 2, mu0 = c(0,0),
-                S0 = diag(10,2), supplement=NULL,
-	        alpha = NULL, a0 = 1, b0 = 0.1,
-                predict = FALSE, parameter = FALSE, verbose = FALSE){ 
+eco <- function(Y, X, data = parent.frame(), nonpar = FALSE, grid = FALSE,
+                n.draws = 5000, burnin = 0, thin = 1, nu0 = 4,
+                tau0 = 2, mu0 = c(0,0), S0 = diag(10,2), supplement=NULL,
+	        alpha = NULL, a0 = 1, b0 = 0.1, predict = FALSE,
+                parameter = FALSE, verbose = FALSE){ 
 
   ## checking inputs
   if (burnin >= n.draws)
@@ -89,7 +88,7 @@ eco <- function(Y, X, data = parent.frame(), nonpar = TRUE, metropolis = TRUE,
 	      as.integer(survey.yes), as.integer(survey.samp), as.double(survey.data),
    	      as.integer(X1type), as.integer(samp.X1), as.double(X1.W1),
    	      as.integer(X0type), as.integer(samp.X0), as.double(X0.W2),
-              as.integer(predict), as.integer(parameter), as.integer(metropolis),
+              as.integer(predict), as.integer(parameter), as.integer(grid),
               pdSMu0=double(n.par), pdSMu1=double(n.par),
               pdSSig00=double(n.par), pdSSig01=double(n.par),
               pdSSig11=double(n.par), 
@@ -157,7 +156,7 @@ eco <- function(Y, X, data = parent.frame(), nonpar = TRUE, metropolis = TRUE,
               as.integer(survey.yes), as.integer(survey.samp), as.double(survey.data),
    	      as.integer(X1type), as.integer(samp.X1), as.double(X1.W1),
    	      as.integer(X0type), as.integer(samp.X0), as.double(X0.W2),
-	      as.integer(predict), as.integer(parameter), as.integer(metropolis), 
+	      as.integer(predict), as.integer(parameter), as.integer(grid), 
 	      pdSMu0=double(n.par),
               pdSMu1=double(n.par), pdSSig00=double(n.par),
               pdSSig01=double(n.par), pdSSig11=double(n.par),

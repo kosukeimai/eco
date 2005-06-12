@@ -66,8 +66,8 @@ void rMH(
 	 double *XY,             /* X_i and Y_i */
 	 double W1min,           /* lower bound for W1 */
 	 double W1max,           /* upper bound for W1 */
-	 double *mu0,            /* mean vector for normal */ 
-	 double **InvSigma0,     /* Inverse covariance matrix for normal */
+	 double *mu,            /* mean vector for normal */ 
+	 double **InvSigma,     /* Inverse covariance matrix for normal */
 	 int n_dim)              /* dimension of parameters */
 {
   int j;
@@ -84,9 +84,9 @@ void rMH(
   }
   
   /* acceptance ratio */
-  dens1 = dMVN(vtemp, mu0, InvSigma0, n_dim, 1) -
+  dens1 = dMVN(vtemp, mu, InvSigma, n_dim, 1) -
     log(Sample[0])-log(Sample[1])-log(1-Sample[0])-log(1-Sample[1]);
-  dens2 = dMVN(vtemp1, mu0, InvSigma0, n_dim, 1) -
+  dens2 = dMVN(vtemp1, mu, InvSigma, n_dim, 1) -
     log(W[0])-log(W[1])-log(1-W[0])-log(1-W[1]);
   ratio=fmin2(1, exp(dens1-dens2));
   
@@ -95,6 +95,63 @@ void rMH(
     for (j=0; j<n_dim; j++)
       Sample[j]=W[j];
   
+  free(vtemp);
+  free(vtemp1);
+}
+
+
+/* sample W via MH for RxC table */
+void rMHrc(
+	   double *Sample,         /* sample of W_i */                 
+	   double *W,              /* previous draws */
+	   double *XY,             /* X_i and Y_i */
+	   double *Zmin,            /* lower bound for Z */
+	   double *Zmax,            /* upper bound for Z */
+	   double *mu,            /* mean vector for normal */ 
+	   double **InvSigma,     /* Inverse covariance matrix for normal */
+	   int n_dim)              /* dimension of parameters */
+{
+  int j, exceed=1;
+  double dens1, dens2, ratio;
+  double *param=doubleArray(n_dim);
+  double *vtemp=doubleArray(n_dim);
+  double *vtemp1=doubleArray(n_dim);
+  
+  /* set Dirichlet parameter to 1 */
+  for (j=0; j<n_dim; j++)
+    param[j] = 1.0;
+
+  /* Sample a candidate draw for W */
+  while (exceed > 0) {
+    exceed = 0;
+    rDirich(vtemp, param, n_dim);
+    for (j=0; j<n_dim; j++) 
+      if (vtemp[j] > Zmax[j] || vtemp[j] < Zmin[j])
+	exceed++;
+  }
+
+  /* calcualte W and its logit transformation */
+  for (j=0; j<n_dim; j++) {
+    Sample[j]=vtemp[j]*XY[0]/XY[j+1];
+    vtemp[j]=log(Sample[j])-log(1-Sample[j]);
+    vtemp1[j]=log(W[j])-log(1-W[j]);
+  }
+  
+  /* acceptance ratio */
+  dens1 = dMVN(vtemp, mu, InvSigma, n_dim, 1);
+  dens2 = dMVN(vtemp1, mu, InvSigma, n_dim, 1);
+  for (j=0; j<n_dim; j++) {
+    dens1 -= (log(Sample[j])+log(1-Sample[j]));
+    dens2 -= (log(W[j])+log(1-W[j]));
+  }
+  ratio=fmin2(1, exp(dens1-dens2));
+  
+  /* reject */
+  if (ratio < unif_rand()) 
+    for (j=0; j<n_dim; j++)
+      Sample[j]=W[j];
+  
+  free(param);
   free(vtemp);
   free(vtemp1);
 }

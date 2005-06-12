@@ -35,24 +35,26 @@ void cDPeco(
 	    double *pda0, double *pdb0, /* prior for alpha if alpha updated*/  
 
 	    /*incorporating survey data */
-	    int *survey,      /*1 if survey data available (set of W_1, W_2) */
-	                      /*0 otherwise*/
-	    int *sur_samp,    /*sample size of survey data*/
-	    double *sur_W,    /*set of known W_1, W_2 */
+	    int *survey,     /* 1 if survey data available (set of W_1, W_2) */
+	                     /* 0 otherwise*/
+	    int *sur_samp,   /* sample size of survey data*/
+	    double *sur_W,   /* set of known W_1, W_2 */
 
 	    /*incorporating homeogenous areas */
-	    int *x1,       /* 1 if X=1 type areas available W_1 known, W_2 unknown */
-	    int *sampx1,   /* number X=1 type areas */
-	    double *x1_W1, /* values of W_1 for X1 type areas */
+	    int *x1,         /* 1 if X=1 type areas available 
+				W_1 known, W_2 unknown */
+	    int *sampx1,     /* number X=1 type areas */
+	    double *x1_W1,   /* values of W_1 for X1 type areas */
 
-	    int *x0,       /* 1 if X=0 type areas available W_2 known, W_1 unknown */
-	    int *sampx0,   /* number X=0 type areas */
-	    double *x0_W2, /* values of W_2 for X0 type areas */
+	    int *x0,         /* 1 if X=0 type areas available 
+				W_2 known, W_1 unknown */
+	    int *sampx0,     /* number X=0 type areas */
+	    double *x0_W2,   /* values of W_2 for X0 type areas */
            
 	    /* storage */
-	    int *pred,     /* 1 if draw posterior prediction */
-	    int *parameter,/* 1 if save population parameter */
-	    int *Metro,
+	    int *pred,       /* 1 if draw posterior prediction */
+	    int *parameter,  /* 1 if save population parameter */
+	    int *Grid,       /* 1 for Grid, 0 for Metropolis */
 
 	    /*  unused:	    int *link,       one Logit transformation 
 				two Probit transformation 
@@ -103,7 +105,7 @@ void cDPeco(
 
   /* dirichlet variables */
   double **Wstar;        /* The pseudo data  */
-                         /*The unidentified parameters */
+                         /* The unidentified parameters */
   double **Sn;           /* The posterior S parameter for InvWish */
   double *mun;           /* The posterior mean of mu under G0*/
   double ***Sigma;       /* The covarince matrix of psi (nsamp,cov,cov)*/
@@ -318,12 +320,12 @@ void cDPeco(
     /**update W, Wstar given mu, Sigma only for the unknown W/Wstar**/
     for (i=0;i<n_samp;i++){
       if (X[i][1]!=0 && X[i][1]!=1) {
-	if (*Metro) {
+	if (*Grid) 
+	  rGrid(W[i], W1g[i], W2g[i], n_grid[i], mu[i], InvSigma[i], n_dim);
+	else {
 	  rMH(vtemp, W[i], X[i], minW1[i], maxW1[i],  mu[i], InvSigma[i], n_dim);
 	  W[i][0]=vtemp[0]; W[i][1]=vtemp[1];
 	}
-	else
-	  rGrid(W[i], W1g[i], W2g[i], n_grid[i], mu[i], InvSigma[i], n_dim);
       }
       /*3 compute Wsta_i from W_i*/
       Wstar[i][0]=log(W[i][0])-log(1-W[i][0]);

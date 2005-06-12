@@ -5,8 +5,9 @@
   Copyright: GPL version 2 or later.
 *******************************************************************/
 
-void rGrid( double *Sample, double *W1gi, double *W2gi, 
-	    int ni_grid, double *mu, double **InvSigma, int n_dim); 
-void rMH( double *Sample, double *W, double *XY,
-          double W1min, double W1max, double *mu0, double **InvSigma0,
-	  int n_dim);
+void rGrid(double *Sample, double *W1gi, double *W2gi, int ni_grid, 
+	   double *mu, double **InvSigma, int n_dim); 
+void rMH(double *Sample, double *W, double *XY, double W1min, 
+	 double W1max, double *mu, double **InvSigma, int n_dim);
+void rMHrc(double *Sample, double *W, double *XY, double *Zmin, 
+	   double *Zmax, double *mu, double **InvSigma, int n_dim);
