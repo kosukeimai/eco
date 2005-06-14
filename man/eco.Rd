@@ -17,59 +17,47 @@ Ecological Inference in 2 by 2 Tables}
 }
 
 \usage{
-eco <- function(Y, X, data = parent.frame(), n.draws = 5000, burnin = 0,
-                thin = 5, verbose = FALSE, nonpar =  TRUE, nu0 = 4, tau0 = 1,
-                mu0 = c(0,0), S0 = diag(8,2), supplement=NULL, alpha = NULL,
-                a0 = 1, b0 = 0.1, predict = FALSE, parameter = FALSE) 
+eco <- function(formula, data = parent.frame(), nonpar = FALSE,
+                supplement = NULL, mu0 = c(0,0), tau0 = 2, 
+                nu0 = 4, S0 = diag(10,2), alpha = NULL, a0 = 1,
+                b0 = 0.1, predict = FALSE, parameter = FALSE,
+                grid = FALSE, n.draws = 5000, burnin = 0, thin = 0
+                verbose = FALSE)
 }
 
 \arguments{
-  \item{Y}{A numeric vector of proportions, representing the
-    weighted average of the missing internal cells of a \eqn{2 \times  
-      2} ecological table.
+  \item{formula}{A symbolic description of the model to be fit,
+    specifying the column and row margins of \eqn{2 \times
+      2} ecological tables. \code{Y ~ X} specifies \code{Y} as the
+    column margin and \code{X} as the row margin. Details and specific
+    examples are given below.
   } 
-  \item{X}{A numeric vector of proportions, representing the weights.
-  }
   \item{data}{An optional data frame in which to interpret the variables
-    in \code{Y} and \code{X}. The default is the environment in which
+    in \code{formula}. The default is the environment in which
     \code{eco} is called. 
   }  
-  \item{n.draws}{A positive integer. The number of MCMC draws.
-    The default is \code{5000}.
-  }
-  \item{burnin}{A positive integer. The burnin interval for the Markov
-    chain; i.e. the number of initial draws that should not be stored. The
-    default is \code{0}.
-  }   
-  \item{thin}{A positive integer. The thinning interval for the
-    Markov chain; i.e. the number of Gibbs draws between the recorded
-    values that are skipped. The default is \code{5}.
-  } 
-  \item{verbose}{Logical. If \code{TRUE}, the progress of the gibbs 
-   sampler is printed to the screen. The default is \code{FALSE}.
-  }
   \item{nonpar}{Logical. If \code{TRUE}, the nonparametric
     model will be fit. Otherwise, the parametric model will be
     estimated. The default is \code{TRUE}.
-  } 
-  \item{nu0}{A positive integer. The prior degrees of freedom
-    parameter. the default is \code{4}.
-  } 
-  \item{tau0}{A positive integer. The prior scale parameter. The default
-    is \code{2}. 
-  } 
-  \item{mu0}{A \eqn{2 \times 1} numeric vector. The prior mean. The
-    default is \eqn{(0,0)}.
-  } 
-  \item{S0}{A \eqn{2 \times 2} numeric matrix, representing a positive
-    definite prior scale matrix. The default is \code{diag(10,2)}. 
-  } 
+  }
   \item{supplement}{A numeric matrix. The matrix has two columns, which
     contain additional individual-level data such as survey data for
     \eqn{W_1} and \eqn{W_2}, respectively.  If \code{NULL}, no
     additional individual-level data are included in the model. The
     default is \code{NULL}.
-  }    
+  }      
+  \item{mu0}{A \eqn{2 \times 1} numeric vector. The prior mean. The
+    default is \eqn{(0,0)}.
+  } 
+  \item{tau0}{A positive integer. The prior scale parameter. The default
+    is \code{2}. 
+  } 
+  \item{nu0}{A positive integer. The prior degrees of freedom
+    parameter. the default is \code{4}.
+  } 
+  \item{S0}{A \eqn{2 \times 2} numeric matrix, representing a positive
+    definite prior scale matrix. The default is \code{diag(10,2)}. 
+  } 
   \item{alpha}{A positive scalar. If \code{NULL}, the concentration
     parameter \eqn{\alpha} will be updated at each Gibbs draw. The prior
     parameters \code{a0} and \code{b0} need to be specified. Otherwise,
@@ -82,18 +70,37 @@ eco <- function(Y, X, data = parent.frame(), n.draws = 5000, burnin = 0,
   \item{b0}{A positive integer. The scale parameter of the gamma prior
     for \eqn{\alpha}. The default is \code{0.1}.
   } 
-
   \item{predict}{Logical. If \code{TRUE}, out-of sample predictions will
     be returned. The default is \code{FALSE}.
   } 
   \item{parameter}{Logical. If \code{TRUE}, the Gibbs draws of the population
     parameters such as mu and sigma are returned. The default is \code{FALSE}.
+  }
+  \item{grid}{Logical. If \code{TRUE}, the grid method is used to sample
+    \eqn{W} in the Gibbs sampler. If \code{FALSE}, the Metropolis
+    algorithm is used where candidate draws are sampled from the uniform
+    distribution on the tomography line for each unit. Note that the
+    grid method is significantly slower than the Metropolis algorithm.
+  }
+  \item{n.draws}{A positive integer. The number of MCMC draws.
+    The default is \code{5000}.
+  }
+  \item{burnin}{A positive integer. The burnin interval for the Markov
+    chain; i.e. the number of initial draws that should not be stored. The
+    default is \code{0}.
+  }   
+  \item{thin}{A positive integer. The thinning interval for the
+    Markov chain; i.e. the number of Gibbs draws between the recorded
+    values that are skipped. The default is \code{0}.
   } 
+  \item{verbose}{Logical. If \code{TRUE}, the progress of the gibbs 
+   sampler is printed to the screen. The default is \code{FALSE}.
+  }
 }
 
 \details{
   An example of \eqn{2 \times 2} ecological table for racial voting is
-  as following: 
+  given below: 
   \tabular{lccc}{
     \tab black voters  \tab white voters \tab \cr
     Voted \tab \eqn{W_{1i}}  \tab \eqn{W_{2i}} \tab \eqn{Y_i} \cr
@@ -101,9 +108,10 @@ eco <- function(Y, X, data = parent.frame(), n.draws = 5000, burnin = 0,
     \tab \eqn{X_i} \tab \eqn{1-X_i} \tab 
   }
   where \eqn{Y_i} and \eqn{X_i} represent the observed margins, and
-  \eqn{W_1} and \eqn{W_2} are unknown variables. The following
-  deterministic relationship holds for each \eqn{i}:
-  \eqn{Y_i=X W_{1i}+(1-X_i)W_{2i}}
+  \eqn{W_1} and \eqn{W_2} are unknown variables. All variables are
+  proportions and hence bounded between 0 and 1. For each \eqn{i}, the
+  following deterministic relationship holds,
+  \eqn{Y_i=X W_{1i}+(1-X_i)W_{2i}}.
 }
 
 \examples{
@@ -111,11 +119,20 @@ eco <- function(Y, X, data = parent.frame(), n.draws = 5000, burnin = 0,
 ## load the registration data
 data(reg)
 
-## run the nonparametric model to give in-sample & out-of sample predictions
-res <- eco(Y = Y, X = X, data = reg, n.draws = 50, verbose = TRUE) 
+## NOTE: convergence has not been properly assessed for the following
+## examples.
 
+## fit the parametric model to give in-sample predictions and store
+## parameter estimates
+res <- eco(Y ~ X, data = reg, parameter = TRUE, verbose = TRUE) 
 ##summarize the results
 summary(res)
+
+## fit the nonparametric model to give out-of-sample
+## as well as in-sample predictions
+res1 <- eco(Y ~ X, data = reg, nonpar = TRUE, predict = TRUE, n.draws = 500, verbose = TRUE) 
+##summarize the results
+summary(res1)
 }
 
 \value{
@@ -170,7 +187,7 @@ summary(res)
     draw.}
   \item{a0}{The prior shape parameter.}
   \item{b0}{The prior scale parameter.}
-  \item{a.post}{The Gibbs draws of \eqn{\alpha}.}
+  \item{alpha.post}{The Gibbs draws of \eqn{\alpha}.}
   \item{nstar}{The number of clusters at each Gibbs draw.}
 }
 
