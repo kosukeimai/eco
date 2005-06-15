@@ -128,9 +128,8 @@ res <- eco(Y ~ X, data = reg, parameter = TRUE, verbose = TRUE)
 ##summarize the results
 summary(res)
 
-## fit the nonparametric model to give out-of-sample
-## as well as in-sample predictions
-res1 <- eco(Y ~ X, data = reg, nonpar = TRUE, predict = TRUE, n.draws = 500, verbose = TRUE) 
+## fit the nonparametric model to give in-sample predictions
+res1 <- eco(Y ~ X, data = reg, nonpar = TRUE, verbose = TRUE) 
 ##summarize the results
 summary(res1)
 }
