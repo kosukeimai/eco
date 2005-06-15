@@ -1,7 +1,7 @@
 ecoX <- function(Y, X, data = parent.frame(), 
 		 Z = NULL, 
 		n.draws = 5000, burnin = 0, thin = 5, verbose = TRUE,
-		nonpar =  TRUE, nu0 = 4, S0 = diag(10,2), 
+		nonpar =  FALSE, nu0 = 4, S0 = diag(10,2), 
 		beta0 = NULL, A0 = NULL,		
 		supplement=NULL,
 	        alpha = NULL, a0 = 1, b0 = 0.1,
