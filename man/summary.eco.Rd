@@ -10,9 +10,9 @@
 }
 
 \usage{
-  \method{summary}{eco}(object, CI=c(2.5, 97.5), long = TRUE, ...)
+  \method{summary}{eco}(object, CI=c(2.5, 97.5), long = FALSE, ...)
 
-  \method{print}{summary.eco}(x, digits = max(3, getOption("digits") - 3), ...)
+  \method{print}{summary.eco}(object, digits = max(3, getOption("digits") - 3), ...)
 }
 
 \arguments{
@@ -44,10 +44,11 @@
 \seealso{\code{eco}}
 
 \author{
-  Ying Lu, Office of Population Research, Woodrow Wilson School of International and Public Affairs,
-  Princeton University \email{yinglu@princeton.edu}; Kosuke Imai,
+Kosuke Imai,
   Department of Politics, Princeton University
-  \email{kimai@Princeton.Edu}, \url{http://www.princeton.edu/~kimai}
+  \email{kimai@Princeton.Edu}, \url{http://www.princeton.edu/~kimai};
+  Ying Lu, Institute for Quantitative Social Sciences, 
+  Harvard University \email{ylu@Latte.Harvard.Edu}
 }
 
 \keyword{methods}

@@ -1,6 +1,6 @@
 \name{eco}
 
-\alias{ECO}
+%\alias{ECO}
 \alias{eco}
 
 \title{Fitting the Parametric and Nonparametric Bayesian Models of
@@ -191,10 +191,10 @@ summary(res1)
 }
 
 \author{
-  Ying Lu, Office of Population Research, Woodrow Wilson School of International and Public Affairs,
-  Princeton University \email{yinglu@Princeton.Edu};
   Kosuke Imai, Department of Politics, Princeton University
-  \email{kimai@Princeton.Edu}, \url{http://www.princeton.edu/~kimai}}
+  \email{kimai@Princeton.Edu}, \url{http://www.princeton.edu/~kimai};
+  Ying Lu, Institute for Quantitative Social Sciences, 
+  Harvard University \email{ylu@Latte.Harvard.Edu}}
 
 \references{
   Imai, Kosuke and Ying Lu. (2004) \dQuote{ Parametric and Nonparametric
