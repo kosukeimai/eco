@@ -12,7 +12,7 @@
 \usage{
   \method{summary}{eco}(object, CI=c(2.5, 97.5), long = FALSE, ...)
 
-  \method{print}{summary.eco}(object, digits = max(3, getOption("digits") - 3), ...)
+  \method{print}{summary.eco}(x, digits = max(3, getOption("digits") - 3), ...)
 }
 
 \arguments{
@@ -21,6 +21,8 @@
     credible intervals used to summarize the results. The default is the
     equal tail 95 percent credible interval.
   }
+  \item{x}{An object of class \code{summary.eco}.}
+  \item{digits}{the number of significant digits to use when printing.}
   \item{long}{Logical. If \code{TRUE}, the in-sample predictions for
     each unit will be provided. The default value is \code{FALSE}.} 
   \item{...}{further arguments passed to or from other methods.}
