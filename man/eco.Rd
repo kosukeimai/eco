@@ -135,44 +135,21 @@ summary(res1)
 
 \value{
   An object of class \code{eco} containing the following elements:
-  \item{model}{The name of the model is used to produce the
-    predictions. If the nonparametric model is used, \code{
-      model=``Dirichlet Process prior''}; if the parametric model is used,
-    \code{ model=``Normal prior''}.
-  } 
-  \item{X}{The vector of data \eqn{X}.}
-  \item{Y}{The vector of data \eqn{Y}.}
+  \item{call}{The matched call.}
+  \item{nonpar}{The logical variable indicating whether the
+    nonparametric model is fit.}
+  \item{X}{The row margin, \eqn{X}.}
+  \item{Y}{The column margin, \eqn{Y}.}
   \item{nu0}{The prior degrees of freedom.}
   \item{tau0}{The prior scale parameter.}
-  \item{mu0}{The prior means.}
+  \item{mu0}{The prior mean.}
   \item{S0}{The prior scale matrix.}
   \item{burnin}{The number of initial burnin draws.}
   \item{thin}{Thinning interval.}
-  \item{mu1.post}{The posterior draws of the population mean parameter
-    of \eqn{W_1}. In nonparametric model, \code{mu1.post} is a m by n
-    matrix, where m is the number of Gibbs draws saved, n is the number of
-    observations. In parametric model, \code{mu1.post} is a vector of length
-    m. Export only if \code{parameter=TRUE}. }
-  \item{mu2.post}{The posterior draws of the population mean parameter
-    of \eqn{W_2}. The dimension of \code{mu2.post} is same as
-    \code{mu1.post}. Export only if \code{parameter=TRUE}.}
-  \item{Sigma11.post}{The posterior draws of the population variance
-    parameter of \eqn{W_1}. In nonparametric model, \code{Sigma11.post}
-    is a m by n matrix, where m is the number of Gibbs draws saved, n is the
-    number of observations. In parametric model, \code{Sigma11.post} is a
-    vector of length m. Export only if \code{parameter=TRUE}.}
-  \item{Sigma12.post}{The posterior draws of the population covariance
-    parameter between \eqn{W_1} and \eqn{W_2}. The dimension of
-    \code{Sigma12.post} is same as \code{Sigma11.post}. Export only if
-    \code{parameter=TRUE}.}
-  \item{Sigma22.post}{The posterior draws of the population variance
-    parameter of \eqn{W_2}. The dimension of \code{Sigma22.post} is same
-    as \code{Sigma11.post}. Export only if \code{parameter=TRUE}.}
-  \item{W1.post}{The posterior draws or in-sample predictions of
-    \eqn{W_1}.}
-  \item{W2.post}{The posterior draws or in-sample predictions of
-    \eqn{W_2}.
-  }
+  \item{W1}{The posterior in-sample predictions of \eqn{W_1}.}
+  \item{W2}{The posterior in-sample predictions of \eqn{W_2}.}
+  The following additional elements are included in the output when
+  \code{predict = TRUE}:
   \item{W1.pred}{The posterior predictive draws or out-of-sample
     predictions of \eqn{W_1}. Export only if \code{predict=TRUE}.
   }
@@ -180,12 +157,32 @@ summary(res1)
     predictions of \eqn{W_2}. Export only if \code{predict=TRUE}.
   }
   The following additional elements are included in the output when the
-  nonparametric model is fit:
-  \item{alpha}{Whether \eqn{\alpha} is being updated at each Gibbs
-    draw.}
+  nonparametric model is fit (i.e., \code{nonpar = TRUE})
   \item{a0}{The prior shape parameter.}
   \item{b0}{The prior scale parameter.}
-  \item{alpha.post}{The Gibbs draws of \eqn{\alpha}.}
+  The following additional elements are included in the output when
+  \code{parameter = TRUE}.\n
+  For the parametric model:
+  \item{mu}{The posterior draws of the population mean parameter,
+    \eqn{mu}.}
+  \item{Sigma}{The poterior draws of the population variance matrix,
+    \eqn{Sigma}.}
+  For the nonparametric model:
+  \item{mu1}{The posterior draws of the population mean parameter
+    for \eqn{W_1}. It is an \eqn{m \times n} matrix, where \eqn{m} is
+    the number of Gibbs draws saved, \eqn{n} is the number of units.}
+  \item{mu2}{The posterior draws of the population mean parameter
+    of \eqn{W_2}. The dimension of \code{mu2} is the same as \code{mu1}.}
+  \item{Sigma11}{The posterior draws of the population variance
+    parameter for \eqn{W_1}. It is an \eqn{m \times n} matrix, where \eqn{m} is the
+    number of Gibbs draws saved, \eqn{n} is the number of units.}
+  \item{Sigma12}{The posterior draws of the population covariance
+    parameter for \eqn{W_1} and \eqn{W_2}. The dimension of
+    \code{Sigma12} is the same as \code{Sigma11}.}
+  \item{Sigma22}{The posterior draws of the population variance
+    parameter for \eqn{W_2}. The dimension of \code{Sigma22} is same
+    as \code{Sigma11}.}
+  \item{alpha}{The posterior draws of \eqn{\alpha}.}
   \item{nstar}{The number of clusters at each Gibbs draw.}
 }
 
