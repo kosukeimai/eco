@@ -1,6 +1,5 @@
 \name{eco}
 
-%\alias{ECO}
 \alias{eco}
 
 \title{Fitting the Parametric and Nonparametric Bayesian Models of
@@ -129,7 +128,7 @@ res <- eco(Y ~ X, data = reg, parameter = TRUE, verbose = TRUE)
 summary(res)
 
 ## fit the nonparametric model to give in-sample predictions
-res1 <- eco(Y ~ X, data = reg, nonpar = TRUE, verbose = TRUE) 
+res1 <- eco(Y ~ X, data = reg, nonpar = TRUE, n.draws = 500, verbose = TRUE) 
 ##summarize the results
 summary(res1)
 }
