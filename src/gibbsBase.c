@@ -354,18 +354,8 @@ void cBaseeco(
 	  /*Wstar prediction */
 	  if (*pred) {
 	    rMVN(vtemp, mu_ord, Sigma_ord, n_dim);
-	    /*  if (*link==1){*/
-	      pdSWt1[itempS]=exp(vtemp[0])/(exp(vtemp[0])+1);
-	      pdSWt2[itempS]=exp(vtemp[1])/(exp(vtemp[1])+1);
-	      /* }
-	    else if (*link==2){
-	      pdSWt1[itempS]=pnorm(vtemp[0], 0, 1, 1, 0);
-	      pdSWt2[itempS]=pnorm(vtemp[1], 0, 1, 1, 0);
-	    }
-	    else if (*link==3){
-	      pdSWt1[itempS]=exp(-exp(-vtemp[0]));
-	      pdSWt2[itempS]=exp(-exp(-vtemp[1]));
-	      }	*/      
+	    pdSWt1[itempS]=exp(vtemp[0])/(exp(vtemp[0])+1);
+	    pdSWt2[itempS]=exp(vtemp[1])/(exp(vtemp[1])+1);
 	  }
 	  itempS++;
 	}
