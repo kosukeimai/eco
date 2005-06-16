@@ -1,9 +1,9 @@
-predict.eco <- function(object, newdata = NULL, ...){
+predict.eco <- function(object, newdata = NULL, newdraw = NULL, ...){
 
-  if (is.null(object$mu))
-    stop("Parameters are not stored: set `parameter = TRUE'")
-  if (is.null(object$Sigma))
-    stop("Parameters are not stored: set `parameter = TRUE'")
+  if (is.null(object$mu) && is.null(newdraw$mu))
+    stop("Posterior draws of mu must be supplied.")
+  if (is.null(object$Sigma) && is.null(newdraw$Sigma))
+    stop("Posterior draws of Sigma must be supplied.")   
   mu <- object$mu
   n <- nrow(mu)
   p <- ncol(mu)
