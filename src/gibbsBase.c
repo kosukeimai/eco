@@ -79,7 +79,7 @@ void cBaseeco(
 
   int t_samp;                  /* total effective sample size =n_samp+s_samp;*/
 
-  /*bounds condition variables */
+  /* bounds */
   double **W;                  /* The W1 and W2 matrix */
   double *minW1, *maxW1;       /* The lower and upper bounds of W_1i */
   int n_step=1000;             /* 1/The default size of grid step */  
@@ -87,10 +87,10 @@ void cBaseeco(
   double **W1g, **W2g;         /* The grids taken for W1 and W2 on tomoline */
   double *resid;               /* The centralizing vector for grids */
 
-  /* ordinary model variables */
-  double **Sigma_ord;          /* The posterior covariance matrix of psi (oridinary)*/
-  double **InvSigma_ord;
-  double *mu_ord;              /* The posterior mean of psi (ordinary)*/
+  /* model parameters */
+  double **Sigma;          /* The posterior covariance matrix of psi (oridinary)*/
+  double **InvSigma;
+  double *mu;              /* The posterior mean of psi (ordinary)*/
 
   /* The pseudo data  */
   double **Wstar;        
@@ -137,13 +137,13 @@ void cBaseeco(
   W1g=doubleMatrix(n_samp, n_step);
   W2g=doubleMatrix(n_samp, n_step);
 
-  /*ordinary model */
-  mu_ord=doubleArray(n_dim);
-  Sigma_ord=doubleMatrix(n_dim,n_dim);
-  InvSigma_ord=doubleMatrix(n_dim,n_dim);
-
+  /* model parameters */
+  mu=doubleArray(n_dim);
+  Sigma=doubleMatrix(n_dim,n_dim);
+  InvSigma=doubleMatrix(n_dim,n_dim);
   Wstar_bar=doubleArray(n_dim);
 
+  /* temporary storage */
   vtemp=doubleArray(n_dim);
   mtemp=doubleMatrix(n_dim,n_dim);
 
@@ -151,10 +151,7 @@ void cBaseeco(
   itemp=0;
   for(k=0;k<n_dim;k++)
     for(j=0;j<n_dim;j++) S0[j][k]=pdS0[itemp++];
-
   t_samp=n_samp+s_samp+x1_samp+x0_samp;  
-
-
 
   /* read the data set */
   /** Packing Y, X  **/
@@ -256,13 +253,13 @@ void cBaseeco(
     }
   }
     
-  /* initialize vales of mu_ord and Sigma_ord */
+  /* initialize vales of mu and Sigma */
   for(j=0;j<n_dim;j++){
-    mu_ord[j]=mu0[j];
+    mu[j]=mu0[j];
     for(k=0;k<n_dim;k++)
-      Sigma_ord[j][k]=S0[j][k];
+      Sigma[j][k]=S0[j][k];
   }
-  dinv(Sigma_ord, n_dim, InvSigma_ord);
+  dinv(Sigma, n_dim, InvSigma);
   
   /***Gibbs for  normal prior ***/
   for(main_loop=0; main_loop<*n_gen; main_loop++){
@@ -270,11 +267,11 @@ void cBaseeco(
     for (i=0;i<n_samp;i++){
       if ( X[i][1]!=0 && X[i][1]!=1 ) {
 	if (*Grid)
-	  rGrid(W[i], W1g[i], W2g[i], n_grid[i], mu_ord, InvSigma_ord,
+	  rGrid(W[i], W1g[i], W2g[i], n_grid[i], mu, InvSigma,
 		n_dim);
 	else {
-	  rMH(vtemp, W[i], X[i], minW1[i], maxW1[i],  mu_ord,
-	      InvSigma_ord, n_dim);
+	  rMH(vtemp, W[i], X[i], minW1[i], maxW1[i],  mu,
+	      InvSigma, n_dim);
 	  W[i][0]=vtemp[0]; W[i][1]=vtemp[1];
 	}
       } 
@@ -283,30 +280,30 @@ void cBaseeco(
       Wstar[i][1]=log(W[i][1])-log(1-W[i][1]);
     }
     
-    /*update W2 given W1, mu_ord and Sigma_ord in x1 homeogeneous areas */
+    /*update W2 given W1, mu and Sigma in x1 homeogeneous areas */
     /*printf("W2 draws\n");*/
     if (*x1==1)
       for (i=0; i<x1_samp; i++) {
-	dtemp=mu_ord[1]+Sigma_ord[0][1]/Sigma_ord[0][0]*(Wstar[n_samp+i][0]-mu_ord[0]);
-	dtemp1=Sigma_ord[1][1]*(1-Sigma_ord[0][1]*Sigma_ord[0][1]/(Sigma_ord[0][0]*Sigma_ord[1][1]));
+	dtemp=mu[1]+Sigma[0][1]/Sigma[0][0]*(Wstar[n_samp+i][0]-mu[0]);
+	dtemp1=Sigma[1][1]*(1-Sigma[0][1]*Sigma[0][1]/(Sigma[0][0]*Sigma[1][1]));
 	/* printf("\n%14g%14g\n", dtemp, dtemp1);*/
 	dtemp1=sqrt(dtemp1);
 	Wstar[n_samp+i][1]=rnorm(dtemp, dtemp1);
 	W[n_samp+i][1]=exp(Wstar[n_samp+i][1])/(1+exp(Wstar[n_samp+i][1]));
       }
     
-    /*update W1 given W2, mu_ord and Sigma_ord in x0 homeogeneous areas */
+    /*update W1 given W2, mu and Sigma in x0 homeogeneous areas */
     /*printf("W1 draws\n");*/
     if (*x0==1)
       for (i=0; i<x0_samp; i++) {
-	dtemp=mu_ord[0]+Sigma_ord[0][1]/Sigma_ord[1][1]*(Wstar[n_samp+x1_samp+i][1]-mu_ord[1]);
-	dtemp1=Sigma_ord[0][0]*(1-Sigma_ord[0][1]*Sigma_ord[0][1]/(Sigma_ord[0][0]*Sigma_ord[1][1]));
+	dtemp=mu[0]+Sigma[0][1]/Sigma[1][1]*(Wstar[n_samp+x1_samp+i][1]-mu[1]);
+	dtemp1=Sigma[0][0]*(1-Sigma[0][1]*Sigma[0][1]/(Sigma[0][0]*Sigma[1][1]));
 	dtemp1=sqrt(dtemp1);
 	Wstar[n_samp+x1_samp+i][0]=rnorm(dtemp, dtemp1);
 	W[n_samp+x1_samp+i][0]=exp(Wstar[n_samp+x1_samp+i][0])/(1+exp(Wstar[n_samp+x1_samp+i][0]));
       }
     
-    /*update mu_ord, Sigma_ord given wstar using effective sample of Wstar*/
+    /*update mu, Sigma given wstar using effective sample of Wstar*/
     for (j=0;j<n_dim;j++) {
       Wstar_bar[j]=0;
       for (k=0;k<n_dim;k++)
@@ -326,23 +323,23 @@ void cBaseeco(
     }
     dinv(Sn, n_dim, mtemp); 
       
-    rWish(InvSigma_ord, mtemp, nu0+t_samp, n_dim);
-    dinv(InvSigma_ord, n_dim, Sigma_ord);
+    rWish(InvSigma, mtemp, nu0+t_samp, n_dim);
+    dinv(InvSigma, n_dim, Sigma);
     
     for(j=0;j<n_dim;j++)
-      for(k=0;k<n_dim;k++) mtemp[j][k]=Sigma_ord[j][k]/(tau0+t_samp);
-    rMVN(mu_ord, mun, mtemp, n_dim);
+      for(k=0;k<n_dim;k++) mtemp[j][k]=Sigma[j][k]/(tau0+t_samp);
+    rMVN(mu, mun, mtemp, n_dim);
     
     /*store Gibbs draw after burn-in and every nth draws */      
     R_CheckUserInterrupt();
     if (main_loop>=*burn_in){
       itempC++;
       if (itempC==nth){
-	pdSMu0[itempA]=mu_ord[0];
-	pdSMu1[itempA]=mu_ord[1];
-	pdSSig00[itempA]=Sigma_ord[0][0];
-	pdSSig01[itempA]=Sigma_ord[0][1];
-	pdSSig11[itempA]=Sigma_ord[1][1];
+	pdSMu0[itempA]=mu[0];
+	pdSMu1[itempA]=mu[1];
+	pdSSig00[itempA]=Sigma[0][0];
+	pdSSig01[itempA]=Sigma[0][1];
+	pdSSig11[itempA]=Sigma[1][1];
 	itempA++;
 	for(i=0; i<(n_samp+x1_samp+x0_samp); i++){
 	  pdSW1[itempS]=W[i][0];
@@ -378,9 +375,9 @@ void cBaseeco(
   FreeMatrix(Sn, n_dim);
   FreeMatrix(W1g, n_samp);
   FreeMatrix(W2g, n_samp);
-  free(mu_ord);
-  FreeMatrix(Sigma_ord,n_dim);
-  FreeMatrix(InvSigma_ord, n_dim);
+  free(mu);
+  FreeMatrix(Sigma,n_dim);
+  FreeMatrix(InvSigma, n_dim);
   free(Wstar_bar);
   free(vtemp);
   FreeMatrix(mtemp, n_dim);
