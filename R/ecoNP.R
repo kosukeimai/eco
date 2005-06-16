@@ -102,10 +102,10 @@ ecoNP <- function(formula, data = parent.frame(), supplement = NULL,
   a.post <- matrix(res$pdSa, n.a, unit.a, byrow=TRUE)
   nstar <- matrix(res$pdSn, n.a, unit.a, byrow=TRUE)
   
-  res.out <- list(call = call, nonpar = nonpar, X = X, Y = Y,
-                  burin = burnin, thin = thin, nu0 = nu0,
-                  tau0 = tau0, mu0 = mu0, a0 = a0, b0 = b0, S0 = S0,
-                  W1 = W1.post, W2 = W2.post)
+  res.out <- list(call = call, X = X, Y = Y, W1 = W1.post, W2 = W2.post,
+                  burin = burnin, thin = thin, nu0 = nu0, tau0 = tau0,
+                  mu0 = mu0, a0 = a0, b0 = b0, S0 = S0)
+  
   if (parameter){
     res.out$mu1 <- mu1.post
     res.out$mu2 <- mu2.post 
