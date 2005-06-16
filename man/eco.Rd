@@ -2,24 +2,22 @@
 
 \alias{eco}
 
-\title{Fitting the Parametric and Nonparametric Bayesian Models of
-Ecological Inference in 2 by 2 Tables} 
+\title{Fitting the Parametric Bayesian Model of Ecological Inference in
+  2 by 2 Tables}  
 
 \description{
-  \code{eco} is used to fit the parametric and nonparametric Bayesian
-  models for ecological inference in \eqn{2 \times 2} tables via Markov
-  chain Monte Carlo. It gives in-sample predictions as well as
-  out-of-sample predictions for population inference. The parametric
-  model uses a normal/inverse-Wishart prior, while the nonparametric
-  model uses a Dirichlet process prior. The models and algorithms are
-  described in Imai and Lu (2004).
+  \code{eco} is used to fit the parametric Bayesian model (based on a
+  Normal/Inverse-Wishart prior) for ecological inference in \eqn{2
+  \times 2} tables via Markov chain Monte Carlo. It gives in-sample
+  predictions as well as out-of-sample predictions for population
+  inference. The model and algorithm are described in Imai and Lu (2004).
 }
 
 \usage{
-eco(formula, data = parent.frame(), nonpar = FALSE, supplement = NULL,
-    mu0 = c(0,0), tau0 = 2, nu0 = 4, S0 = diag(10,2), alpha = NULL,
-    a0 = 1, b0 = 0.1, predict = FALSE, parameter = FALSE, grid = FALSE,
-    n.draws = 5000, burnin = 0, thin = 0, verbose = FALSE)
+eco(formula, data = parent.frame(), supplement = NULL, mu0 = c(0,0),
+    tau0 = 2, nu0 = 4, S0 = diag(10,2), alpha = NULL, a0 = 1, b0 = 0.1,
+    predict = FALSE, parameter = FALSE, grid = FALSE, n.draws = 5000,
+    burnin = 0, thin = 0, verbose = FALSE)
 }
 
 \arguments{
@@ -33,10 +31,6 @@ eco(formula, data = parent.frame(), nonpar = FALSE, supplement = NULL,
     in \code{formula}. The default is the environment in which
     \code{eco} is called. 
   }  
-  \item{nonpar}{Logical. If \code{TRUE}, the nonparametric
-    model will be fit. Otherwise, the parametric model will be
-    estimated. The default is \code{TRUE}.
-  }
   \item{supplement}{A numeric matrix. The matrix has two columns, which
     contain additional individual-level data such as survey data for
     \eqn{W_1} and \eqn{W_2}, respectively.  If \code{NULL}, no
@@ -125,10 +119,6 @@ res <- eco(Y ~ X, data = reg, parameter = TRUE, verbose = TRUE)
 ##summarize the results
 summary(res)
 
-## fit the nonparametric model to give in-sample predictions
-res1 <- eco(Y ~ X, data = reg, nonpar = TRUE, n.draws = 500, verbose = TRUE) 
-##summarize the results
-summary(res1)
 }
 
 \value{
@@ -154,34 +144,12 @@ summary(res1)
   \item{W2.pred}{The posterior predictive draws or out-of-sample
     predictions of \eqn{W_2}. Export only if \code{predict=TRUE}.
   }
-  The following additional elements are included in the output when the
-  nonparametric model is fit (i.e., \code{nonpar = TRUE})
-  \item{a0}{The prior shape parameter.}
-  \item{b0}{The prior scale parameter.}
   The following additional elements are included in the output when
-  \code{parameter = TRUE}.\n
-  For the parametric model:
+  \code{parameter = TRUE}.
   \item{mu}{The posterior draws of the population mean parameter,
     \eqn{mu}.}
   \item{Sigma}{The poterior draws of the population variance matrix,
     \eqn{Sigma}.}
-  For the nonparametric model:
-  \item{mu1}{The posterior draws of the population mean parameter
-    for \eqn{W_1}. It is an \eqn{m \times n} matrix, where \eqn{m} is
-    the number of Gibbs draws saved, \eqn{n} is the number of units.}
-  \item{mu2}{The posterior draws of the population mean parameter
-    of \eqn{W_2}. The dimension of \code{mu2} is the same as \code{mu1}.}
-  \item{Sigma11}{The posterior draws of the population variance
-    parameter for \eqn{W_1}. It is an \eqn{m \times n} matrix, where \eqn{m} is the
-    number of Gibbs draws saved, \eqn{n} is the number of units.}
-  \item{Sigma12}{The posterior draws of the population covariance
-    parameter for \eqn{W_1} and \eqn{W_2}. The dimension of
-    \code{Sigma12} is the same as \code{Sigma11}.}
-  \item{Sigma22}{The posterior draws of the population variance
-    parameter for \eqn{W_2}. The dimension of \code{Sigma22} is same
-    as \code{Sigma11}.}
-  \item{alpha}{The posterior draws of \eqn{\alpha}.}
-  \item{nstar}{The number of clusters at each Gibbs draw.}
 }
 
 \author{
@@ -196,5 +164,5 @@ summary(res1)
   Tables.} Proceedings of the American Statistical Association.
   \url{http://www.princeton.edu/~kimai/research/einonpar.html} }
 
-\seealso{\code{summary.eco}}
+\seealso{\code{ecoNP}, \code{summary.eco}}
 \keyword{models}
