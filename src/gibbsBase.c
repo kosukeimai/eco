@@ -15,6 +15,7 @@
 #include "rand.h"
 #include "sample.h"
 
+/* Normal Parametric Model for 2x2 Tables */
 void cBaseeco(
 	      /*data input */
 	      double *pdX,     /* data (X, Y) */
@@ -120,6 +121,7 @@ void cBaseeco(
   W=doubleMatrix((n_samp+s_samp+x0_samp+x1_samp),n_dim);
   Wstar=doubleMatrix((n_samp+s_samp+x0_samp+x1_samp),n_dim);
 
+  /* survey data */
   S_W=doubleMatrix(s_samp, n_dim);
   S_Wstar=doubleMatrix(s_samp, n_dim);
 
@@ -150,7 +152,7 @@ void cBaseeco(
   vtemp=doubleArray(n_dim);
   mtemp=doubleMatrix(n_dim,n_dim);
 
-  /* priors under G0*/
+  /* priors */
   itemp=0;
   for(k=0;k<n_dim;k++)
     for(j=0;j<n_dim;j++) S0[j][k]=pdS0[itemp++];
