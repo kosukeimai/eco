@@ -61,44 +61,47 @@ void cBaseeco(
 	      double *pdSW1, double *pdSW2
 	      ){	   
   
-  int n_samp = *pin_samp;      /* sample size */
-  int nu0 = *pinu0;            /* prior parameters */ 
-  double tau0 = *pdtau0;   
-  int nth=*pinth;  
-  int n_dim=2;                 /* The number of covariates */
-
-  double **X;	    	       /* The Y and covariates */
-  double **S0;                 /* The prior S parameter for InvWish */
-  
-  int s_samp= *sur_samp;       /* sample size of survey data */ 
-  double **S_W;                /* The known W1 and W2 matrix*/
-  double **S_Wstar;            /* The inverse logit transformation of S_W*/
-
+  int n_samp = *pin_samp;   /* sample size */
+  int s_samp= *sur_samp;    /* sample size of survey data */ 
   int x1_samp=*sampx1;
   int x0_samp=*sampx0;
+  int t_samp=n_samp+s_samp+x1_samp+x0_samp;  /* total effective sample size */
+  int nth=*pinth;  
+  int n_dim=2;              /* The number of covariates */
 
-  int t_samp;                  /* total effective sample size =n_samp+s_samp;*/
+  /* prior parameters */ 
+  double tau0 = *pdtau0;   
+  int nu0 = *pinu0;            
+  double **S0;              /* The prior S parameter for InvWish */
+
+  /* data */
+  double **X;	    	    /* The Y and covariates */
+  double **S_W;             /* The known W1 and W2 matrix*/
+  double **S_Wstar;         /* The inverse logit transformation of S_W*/
+  double **W;               /* The W1 and W2 matrix */
 
   /* bounds */
-  double **W;                  /* The W1 and W2 matrix */
-  double *minW1, *maxW1;       /* The lower and upper bounds of W_1i */
-  int n_step=1000;             /* 1/The default size of grid step */  
-  int *n_grid;                 /* The number of grids for sampling on tomoline */
-  double **W1g, **W2g;         /* The grids taken for W1 and W2 on tomoline */
-  double *resid;               /* The centralizing vector for grids */
+  double *minW1, *maxW1;    /* The lower and upper bounds of W_1i */
 
+  /* grids */
+  int n_step=1000;          /* 1/The default size of grid step */  
+  int *n_grid;              /* The number of grids for sampling on
+			       tomoline */
+  double **W1g, **W2g;      /* The grids taken for W1 and W2 on tomoline */
+  double *resid;            /* The centralizing vector for grids */
+  
   /* model parameters */
-  double **Sigma;          /* The posterior covariance matrix of psi (oridinary)*/
+  double **Sigma;           /* The posterior covariance matrix of psi */
   double **InvSigma;
-  double *mu;              /* The posterior mean of psi (ordinary)*/
+  double *mu;               /* The posterior mean of psi */
 
   /* The pseudo data  */
   double **Wstar;        
   double *Wstar_bar;
 
-  /*posterior variables */
-  double *mun;           /* The posterior mean */
-  double **Sn;           /* The posterior S parameter for InvWish */
+  /* posterior variables */
+  double *mun;              /* The posterior mean */
+  double **Sn;              /* The posterior S parameter for InvWish */
 
   /* misc variables */
   int i, j, k, main_loop;   /* used for various loops */
@@ -123,19 +126,19 @@ void cBaseeco(
   /* bounds */
   minW1=doubleArray(n_samp);
   maxW1=doubleArray(n_samp);
-  n_grid=intArray(n_samp);
-  resid=doubleArray(n_samp);
 
-  /*priors*/
+  /* priors */
   S0=doubleMatrix(n_dim,n_dim);
 
-  /*posteriors*/
+  /* posteriors */
   mun=doubleArray(n_dim);
   Sn=doubleMatrix(n_dim,n_dim);
 
-  /*bounds condition */
+  /* grids */
   W1g=doubleMatrix(n_samp, n_step);
   W2g=doubleMatrix(n_samp, n_step);
+  n_grid=intArray(n_samp);
+  resid=doubleArray(n_samp);
 
   /* model parameters */
   mu=doubleArray(n_dim);
@@ -151,15 +154,12 @@ void cBaseeco(
   itemp=0;
   for(k=0;k<n_dim;k++)
     for(j=0;j<n_dim;j++) S0[j][k]=pdS0[itemp++];
-  t_samp=n_samp+s_samp+x1_samp+x0_samp;  
 
-  /* read the data set */
-  /** Packing Y, X  **/
+  /* read the data */
   itemp = 0;
   for (j = 0; j < n_dim; j++) 
-    for (i = 0; i < n_samp; i++) {
+    for (i = 0; i < n_samp; i++) 
       X[i][j] = pdX[itemp++];
-    }
 
   /* initialize W, Wstar for n_samp*/
   for (j=0; j<n_dim; j++)
@@ -168,11 +168,9 @@ void cBaseeco(
       Wstar[i][j]=0;
       if (X[i][1]==0) W[i][j]=0.0001;
       else if (X[i][1]==1) W[i][j]=0.9999;
-
     }
 
-
-  /*read homeogenous areas information */
+  /* read homeogenous areas information */
   if (*x1==1) 
     for (i=0; i<x1_samp; i++) {
       W[(n_samp+i)][0]=x1_W1[i];
@@ -180,7 +178,6 @@ void cBaseeco(
       if (W[(n_samp+i)][0]==1) W[(n_samp+i)][0]=0.9999;
       Wstar[(n_samp+i)][0]=log(W[(n_samp+i)][0])-log(1-W[(n_samp+i)][0]);
     }
-
   if (*x0==1) 
     for (i=0; i<x0_samp; i++) {
       W[(n_samp+x1_samp+i)][1]=x0_W2[i];
@@ -189,9 +186,7 @@ void cBaseeco(
       Wstar[(n_samp+x1_samp+i)][1]=log(W[(n_samp+x1_samp+i)][1])-log(1-W[(n_samp+x1_samp+i)][1]);
     }
 
-
-  /*read the survey data */
-
+  /* read the survey data */
   if (*survey==1) {
     itemp = 0;
     for (j=0; j<n_dim; j++)
@@ -205,19 +200,19 @@ void cBaseeco(
       }
   }
 
-  itempA=0; /* counter for alpha */
-  itempS=0; /* counter for storage */
-  itempC=0; /* counter to control nth draw */
+  /* counters */
+  itempA=0; /* for alpha */
+  itempS=0; /* for storage */
+  itempC=0; /* control nth draw */
 
-  /*initialize W and Wstar */
-
-  
   /*initialize W1g and W2g */
-  for(i=0; i<n_samp; i++)
-    for (j=0; j<n_step; j++){
-      W1g[i][j]=0;
-      W2g[i][j]=0;
-    }
+  if (*Grid) 
+    for(i=0; i<n_samp; i++)
+      for (j=0; j<n_step; j++){
+	W1g[i][j]=0;
+	W2g[i][j]=0;
+      }
+
 
   /*** calculate bounds and grids ***/
   for(i=0;i<n_samp;i++) {
@@ -225,30 +220,30 @@ void cBaseeco(
       /* min and max for W1 */ 
       minW1[i]=fmax2(0.0, (X[i][0]+X[i][1]-1)/X[i][0]);
       maxW1[i]=fmin2(1.0, X[i][1]/X[i][0]);
-      /* number of grid points */
-      /* note: 1/n_step is the length of the grid */
-      dtemp=(double)1/n_step;
-      if ((maxW1[i]-minW1[i]) > (2*dtemp)) { 
-	n_grid[i]=ftrunc((maxW1[i]-minW1[i])*n_step);
-	resid[i]=(maxW1[i]-minW1[i])-n_grid[i]*dtemp;
-	/*if (maxW1[i]-minW1[i]==1) resid[i]=dtemp/4;*/
-	j=0; 
-	while (j<n_grid[i]) {
-	  W1g[i][j]=minW1[i]+(j+1)*dtemp-(dtemp+resid[i])/2;
-	  if ((W1g[i][j]-minW1[i])<resid[i]/2) W1g[i][j]+=resid[i]/2;
-	  if ((maxW1[i]-W1g[i][j])<resid[i]/2) W1g[i][j]-=resid[i]/2;
-	  W2g[i][j]=(X[i][1]-X[i][0]*W1g[i][j])/(1-X[i][0]);
-	  /*if (i<20) printf("\n%5d%5d%14g%14g", i, j, W1g[i][j], W2g[i][j]);*/
-	  j++;
+      if (*Grid) {
+	/* 1/n_step is the length of the grid */
+	dtemp=(double)1/n_step;
+	if ((maxW1[i]-minW1[i]) > (2*dtemp)) { 
+	  n_grid[i]=ftrunc((maxW1[i]-minW1[i])*n_step);
+	  resid[i]=(maxW1[i]-minW1[i])-n_grid[i]*dtemp;
+	  /*if (maxW1[i]-minW1[i]==1) resid[i]=dtemp/4;*/
+	  j=0; 
+	  while (j<n_grid[i]) {
+	    W1g[i][j]=minW1[i]+(j+1)*dtemp-(dtemp+resid[i])/2;
+	    if ((W1g[i][j]-minW1[i])<resid[i]/2) W1g[i][j]+=resid[i]/2;
+	    if ((maxW1[i]-W1g[i][j])<resid[i]/2) W1g[i][j]-=resid[i]/2;
+	    W2g[i][j]=(X[i][1]-X[i][0]*W1g[i][j])/(1-X[i][0]);
+	    /*if (i<20) printf("\n%5d%5d%14g%14g", i, j, W1g[i][j], W2g[i][j]);*/
+	    j++;
+	  }
 	}
-      }
-      else {
-	W1g[i][0]=minW1[i]+(maxW1[i]-minW1[i])/3;
-	W2g[i][0]=(X[i][1]-X[i][0]*W1g[i][0])/(1-X[i][0]);
-	W1g[i][1]=minW1[i]+2*(maxW1[i]-minW1[i])/3;
-	W2g[i][1]=(X[i][1]-X[i][0]*W1g[i][1])/(1-X[i][0]);
-	n_grid[i]=2;
-	
+	else {
+	  W1g[i][0]=minW1[i]+(maxW1[i]-minW1[i])/3;
+	  W2g[i][0]=(X[i][1]-X[i][0]*W1g[i][0])/(1-X[i][0]);
+	  W1g[i][1]=minW1[i]+2*(maxW1[i]-minW1[i])/3;
+	  W2g[i][1]=(X[i][1]-X[i][0]*W1g[i][1])/(1-X[i][0]);
+	  n_grid[i]=2;
+	}
       }
     }
   }
@@ -261,9 +256,9 @@ void cBaseeco(
   }
   dinv(Sigma, n_dim, InvSigma);
   
-  /***Gibbs for  normal prior ***/
+  /*** Gibbs sampler! ***/
   for(main_loop=0; main_loop<*n_gen; main_loop++){
-    /**update W, Wstar given mu, Sigma in regular areas**/
+    /** update W, Wstar given mu, Sigma in regular areas **/
     for (i=0;i<n_samp;i++){
       if ( X[i][1]!=0 && X[i][1]!=1 ) {
 	if (*Grid)
@@ -280,20 +275,17 @@ void cBaseeco(
       Wstar[i][1]=log(W[i][1])-log(1-W[i][1]);
     }
     
-    /*update W2 given W1, mu and Sigma in x1 homeogeneous areas */
-    /*printf("W2 draws\n");*/
+    /* update W2 given W1, mu and Sigma in x1 homeogeneous areas */
     if (*x1==1)
       for (i=0; i<x1_samp; i++) {
 	dtemp=mu[1]+Sigma[0][1]/Sigma[0][0]*(Wstar[n_samp+i][0]-mu[0]);
 	dtemp1=Sigma[1][1]*(1-Sigma[0][1]*Sigma[0][1]/(Sigma[0][0]*Sigma[1][1]));
-	/* printf("\n%14g%14g\n", dtemp, dtemp1);*/
 	dtemp1=sqrt(dtemp1);
 	Wstar[n_samp+i][1]=rnorm(dtemp, dtemp1);
 	W[n_samp+i][1]=exp(Wstar[n_samp+i][1])/(1+exp(Wstar[n_samp+i][1]));
       }
     
-    /*update W1 given W2, mu and Sigma in x0 homeogeneous areas */
-    /*printf("W1 draws\n");*/
+    /* update W1 given W2, mu and Sigma in x0 homeogeneous areas */
     if (*x0==1)
       for (i=0; i<x0_samp; i++) {
 	dtemp=mu[0]+Sigma[0][1]/Sigma[1][1]*(Wstar[n_samp+x1_samp+i][1]-mu[1]);
@@ -303,7 +295,7 @@ void cBaseeco(
 	W[n_samp+x1_samp+i][0]=exp(Wstar[n_samp+x1_samp+i][0])/(1+exp(Wstar[n_samp+x1_samp+i][0]));
       }
     
-    /*update mu, Sigma given wstar using effective sample of Wstar*/
+    /* update mu, Sigma given wstar using effective sample of Wstar */
     for (j=0;j<n_dim;j++) {
       Wstar_bar[j]=0;
       for (k=0;k<n_dim;k++)
@@ -322,7 +314,6 @@ void cBaseeco(
 	Sn[j][k]+=(tau0*t_samp)*(Wstar_bar[j]-mu0[j])*(Wstar_bar[k]-mu0[k])/(tau0+t_samp);
     }
     dinv(Sn, n_dim, mtemp); 
-      
     rWish(InvSigma, mtemp, nu0+t_samp, n_dim);
     dinv(InvSigma, n_dim, Sigma);
     
@@ -331,7 +322,6 @@ void cBaseeco(
     rMVN(mu, mun, mtemp, n_dim);
     
     /*store Gibbs draw after burn-in and every nth draws */      
-    R_CheckUserInterrupt();
     if (main_loop>=*burn_in){
       itempC++;
       if (itempC==nth){
@@ -348,14 +338,15 @@ void cBaseeco(
 	}
 	itempC=0;
       }
-    } /*end of stroage *burn_in*/
+    } 
     if (*verbose)
       if (itempP == main_loop) {
 	Rprintf("%3d percent done.\n", progress*10);
 	itempP+=ftrunc((double) *n_gen/10); progress++;
-      R_FlushConsole();
+	R_FlushConsole();
       }
-  } /*end of MCMC for normal */ 
+    R_CheckUserInterrupt();
+  } /* end of Gibbs sampler */ 
 
   if(*verbose)
     Rprintf("100 percent done.\n");
@@ -369,10 +360,10 @@ void cBaseeco(
   FreeMatrix(Wstar, t_samp);
   free(minW1);
   free(maxW1);
-  free(n_grid);
-  free(resid);
   FreeMatrix(S0, n_dim);
   FreeMatrix(Sn, n_dim);
+  free(n_grid);
+  free(resid);
   FreeMatrix(W1g, n_samp);
   FreeMatrix(W2g, n_samp);
   free(mu);
