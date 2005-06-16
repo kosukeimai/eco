@@ -27,7 +27,7 @@ summary.eco <- function(object, CI=c(2.5, 97.5), long = FALSE, ...) {
   rownames(agg.table) <- c("W1", "W2")
 
   ans<- list(call = object$call, W1.table = W1.table, W2.table = W2.table,
-             agg.table = agg.table, nonpar = object$nonpar, n.obs = n.obs) 
+             agg.table = agg.table, n.obs = n.obs) 
   class(ans) <-"summary.eco"
   return(ans)
 }

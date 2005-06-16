@@ -3,12 +3,6 @@ print.summary.eco <- function(x, digits=max(3, getOption("digits")
   cat("\nCall: ") 
   cat(paste(deparse(x$call), sep="\n", collapse="\n"))
 
-  if (!is.null(x$nonpar))
-    if(x$nonpar)
-      cat("\n\n** Nonparametric Model **")
-    else
-      cat("\n\n** Parametric Model **")
-  
   cat("\n\nAggregate Estimates:\n")
   printCoefmat(x$agg.table, digits=digits, na.print="NA",...)
 
