@@ -9,15 +9,14 @@
   \code{eco} is used to fit the parametric Bayesian model (based on a
   Normal/Inverse-Wishart prior) for ecological inference in \eqn{2
   \times 2} tables via Markov chain Monte Carlo. It gives in-sample
-  predictions as well as out-of-sample predictions for population
-  inference. The model and algorithm are described in Imai and Lu (2004).
+  predictions as well as the estimates of the model parameters. The
+  model and algorithm are described in Imai and Lu (2004).
 }
 
 \usage{
 eco(formula, data = parent.frame(), supplement = NULL, mu0 = c(0,0),
-    tau0 = 2, nu0 = 4, S0 = diag(10,2), predict = FALSE,
-    parameter = TRUE, grid = FALSE, n.draws = 5000, burnin = 0,
-    thin = 0, verbose = FALSE)
+    tau0 = 2, nu0 = 4, S0 = diag(10,2), parameter = TRUE,
+    grid = FALSE, n.draws = 5000, burnin = 0, thin = 0, verbose = FALSE)
 }
 
 \arguments{
@@ -48,9 +47,6 @@ eco(formula, data = parent.frame(), supplement = NULL, mu0 = c(0,0),
   } 
   \item{S0}{A \eqn{2 \times 2} numeric matrix, representing a positive
     definite prior scale matrix. The default is \code{diag(10,2)}. 
-  } 
-  \item{predict}{Logical. If \code{TRUE}, out-of sample predictions will
-    be returned. The default is \code{FALSE}.
   } 
   \item{parameter}{Logical. If \code{TRUE}, the Gibbs draws of the population
     parameters such as mu and sigma are returned. The default is \code{TRUE}.
@@ -101,9 +97,8 @@ data(reg)
 ## NOTE: convergence has not been properly assessed for the following
 ## examples.
 
-## fit the parametric model to give in-sample predictions and store
-## parameter estimates
-res <- eco(Y ~ X, data = reg, parameter = TRUE, verbose = TRUE) 
+## fit the parametric model with the default prior specification
+res <- eco(Y ~ X, data = reg, verbose = TRUE) 
 ##summarize the results
 summary(res)
 
@@ -124,14 +119,6 @@ summary(res)
   \item{thin}{Thinning interval.}
   \item{W1}{The posterior in-sample predictions of \eqn{W_1}.}
   \item{W2}{The posterior in-sample predictions of \eqn{W_2}.}
-  The following additional elements are included in the output when
-  \code{predict = TRUE}:
-  \item{W1.pred}{The posterior predictive draws or out-of-sample
-    predictions of \eqn{W_1}. Export only if \code{predict=TRUE}.
-  }
-  \item{W2.pred}{The posterior predictive draws or out-of-sample
-    predictions of \eqn{W_2}. Export only if \code{predict=TRUE}.
-  }
   The following additional elements are included in the output when
   \code{parameter = TRUE}.
   \item{mu}{The posterior draws of the population mean parameter,

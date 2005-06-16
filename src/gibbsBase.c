@@ -49,7 +49,6 @@ void cBaseeco(
 	      double *x0_W2,   /* values of W_2 for X0 type areas */
 
 	      /* storage */
-	      int *pred,       /* 1 if draw posterior prediction */
 	      int *parameter,  /* 1 if save population parameter */
 	      int *Grid,       /* 1 if Grid algorithm is used; 0 for
 				  Metropolis */
@@ -59,10 +58,7 @@ void cBaseeco(
 	      double *pdSSig00, double *pdSSig01, double *pdSSig11,
            
 	      /* storage for Gibbs draws of W*/
-	      double *pdSW1, double *pdSW2,
-
-	      /* storage for posterior predictions of W */
-	      double *pdSWt1, double *pdSWt2
+	      double *pdSW1, double *pdSW2
 	      ){	   
   
   int n_samp = *pin_samp;      /* sample size */
@@ -351,12 +347,6 @@ void cBaseeco(
 	for(i=0; i<(n_samp+x1_samp+x0_samp); i++){
 	  pdSW1[itempS]=W[i][0];
 	  pdSW2[itempS]=W[i][1];
-	  /*Wstar prediction */
-	  if (*pred) {
-	    rMVN(vtemp, mu_ord, Sigma_ord, n_dim);
-	    pdSWt1[itempS]=exp(vtemp[0])/(exp(vtemp[0])+1);
-	    pdSWt2[itempS]=exp(vtemp[1])/(exp(vtemp[1])+1);
-	  }
 	  itempS++;
 	}
 	itempC=0;
