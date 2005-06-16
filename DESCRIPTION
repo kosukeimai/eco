@@ -5,7 +5,7 @@ Title: R Package for Fitting Bayesian Models of Ecological Inference in 2 by 2 T
 Author: Kosuke Imai <kimai@princeton.edu>,
         Ying Lu <ylu@iq.harvard.edu>.
 Maintainer: Kosuke Imai <kimai@princeton.edu>
-Depends: R (>= 2.0)
+Depends: R (>= 2.0), MASS
 Description: eco is a publicly available R package that fits
              parametric and nonparametric Bayesian models for
              ecological inference in 2 by 2 tables. The models are fit
