@@ -1,6 +1,6 @@
 eco <- function(formula, data = parent.frame(), supplement = NULL,
                 mu0 = c(0,0), tau0 = 2, nu0 = 4, S0 = diag(10,2),
-                predict = FALSE, parameter = FALSE, grid = FALSE,
+                predict = FALSE, parameter = TRUE, grid = FALSE,
                 n.draws = 5000, burnin = 0, thin = 0,
                 verbose = FALSE){ 
 

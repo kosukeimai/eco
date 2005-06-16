@@ -16,7 +16,7 @@
 \usage{
 eco(formula, data = parent.frame(), supplement = NULL, mu0 = c(0,0),
     tau0 = 2, nu0 = 4, S0 = diag(10,2), predict = FALSE,
-    parameter = FALSE, grid = FALSE, n.draws = 5000, burnin = 0,
+    parameter = TRUE, grid = FALSE, n.draws = 5000, burnin = 0,
     thin = 0, verbose = FALSE)
 }
 
@@ -49,23 +49,11 @@ eco(formula, data = parent.frame(), supplement = NULL, mu0 = c(0,0),
   \item{S0}{A \eqn{2 \times 2} numeric matrix, representing a positive
     definite prior scale matrix. The default is \code{diag(10,2)}. 
   } 
-  \item{alpha}{A positive scalar. If \code{NULL}, the concentration
-    parameter \eqn{\alpha} will be updated at each Gibbs draw. The prior
-    parameters \code{a0} and \code{b0} need to be specified. Otherwise,
-    \eqn{\alpha} is fixed at a user specified value. 
-    The default is \code{NULL}.
-  } 
-  \item{a0}{A positive integer. The shape parameter of the gamma prior
-    for \eqn{\alpha}. The default is \code{1}.
-  } 
-  \item{b0}{A positive integer. The scale parameter of the gamma prior
-    for \eqn{\alpha}. The default is \code{0.1}.
-  } 
   \item{predict}{Logical. If \code{TRUE}, out-of sample predictions will
     be returned. The default is \code{FALSE}.
   } 
   \item{parameter}{Logical. If \code{TRUE}, the Gibbs draws of the population
-    parameters such as mu and sigma are returned. The default is \code{FALSE}.
+    parameters such as mu and sigma are returned. The default is \code{TRUE}.
   }
   \item{grid}{Logical. If \code{TRUE}, the grid method is used to sample
     \eqn{W} in the Gibbs sampler. If \code{FALSE}, the Metropolis
