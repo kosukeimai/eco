@@ -16,12 +16,10 @@ Ecological Inference in 2 by 2 Tables}
 }
 
 \usage{
-eco <- function(formula, data = parent.frame(), nonpar = FALSE,
-                supplement = NULL, mu0 = c(0,0), tau0 = 2, 
-                nu0 = 4, S0 = diag(10,2), alpha = NULL, a0 = 1,
-                b0 = 0.1, predict = FALSE, parameter = FALSE,
-                grid = FALSE, n.draws = 5000, burnin = 0, thin = 0
-                verbose = FALSE)
+eco(formula, data = parent.frame(), nonpar = FALSE, supplement = NULL,
+    mu0 = c(0,0), tau0 = 2, nu0 = 4, S0 = diag(10,2), alpha = NULL,
+    a0 = 1, b0 = 0.1, predict = FALSE, parameter = FALSE, grid = FALSE,
+    n.draws = 5000, burnin = 0, thin = 0, verbose = FALSE)
 }
 
 \arguments{
