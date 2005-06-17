@@ -1,6 +1,6 @@
 summary.predict.eco <- function(object, CI=c(2.5, 97.5), ...) {
   
-  n.draws <- ncol(object)
+  n.draws <- nrow(object)
   table.names<-c("mean", "std.dev", paste(min(CI), "%", sep=" "),
 			paste(max(CI), "%", sep=" "))
 

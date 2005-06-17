@@ -26,8 +26,15 @@ summary.eco <- function(object, CI=c(2.5, 97.5), long = FALSE, ...) {
   colnames(agg.table) <- table.names
   rownames(agg.table) <- c("W1", "W2")
 
-  ans<- list(call = object$call, W1.table = W1.table, W2.table = W2.table,
-             agg.table = agg.table, n.obs = n.obs) 
+  if (is.null(object$mu))
+    mu.table <- NULL
+  else
+    mu.table <- cbind(apply(object$mu, 2, mean), apply(object$mu, 2, sd),
+                      apply(object$mu, 2, quantile, min(CI)/100),
+                      apply(object$mu, 2, quantile, max(CI)/100))
+    
+  ans <- list(call = object$call, W1.table = W1.table, W2.table = W2.table,
+              agg.table = agg.table, mu.table = mu.table, n.obs = n.obs) 
   class(ans) <-"summary.eco"
   return(ans)
 }

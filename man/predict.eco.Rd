@@ -12,7 +12,7 @@ Ecological Inference Models}
 }
 
 \usage{
-  \method{predict}{eco}(object, newdraw = NULL, verbose = FALSE, ...)
+  \method{predict}{eco}(object, newdraw = NULL, subset = NULL, verbose = FALSE, ...)
 }
 
 \arguments{
@@ -21,6 +21,12 @@ Ecological Inference Models}
     of \eqn{\mu} and \eqn{\Sigma}. The two matrices should be named as
     \code{mu} and \code{Sigma}, respectively. The default is the
     original MCMC draws stored in \code{object}.
+  }
+  \item{subset}{A scalar or numerical vector specifying the row
+    number(s) of \code{mu} and \code{Sigma} in the output object from
+    \code{eco}. If specified, the posterior draws of parameters for
+    those rows are used for posterior prediction. The default is
+    \code{NULL} where all the posterior draws are used. 
   }
   \item{verbose}{logical. If \code{TRUE}, helpful messages along with a
     progress report on the Monte Carlo sampling from the posterior 

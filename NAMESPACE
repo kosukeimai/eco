@@ -8,8 +8,10 @@ export(eco,
        print.summary.predict.eco,
        print.summary.eco,
        predict.eco,
+       coef.eco,
        cov.eco)
 
+S3method(coef, eco)
 S3method(predict, eco)
 S3method(summary, eco)
 S3method(summary, predict.eco)
