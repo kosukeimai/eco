@@ -2,7 +2,7 @@ cov.eco <- function(object, subset = NULL, ...) {
   if (is.null(subset))
     subset <- 1:nrow(object$mu)
   else if (max(subset) > nrow(object$mu))
-    stop(paste("invalid input for `subset.' only", nrow(mu), "draws are stored."))
+    stop(paste("invalid input for `subset.' only", nrow(object$mu), "draws are stored."))
 
   p <- ncol(object$mu)
   n <- length(subset)
