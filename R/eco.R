@@ -7,9 +7,6 @@ eco <- function(formula, data = parent.frame(), supplement = NULL,
   if (burnin >= n.draws)
     stop("n.draws should be larger than burnin")
   
-  if ((dim(supplement)[2] != 2) && (length(supplement)>0))
-    stop("use n by 2 matrix for survey data")
-  
   call <- match.call()
 
   ## getting X and Y
@@ -20,55 +17,25 @@ eco <- function(formula, data = parent.frame(), supplement = NULL,
   X <- model.matrix(tt, data)
   Y <- model.response(model.frame(tt, data = data))
 
-  ## survey data
-  if (is.null(supplement)) 
-    survey.samp <- survey.data <- survey.yes <- 0
-  else {
-    survey.samp <- length(supplement[,1])
-    survey.data <- as.matrix(supplement)
-    survey.yes <- 1
-  }
-  
-  ind <- 1:length(X)
-  X1type <- X0type <- samp.X1 <- samp.X0 <- X1.W1 <- X0.W2<-0
-  
-  ## X = 1
-  X1.ind<-ind[along=(X==1)]
-  if (length(X[X!=1])<length(X)){
-    X1type<-1
-    samp.X1<-length(X1.ind)
-    X1.W1<-Y[X1.ind]
-  }
-  
-  ## X = 0 
-  X0.ind<-ind[along=(X==0)]
-  if (length(X[X!=0])<length(X)){
-    X0type<-1
-    samp.X0<-length(X0.ind)
-    X0.W2<-Y[X0.ind]
-  }
-  
-  XX.ind<-setdiff(ind, union(X0.ind, X1.ind))
-  X.use<-X[XX.ind]
-  Y.use<-Y[XX.ind]
+  # check data and modify inputs 
+  i <- checkdata(X,Y, supplement)  
 
-  order.old<-order(c(XX.ind, X0.ind, X1.ind))
-  
   ## fitting the model
-  n.samp <- length(Y.use)	 
-  d <- cbind(X.use, Y.use)
   n.a <- floor((n.draws-burnin)/(thin+1))
   n.par <- n.a
-  n.w <- n.a * (n.samp+samp.X1+samp.X0) 
+
   unit.a <- unit.par <- 1
-  unit.w <- n.samp+samp.X1+samp.X0 	
-  res <- .C("cBaseeco", as.double(d), as.integer(n.samp),
+  unit.w <- i$n.samp+i$samp.X1+i$samp.X0 	
+
+  n.w <- n.a * unit.w
+
+  res <- .C("cBaseeco", as.double(i$d), as.integer(i$n.samp),
             as.integer(n.draws), as.integer(burnin), as.integer(thin+1),
             as.integer(verbose), as.integer(nu0), as.double(tau0),
-            as.double(mu0), as.double(S0), as.integer(survey.yes),
-            as.integer(survey.samp), as.double(survey.data),
-            as.integer(X1type), as.integer(samp.X1), as.double(X1.W1),
-            as.integer(X0type), as.integer(samp.X0), as.double(X0.W2),
+            as.double(mu0), as.double(S0), as.integer(i$survey.yes),
+            as.integer(i$survey.samp), as.double(i$survey.data),
+            as.integer(i$X1type), as.integer(i$samp.X1), as.double(i$X1.W1),
+            as.integer(i$X0type), as.integer(i$samp.X0), as.double(i$X0.W2),
             as.integer(parameter), as.integer(grid), 
             pdSMu0=double(n.par), pdSMu1=double(n.par), pdSSig00=double(n.par),
             pdSSig01=double(n.par), pdSSig11=double(n.par),
@@ -84,8 +51,8 @@ eco <- function(formula, data = parent.frame(), supplement = NULL,
                         matrix(res$pdSSig11, n.a, unit.par, byrow=TRUE))
     colnames(Sigma.post) <- c("Sigma11", "Sigma12", "Sigma22")
   }
-  W1.post <- matrix(res$pdSW1, n.a, unit.w, byrow=TRUE)[,order.old]
-  W2.post <- matrix(res$pdSW2, n.a, unit.w, byrow=TRUE)[,order.old]
+  W1.post <- matrix(res$pdSW1, n.a, unit.w, byrow=TRUE)[,i$order.old]
+  W2.post <- matrix(res$pdSW2, n.a, unit.w, byrow=TRUE)[,i$order.old]
   
   res.out <- list(call = call, X = X, Y = Y, W1 = W1.post, W2 = W2.post,
                   burin = burnin, thin = thin, nu0 = nu0, tau0 = tau0,
