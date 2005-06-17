@@ -1,6 +1,6 @@
 ecoNP <- function(formula, data = parent.frame(), supplement = NULL,
                   mu0 = c(0,0), tau0 = 2, nu0 = 4, S0 = diag(10,2),
-                  alpha = NULL, a0 = 1, b0 = 0.1, predict = FALSE,
+                  alpha = NULL, a0 = 1, b0 = 0.1, 
                   parameter = TRUE, grid = FALSE, n.draws = 5000,
                   burnin = 0, thin = 0, verbose = FALSE){ 
 
@@ -49,7 +49,6 @@ ecoNP <- function(formula, data = parent.frame(), supplement = NULL,
             pdSMu0=double(n.par), pdSMu1=double(n.par),
             pdSSig00=double(n.par), pdSSig01=double(n.par),
             pdSSig11=double(n.par), pdSW1=double(n.w), pdSW2=double(n.w), 
-            pdSWt1=double(n.w), pdSWt2=double(n.w),
             pdSa=double(n.a), pdSn=integer(n.a), PACKAGE="eco")
   if (parameter) {
     mu1.post <- matrix(res$pdSMu0, n.a, unit.par, byrow=TRUE)[,i$order.old]
@@ -58,12 +57,11 @@ ecoNP <- function(formula, data = parent.frame(), supplement = NULL,
     Sigma12.post <- matrix(res$pdSSig01, n.a, unit.par, byrow=TRUE)[,i$order.old]
     Sigma22.post <- matrix(res$pdSSig11, n.a, unit.par, byrow=TRUE)[,i$order.old]
   }
+  mu <- array(rbind(mu1,mu2), c(n.a, 2, unit.par))
+  Sigma <- array(rbind(Sigma11, Sigma12, Sigma22), c(n.a, 3, unit.par))
   W1.post <- matrix(res$pdSW1, n.a, unit.w, byrow=TRUE)[,i$order.old]
   W2.post <- matrix(res$pdSW2, n.a, unit.w, byrow=TRUE)[,i$order.old]
-  if (predict) {
-    W1.pred <- matrix(res$pdSWt1, n.a, unit.w, byrow=TRUE)[,i$order.old]
-    W2.pred <- matrix(res$pdSWt2, n.a, unit.w, byrow=TRUE) [,i$order.old]
-  }
+
   a.post <- matrix(res$pdSa, n.a, unit.a, byrow=TRUE)
   nstar <- matrix(res$pdSn, n.a, unit.a, byrow=TRUE)
   
@@ -72,21 +70,15 @@ ecoNP <- function(formula, data = parent.frame(), supplement = NULL,
                   mu0 = mu0, a0 = a0, b0 = b0, S0 = S0)
   
   if (parameter){
-    res.out$mu1 <- mu1.post
-    res.out$mu2 <- mu2.post 
-    res.out$Sigma11 <- Sigma11.post
-    res.out$Sigma12 <- Sigma12.post
-    res.out$Sigma22 <- Sigma22.post
+    res.out$mu <- mu
+    res.out$Sigma <- Sigma
     if (alpha.update)
       res.out$alpha <- a.post
     else
       res.out$alpha <- alpha
     res.out$nstar <- res.out$nstar
   }
-  if (predict) {
-    res.out$W1.pred <- W1.pred
-    res.out$W2.pred <- W2.pred
-  }
+
 
   class(res.out) <- c("ecoNP", "eco")
   return(res.out)
