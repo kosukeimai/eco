@@ -9,14 +9,15 @@ eco <- function(formula, data = parent.frame(), N = NULL, supplement = NULL,
   
   call <- match.call()
 
-  ## getting X and Y
+  ## getting X, Y, and N
   tt <- terms(formula)
   attr(tt, "intercept") <- 0
   if (is.matrix(eval.parent(call$data)))
     data <- as.data.frame(data)
   X <- model.matrix(tt, data)
   Y <- model.response(model.frame(tt, data = data))
-
+  N <- eval(call$N, data)
+  
   # check data and modify inputs 
   tmp <- checkdata(X,Y, supplement)  
 

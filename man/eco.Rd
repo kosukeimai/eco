@@ -14,8 +14,8 @@
 }
 
 \usage{
-eco(formula, data = parent.frame(), supplement = NULL, mu0 = c(0,0),
-    tau0 = 2, nu0 = 4, S0 = diag(10,2), parameter = TRUE,
+eco(formula, data = parent.frame(), N = NULL, supplement = NULL,
+    mu0 = c(0,0), tau0 = 2, nu0 = 4, S0 = diag(10,2), parameter = TRUE,
     grid = FALSE, n.draws = 5000, burnin = 0, thin = 0, verbose = FALSE)
 }
 
@@ -29,12 +29,14 @@ eco(formula, data = parent.frame(), supplement = NULL, mu0 = c(0,0),
   \item{data}{An optional data frame in which to interpret the variables
     in \code{formula}. The default is the environment in which
     \code{eco} is called. 
-  }  
-  \item{supplement}{A numeric matrix. The matrix has two columns, which
-    contain additional individual-level data such as survey data for
-    \eqn{W_1} and \eqn{W_2}, respectively.  If \code{NULL}, no
-    additional individual-level data are included in the model. The
-    default is \code{NULL}.
+  }
+  \item{N}{An optional variable representing the size of the unit; e.g.,
+    the total number of voters.}
+  \item{supplement}{An optional matrix of supplemental data. The matrix
+    has two columns, which contain additional individual-level data such
+    as survey data for \eqn{W_1} and \eqn{W_2}, respectively.  If
+    \code{NULL}, no additional individual-level data are included in the
+    model. The default is \code{NULL}.
   }      
   \item{mu0}{A \eqn{2 \times 1} numeric vector. The prior mean. The
     default is \eqn{(0,0)}.
