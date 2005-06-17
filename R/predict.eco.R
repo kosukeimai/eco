@@ -1,4 +1,4 @@
-predict.eco <- function(object, newdata = NULL, newdraw = NULL, ...){
+predict.eco <- function(object, newdraw = NULL, verbose = FALSE, ...){
 
   if (is.null(object$mu) && is.null(newdraw$mu))
     stop("Posterior draws of mu must be supplied.")
@@ -9,7 +9,18 @@ predict.eco <- function(object, newdata = NULL, newdraw = NULL, ...){
   p <- ncol(mu)
   Sigma <- cov.eco(object)
   Wstar <- matrix(NA, nrow=n.draws, ncol=p)
-  for (i in 1:n.draws) 
+  if (verbose) {
+    tmp <- floor(n.draws/10)
+    inc <- 1
+  }
+  for (i in 1:n.draws) {
     Wstar[i,] <- mvrnorm(1, mu = mu[i,], Sigma = Sigma[,,i])
-  return(apply(Wstar, 2, invlogit))
+    if (i == inc*tmp & verbose) {
+      cat("", inc*10, "percent done.\n")
+      inc <- inc + 1
+    }
+  }
+  res <- apply(Wstar, 2, invlogit)
+  colnames(res) <- c("W1", "W2")
+  return(res)
 }
