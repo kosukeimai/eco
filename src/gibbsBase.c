@@ -309,11 +309,13 @@ void cBaseeco(
     for (j=0;j<n_dim;j++)
       for (k=0;k<n_dim;k++)
 	for (i=0;i<t_samp;i++)
-	  Sn[j][k]+=(Wstar[i][j]-Wstar_bar[j])*(Wstar[i][k]-Wstar_bar[k]);
+	  Sn[j][k]+=(Wstar[i][j]-Wstar_bar[j])*(Wstar[i][k]-Wstar_bar[k]); 
+	  /* conditioning on mu: Sn[j][k]+=(Wstar[i][j]-mu[j])*(Wstar[i][k]-mu[k]); */
     for (j=0;j<n_dim;j++){
       mun[j]=(tau0*mu0[j]+t_samp*Wstar_bar[j])/(tau0+t_samp);
       for (k=0;k<n_dim;k++)
-	Sn[j][k]+=(tau0*t_samp)*(Wstar_bar[j]-mu0[j])*(Wstar_bar[k]-mu0[k])/(tau0+t_samp);
+	Sn[j][k]+=(tau0*t_samp)*(Wstar_bar[j]-mu0[j])*(Wstar_bar[k]-mu0[k])/(tau0+t_samp); 
+      /* conditioning on mu: Sn[j][k]+=tau0*(mu[j]-mu0[j])*(mu[k]-mu0[k]); */
     }
     dinv(Sn, n_dim, mtemp); 
     rWish(InvSigma, mtemp, nu0+t_samp, n_dim);
