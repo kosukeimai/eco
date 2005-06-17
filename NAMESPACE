@@ -2,9 +2,16 @@ useDynLib(eco)
 
 importFrom(MASS, mvrnorm)
 
-export(eco, ecoNP, ecoX, eco.em, eco.sem, summary.eco,
-       print.summary.eco, predict.eco, cov.eco)
+export(eco, 
+       ecoNP,
+       summary.eco,
+       print.summary.predict.eco,
+       print.summary.eco,
+       predict.eco,
+       cov.eco)
 
 S3method(predict, eco)
 S3method(summary, eco)
+S3method(summary, predict.eco)
 S3method(print, summary.eco)
+S3method(print, summary.predict.eco)

@@ -99,12 +99,14 @@ data(reg)
 
 ## fit the parametric model with the default prior specification
 res <- eco(Y ~ X, data = reg, verbose = TRUE)
-
-##summarize the results
+## summarize the results
 summary(res)
 
 ## obtain out-of-sample prediction
 out <- predict(res, verbose=TRUE)
+## summarize the results
+summary(out)
+
 }
 
 \value{
