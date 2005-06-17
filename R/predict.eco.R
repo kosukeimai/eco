@@ -19,6 +19,6 @@ predict.eco <- function(object, newdraw = NULL, verbose = FALSE, ...){
     }
   }
   res <- apply(Wstar, 2, invlogit)
-  colnames(res) <- c("W1", "W2")
+  class(res) <- c("predict.eco", "matrix")
   return(res)
 }
