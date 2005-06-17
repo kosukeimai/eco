@@ -1,7 +1,9 @@
 predict.eco <- function(object, newdraw = NULL, subset = NULL,
                         verbose = FALSE, ...){
 
-  if (!is.null(newdraw)) {
+  if (is.null(newdraw) && !object$parameter)
+    stop("Posterior draws of mu and Sigma must be supplied")
+  else if (!object$parameter){
     if (is.null(newdraw$mu) && is.null(newdraw$Sigma))
       stop("Posterior draws of both mu and Sigma must be supplied.")
     object <- newdraw
@@ -10,7 +12,7 @@ predict.eco <- function(object, newdraw = NULL, subset = NULL,
   n.draws <- nrow(mu)
   
   p <- ncol(mu)
-  Sigma <- cov.eco(object, subset = subset)
+  Sigma <- varcov(object, subset = subset)
   Wstar <- matrix(NA, nrow=n.draws, ncol=p)
   tmp <- floor(n.draws/10)
   inc <- 1
