@@ -2,13 +2,13 @@
 
 \alias{predict.eco}
 
-\title{Out-of-Sample Posterior Prediction under the Parametric Bayesian
-Ecological Inference Models}
+\title{Out-of-Sample Posterior Prediction under the Parametric and
+  Nonparametric Bayesian Ecological Inference Models}
 
 \description{
   Obtains out-of-sample posterior predictions under a fitted parametric
-  Bayesian model for ecological inference. \code{predict} method for
-  class \code{eco}.
+  and nonparametric Bayesian models for ecological
+  inference. \code{predict} method for class \code{eco}.
 }
 
 \usage{
@@ -16,9 +16,10 @@ Ecological Inference Models}
 }
 
 \arguments{
-  \item{object}{An output object from \code{eco}.}
-  \item{newdraw}{An optional list containing two matrices of MCMC draws
-    of \eqn{\mu} and \eqn{\Sigma}. The two matrices should be named as
+  \item{object}{An output object from \code{eco} or \code{ecoNP}.}
+  \item{newdraw}{An optional list containing two matrices (or three
+    dimensional arrays for the nonparametric model) of MCMC draws
+    of \eqn{\mu} and \eqn{\Sigma}. Those elements should be named as
     \code{mu} and \code{Sigma}, respectively. The default is the
     original MCMC draws stored in \code{object}.
   }
@@ -42,21 +43,22 @@ Ecological Inference Models}
   parameters, we sample the vector-valued latent variable from the
   appropriate multivariate Normal distribution. Then, we apply the
   inverse logit transformation to obtain the predictive values of
-  proportions, \eqn{W}. The computation may be slow if a large Monte
-  Carlo sample of the model parameters is used. In either case, setting
-  \code{verbose = TRUE} may be helpful in monitoring the progress of the
-  code.
+  proportions, \eqn{W}. The computation may be slow (especially for the
+  nonparametric model) if a large Monte Carlo sample of the model
+  parameters is used. In either case, setting \code{verbose = TRUE} may
+  be helpful in monitoring the progress of the code.
 }
 
 \value{
   \code{predict.eco} yields a matrix of class \code{predict.eco}
   containing the Monte Carlo sample from the posterior predictive
   distribution of inner cells of ecological
-  tables. \code{summary.predict.eco} will summarize the output.
+  tables. \code{summary.predict.eco} will summarize the output, and
+  \code{print.summary.predict.eco} will print the summary.
 }
 
-\seealso{\code{eco}, \code{predict.ecoNP}; eco home
-page at \url{http://www.princeton.edu/~kimai/research/eco.html}}
+\seealso{\code{eco}, \code{ecoNP}, \code{summary.eco}; eco home
+  page at \url{http://www.princeton.edu/~kimai/research/eco.html}}
 
 \author{
   Kosuke Imai, Department of Politics, Princeton University
