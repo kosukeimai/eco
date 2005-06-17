@@ -18,24 +18,25 @@ eco <- function(formula, data = parent.frame(), supplement = NULL,
   Y <- model.response(model.frame(tt, data = data))
 
   # check data and modify inputs 
-  i <- checkdata(X,Y, supplement)  
+  tmp <- checkdata(X,Y, supplement)  
 
   ## fitting the model
   n.a <- floor((n.draws-burnin)/(thin+1))
   n.par <- n.a
 
   unit.a <- unit.par <- 1
-  unit.w <- i$n.samp+i$samp.X1+i$samp.X0 	
+  unit.w <- tmp$n.samp+tmp$samp.X1+tmp$samp.X0 	
 
   n.w <- n.a * unit.w
 
-  res <- .C("cBaseeco", as.double(i$d), as.integer(i$n.samp),
+  res <- .C("cBaseeco", as.double(tmp$d), as.integer(tmp$n.samp),
             as.integer(n.draws), as.integer(burnin), as.integer(thin+1),
             as.integer(verbose), as.integer(nu0), as.double(tau0),
-            as.double(mu0), as.double(S0), as.integer(i$survey.yes),
-            as.integer(i$survey.samp), as.double(i$survey.data),
-            as.integer(i$X1type), as.integer(i$samp.X1), as.double(i$X1.W1),
-            as.integer(i$X0type), as.integer(i$samp.X0), as.double(i$X0.W2),
+            as.double(mu0), as.double(S0), as.integer(tmp$survey.yes),
+            as.integer(tmp$survey.samp), as.double(tmp$survey.data),
+            as.integer(tmp$X1type), as.integer(tmp$samp.X1),
+            as.double(tmp$X1.W1), as.integer(tmp$X0type),
+            as.integer(tmp$samp.X0), as.double(tmp$X0.W2),
             as.integer(parameter), as.integer(grid), 
             pdSMu0=double(n.par), pdSMu1=double(n.par), pdSSig00=double(n.par),
             pdSSig01=double(n.par), pdSSig11=double(n.par),
@@ -51,8 +52,8 @@ eco <- function(formula, data = parent.frame(), supplement = NULL,
                         matrix(res$pdSSig11, n.a, unit.par, byrow=TRUE))
     colnames(Sigma.post) <- c("Sigma11", "Sigma12", "Sigma22")
   }
-  W1.post <- matrix(res$pdSW1, n.a, unit.w, byrow=TRUE)[,i$order.old]
-  W2.post <- matrix(res$pdSW2, n.a, unit.w, byrow=TRUE)[,i$order.old]
+  W1.post <- matrix(res$pdSW1, n.a, unit.w, byrow=TRUE)[,tmp$order.old]
+  W2.post <- matrix(res$pdSW2, n.a, unit.w, byrow=TRUE)[,tmp$order.old]
   
   res.out <- list(call = call, X = X, Y = Y, W1 = W1.post, W2 = W2.post,
                   burin = burnin, thin = thin, nu0 = nu0, tau0 = tau0,
