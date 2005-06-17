@@ -1,4 +1,4 @@
-summary.eco <- function(object, CI=c(2.5, 97.5), long = FALSE, ...) {
+summary.eco <- function(object, CI=c(2.5, 97.5), parameter=FALSE, long = FALSE, ...) {
   
   n.obs <- ncol(object$W1)
   n.draws <- nrow(object$W1)
@@ -18,7 +18,7 @@ summary.eco <- function(object, CI=c(2.5, 97.5), long = FALSE, ...) {
                            quantile(W2.agg.mean, max(CI)/100)))
   colnames(agg.table) <- table.names
   rownames(agg.table) <- c("W1", "W2")
-
+  if (parameter) {
   param <- cbind(object$mu, invlogit(object$mu), object$Sigma)
   if (is.null(param))
     param.table <- NULL
@@ -30,7 +30,7 @@ summary.eco <- function(object, CI=c(2.5, 97.5), long = FALSE, ...) {
     rownames(param.table) <- c("mu1", "mu2", "E(W1)", "E(W2)",
                                "Sigma11", "Sigma12", "Sigma22")
   }
-  
+  }
   if (long) {
     W1.table <- cbind(apply(object$W1, 2, mean), apply(object$W1, 2, sd),
                       apply(object$W1, 2, quantile, min(CI)/100),
