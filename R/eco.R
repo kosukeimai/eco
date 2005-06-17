@@ -59,7 +59,7 @@ eco <- function(formula, data = parent.frame(), N = NULL, supplement = NULL,
   res.out <- list(call = call, X = X, Y = Y, N = N, W1 = W1.post, W2 =
                   W2.post, burin = burnin, thin = thin, nu0 = nu0,
                   tau0 = tau0, mu0 = mu0, S0 = S0)
-  
+
   if (parameter) {
     res.out$mu <- mu.post
     res.out$Sigma <- Sigma.post
