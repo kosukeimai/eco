@@ -9,10 +9,8 @@ predict.eco <- function(object, newdraw = NULL, verbose = FALSE, ...){
   p <- ncol(mu)
   Sigma <- cov.eco(object)
   Wstar <- matrix(NA, nrow=n.draws, ncol=p)
-  if (verbose) {
-    tmp <- floor(n.draws/10)
-    inc <- 1
-  }
+  tmp <- floor(n.draws/10)
+  inc <- 1
   for (i in 1:n.draws) {
     Wstar[i,] <- mvrnorm(1, mu = mu[i,], Sigma = Sigma[,,i])
     if (i == inc*tmp & verbose) {

@@ -98,10 +98,13 @@ data(reg)
 ## examples.
 
 ## fit the parametric model with the default prior specification
-res <- eco(Y ~ X, data = reg, verbose = TRUE) 
+res <- eco(Y ~ X, data = reg, verbose = TRUE)
+
 ##summarize the results
 summary(res)
 
+## obtain out-of-sample prediction
+out <- predict(res, verbose=TRUE)
 }
 
 \value{
@@ -139,5 +142,5 @@ summary(res)
   Tables.} Proceedings of the American Statistical Association.
   \url{http://www.princeton.edu/~kimai/research/einonpar.html} }
 
-\seealso{\code{ecoNP}, \code{summary.eco}}
+\seealso{\code{ecoNP}, \code{predict.eco}, \code{summary.eco}}
 \keyword{models}
