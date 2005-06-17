@@ -45,7 +45,7 @@ ecoNP <- function(formula, data = parent.frame(), supplement = NULL,
             as.double(i$survey.data), as.integer(i$X1type),
             as.integer(i$samp.X1), as.double(i$X1.W1),
             as.integer(i$X0type), as.integer(i$samp.X0), as.double(i$X0.W2),
-            as.integer(predict), as.integer(parameter), as.integer(grid),
+            as.integer(parameter), as.integer(grid),
             pdSMu0=double(n.par), pdSMu1=double(n.par),
             pdSSig00=double(n.par), pdSSig01=double(n.par),
             pdSSig11=double(n.par), pdSW1=double(n.w), pdSW2=double(n.w), 
@@ -57,8 +57,9 @@ ecoNP <- function(formula, data = parent.frame(), supplement = NULL,
     Sigma12.post <- matrix(res$pdSSig01, n.a, unit.par, byrow=TRUE)[,i$order.old]
     Sigma22.post <- matrix(res$pdSSig11, n.a, unit.par, byrow=TRUE)[,i$order.old]
   }
-  mu <- array(rbind(mu1,mu2), c(n.a, 2, unit.par))
-  Sigma <- array(rbind(Sigma11, Sigma12, Sigma22), c(n.a, 3, unit.par))
+  mu <- array(rbind(mu1.post,mu2.post), c(n.a, 2, unit.par))
+  Sigma <- array(rbind(Sigma11.post, Sigma12.post, Sigma22.post), c(n.a, 3, unit.par))
+
   W1.post <- matrix(res$pdSW1, n.a, unit.w, byrow=TRUE)[,i$order.old]
   W2.post <- matrix(res$pdSW2, n.a, unit.w, byrow=TRUE)[,i$order.old]
 
@@ -68,7 +69,8 @@ ecoNP <- function(formula, data = parent.frame(), supplement = NULL,
   res.out <- list(call = call, X = X, Y = Y, W1 = W1.post, W2 = W2.post,
                   burin = burnin, thin = thin, nu0 = nu0, tau0 = tau0,
                   mu0 = mu0, a0 = a0, b0 = b0, S0 = S0)
-  
+
+
   if (parameter){
     res.out$mu <- mu
     res.out$Sigma <- Sigma
@@ -78,7 +80,7 @@ ecoNP <- function(formula, data = parent.frame(), supplement = NULL,
       res.out$alpha <- alpha
     res.out$nstar <- res.out$nstar
   }
-
+  
 
   class(res.out) <- c("ecoNP", "eco")
   return(res.out)
