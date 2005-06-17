@@ -51,7 +51,8 @@ Ecological Inference Models}
 \value{
   \code{predict.eco} yields a matrix of class \code{predict.eco}
   containing the Monte Carlo sample from the posterior predictive
-  distribution of inner cells of ecological tables. 
+  distribution of inner cells of ecological
+  tables. \code{summary.predict.eco} will summarize the output.
 }
 
 \seealso{\code{eco}, \code{predict.ecoNP}; eco home

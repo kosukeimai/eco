@@ -32,14 +32,15 @@
   \code{summary.eco} yields an object of class \code{summary.eco}
   containing the following elements:
   \item{call}{The call from \code{eco}.}
-  \item{nonpar}{The logical variable indicating whether the results are
-    based on the parametric or nonparametric model.}
   \item{n.obs}{The number of units.}
+  \item{n.draws}{The number of Monte Carlo samples.}
   \item{agg.table}{Aggregate posterior estimates of the marginal means
-    of \eqn{W_1} and \eqn{W_2}.}
+    of \eqn{W_1} and \eqn{W_2} using \eqn{X} as a weight.}
   If \code{long = TRUE}, the following elements are also included:
   \item{W1.table}{Unit-level posterior estimates for \eqn{W_1}.}
   \item{W2.table}{Unit-level posterior estimates for \eqn{W_2}.}
+  \item{param.table}{Posterior estimates of model parameters: population
+    mean estimates of \eqn{W_1} and \eqn{W_2} are also included.}
   This object can be printed by \code{print.summary.eco}
 }
 
