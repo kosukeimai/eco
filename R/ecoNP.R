@@ -1,15 +1,12 @@
 ecoNP <- function(formula, data = parent.frame(), supplement = NULL,
                   mu0 = c(0,0), tau0 = 2, nu0 = 4, S0 = diag(10,2),
                   alpha = NULL, a0 = 1, b0 = 0.1, predict = FALSE,
-                  parameter = FALSE, grid = FALSE, n.draws = 5000,
+                  parameter = TRUE, grid = FALSE, n.draws = 5000,
                   burnin = 0, thin = 0, verbose = FALSE){ 
 
   ## checking inputs
   if (burnin >= n.draws)
     stop("n.draws should be larger than burnin")
-  
-  if ((dim(supplement)[2] != 2) && (length(supplement)>0))
-    stop("use n by 2 matrix for survey data")
   
   call <- match.call()
 
@@ -28,58 +25,26 @@ ecoNP <- function(formula, data = parent.frame(), supplement = NULL,
   else
     alpha.update <- FALSE
   
-  ## survey data
-  if (is.null(supplement)) 
-    survey.samp <- survey.data <- survey.yes <- 0
-  else {
-    survey.samp <- length(supplement[,1])
-    survey.data <- as.matrix(supplement)
-    survey.yes <- 1
-  }
-  
-  ind <- 1:length(X)
-  X1type <- X0type <- samp.X1 <- samp.X0 <- X1.W1 <- X0.W2<-0
-  
-  ## X = 1
-  X1.ind<-ind[along=(X==1)]
-  if (length(X[X!=1])<length(X)){
-    X1type<-1
-    samp.X1<-length(X1.ind)
-    X1.W1<-Y[X1.ind]
-  }
-  
-  ## X = 0 
-  X0.ind<-ind[along=(X==0)]
-  if (length(X[X!=0])<length(X)){
-    X0type<-1
-    samp.X0<-length(X0.ind)
-    X0.W2<-Y[X0.ind]
-  }
-  
-  XX.ind<-setdiff(ind, union(X0.ind, X1.ind))
-  X.use<-X[XX.ind]
-  Y.use<-Y[XX.ind]
-
-  order.old<-order(c(XX.ind, X0.ind, X1.ind))
+  i <- checkdata(X,Y, supplement)
   
   ## fitting the model
-  n.samp <- length(Y.use)	 
-  d <- cbind(X.use, Y.use)
   n.a <- floor((n.draws-burnin)/(thin+1))
-  n.par <- n.a * (n.samp+samp.X1+samp.X0) 
-  n.w <- n.a * (n.samp+samp.X1+samp.X0) 
+
+  unit.par <- unit.w <- i$n.samp+i$samp.X1+i$samp.X0
+  n.par <- n.a * unit.par
+  n.w <- n.a * unit.w
+
   unit.a <- 1
-  unit.par <- (n.samp+samp.X1+samp.X0) 
-  unit.w <- (n.samp+samp.X1+samp.X0) 	
-  res <- .C("cDPeco", as.double(d), as.integer(n.samp),
+
+  res <- .C("cDPeco", as.double(i$d), as.integer(i$n.samp),
             as.integer(n.draws), as.integer(burnin), as.integer(thin+1),
             as.integer(verbose), as.integer(nu0), as.double(tau0),
             as.double(mu0), as.double(S0), as.double(alpha),
             as.integer(alpha.update), as.double(a0), as.double(b0),
-            as.integer(survey.yes), as.integer(survey.samp),
-            as.double(survey.data), as.integer(X1type),
-            as.integer(samp.X1), as.double(X1.W1),
-            as.integer(X0type), as.integer(samp.X0), as.double(X0.W2),
+            as.integer(i$survey.yes), as.integer(i$survey.samp),
+            as.double(i$survey.data), as.integer(i$X1type),
+            as.integer(i$samp.X1), as.double(i$X1.W1),
+            as.integer(i$X0type), as.integer(i$samp.X0), as.double(i$X0.W2),
             as.integer(predict), as.integer(parameter), as.integer(grid),
             pdSMu0=double(n.par), pdSMu1=double(n.par),
             pdSSig00=double(n.par), pdSSig01=double(n.par),
@@ -87,17 +52,17 @@ ecoNP <- function(formula, data = parent.frame(), supplement = NULL,
             pdSWt1=double(n.w), pdSWt2=double(n.w),
             pdSa=double(n.a), pdSn=integer(n.a), PACKAGE="eco")
   if (parameter) {
-    mu1.post <- matrix(res$pdSMu0, n.a, unit.par, byrow=TRUE)[,order.old]
-    mu2.post <- matrix(res$pdSMu1, n.a, unit.par, byrow=TRUE)[,order.old]
-    Sigma11.post <- matrix(res$pdSSig00, n.a, unit.par, byrow=TRUE)[,order.old]
-    Sigma12.post <- matrix(res$pdSSig01, n.a, unit.par, byrow=TRUE)[,order.old]
-    Sigma22.post <- matrix(res$pdSSig11, n.a, unit.par, byrow=TRUE)[,order.old]
+    mu1.post <- matrix(res$pdSMu0, n.a, unit.par, byrow=TRUE)[,i$order.old]
+    mu2.post <- matrix(res$pdSMu1, n.a, unit.par, byrow=TRUE)[,i$order.old]
+    Sigma11.post <- matrix(res$pdSSig00, n.a, unit.par, byrow=TRUE)[,i$order.old]
+    Sigma12.post <- matrix(res$pdSSig01, n.a, unit.par, byrow=TRUE)[,i$order.old]
+    Sigma22.post <- matrix(res$pdSSig11, n.a, unit.par, byrow=TRUE)[,i$order.old]
   }
-  W1.post <- matrix(res$pdSW1, n.a, unit.w, byrow=TRUE)[,order.old]
-  W2.post <- matrix(res$pdSW2, n.a, unit.w, byrow=TRUE)[,order.old]
+  W1.post <- matrix(res$pdSW1, n.a, unit.w, byrow=TRUE)[,i$order.old]
+  W2.post <- matrix(res$pdSW2, n.a, unit.w, byrow=TRUE)[,i$order.old]
   if (predict) {
-    W1.pred <- matrix(res$pdSWt1, n.a, unit.w, byrow=TRUE)[,order.old]
-    W2.pred <- matrix(res$pdSWt2, n.a, unit.w, byrow=TRUE) [,order.old]
+    W1.pred <- matrix(res$pdSWt1, n.a, unit.w, byrow=TRUE)[,i$order.old]
+    W2.pred <- matrix(res$pdSWt2, n.a, unit.w, byrow=TRUE) [,i$order.old]
   }
   a.post <- matrix(res$pdSa, n.a, unit.a, byrow=TRUE)
   nstar <- matrix(res$pdSn, n.a, unit.a, byrow=TRUE)
