@@ -1,4 +1,4 @@
-eco <- function(formula, data = parent.frame(), supplement = NULL,
+eco <- function(formula, data = parent.frame(), N = NULL, supplement = NULL,
                 mu0 = c(0,0), tau0 = 2, nu0 = 4, S0 = diag(10,2),
                 parameter = TRUE, grid = FALSE, n.draws = 5000,
                 burnin = 0, thin = 0, verbose = FALSE){ 
@@ -55,9 +55,9 @@ eco <- function(formula, data = parent.frame(), supplement = NULL,
   W1.post <- matrix(res$pdSW1, n.a, unit.w, byrow=TRUE)[,tmp$order.old]
   W2.post <- matrix(res$pdSW2, n.a, unit.w, byrow=TRUE)[,tmp$order.old]
   
-  res.out <- list(call = call, X = X, Y = Y, W1 = W1.post, W2 = W2.post,
-                  burin = burnin, thin = thin, nu0 = nu0, tau0 = tau0,
-                  mu0 = mu0, S0 = S0)
+  res.out <- list(call = call, X = X, Y = Y, N = N, W1 = W1.post, W2 =
+                  W2.post, burin = burnin, thin = thin, nu0 = nu0,
+                  tau0 = tau0, mu0 = mu0, S0 = S0)
   
   if (parameter) {
     res.out$mu <- mu.post
