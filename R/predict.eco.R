@@ -1,14 +1,14 @@
 predict.eco <- function(object, newdraw = NULL, subset = NULL,
                         verbose = FALSE, ...){
 
-  if (is.null(newdraw) && !object$parameter)
+  if (is.null(newdraw) && is.null(object$mu))
     stop("Posterior draws of mu and Sigma must be supplied")
-  else if (!object$parameter){
+  else if (!object$mu){
     if (is.null(newdraw$mu) && is.null(newdraw$Sigma))
       stop("Posterior draws of both mu and Sigma must be supplied.")
     object <- newdraw
   }
-  mu <- coef(object, subset = subset)
+  mu <- coefeco(object, subset = subset)
   n.draws <- nrow(mu)
   
   p <- ncol(mu)
