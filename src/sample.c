@@ -186,8 +186,11 @@ void NIWupdate(
     mun[j] = (tau0*mu0[j]+n_samp*Ybar[j])/(tau0+n_samp);
     for (k=0; k<n_dim; k++) {
       Sn[j][k] += (tau0*n_samp)*(Ybar[j]-mu0[j])*(Ybar[k]-mu0[k])/(tau0+n_samp);
-      for (i=0; i<n_dim; i++)
+      for (i=0; i<n_samp; i++)
 	Sn[j][k] += (Y[i][j]-Ybar[j])*(Y[i][k]-Ybar[k]);
+      /* conditioning on mu:
+	 Sn[j][k]+=tau0*(mu[j]-mu0[j])*(mu[k]-mu0[k]); 
+	 Sn[j][k]+=(Y[i][j]-mu[j])*(Y[i][k]-mu[k]); */
     }
   }
   dinv(Sn, n_dim, mtemp);
