@@ -62,41 +62,41 @@ void cBaseeco(
 	      double *pdSW1, double *pdSW2
 	      ){	   
   
-  int n_samp = *pin_samp;   /* sample size */
-  int s_samp= *sur_samp;    /* sample size of survey data */ 
-  int x1_samp=*sampx1;
-  int x0_samp=*sampx0;
-  int t_samp=n_samp+s_samp+x1_samp+x0_samp;  /* total effective sample size */
-  int nth=*pinth;  
-  int n_dim=2;              /* The number of covariates */
+  /* some integers */
+  int n_samp = *pin_samp;    /* sample size */
+  int s_samp = *sur_samp;    /* sample size of survey data */ 
+  int x1_samp = *sampx1;     /* sample size for X=1 */
+  int x0_samp = *sampx0;     /* sample size for X=0 */
+  int t_samp = n_samp+s_samp+x1_samp+x0_samp;  /* total sample size */
+  int nth = *pinth;  
+  int n_dim = 2;             /* dimension */
+  int n_step = 1000;         /* 1/The default size of grid step */  
 
   /* prior parameters */ 
-  double tau0 = *pdtau0;   
-  int nu0 = *pinu0;            
-  double **S0;              /* The prior S parameter for InvWish */
+  double tau0 = *pdtau0;                          /* prior scale */
+  int nu0 = *pinu0;                               /* prior degrees of freedom */   
+  double **S0 = doubleMatrix(n_dim, n_dim);       /* The prior S parameter for InvWish */
 
   /* data */
-  double **X;	    	    /* The Y and covariates */
-  double **S_W;             /* The known W1 and W2 matrix*/
-  double **S_Wstar;         /* The inverse logit transformation of S_W*/
-  double **W;               /* The W1 and W2 matrix */
+  double **X = doubleMatrix(n_samp, n_dim);       /* The Y and covariates */
+  double **W = doubleMatrix(t_samp, n_dim);       /* The W1 and W2 matrix */
+  double **Wstar = doubleMatrix(t_samp, n_dim);   /* logit tranformed W */       
+  double **S_W = doubleMatrix(s_samp, n_dim);     /* The known W1 and W2 matrix*/
+  double **S_Wstar = doubleMatrix(s_samp, n_dim); /* logit transformed S_W*/
 
-  /* bounds */
-  double *minW1, *maxW1;    /* The lower and upper bounds of W_1i */
+  /* The lower and upper bounds of W_1i */
+  double *minW1 = doubleArray(n_samp);
+  double *maxW1 = doubleArray(n_samp);    
 
   /* grids */
-  int n_step=1000;          /* 1/The default size of grid step */  
-  double **W1g, **W2g;      /* The grids taken for W1 and W2 on tomoline */
-  int *n_grid;              /* The number of grids for sampling on
-			       tomoline */
-  
-  /* model parameters */
-  double **Sigma;           /* The posterior covariance matrix of psi */
-  double **InvSigma;
-  double *mu;               /* The posterior mean of psi */
+  double **W1g = doubleMatrix(n_samp, n_step);    /* grids for W1 */
+  double **W2g = doubleMatrix(n_samp, n_step);    /* grids for W2 */
+  int *n_grid = intArray(n_samp);                 /* grid size */
 
-  /* The pseudo data  */
-  double **Wstar;        
+  /* model parameters */
+  double *mu = doubleArray(n_dim);                /* The mean */
+  double **Sigma = doubleMatrix(n_dim, n_dim);    /* The covariance matrix */
+  double **InvSigma = doubleMatrix(n_dim, n_dim); /* The inverse covariance matrix */
 
   /* misc variables */
   int i, j, k, main_loop;   /* used for various loops */
@@ -106,35 +106,8 @@ void cBaseeco(
 
   /* get random seed */
   GetRNGstate();
-
-  /* defining vectors and matricies */
-  /* data */
-  X=doubleMatrix(n_samp,n_dim);
-  W=doubleMatrix((n_samp+s_samp+x0_samp+x1_samp),n_dim);
-  Wstar=doubleMatrix((n_samp+s_samp+x0_samp+x1_samp),n_dim);
-
-  /* survey data */
-  S_W=doubleMatrix(s_samp, n_dim);
-  S_Wstar=doubleMatrix(s_samp, n_dim);
-
-  /* bounds */
-  minW1=doubleArray(n_samp);
-  maxW1=doubleArray(n_samp);
-
-  /* priors */
-  S0=doubleMatrix(n_dim,n_dim);
-
-  /* grids */
-  W1g=doubleMatrix(n_samp, n_step);
-  W2g=doubleMatrix(n_samp, n_step);
-  n_grid=intArray(n_samp);
-
-  /* model parameters */
-  mu=doubleArray(n_dim);
-  Sigma=doubleMatrix(n_dim,n_dim);
-  InvSigma=doubleMatrix(n_dim,n_dim);
-
-  /* priors */
+  
+  /* read the priors */
   itemp=0;
   for(k=0;k<n_dim;k++)
     for(j=0;j<n_dim;j++) S0[j][k]=pdS0[itemp++];
