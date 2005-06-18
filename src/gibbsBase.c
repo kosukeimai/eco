@@ -163,14 +163,22 @@ void cBaseeco(
     for (i = 0; i < n_samp; i++) 
       X[i][j] = pdX[itemp++];
 
-  /* initialize W, Wstar for n_samp*/
-  for (j=0; j<n_dim; j++)
-    for (i=0; i< n_samp; i++) {
-      W[i][j]=0;
-      Wstar[i][j]=0;
-      if (X[i][1]==0) W[i][j]=0.0001;
-      else if (X[i][1]==1) W[i][j]=0.9999;
+  /* calculate bounds, initialize W, Wstar for n_samp */
+  for (i=0; i< n_samp; i++) {
+    if (X[i][1]!=0 && X[i][1]!=1) {
+      /* min and max for W1 */ 
+      minW1[i]=fmax2(0.0, (X[i][0]+X[i][1]-1)/X[i][0]);
+      maxW1[i]=fmin2(1.0, X[i][1]/X[i][0]);
+      W[i][0]=(maxW1[i]+minW1[i])/2;
+      W[i][1]=(X[i][1]-X[i][0]*W[i][0])/(1-X[i][0]);
     }
+    if (X[i][1]==0) 
+      for (j=0; j<n_dim; j++) W[i][j]=0.0001;
+    if (X[i][1]==1) 
+      for (j=0; j<n_dim; j++) W[i][j]=0.9999;
+    for (j=0; j<n_dim; j++)
+      Wstar[i][j]=log(W[i][j])-log(1-W[i][j]);
+  }
 
   /* read homeogenous areas information */
   if (*x1==1) 
@@ -207,22 +215,16 @@ void cBaseeco(
   itempS=0; /* for storage */
   itempC=0; /* control nth draw */
 
-  /*initialize W1g and W2g */
-  if (*Grid) 
+  /*** calculate grids ***/
+  /* initialize W1g and W2g */
+  if (*Grid) { 
     for(i=0; i<n_samp; i++)
       for (j=0; j<n_step; j++){
 	W1g[i][j]=0;
 	W2g[i][j]=0;
       }
-
-
-  /*** calculate bounds and grids ***/
-  for(i=0;i<n_samp;i++) {
-    if (X[i][1]!=0 && X[i][1]!=1) {
-      /* min and max for W1 */ 
-      minW1[i]=fmax2(0.0, (X[i][0]+X[i][1]-1)/X[i][0]);
-      maxW1[i]=fmin2(1.0, X[i][1]/X[i][0]);
-      if (*Grid) {
+    for(i=0;i<n_samp;i++) {
+      if (X[i][1]!=0 && X[i][1]!=1) {
 	/* 1/n_step is the length of the grid */
 	dtemp=(double)1/n_step;
 	if ((maxW1[i]-minW1[i]) > (2*dtemp)) { 
