@@ -7,7 +7,10 @@
 
 void rGrid(double *Sample, double *W1gi, double *W2gi, int ni_grid, 
 	   double *mu, double **InvSigma, int n_dim); 
-void rMH(double *Sample, double *W, double *XY, double W1min, 
+void rMH(double *W, double *XY, double W1min, 
 	 double W1max, double *mu, double **InvSigma, int n_dim);
 void rMHrc(double *Sample, double *W, double *XY, double *Zmin, 
 	   double *Zmax, double *mu, double **InvSigma, int n_dim);
+void NIWupdate(double **Y, double *mu, double **Sigma, double **InvSigma,
+	       double *mu0, double tau0, int nu0, double **S0, 
+	       int n_samp, int n_dim); 

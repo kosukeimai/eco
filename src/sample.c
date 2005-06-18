@@ -14,23 +14,22 @@
 #include "vector.h"
 #include "subroutines.h"
 #include "rand.h"
-#include "sample.h"
 
 
 /* Grid method samping from tomography line*/
 void rGrid(
-	  double *Sample,         /* W_i sampled from each tomography line */                 
-	  double *W1gi,           /* The grid lines of W1[i] */
-	  double *W2gi,           /* The grid lines of W2[i] */
-	  int ni_grid,            /* number of grids for observation i*/
-          double *mu,             /* mean vector for normal */ 
-          double **InvSigma,         /* Inverse covariance matrix for normal */
-          int n_dim)               /* dimension of parameters */
+	   double *Sample,         /* W_i sampled from each tomography line */                 
+	   double *W1gi,           /* The grid lines of W1[i] */
+	   double *W2gi,           /* The grid lines of W2[i] */
+	   int ni_grid,            /* number of grids for observation i*/
+	   double *mu,             /* mean vector for normal */ 
+	   double **InvSigma,      /* Inverse covariance matrix for normal */
+	   int n_dim)              /* dimension of parameters */
 {
   int j;
   double dtemp;
   double *vtemp=doubleArray(n_dim);
-  double *prob_grid=doubleArray(ni_grid);  /*density by grid */
+  double *prob_grid=doubleArray(ni_grid);     /* density by grid */
   double *prob_grid_cum=doubleArray(ni_grid); /* cumulative density by grid */
     
   dtemp=0;
@@ -45,8 +44,8 @@ void rGrid(
   }
   for (j=0;j<ni_grid;j++)
     prob_grid_cum[j]/=dtemp; /*standardize prob.grid */
-  /*2 sample W_i on the ith tomo line */
 
+  /*2 sample W_i on the ith tomo line */
   j=0;
   dtemp=unif_rand();
   while (dtemp > prob_grid_cum[j]) j++;
@@ -61,7 +60,6 @@ void rGrid(
 
 /* sample W via MH for 2x2 table */
 void rMH(
-	 double *Sample,         /* sample of W_i */                 
 	 double *W,              /* previous draws */
 	 double *XY,             /* X_i and Y_i */
 	 double W1min,           /* lower bound for W1 */
@@ -72,6 +70,7 @@ void rMH(
 {
   int j;
   double dens1, dens2, ratio;
+  double *Sample=doubleArray(n_dim);
   double *vtemp=doubleArray(n_dim);
   double *vtemp1=doubleArray(n_dim);
   
@@ -82,7 +81,6 @@ void rMH(
     vtemp[j]=log(Sample[j])-log(1-Sample[j]);
     vtemp1[j]=log(W[j])-log(1-W[j]);
   }
-  
   /* acceptance ratio */
   dens1 = dMVN(vtemp, mu, InvSigma, n_dim, 1) -
     log(Sample[0])-log(Sample[1])-log(1-Sample[0])-log(1-Sample[1]);
@@ -90,11 +88,12 @@ void rMH(
     log(W[0])-log(W[1])-log(1-W[0])-log(1-W[1]);
   ratio=fmin2(1, exp(dens1-dens2));
   
-  /* reject */
-  if (ratio < unif_rand()) 
-    for (j=0; j<n_dim; j++)
-      Sample[j]=W[j];
+  /* accept */
+  if (unif_rand() < ratio) 
+    for (j=0; j<n_dim; j++) 
+      W[j]=Sample[j];
   
+  free(Sample);
   free(vtemp);
   free(vtemp1);
 }
@@ -156,3 +155,52 @@ void rMHrc(
   free(vtemp1);
 }
 
+/* Normal-InvWishart updating */
+void NIWupdate(
+	       double **Y,         /* data */
+	       double *mu,         /* mean */
+	       double **Sigma,     /* variance */
+	       double **InvSigma,  /* precision */
+	       double *mu0,        /* prior mean */
+	       double tau0,        /* prior scale */
+	       int nu0,            /* prior df */
+	       double **S0,        /* prior scale */
+	       int n_samp,         /* sample size */
+	       int n_dim)          /* dimension */
+{
+  int i,j,k;
+  double *Ybar = doubleArray(n_dim);
+  double *mun = doubleArray(n_dim);
+  double **Sn = doubleMatrix(n_dim, n_dim);
+  double **mtemp = doubleMatrix(n_dim, n_dim);
+
+  for (j=0; j<n_dim; j++) {
+    Ybar[j] = 0;
+    for (i=0; i<n_samp; i++)
+      Ybar[j] += Y[i][j];
+    Ybar[j] /= n_samp;
+    for (k=0; k<n_dim; k++)
+      Sn[j][k] = S0[j][k];
+  }
+  for (j=0; j<n_dim; j++) {
+    mun[j] = (tau0*mu0[j]+n_samp*Ybar[j])/(tau0+n_samp);
+    for (k=0; k<n_dim; k++) {
+      Sn[j][k] += (tau0*n_samp)*(Ybar[j]-mu0[j])*(Ybar[k]-mu0[k])/(tau0+n_samp);
+      for (i=0; i<n_dim; i++)
+	Sn[j][k] += (Y[i][j]-Ybar[j])*(Y[i][k]-Ybar[k]);
+    }
+  }
+  dinv(Sn, n_dim, mtemp);
+  rWish(InvSigma, mtemp, nu0+n_samp, n_dim);
+  dinv(InvSigma, n_dim, Sigma);
+ 
+  for (j=0; j<n_dim; j++)
+    for (k=0; k<n_dim; k++)
+      mtemp[j][k] = Sigma[j][k]/(tau0+n_samp);
+  rMVN(mu, mun, mtemp, n_dim);
+
+  free(Ybar);
+  free(mun);
+  FreeMatrix(Sn, n_dim);
+  FreeMatrix(mtemp, n_dim);
+}
