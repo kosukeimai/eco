@@ -155,7 +155,10 @@ void rMHrc(
   free(vtemp1);
 }
 
-/* Normal-InvWishart updating */
+/* Normal-InvWishart updating 
+     Y|mu, Sigma ~ N(mu, Sigma) 
+        mu|Sigma ~ N(mu0, Sigma/tau0) 
+           Sigma ~ InvWish(nu0, S0^{-1}) */
 void NIWupdate(
 	       double **Y,         /* data */
 	       double *mu,         /* mean */
