@@ -98,19 +98,12 @@ void cBaseeco(
 
   /* The pseudo data  */
   double **Wstar;        
-  double *Wstar_bar;
-
-  /* posterior variables */
-  double *mun;              /* The posterior mean */
-  double **Sn;              /* The posterior S parameter for InvWish */
 
   /* misc variables */
   int i, j, k, main_loop;   /* used for various loops */
   int itemp, itempS, itempC, itempA;
   int progress = 1, itempP = ftrunc((double) *n_gen/10);
   double dtemp, dtemp1;
-  double *vtemp;
-  double **mtemp;
 
   /* get random seed */
   GetRNGstate();
@@ -132,10 +125,6 @@ void cBaseeco(
   /* priors */
   S0=doubleMatrix(n_dim,n_dim);
 
-  /* posteriors */
-  mun=doubleArray(n_dim);
-  Sn=doubleMatrix(n_dim,n_dim);
-
   /* grids */
   W1g=doubleMatrix(n_samp, n_step);
   W2g=doubleMatrix(n_samp, n_step);
@@ -146,11 +135,6 @@ void cBaseeco(
   mu=doubleArray(n_dim);
   Sigma=doubleMatrix(n_dim,n_dim);
   InvSigma=doubleMatrix(n_dim,n_dim);
-  Wstar_bar=doubleArray(n_dim);
-
-  /* temporary storage */
-  vtemp=doubleArray(n_dim);
-  mtemp=doubleMatrix(n_dim,n_dim);
 
   /* priors */
   itemp=0;
@@ -296,32 +280,7 @@ void cBaseeco(
       }
     
     /* update mu, Sigma given wstar using effective sample of Wstar */
-    for (j=0;j<n_dim;j++) {
-      Wstar_bar[j]=0;
-      for (i=0;i<t_samp;i++)
-	Wstar_bar[j]+=Wstar[i][j];
-      Wstar_bar[j]/=t_samp;
-      for (k=0;k<n_dim;k++)
-	Sn[j][k]=S0[j][k];
-    }
-    for (j=0;j<n_dim;j++) {
-      mun[j]=(tau0*mu0[j]+t_samp*Wstar_bar[j])/(tau0+t_samp);
-      for (k=0;k<n_dim;k++) {
-	Sn[j][k]+=(tau0*t_samp)*(Wstar_bar[j]-mu0[j])*(Wstar_bar[k]-mu0[k])/(tau0+t_samp); 
-	for (i=0;i<t_samp;i++)
-	  Sn[j][k]+=(Wstar[i][j]-Wstar_bar[j])*(Wstar[i][k]-Wstar_bar[k]); 
-	/* conditioning on mu:
-	   Sn[j][k]+=tau0*(mu[j]-mu0[j])*(mu[k]-mu0[k]); 
-	   Sn[j][k]+=(Wstar[i][j]-mu[j])*(Wstar[i][k]-mu[k]); */
-      }
-    }
-    dinv(Sn, n_dim, mtemp); 
-    rWish(InvSigma, mtemp, nu0+t_samp, n_dim);
-    dinv(InvSigma, n_dim, Sigma);
-    
-    for(j=0;j<n_dim;j++)
-      for(k=0;k<n_dim;k++) mtemp[j][k]=Sigma[j][k]/(tau0+t_samp);
-    rMVN(mu, mun, mtemp, n_dim);
+    NIWupdate(Wstar, mu, Sigma, InvSigma, mu0, tau0, nu0, S0, t_samp, n_dim);
     
     /*store Gibbs draw after burn-in and every nth draws */      
     if (main_loop>=*burn_in){
@@ -360,20 +319,18 @@ void cBaseeco(
   FreeMatrix(X, n_samp);
   FreeMatrix(W, t_samp);
   FreeMatrix(Wstar, t_samp);
+  FreeMatrix(S_W, s_samp);
+  FreeMatrix(S_Wstar, s_samp);
   free(minW1);
   free(maxW1);
   FreeMatrix(S0, n_dim);
-  FreeMatrix(Sn, n_dim);
-  free(n_grid);
-  free(resid);
   FreeMatrix(W1g, n_samp);
   FreeMatrix(W2g, n_samp);
+  free(n_grid);
+  free(resid);
   free(mu);
   FreeMatrix(Sigma,n_dim);
   FreeMatrix(InvSigma, n_dim);
-  free(Wstar_bar);
-  free(vtemp);
-  FreeMatrix(mtemp, n_dim);
   
 } /* main */
 
