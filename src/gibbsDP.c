@@ -55,10 +55,6 @@ void cDPeco(
 	    int *parameter,  /* 1 if save population parameter */
 	    int *Grid,       /* 1 for Grid, 0 for Metropolis */
 
-	    /*  unused:	    int *link,       one Logit transformation 
-				two Probit transformation 
-	                        three cloglog transformation */
-
 	    /* storage for Gibbs draws of mu/sigmat*/
 	    double *pdSMu0, double *pdSMu1, 
 	    double *pdSSig00, double *pdSSig01, double *pdSSig11,           
@@ -68,8 +64,6 @@ void cDPeco(
 	    double *pdSa,
 	    /* storage for nstar at each Gibbs draw*/
 	    int *pdSn
-	    /* unused: storage for posterior predictions of Y 
-	    double *pdY,*/
  	    ){	   
   
   int n_samp = *pin_samp;    /* sample size */
@@ -502,6 +496,7 @@ void cDPeco(
   /*store Gibbs draws after burn_in */
   R_CheckUserInterrupt();
   if (main_loop>=*burn_in) {
+
     itempC++;
     if (itempC==nth){
       if(*pinUpdate) {
@@ -518,11 +513,12 @@ void cDPeco(
 	pdSSig11[itempS]=Sigma[i][1][1];
 	pdSW1[itempS]=W[i][0];
 	pdSW2[itempS]=W[i][1];
-      }
 	itempS++;
       }
-      itempC=0;
-    }
+     itempC=0; 
+   }
+ 
+  
   }
   if (*verbose)
     if (itempP == main_loop) {
