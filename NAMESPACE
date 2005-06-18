@@ -2,7 +2,9 @@ useDynLib(eco)
 
 importFrom(MASS, mvrnorm)
 
-export(eco, 
+export(
+       bounds,
+       eco, 	
        ecoNP,
        summary.eco,
        print.summary.predict.eco,
