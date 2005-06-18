@@ -29,8 +29,8 @@ void cBaseeco(
 
 	      /* prior specification*/
 	      int *pinu0,      /* prior df parameter for InvWish */
-	      double *pdtau0,  /* prior scale parameter for Sigma under G0*/
-	      double *mu0,     /* prior mean for mu under G0 */
+	      double *pdtau0,  /* prior scale parameter for Sigma */
+	      double *mu0,     /* prior mean for mu */
 	      double *pdS0,    /* prior scale for Sigma */
 
 	      /*incorporating survey data */
@@ -306,16 +306,16 @@ void cBaseeco(
     for (j=0;j<n_dim;j++) 
       for (i=0;i<t_samp;i++)
 	Wstar_bar[j]+=Wstar[i][j]/t_samp;
-    for (j=0;j<n_dim;j++)
-      for (k=0;k<n_dim;k++)
+    for (j=0;j<n_dim;j++) {
+      mun[j]=(tau0*mu0[j]+t_samp*Wstar_bar[j])/(tau0+t_samp);
+      for (k=0;k<n_dim;k++) {
+	Sn[j][k]+=(tau0*t_samp)*(Wstar_bar[j]-mu0[j])*(Wstar_bar[k]-mu0[k])/(tau0+t_samp); 
 	for (i=0;i<t_samp;i++)
 	  Sn[j][k]+=(Wstar[i][j]-Wstar_bar[j])*(Wstar[i][k]-Wstar_bar[k]); 
-	  /* conditioning on mu: Sn[j][k]+=(Wstar[i][j]-mu[j])*(Wstar[i][k]-mu[k]); */
-    for (j=0;j<n_dim;j++){
-      mun[j]=(tau0*mu0[j]+t_samp*Wstar_bar[j])/(tau0+t_samp);
-      for (k=0;k<n_dim;k++)
-	Sn[j][k]+=(tau0*t_samp)*(Wstar_bar[j]-mu0[j])*(Wstar_bar[k]-mu0[k])/(tau0+t_samp); 
-      /* conditioning on mu: Sn[j][k]+=tau0*(mu[j]-mu0[j])*(mu[k]-mu0[k]); */
+	/* conditioning on mu:
+	   Sn[j][k]+=tau0*(mu[j]-mu0[j])*(mu[k]-mu0[k]); 
+	   Sn[j][k]+=(Wstar[i][j]-mu[j])*(Wstar[i][k]-mu[k]); */
+      }
     }
     dinv(Sn, n_dim, mtemp); 
     rWish(InvSigma, mtemp, nu0+t_samp, n_dim);
