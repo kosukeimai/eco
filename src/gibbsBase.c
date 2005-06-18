@@ -300,12 +300,12 @@ void cBaseeco(
     /* update mu, Sigma given wstar using effective sample of Wstar */
     for (j=0;j<n_dim;j++) {
       Wstar_bar[j]=0;
+      for (i=0;i<t_samp;i++)
+	Wstar_bar[j]+=Wstar[i][j];
+      Wstar_bar[j]/=t_samp;
       for (k=0;k<n_dim;k++)
 	Sn[j][k]=S0[j][k];
     }
-    for (j=0;j<n_dim;j++) 
-      for (i=0;i<t_samp;i++)
-	Wstar_bar[j]+=Wstar[i][j]/t_samp;
     for (j=0;j<n_dim;j++) {
       mun[j]=(tau0*mu0[j]+t_samp*Wstar_bar[j])/(tau0+t_samp);
       for (k=0;k<n_dim;k++) {
