@@ -15,11 +15,11 @@ coefeco.ecoNP <- function(object, subset = NULL, ...) {
   if (is.null(subset))
     subset <- 1:nrow(object$mu[,,1])
   else if (max(subset) > nrow(object$mu[,,1]))
-    stop(paste("invalid input for `subset.' only", nrow(mu[,,1]), "draws are stored."))
+    stop(paste("invalid input for `subset.' only", nrow(object$mu[,,1]), "draws are stored."))
 
     temp <- object$mu[subset,,]
-    n <- length(object$mu[1,1,])*length(object$mu[,1,1])
-    p <- length(object$mu[1,,1])
+    n <- length(temp[1,1,])*length(temp[,1,1])
+    p <- length(temp[1,,1])
     mu <- matrix(0, n,2)
 
     for (j in 1:p)

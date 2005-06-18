@@ -25,43 +25,45 @@ ecoNP <- function(formula, data = parent.frame(), supplement = NULL,
   else
     alpha.update <- FALSE
   
-  i <- checkdata(X,Y, supplement)
-  
+  tmp <- checkdata(X,Y, supplement)
+ 
   ## fitting the model
   n.a <- floor((n.draws-burnin)/(thin+1))
 
-  unit.par <- unit.w <- i$n.samp+i$samp.X1+i$samp.X0
+  unit.par <- unit.w <- tmp$n.samp+tmp$samp.X1+tmp$samp.X0
   n.par <- n.a * unit.par
   n.w <- n.a * unit.w
 
   unit.a <- 1
 
-  res <- .C("cDPeco", as.double(i$d), as.integer(i$n.samp),
+  res <- .C("cDPeco", as.double(tmp$d), as.integer(tmp$n.samp),
             as.integer(n.draws), as.integer(burnin), as.integer(thin+1),
             as.integer(verbose), as.integer(nu0), as.double(tau0),
             as.double(mu0), as.double(S0), as.double(alpha),
             as.integer(alpha.update), as.double(a0), as.double(b0),
-            as.integer(i$survey.yes), as.integer(i$survey.samp),
-            as.double(i$survey.data), as.integer(i$X1type),
-            as.integer(i$samp.X1), as.double(i$X1.W1),
-            as.integer(i$X0type), as.integer(i$samp.X0), as.double(i$X0.W2),
+            as.integer(tmp$survey.yes), as.integer(tmp$survey.samp),
+            as.double(tmp$survey.data), as.integer(tmp$X1type),
+            as.integer(tmp$samp.X1), as.double(tmp$X1.W1),
+            as.integer(tmp$X0type), as.integer(tmp$samp.X0),
+            as.double(tmp$X0.W2),
             as.integer(parameter), as.integer(grid),
             pdSMu0=double(n.par), pdSMu1=double(n.par),
             pdSSig00=double(n.par), pdSSig01=double(n.par),
             pdSSig11=double(n.par), pdSW1=double(n.w), pdSW2=double(n.w), 
             pdSa=double(n.a), pdSn=integer(n.a), PACKAGE="eco")
   if (parameter) {
-    mu1.post <- matrix(res$pdSMu0, n.a, unit.par, byrow=TRUE)[,i$order.old]
-    mu2.post <- matrix(res$pdSMu1, n.a, unit.par, byrow=TRUE)[,i$order.old]
-    Sigma11.post <- matrix(res$pdSSig00, n.a, unit.par, byrow=TRUE)[,i$order.old]
-    Sigma12.post <- matrix(res$pdSSig01, n.a, unit.par, byrow=TRUE)[,i$order.old]
-    Sigma22.post <- matrix(res$pdSSig11, n.a, unit.par, byrow=TRUE)[,i$order.old]
-  }
+    mu1.post <- matrix(res$pdSMu0, n.a, unit.par, byrow=TRUE)[,tmp$order.old]
+    mu2.post <- matrix(res$pdSMu1, n.a, unit.par, byrow=TRUE)[,tmp$order.old]
+    Sigma11.post <- matrix(res$pdSSig00, n.a, unit.par, byrow=TRUE)[,tmp$order.old]
+    Sigma12.post <- matrix(res$pdSSig01, n.a, unit.par, byrow=TRUE)[,tmp$order.old]
+    Sigma22.post <- matrix(res$pdSSig11, n.a, unit.par, byrow=TRUE)[,tmp$order.old]
+  
   mu <- array(rbind(mu1.post,mu2.post), c(n.a, 2, unit.par))
   Sigma <- array(rbind(Sigma11.post, Sigma12.post, Sigma22.post), c(n.a, 3, unit.par))
-
-  W1.post <- matrix(res$pdSW1, n.a, unit.w, byrow=TRUE)[,i$order.old]
-  W2.post <- matrix(res$pdSW2, n.a, unit.w, byrow=TRUE)[,i$order.old]
+}
+ 
+  W1.post <- matrix(res$pdSW1, n.a, unit.w, byrow=TRUE)[,tmp$order.old]
+  W2.post <- matrix(res$pdSW2, n.a, unit.w, byrow=TRUE)[,tmp$order.old]
 
   a.post <- matrix(res$pdSa, n.a, unit.a, byrow=TRUE)
   nstar <- matrix(res$pdSn, n.a, unit.a, byrow=TRUE)

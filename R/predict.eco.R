@@ -3,16 +3,16 @@ predict.eco <- function(object, newdraw = NULL, subset = NULL,
 
   if (is.null(newdraw) && is.null(object$mu))
     stop("Posterior draws of mu and Sigma must be supplied")
-  else if (!object$mu){
+  else if (!is.null(newdraw)){
     if (is.null(newdraw$mu) && is.null(newdraw$Sigma))
       stop("Posterior draws of both mu and Sigma must be supplied.")
     object <- newdraw
   }
   mu <- coefeco(object, subset = subset)
   n.draws <- nrow(mu)
-  
   p <- ncol(mu)
   Sigma <- varcov(object, subset = subset)
+  
   Wstar <- matrix(NA, nrow=n.draws, ncol=p)
   tmp <- floor(n.draws/10)
   inc <- 1
