@@ -14,7 +14,7 @@ export(eco,
        coef.eco,
        coef.ecoNP)
 
-S3method(varcov)
+S3method(varcov, default)
 S3method(varcov, eco)
 S3method(varcov, ecoNP)
 S3method(coef, eco)
