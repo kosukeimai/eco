@@ -86,10 +86,9 @@ void cBaseeco(
 
   /* grids */
   int n_step=1000;          /* 1/The default size of grid step */  
+  double **W1g, **W2g;      /* The grids taken for W1 and W2 on tomoline */
   int *n_grid;              /* The number of grids for sampling on
 			       tomoline */
-  double **W1g, **W2g;      /* The grids taken for W1 and W2 on tomoline */
-  double *resid;            /* The centralizing vector for grids */
   
   /* model parameters */
   double **Sigma;           /* The posterior covariance matrix of psi */
@@ -129,7 +128,6 @@ void cBaseeco(
   W1g=doubleMatrix(n_samp, n_step);
   W2g=doubleMatrix(n_samp, n_step);
   n_grid=intArray(n_samp);
-  resid=doubleArray(n_samp);
 
   /* model parameters */
   mu=doubleArray(n_dim);
@@ -200,41 +198,8 @@ void cBaseeco(
   itempC=0; /* control nth draw */
 
   /*** calculate grids ***/
-  /* initialize W1g and W2g */
-  if (*Grid) { 
-    for(i=0; i<n_samp; i++)
-      for (j=0; j<n_step; j++){
-	W1g[i][j]=0;
-	W2g[i][j]=0;
-      }
-    for(i=0;i<n_samp;i++) {
-      if (X[i][1]!=0 && X[i][1]!=1) {
-	/* 1/n_step is the length of the grid */
-	dtemp=(double)1/n_step;
-	if ((maxW1[i]-minW1[i]) > (2*dtemp)) { 
-	  n_grid[i]=ftrunc((maxW1[i]-minW1[i])*n_step);
-	  resid[i]=(maxW1[i]-minW1[i])-n_grid[i]*dtemp;
-	  /*if (maxW1[i]-minW1[i]==1) resid[i]=dtemp/4;*/
-	  j=0; 
-	  while (j<n_grid[i]) {
-	    W1g[i][j]=minW1[i]+(j+1)*dtemp-(dtemp+resid[i])/2;
-	    if ((W1g[i][j]-minW1[i])<resid[i]/2) W1g[i][j]+=resid[i]/2;
-	    if ((maxW1[i]-W1g[i][j])<resid[i]/2) W1g[i][j]-=resid[i]/2;
-	    W2g[i][j]=(X[i][1]-X[i][0]*W1g[i][j])/(1-X[i][0]);
-	    /*if (i<20) printf("\n%5d%5d%14g%14g", i, j, W1g[i][j], W2g[i][j]);*/
-	    j++;
-	  }
-	}
-	else {
-	  W1g[i][0]=minW1[i]+(maxW1[i]-minW1[i])/3;
-	  W2g[i][0]=(X[i][1]-X[i][0]*W1g[i][0])/(1-X[i][0]);
-	  W1g[i][1]=minW1[i]+2*(maxW1[i]-minW1[i])/3;
-	  W2g[i][1]=(X[i][1]-X[i][0]*W1g[i][1])/(1-X[i][0]);
-	  n_grid[i]=2;
-	}
-      }
-    }
-  }
+  if (*Grid) 
+    GridPrep(W1g, W2g, X, maxW1, minW1, n_grid, n_samp, n_step);
     
   /* initialize vales of mu and Sigma */
   for(j=0;j<n_dim;j++){
@@ -327,7 +292,6 @@ void cBaseeco(
   FreeMatrix(W1g, n_samp);
   FreeMatrix(W2g, n_samp);
   free(n_grid);
-  free(resid);
   free(mu);
   FreeMatrix(Sigma,n_dim);
   FreeMatrix(InvSigma, n_dim);

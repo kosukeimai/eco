@@ -58,6 +58,57 @@ void rGrid(
 
 }
 
+/* preparation for Grid */\
+void GridPrep(
+	      double **W1g,  /* grids holder for W1 */
+	      double **W2g,  /* grids holder for W2 */
+	      double **X,    /* data: [X Y] */
+	      double *maxW1, /* upper bound for W1 */
+	      double *minW1, /* lower bound for W1 */
+	      int *n_grid,   /* number of grids */
+	      int  n_samp,   /* sample size */
+	      int  n_step    /* step size */
+)
+{
+  int i, j;
+  double dtemp;
+  double *resid = doubleArray(n_samp);
+
+  for(i=0; i<n_samp; i++)
+    for (j=0; j<n_step; j++){
+      W1g[i][j]=0;
+      W2g[i][j]=0;
+    }
+  for(i=0;i<n_samp;i++) {
+    if (X[i][1]!=0 && X[i][1]!=1) {
+      /* 1/n_step is the length of the grid */
+      dtemp=(double)1/n_step;
+      if ((maxW1[i]-minW1[i]) > (2*dtemp)) { 
+	n_grid[i]=ftrunc((maxW1[i]-minW1[i])*n_step);
+	resid[i]=(maxW1[i]-minW1[i])-n_grid[i]*dtemp;
+	/*if (maxW1[i]-minW1[i]==1) resid[i]=dtemp/4; */
+	j=0; 
+	while (j<n_grid[i]) {
+	  W1g[i][j]=minW1[i]+(j+1)*dtemp-(dtemp+resid[i])/2;
+	  if ((W1g[i][j]-minW1[i])<resid[i]/2) W1g[i][j]+=resid[i]/2;
+	  if ((maxW1[i]-W1g[i][j])<resid[i]/2) W1g[i][j]-=resid[i]/2;
+	  W2g[i][j]=(X[i][1]-X[i][0]*W1g[i][j])/(1-X[i][0]);
+	  j++;
+	}
+      }
+      else {
+	W1g[i][0]=minW1[i]+(maxW1[i]-minW1[i])/3;
+	W2g[i][0]=(X[i][1]-X[i][0]*W1g[i][0])/(1-X[i][0]);
+	W1g[i][1]=minW1[i]+2*(maxW1[i]-minW1[i])/3;
+	W2g[i][1]=(X[i][1]-X[i][0]*W1g[i][1])/(1-X[i][0]);
+	n_grid[i]=2;
+      }
+    }
+  }
+
+  free(resid);
+}
+
 /* sample W via MH for 2x2 table */
 void rMH(
 	 double *W,              /* previous draws */
