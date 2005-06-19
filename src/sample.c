@@ -154,35 +154,39 @@ void rMH(
 void rMHrc(
 	   double *Sample,         /* sample of W_i */                 
 	   double *W,              /* previous draws */
-	   double *XY,             /* X_i and Y_i */
-	   double *Zmin,            /* lower bound for Z */
-	   double *Zmax,            /* upper bound for Z */
-	   double *mu,            /* mean vector for normal */ 
-	   double **InvSigma,     /* Inverse covariance matrix for normal */
+	   double *XY,             /* X_i and Y_i: [X Y] */
+	   double *Zmin,           /* lower bound for Z */
+	   double *Zmax,           /* upper bound for Z */
+	   double *mu,             /* mean vector for normal */ 
+	   double **InvSigma,      /* Inverse covariance matrix for normal */
 	   int n_dim)              /* dimension of parameters */
 {
-  int j, exceed=1;
+  int i, j, exceed, maxit = 100000;
   double dens1, dens2, ratio;
-  double *param=doubleArray(n_dim);
-  double *vtemp=doubleArray(n_dim);
-  double *vtemp1=doubleArray(n_dim);
+  double *param = doubleArray(n_dim);
+  double *vtemp = doubleArray(n_dim);
+  double *vtemp1 = doubleArray(n_dim);
   
   /* set Dirichlet parameter to 1 */
   for (j=0; j<n_dim; j++)
     param[j] = 1.0;
 
   /* Sample a candidate draw for W */
+  i = 0; exceed = 1;
   while (exceed > 0) {
-    exceed = 0;
     rDirich(vtemp, param, n_dim);
+    exceed = 0;
     for (j=0; j<n_dim; j++) 
       if (vtemp[j] > Zmax[j] || vtemp[j] < Zmin[j])
 	exceed++;
+    i++;
+    if (i > maxit)
+      error("rMHrc: the algorithm failed because of bounds are too short.")
   }
 
   /* calcualte W and its logit transformation */
   for (j=0; j<n_dim; j++) {
-    Sample[j]=vtemp[j]*XY[0]/XY[j+1];
+    Sample[j]=vtemp[j]*XY[n_dim]/XY[j];
     vtemp[j]=log(Sample[j])-log(1-Sample[j]);
     vtemp1[j]=log(W[j])-log(1-W[j]);
   }
@@ -206,58 +210,3 @@ void rMHrc(
   free(vtemp1);
 }
 
-/* Normal-InvWishart updating 
-     Y|mu, Sigma ~ N(mu, Sigma) 
-        mu|Sigma ~ N(mu0, Sigma/tau0) 
-           Sigma ~ InvWish(nu0, S0^{-1}) */
-void NIWupdate(
-	       double **Y,         /* data */
-	       double *mu,         /* mean */
-	       double **Sigma,     /* variance */
-	       double **InvSigma,  /* precision */
-	       double *mu0,        /* prior mean */
-	       double tau0,        /* prior scale */
-	       int nu0,            /* prior df */
-	       double **S0,        /* prior scale */
-	       int n_samp,         /* sample size */
-	       int n_dim)          /* dimension */
-{
-  int i,j,k;
-  double *Ybar = doubleArray(n_dim);
-  double *mun = doubleArray(n_dim);
-  double **Sn = doubleMatrix(n_dim, n_dim);
-  double **mtemp = doubleMatrix(n_dim, n_dim);
-
-  for (j=0; j<n_dim; j++) {
-    Ybar[j] = 0;
-    for (i=0; i<n_samp; i++)
-      Ybar[j] += Y[i][j];
-    Ybar[j] /= n_samp;
-    for (k=0; k<n_dim; k++)
-      Sn[j][k] = S0[j][k];
-  }
-  for (j=0; j<n_dim; j++) {
-    mun[j] = (tau0*mu0[j]+n_samp*Ybar[j])/(tau0+n_samp);
-    for (k=0; k<n_dim; k++) {
-      Sn[j][k] += (tau0*n_samp)*(Ybar[j]-mu0[j])*(Ybar[k]-mu0[k])/(tau0+n_samp);
-      for (i=0; i<n_samp; i++)
-	Sn[j][k] += (Y[i][j]-Ybar[j])*(Y[i][k]-Ybar[k]);
-      /* conditioning on mu:
-	 Sn[j][k]+=tau0*(mu[j]-mu0[j])*(mu[k]-mu0[k]); 
-	 Sn[j][k]+=(Y[i][j]-mu[j])*(Y[i][k]-mu[k]); */
-    }
-  }
-  dinv(Sn, n_dim, mtemp);
-  rWish(InvSigma, mtemp, nu0+n_samp, n_dim);
-  dinv(InvSigma, n_dim, Sigma);
- 
-  for (j=0; j<n_dim; j++)
-    for (k=0; k<n_dim; k++)
-      mtemp[j][k] = Sigma[j][k]/(tau0+n_samp);
-  rMVN(mu, mun, mtemp, n_dim);
-
-  free(Ybar);
-  free(mun);
-  FreeMatrix(Sn, n_dim);
-  FreeMatrix(mtemp, n_dim);
-}
