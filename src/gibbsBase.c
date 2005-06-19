@@ -13,6 +13,7 @@
 #include "vector.h"
 #include "subroutines.h"
 #include "rand.h"
+#include "bayes.h"
 #include "sample.h"
 
 /* Normal Parametric Model for 2x2 Tables */
