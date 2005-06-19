@@ -89,7 +89,7 @@ double TruncNorm(
   stlb = (lb-mu)/sqrt(var);  /* standardized lower bound */
   stub = (ub-mu)/sqrt(var);  /* standardized upper bound */
   if(stlb >= stub)
-    error("TurncNorm: lower bound is greater than upper bound\n");
+    error("TruncNorm: lower bound is greater than upper bound\n");
   if(stub<=-2){
     flag=1;
     temp=stub;
