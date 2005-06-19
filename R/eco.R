@@ -22,13 +22,13 @@ eco <- function(formula, data = parent.frame(), N = NULL, supplement = NULL,
   tmp <- checkdata(X,Y, supplement)  
 
   ## fitting the model
-  n.a <- floor((n.draws-burnin)/(thin+1))
-  n.par <- n.a
+  n.store <- floor((n.draws-burnin)/(thin+1))
+  n.par <- n.store
 
   unit.a <- unit.par <- 1
   unit.w <- tmp$n.samp+tmp$samp.X1+tmp$samp.X0 	
 
-  n.w <- n.a * unit.w
+  n.w <- n.store * unit.w
 
   res <- .C("cBaseeco", as.double(tmp$d), as.integer(tmp$n.samp),
             as.integer(n.draws), as.integer(burnin), as.integer(thin+1),
@@ -45,16 +45,16 @@ eco <- function(formula, data = parent.frame(), N = NULL, supplement = NULL,
             PACKAGE="eco")
   
   if (parameter) {
-    mu.post <- cbind(matrix(res$pdSMu0, n.a, unit.par, byrow=TRUE),
-                     matrix(res$pdSMu1, n.a, unit.par, byrow=TRUE)) 
+    mu.post <- cbind(matrix(res$pdSMu0, n.store, unit.par, byrow=TRUE),
+                     matrix(res$pdSMu1, n.store, unit.par, byrow=TRUE)) 
     colnames(mu.post) <- c("mu1", "mu2")
-    Sigma.post <- cbind(matrix(res$pdSSig00, n.a, unit.par, byrow=TRUE), 
-                        matrix(res$pdSSig01, n.a, unit.par, byrow=TRUE),
-                        matrix(res$pdSSig11, n.a, unit.par, byrow=TRUE))
+    Sigma.post <- cbind(matrix(res$pdSSig00, n.store, unit.par, byrow=TRUE), 
+                        matrix(res$pdSSig01, n.store, unit.par, byrow=TRUE),
+                        matrix(res$pdSSig11, n.store, unit.par, byrow=TRUE))
     colnames(Sigma.post) <- c("Sigma11", "Sigma12", "Sigma22")
   }
-  W1.post <- matrix(res$pdSW1, n.a, unit.w, byrow=TRUE)[,tmp$order.old]
-  W2.post <- matrix(res$pdSW2, n.a, unit.w, byrow=TRUE)[,tmp$order.old]
+  W1.post <- matrix(res$pdSW1, n.store, unit.w, byrow=TRUE)[,tmp$order.old]
+  W2.post <- matrix(res$pdSW2, n.store, unit.w, byrow=TRUE)[,tmp$order.old]
   
   res.out <- list(call = call, X = X, Y = Y, N = N, W1 = W1.post, W2 =
                   W2.post, burin = burnin, thin = thin, nu0 = nu0,
