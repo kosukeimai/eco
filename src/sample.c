@@ -181,7 +181,7 @@ void rMHrc(
 	exceed++;
     i++;
     if (i > maxit)
-      error("rMHrc: the algorithm failed because of bounds are too short.")
+      error("rMHrc: the algorithm failed because of bounds are too short.");
   }
 
   /* calcualte W and its logit transformation */
