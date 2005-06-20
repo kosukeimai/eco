@@ -152,8 +152,7 @@ void rMH(
 
 /* sample W via MH for RxC table */
 void rMHrc(
-	   double *Sample,         /* sample of W_i */                 
-	   double *W,              /* previous draws */
+	   double *W,              /* W */
 	   double *X,              /* X_i */
 	   double Y,               /* Y_i */
 	   double *minZ,           /* lower bound for Z */
@@ -164,6 +163,7 @@ void rMHrc(
 {
   int i, j, exceed, maxit = 100000;
   double dens1, dens2, ratio;
+  double *Sample = doubleArray(n_dim);
   double *param = doubleArray(n_dim);
   double *vtemp = doubleArray(n_dim);
   double *vtemp1 = doubleArray(n_dim);
@@ -206,6 +206,7 @@ void rMHrc(
     for (j = 0; j < n_dim; j++)
       Sample[j] = W[j];
   
+  free(Sample);
   free(param);
   free(vtemp);
   free(vtemp1);
