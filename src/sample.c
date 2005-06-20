@@ -58,7 +58,7 @@ void rGrid(
 
 }
 
-/* preparation for Grid */\
+/* preparation for Grid */
 void GridPrep(
 	      double **W1g,  /* grids holder for W1 */
 	      double **W2g,  /* grids holder for W2 */
