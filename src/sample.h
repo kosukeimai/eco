@@ -11,5 +11,5 @@ void GridPrep(double **W1g, double **W2g, double **X, double *maxW1,
 	      double *minW1, int *n_grid, int n_samp, int n_step);
 void rMH(double *W, double *XY, double W1min, double W1max, 
 	 double *mu, double **InvSigma, int n_dim);
-void rMHrc(double *Sample, double *W, double *XY, double *Zmin, 
-	   double *Zmax, double *mu, double **InvSigma, int n_dim);
+void rMHrc(double *Sample, double *W, double *X, double Y, double *minZ, 
+	   double *maxZ, double *mu, double **InvSigma, int n_dim);

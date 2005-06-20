@@ -154,9 +154,10 @@ void rMH(
 void rMHrc(
 	   double *Sample,         /* sample of W_i */                 
 	   double *W,              /* previous draws */
-	   double *XY,             /* X_i and Y_i: [X Y] */
-	   double *Zmin,           /* lower bound for Z */
-	   double *Zmax,           /* upper bound for Z */
+	   double *X,              /* X_i */
+	   double Y,               /* Y_i */
+	   double *minZ,           /* lower bound for Z */
+	   double *maxZ,           /* upper bound for Z */
 	   double *mu,             /* mean vector for normal */ 
 	   double **InvSigma,      /* Inverse covariance matrix for normal */
 	   int n_dim)              /* dimension of parameters */
@@ -168,7 +169,7 @@ void rMHrc(
   double *vtemp1 = doubleArray(n_dim);
   
   /* set Dirichlet parameter to 1 */
-  for (j=0; j<n_dim; j++)
+  for (j = 0; j < n_dim; j++)
     param[j] = 1.0;
 
   /* Sample a candidate draw for W */
@@ -176,8 +177,8 @@ void rMHrc(
   while (exceed > 0) {
     rDirich(vtemp, param, n_dim);
     exceed = 0;
-    for (j=0; j<n_dim; j++) 
-      if (vtemp[j] > Zmax[j] || vtemp[j] < Zmin[j])
+    for (j = 0; j < n_dim; j++) 
+      if (vtemp[j] > maxZ[j] || vtemp[j] < minZ[j])
 	exceed++;
     i++;
     if (i > maxit)
@@ -185,10 +186,10 @@ void rMHrc(
   }
 
   /* calcualte W and its logit transformation */
-  for (j=0; j<n_dim; j++) {
-    Sample[j]=vtemp[j]*XY[n_dim]/XY[j];
-    vtemp[j]=log(Sample[j])-log(1-Sample[j]);
-    vtemp1[j]=log(W[j])-log(1-W[j]);
+  for (j = 0; j < n_dim; j++) {
+    Sample[j] = vtemp[j]*Y/X[j];
+    vtemp[j] = log(Sample[j])-log(1-Sample[j]);
+    vtemp1[j] = log(W[j])-log(1-W[j]);
   }
   
   /* acceptance ratio */
@@ -202,8 +203,8 @@ void rMHrc(
   
   /* reject */
   if (ratio < unif_rand()) 
-    for (j=0; j<n_dim; j++)
-      Sample[j]=W[j];
+    for (j = 0; j < n_dim; j++)
+      Sample[j] = W[j];
   
   free(param);
   free(vtemp);
