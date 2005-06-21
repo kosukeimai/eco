@@ -201,10 +201,10 @@ void rMHrc(
   }
   ratio=fmin2(1, exp(dens1-dens2));
   
-  /* reject */
-  if (ratio < unif_rand()) 
+  /* accept */
+  if (unif_rand() < ratio) 
     for (j = 0; j < n_dim; j++)
-      Sample[j] = W[j];
+      W[j] = Sample[j];
   
   free(Sample);
   free(param);

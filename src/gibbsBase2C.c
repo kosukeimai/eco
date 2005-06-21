@@ -10,6 +10,7 @@
 #include <math.h>
 #include <Rmath.h>
 #include <R_ext/Utils.h>
+#include <R.h>
 #include "vector.h"
 #include "subroutines.h"
 #include "rand.h"
@@ -113,7 +114,7 @@ void cBase2C(
         itemp++;
     k++;
     if (k > 100000)
-      error("gibbs sampler cannot start because bounds are too short.");
+      error("gibbs sampler cannot start because bounds are too short.\n");
     }
     for (j = 0; j < n_dim; j++) {
       W[i][j] = dvtemp[j]*Y[i]/X[i][j];

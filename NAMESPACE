@@ -6,6 +6,7 @@ export(
        bounds,
        eco, 	
        ecoNP,
+       ecoRC,
        summary.eco,
        print.summary.predict.eco,
        print.summary.eco,
