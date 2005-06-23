@@ -28,6 +28,7 @@ void cBase2C(
 	     int *pin_dim,    /* number of columns */
 	     
 	     /*MCMC draws */
+	     int *reject,      /* whether to use rejection sampling */
 	     int *n_gen,      /* number of gibbs draws */
 	     int *burn_in,    /* number of draws to be burned in */
 	     int *pinth,      /* keep every nth draw */
@@ -114,7 +115,7 @@ void cBase2C(
         itemp++;
     k++;
     if (k > 100000)
-      error("gibbs sampler cannot start because bounds are too short.\n");
+      error("gibbs sampler cannot start because bounds are too tight.\n");
     }
     for (j = 0; j < n_dim; j++) {
       W[i][j] = dvtemp[j]*Y[i]/X[i][j];
@@ -140,7 +141,7 @@ void cBase2C(
   for(main_loop = 0; main_loop < *n_gen; main_loop++){
     /** update W, Wstar given mu, Sigma **/
     for (i = 0; i < n_samp; i++){
-      rMHrc(W[i], X[i], Y[i], minZ[i], maxZ[i], mu, InvSigma, n_dim);
+      rMHrc(W[i], X[i], Y[i], minZ[i], maxZ[i], mu, InvSigma, n_dim, *reject);
       for (j = 0; j < n_dim; j++) 
 	Wstar[i][j] = log(W[i][j])-log(1-W[i][j]);
     }

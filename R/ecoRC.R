@@ -1,5 +1,5 @@
 ecoRC <- function(formula, data = parent.frame(),
-                  mu0 = 0, tau0 = 2, nu0 = 4, S0 = 10,
+                  mu0 = 0, tau0 = 2, nu0 = 4, S0 = 10, reject = TRUE,
                   parameter = TRUE, n.draws = 5000,
                   burnin = 0, thin = 0, verbose = FALSE){ 
   
@@ -30,8 +30,10 @@ ecoRC <- function(formula, data = parent.frame(),
   res <- .C("cBase2C", as.double(X), as.double(Y),
             as.double(tmp$Wmin), as.double(tmp$Wmax),
             as.integer(n.samp), as.integer(C),
+            as.integer(reject),
             as.integer(n.draws), as.integer(burnin),
-            as.integer(thin+1), as.integer(verbose), as.integer(nu0), as.double(tau0),
+            as.integer(thin+1), as.integer(verbose),
+            as.integer(nu0), as.double(tau0),
             as.double(mu0), as.double(S0),
             as.integer(parameter), pdSmu = double(n.store*C),
             pdSSigma = double(n.store*C*(C+1)/2),

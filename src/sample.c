@@ -155,34 +155,49 @@ void rMHrc(
 	   double *W,              /* W */
 	   double *X,              /* X_i */
 	   double Y,               /* Y_i */
-	   double *minZ,           /* lower bound for Z */
-	   double *maxZ,           /* upper bound for Z */
+	   double *minU,           /* lower bound for U */
+	   double *maxU,           /* upper bound for U */
 	   double *mu,             /* mean vector for normal */ 
 	   double **InvSigma,      /* Inverse covariance matrix for normal */
-	   int n_dim)              /* dimension of parameters */
+	   int n_dim,              /* dimension of parameters */
+	   int reject)             /* if 1, use rejection sampling to
+				      draw from the truncated Dirichlet */  
 {
   int i, j, exceed, maxit = 100000;
-  double dens1, dens2, ratio;
+  double dens1, dens2, ratio, dtemp;
   double *Sample = doubleArray(n_dim);
   double *param = doubleArray(n_dim);
   double *vtemp = doubleArray(n_dim);
   double *vtemp1 = doubleArray(n_dim);
   
-  /* set Dirichlet parameter to 1 */
+  /* set parent Dirichlet parameter to 1 */
   for (j = 0; j < n_dim; j++)
     param[j] = 1.0;
 
-  /* Sample a candidate draw for W */
-  i = 0; exceed = 1;
-  while (exceed > 0) {
-    rDirich(vtemp, param, n_dim);
-    exceed = 0;
+  /* Sample a candidate draw of W from truncated Dirichlet */
+  if (reject) { /* rejection sampling */
+    i = 0; exceed = 1;
+    while (exceed > 0) {
+      rDirich(vtemp, param, n_dim);
+      exceed = 0;
+      for (j = 0; j < n_dim; j++) 
+	if (vtemp[j] > maxU[j] || vtemp[j] < minU[j])
+	  exceed++;
+      i++;
+      if (i > maxit)
+	error("rMHrc: rejection algorithm failed because bounds are too tight.\n use the gibbs sampler instead.");
+    }
+  }
+  else { /* gibbs sampler */
     for (j = 0; j < n_dim; j++) 
-      if (vtemp[j] > maxZ[j] || vtemp[j] < minZ[j])
-	exceed++;
-    i++;
-    if (i > maxit)
-      error("rMHrc: the algorithm failed because of bounds are too short.");
+      vtemp[j] = W[j]*X[j]/Y;
+    dtemp = 1.0 - vtemp[n_dim-1];
+    for (j = 0; j < n_dim-1; j++) {
+      dtemp -= vtemp[j];
+      vtemp[j] = runif(minU[j], maxU[j]);
+      dtemp += vtemp[j];
+    }
+    vtemp[n_dim-1] = 1.0 - dtemp;
   }
 
   /* calcualte W and its logit transformation */
