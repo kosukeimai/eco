@@ -12,10 +12,11 @@ bounds <- function(formula, data = parent.frame(), N=NULL){
   if (sum(apply(X, 1, sum) == 1) != n.obs)
     X <- cbind(X, 1-X)
   ## for now, assume Y is a vector and X can be a matrix
-  Wmin <- Wmax <- matrix(NA, ncol = ncol(X), nrow = n.obs)
-  for (i in 1:ncol(X)) {
-    Wmin[,i] <- apply(cbind(0, (X[,i]+Y-1)/X[,i]), 1, max)
-    Wmax[,i] <- apply(cbind(1, Y/X[,1]), 1, min)
-  }
+  Wmin <- Wmax <- array(NA, c(n.obs, ncol(X), ncol(Y)))
+  for (i in 1:ncol(X))
+    for (j in 1:ncol(Y)) {
+      Wmin[,i,j] <- apply(cbind(0, (X[,i]+Y[j]-1)/X[,i]), 1, max)
+      Wmax[,i,j] <- apply(cbind(1, Y[,j]/X[,1]), 1, min)
+    }
   return(list(call = match.call(), Wmin=Wmin, Wmax=Wmax))
 }
