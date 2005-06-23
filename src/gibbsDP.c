@@ -309,13 +309,13 @@ void cDPeco(
   
   for(main_loop=0; main_loop<*n_gen; main_loop++){
     /**update W, Wstar given mu, Sigma only for the unknown W/Wstar**/
+
     for (i=0;i<n_samp;i++){
       if (X[i][1]!=0 && X[i][1]!=1) {
 	if (*Grid) 
 	  rGrid(W[i], W1g[i], W2g[i], n_grid[i], mu[i], InvSigma[i], n_dim);
 	else {
-	  rMH(vtemp, W[i], X[i], minW1[i], maxW1[i],  mu[i], InvSigma[i], n_dim);
-	  W[i][0]=vtemp[0]; W[i][1]=vtemp[1];
+	  rMH(W[i], X[i], minW1[i], maxW1[i],  mu[i], InvSigma[i], n_dim);
 	}
       }
       /*3 compute Wsta_i from W_i*/
