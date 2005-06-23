@@ -26,7 +26,7 @@ ecoNP <- function(formula, data = parent.frame(), supplement = NULL,
     alpha.update <- FALSE
   
   tmp <- checkdata(X,Y, supplement)
- 
+
   ## fitting the model
   n.a <- floor((n.draws-burnin)/(thin+1))
 
