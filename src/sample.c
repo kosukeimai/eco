@@ -121,23 +121,23 @@ void rMH(
 {
   int j;
   double dens1, dens2, ratio;
-  double *Sample=doubleArray(n_dim);
-  double *vtemp=doubleArray(n_dim);
-  double *vtemp1=doubleArray(n_dim);
+  double *Sample = doubleArray(n_dim);
+  double *vtemp = doubleArray(n_dim);
+  double *vtemp1 = doubleArray(n_dim);
   
-  /* draw Sample[0] (W_1) from unif(W1min, W1max) */
-  Sample[0]=W1min+unif_rand()*(W1max-W1min);
-  Sample[1]=XY[1]/(1-XY[0])-Sample[0]*XY[0]/(1-XY[0]);
-  for (j=0; j<n_dim; j++) {
-    vtemp[j]=log(Sample[j])-log(1-Sample[j]);
-    vtemp1[j]=log(W[j])-log(1-W[j]);
+  /* sample W_1 from unif(W1min, W1max) */
+  Sample[0] = runif(W1min, W1max);
+  Sample[1] = XY[1]/(1-XY[0])-Sample[0]*XY[0]/(1-XY[0]);
+  for (j = 0; j < n_dim; j++) {
+    vtemp[j] = log(Sample[j])-log(1-Sample[j]);
+    vtemp1[j] = log(W[j])-log(1-W[j]);
   }
   /* acceptance ratio */
   dens1 = dMVN(vtemp, mu, InvSigma, n_dim, 1) -
     log(Sample[0])-log(Sample[1])-log(1-Sample[0])-log(1-Sample[1]);
   dens2 = dMVN(vtemp1, mu, InvSigma, n_dim, 1) -
     log(W[0])-log(W[1])-log(1-W[0])-log(1-W[1]);
-  ratio=fmin2(1, exp(dens1-dens2));
+  ratio = fmin2(1, exp(dens1-dens2));
   
   /* accept */
   if (unif_rand() < ratio) 
