@@ -125,7 +125,7 @@ void cBaseeco(
       /* min and max for W1 */ 
       minW1[i]=fmax2(0.0, (X[i][0]+X[i][1]-1)/X[i][0]);
       maxW1[i]=fmin2(1.0, X[i][1]/X[i][0]);
-      W[i][0]=(maxW1[i]+minW1[i])/2;
+      W[i][0]=runif(minW1[i], maxW1[i]);
       W[i][1]=(X[i][1]-X[i][0]*W[i][0])/(1-X[i][0]);
     }
     if (X[i][1]==0) 
