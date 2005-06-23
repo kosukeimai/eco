@@ -13,23 +13,27 @@
 #include "vector.h"
 #include "subroutines.h"
 #include "rand.h"
+#include "bayes.h"
 #include "sample.h"
 
 void cDPeco(
 	    /*data input */
 	    double *pdX,     /* data (X, Y) */
 	    int *pin_samp,   /* sample size */
+
 	    /*MCMC draws */
 	    int *n_gen,      /* number of gibbs draws */ 
 	    int *burn_in,    /* number of draws to be burned in */
 	    int *pinth,      /* keep every nth draw */
 	    int *verbose,    /* 1 for output monitoring */
+
 	    /* prior specification*/
 	    int *pinu0,      /* prior df parameter for InvWish */
 	    double *pdtau0,  /* prior scale parameter for Sigma under G0*/ 
 	    double *mu0,     /* prior mean for mu under G0 */
 	    double *pdS0,    /* prior scale for Sigma */
 
+	    /* DP prior specification */
 	    double *alpha0,  /* precision parameter, can be fixed or updated*/
 	    int *pinUpdate,  /* 1 if alpha gets updated */
 	    double *pda0, double *pdb0, /* prior for alpha if alpha updated*/  
@@ -53,7 +57,8 @@ void cDPeco(
            
 	    /* storage */
 	    int *parameter,  /* 1 if save population parameter */
-	    int *Grid,       /* 1 for Grid, 0 for Metropolis */
+	    int *Grid,       /* 1 if Grid algorithm used; \
+				0 if Metropolis algorithm used*/
 
 	    /* storage for Gibbs draws of mu/sigmat*/
 	    double *pdSMu0, double *pdSMu1, 
@@ -65,59 +70,63 @@ void cDPeco(
 	    /* storage for nstar at each Gibbs draw*/
 	    int *pdSn
  	    ){	   
-  
+  /*some integers */
   int n_samp = *pin_samp;    /* sample size */
-  int nu0 = *pinu0;          /* prior parameters */ 
-  double tau0 = *pdtau0;   
-  double a0=*pda0, b0=*pdb0;  
-  int nth=*pinth;  
-  int n_dim=2;               /* The number of covariates */
+  int s_samp = *sur_samp;    /* sample size of survey data */
+  int x1_samp = *sampx1;     /* sample size for X=1 */
+  int x0_samp = *sampx0;     /* sample size for X=0 */
+  int t_samp = n_samp+x1_samp+x0_samp+s_samp; /* total sample size */
+  int nth = *pinth;          /* keep every nth draw */ 
+  int n_dim = 2;             /* dimension */
+  int n_step=1000;           /* The default size of grid step */  
 
-  double **X;	    	     /* The Y and covariates */
-  double **S0;               /* The prior S parameter for InvWish */
+  /*prior parameters */
+  double tau0 = *pdtau0;     /* prior scale */ 
+  int nu0 = *pinu0;          /* prior degree of freedom*/ 
+  double **S0 = doubleMatrix(n_dim,n_dim);/*The prior S parameter for InvWish*/
+  double alpha = *alpha0;      /* precision parameter*/
+  double a0 = *pda0, b0 = *pdb0; /* hyperprior for alpha */ 
 
-  double alpha=*alpha0;      /* precision parameter*/
-  int s_samp= *sur_samp;     /* sample size of survey data */
-  double **S_W;              /* The known W1 and W2 matrix*/
-  double **S_Wstar;          /* The inverse logit transformation of S_W*/
+  /* data */
+  double **X = doubleMatrix(n_samp,n_dim);     /* The Y and covariates */
+  double **W = doubleMatrix(t_samp,n_dim);     /* The W1 and W2 matrix */
+  double **Wstar = doubleMatrix(t_samp,n_dim); /* The pseudo data  */
+  double **S_W = doubleMatrix(s_samp,n_dim);    /* The known W1 and W2 matrix*/
+  double **S_Wstar = doubleMatrix(s_samp,n_dim); /* The logit transformed S_W*/
 
-  int x1_samp=*sampx1;
-  int x0_samp=*sampx0;
+  /* the lower and upper bounds of W_1i */
+  double *minW1 = doubleArray(n_samp); 
+  double *maxW1 = doubleArray(n_samp);
 
-  int t_samp; /*effective sample size of W when survey data available*/
+  /* grids */
+  double **W1g = doubleMatrix(n_samp, n_step); /* grids for W1 */
+  double **W2g = doubleMatrix(n_samp, n_step); /* grids for W2 */
+  int *n_grid = intArray(n_samp);              /* grids size */
 
-  /*bounds condition variables */
-  double **W;            /* The W1 and W2 matrix */
-  double *minW1, *maxW1; /* The lower and upper bounds of W_1i */
-  int n_step=1000;       /* 1/The default size of grid step */  
-  int *n_grid;           /* The number of grids for sampling on tomoline */
-  double **W1g, **W2g;   /* The grids taken for W1 and W2 on tomoline */
-  double *resid;         /* The centralizing vector for grids */
-
+  /* Model parameters */
   /* dirichlet variables */
-  double **Wstar;        /* The pseudo data  */
-                         /* The unidentified parameters */
-  double **Sn;           /* The posterior S parameter for InvWish */
-  double *mun;           /* The posterior mean of mu under G0*/
-  double ***Sigma;       /* The covarince matrix of psi (nsamp,cov,cov)*/
-  double ***InvSigma;    /* The inverse of Sigma*/
-  double **mu;           /* The mean of psi (nsamp,cov)  */
-
-  int *C;    	         /* vector of cluster membership */
+  double **mu = doubleMatrix(t_samp,n_dim); /* The mean matrix  */
+  double ***Sigma = doubleMatrix3D(t_samp,n_dim,n_dim); /*The covarince matrix*/
+  double ***InvSigma = doubleMatrix3D(t_samp,n_dim,n_dim); /* The inverse of Sigma*/
+  
+  double **Sn = doubleMatrix(n_dim,n_dim); /* The posterior S parameter for InvWish */
+  double *mun = doubleArray(n_dim);      /* The posterior mean of mu under G0*/
+ 
   int nstar;		 /* # of clusters with distict theta values */
-  double *q;	         /* Weights used in drawing posterior from Dirichlet */
-  double *qq;            /* cumulative dist of weight vector q */
-  double **S_bvt;        /* The matrix paramter for BVT in q0 part */
+  int *C = intArray(t_samp);    /* vector of cluster membership */
+  double *q = doubleArray(t_samp);/* Weights used in drawing posterior from Dirichlet */
+  double *qq = doubleArray(t_samp); /* cumulative dist of weight vector q */
+  double **S_bvt = doubleMatrix(n_dim,n_dim); /* The matrix paramter for BVT in q0 part */
 
   /* variables defined in remixing step */
-  double **Snj;          /* The posterior S parameter for InvWish */
-  double *munj;          /* The posterior mean of mu under G0*/
+  double **Snj = doubleMatrix(n_dim,n_dim);   /* The posterior S parameter for InvWish */
+  double *munj = doubleArray(n_dim);   /* The posterior mean of mu under G0*/
   int nj;                /* track the number of obs in each cluster */
-  int *sortC;            /* track original obs id */
-  int *indexC;           /* track original obs id */
-  double **Wstarmix;     /* extracted data matrix used in remix step */ 
+  int *sortC = intArray(t_samp);     /* track original obs id */
+  int *indexC = intArray(t_samp);   /* track original obs id */
+  double **Wstarmix = doubleMatrix(t_samp,n_dim);     /* extracted data matrix used in remix step */ 
 
-  int *label;            /* store index values */
+  int *label = intArray(t_samp);        /* store index values */
   double *mu_mix;        /* store mu update from remixing step */
   double **Sigma_mix;    /* store Sigma update from remixing step */
   double **InvSigma_mix; /* store InvSigma update from remixing step */
@@ -131,64 +140,28 @@ void cDPeco(
   double *vtemp;
   double **mtemp, **mtemp1;
 
+  double *resid;         /* The centralizing vector for grids */
+
+  resid=doubleArray(n_samp);
+
+
   /* get random seed */
   GetRNGstate();
 
-  /* defining vectors and matricies */
-  /* data */
-  X=doubleMatrix(n_samp,n_dim);
-  W=doubleMatrix((n_samp+x1_samp+x0_samp+s_samp),n_dim);
-  Wstar=doubleMatrix((n_samp+x1_samp+x0_samp+s_samp),n_dim);
 
-  S_W=doubleMatrix(s_samp,n_dim);
-  S_Wstar=doubleMatrix(s_samp,n_dim);
+    Wstar_bar= doubleArray(n_dim);
 
+  mu_mix= doubleArray(n_dim);
+  Sigma_mix= doubleMatrix(n_dim,n_dim);
+  InvSigma_mix= doubleMatrix(n_dim,n_dim);
 
-  /* bounds */
-  minW1=doubleArray(n_samp);
-  maxW1=doubleArray(n_samp);
-  n_grid=intArray(n_samp);
-  resid=doubleArray(n_samp);
-
-  /*priors*/
-  S0=doubleMatrix(n_dim,n_dim);
-
-  /*posteriors*/
-  Sn=doubleMatrix(n_dim,n_dim);
-  mun=doubleArray(n_dim); 
-
-  /*bounds condition */
-  W1g=doubleMatrix(n_samp, n_step);
-  W2g=doubleMatrix(n_samp, n_step);
-
-  /*Dirichlet variables*/
-  Sigma=doubleMatrix3D((n_samp+x1_samp+x0_samp+s_samp),n_dim,n_dim);
-  InvSigma=doubleMatrix3D((n_samp+x1_samp+x0_samp+s_samp),n_dim,n_dim);
-  mu=doubleMatrix((n_samp+x1_samp+x0_samp+s_samp),n_dim);
-
-  C=intArray((n_samp+x1_samp+x0_samp+s_samp));
-  q=doubleArray((n_samp+x1_samp+x0_samp+s_samp));
-  qq=doubleArray((n_samp+x1_samp+x0_samp+s_samp));
-  S_bvt=doubleMatrix(n_dim,n_dim);
-
-  sortC=intArray((n_samp+x1_samp+x0_samp+s_samp));
-  indexC=intArray((n_samp+x1_samp+x0_samp+s_samp));
-  Wstarmix=doubleMatrix((n_samp+x1_samp+x0_samp+s_samp),n_dim);
-  Snj=doubleMatrix(n_dim,n_dim);
-  munj=doubleArray(n_dim);
- 
-  Wstar_bar=doubleArray(n_dim);
-
-  mu_mix=doubleArray(n_dim);
-  Sigma_mix=doubleMatrix(n_dim,n_dim);
-  InvSigma_mix=doubleMatrix(n_dim,n_dim);
-  label=intArray((n_samp+x1_samp+x0_samp+s_samp));
 
   vtemp=doubleArray(n_dim);
   mtemp=doubleMatrix(n_dim,n_dim);
   mtemp1=doubleMatrix(n_dim,n_dim);
 
-  t_samp=n_samp+x1_samp+x0_samp+s_samp;
+
+  
 
   /* read the data set */
   /** Packing Y, X  **/
