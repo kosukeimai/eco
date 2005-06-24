@@ -15,8 +15,9 @@
 
 \usage{
 eco(formula, data = parent.frame(), N = NULL, supplement = NULL,
-    mu0 = c(0,0), tau0 = 2, nu0 = 4, S0 = diag(10,2), parameter = TRUE,
-    grid = FALSE, n.draws = 5000, burnin = 0, thin = 0, verbose = FALSE)
+    mu0 = c(0,0), tau0 = 2, nu0 = 4, S0 = diag(10,2), mu.start = c(0,0),
+    Sigmastart = diag(10, 2), parameter = TRUE, grid = FALSE,
+    n.draws = 5000, burnin = 0, thin = 0, verbose = FALSE)
 }
 
 \arguments{
@@ -39,7 +40,7 @@ eco(formula, data = parent.frame(), N = NULL, supplement = NULL,
     model. The default is \code{NULL}.
   }      
   \item{mu0}{A \eqn{2 \times 1} numeric vector. The prior mean. The
-    default is \eqn{(0,0)}.
+    default is \code{c(0,0)}.
   } 
   \item{tau0}{A positive integer. The prior scale parameter. The default
     is \code{2}. 
@@ -49,6 +50,13 @@ eco(formula, data = parent.frame(), N = NULL, supplement = NULL,
   } 
   \item{S0}{A \eqn{2 \times 2} numeric matrix, representing a positive
     definite prior scale matrix. The default is \code{diag(10,2)}. 
+  } 
+  \item{mu.start}{A \eqn{2 \times 1} numeric vector. The starting values
+    of the mean. The default is \code{c(0,0)}.
+  }
+  \item{Sigma.start}{A \eqn{2 \times 2} numeric matrix, representing a
+    positive definite matrix for a starting value of the variance
+    matrix. The default is \code{diag(10,2)}.
   } 
   \item{parameter}{Logical. If \code{TRUE}, the Gibbs draws of the population
     parameters such as mu and sigma are returned. The default is \code{TRUE}.
