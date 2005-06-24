@@ -33,6 +33,8 @@ void cBaseeco(
 	      double *pdtau0,  /* prior scale parameter for Sigma */
 	      double *mu0,     /* prior mean for mu */
 	      double *pdS0,    /* prior scale for Sigma */
+	      double *mustart, /* starting values for mu */
+	      double *Sigmastart, /* starting values for Sigma */
 
 	      /*incorporating survey data */
 	      int *survey,     /*1 if survey data available (set of W_1, W_2) */
@@ -175,11 +177,12 @@ void cBaseeco(
   if (*Grid) 
     GridPrep(W1g, W2g, X, maxW1, minW1, n_grid, n_samp, n_step);
     
-  /* initialize vales of mu and Sigma */
+  /* starting vales of mu and Sigma */
+  itemp = 0;
   for(j=0;j<n_dim;j++){
-    mu[j]=mu0[j];
+    mu[j] = mustart[j];
     for(k=0;k<n_dim;k++)
-      Sigma[j][k]=S0[j][k];
+      Sigma[j][k]=Sigmastart[itemp++];
   }
   dinv(Sigma, n_dim, InvSigma);
   

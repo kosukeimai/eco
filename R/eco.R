@@ -1,5 +1,6 @@
 eco <- function(formula, data = parent.frame(), N = NULL, supplement = NULL,
                 mu0 = c(0,0), tau0 = 2, nu0 = 4, S0 = diag(10,2),
+                mu.start = c(0,0), Sigma.start = diag(10,2),
                 parameter = TRUE, grid = FALSE, n.draws = 5000,
                 burnin = 0, thin = 0, verbose = FALSE){ 
 
@@ -33,7 +34,8 @@ eco <- function(formula, data = parent.frame(), N = NULL, supplement = NULL,
   res <- .C("cBaseeco", as.double(tmp$d), as.integer(tmp$n.samp),
             as.integer(n.draws), as.integer(burnin), as.integer(thin+1),
             as.integer(verbose), as.integer(nu0), as.double(tau0),
-            as.double(mu0), as.double(S0), as.integer(tmp$survey.yes),
+            as.double(mu0), as.double(S0), as.double(mu.start),
+            as.double(Sigma.start), as.integer(tmp$survey.yes),
             as.integer(tmp$survey.samp), as.double(tmp$survey.data),
             as.integer(tmp$X1type), as.integer(tmp$samp.X1),
             as.double(tmp$X1.W1), as.integer(tmp$X0type),
