@@ -26,6 +26,7 @@ ecoNP <- function(formula, data = parent.frame(), supplement = NULL,
     alpha.update <- FALSE
   
   tmp <- checkdata(X,Y, supplement)
+  bdd <- bounds(formula, data=data)
 
   ## fitting the model
   n.a <- floor((n.draws-burnin)/(thin+1))
@@ -45,7 +46,8 @@ ecoNP <- function(formula, data = parent.frame(), supplement = NULL,
             as.double(tmp$survey.data), as.integer(tmp$X1type),
             as.integer(tmp$samp.X1), as.double(tmp$X1.W1),
             as.integer(tmp$X0type), as.integer(tmp$samp.X0),
-            as.double(tmp$X0.W2),
+            as.double(tmp$X0.W2), 
+	    as.double(bdd$Wmin[,1]), as.double(bdd$Wmax[,1]), 
             as.integer(parameter), as.integer(grid),
             pdSMu0=double(n.par), pdSMu1=double(n.par),
             pdSSig00=double(n.par), pdSSig01=double(n.par),
