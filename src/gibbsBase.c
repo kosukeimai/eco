@@ -52,6 +52,9 @@ void cBaseeco(
 	      int *sampx0,     /* number X=0 type areas */
 	      double *x0_W2,   /* values of W_2 for X0 type areas */
 
+	      /* bounds of W1 */
+	      double *minW1, double *maxW1,
+
 	      /* storage */
 	      int *parameter,  /* 1 if save population parameter */
 	      int *Grid,       /* 1 if Grid algorithm is used; 0 for
@@ -87,10 +90,6 @@ void cBaseeco(
   double **S_W = doubleMatrix(s_samp, n_dim);     /* The known W1 and W2 matrix*/
   double **S_Wstar = doubleMatrix(s_samp, n_dim); /* logit transformed S_W*/
 
-  /* The lower and upper bounds of W_1i */
-  double *minW1 = doubleArray(n_samp);
-  double *maxW1 = doubleArray(n_samp);    
-
   /* grids */
   double **W1g = doubleMatrix(n_samp, n_step);    /* grids for W1 */
   double **W2g = doubleMatrix(n_samp, n_step);    /* grids for W2 */
@@ -121,12 +120,9 @@ void cBaseeco(
     for (i = 0; i < n_samp; i++) 
       X[i][j] = pdX[itemp++];
 
-  /* calculate bounds, initialize W, Wstar for n_samp */
+  /* Initialize W, Wstar for n_samp */
   for (i=0; i< n_samp; i++) {
     if (X[i][1]!=0 && X[i][1]!=1) {
-      /* min and max for W1 */ 
-      minW1[i]=fmax2(0.0, (X[i][0]+X[i][1]-1)/X[i][0]);
-      maxW1[i]=fmin2(1.0, X[i][1]/X[i][0]);
       W[i][0]=runif(minW1[i], maxW1[i]);
       W[i][1]=(X[i][1]-X[i][0]*W[i][0])/(1-X[i][0]);
     }
@@ -263,8 +259,6 @@ void cBaseeco(
   FreeMatrix(Wstar, t_samp);
   FreeMatrix(S_W, s_samp);
   FreeMatrix(S_Wstar, s_samp);
-  free(minW1);
-  free(maxW1);
   FreeMatrix(S0, n_dim);
   FreeMatrix(W1g, n_samp);
   FreeMatrix(W2g, n_samp);
