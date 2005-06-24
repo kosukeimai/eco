@@ -54,7 +54,10 @@ void cDPeco(
 				W_2 known, W_1 unknown */
 	    int *sampx0,     /* number X=0 type areas */
 	    double *x0_W2,   /* values of W_2 for X0 type areas */
-           
+
+	    /* bounds of W1 */
+	    double *minW1, double *maxW1,
+
 	    /* storage */
 	    int *parameter,  /* 1 if save population parameter */
 	    int *Grid,       /* 1 if Grid algorithm used; \
@@ -93,10 +96,6 @@ void cDPeco(
   double **Wstar = doubleMatrix(t_samp,n_dim); /* The pseudo data  */
   double **S_W = doubleMatrix(s_samp,n_dim);    /* The known W1 and W2 matrix*/
   double **S_Wstar = doubleMatrix(s_samp,n_dim); /* The logit transformed S_W*/
-
-  /* the lower and upper bounds of W_1i */
-  double *minW1 = doubleArray(n_samp); 
-  double *maxW1 = doubleArray(n_samp);
 
   /* grids */
   double **W1g = doubleMatrix(n_samp, n_step); /* grids for W1 */
@@ -148,12 +147,9 @@ void cDPeco(
   for (j = 0; j < n_dim; j++) 
     for (i = 0; i < n_samp; i++) X[i][j] = pdX[itemp++];
 
-  /*calcualte bounds and intialize W, Wsatr for n_samp */
+  /*Intialize W, Wsatr for n_samp */
   for (i=0; i< n_samp; i++) {
     if (X[i][1]!=0 && X[i][1]!=1) {
-      /* min and max for W1 */ 
-      minW1[i]=fmax2(0.0, (X[i][0]+X[i][1]-1)/X[i][0]);
-      maxW1[i]=fmin2(1.0, X[i][1]/X[i][0]);
       W[i][0]=runif(minW1[i], maxW1[i]);
       W[i][1]=(X[i][1]-X[i][0]*W[i][0])/(1-X[i][0]);
     }
@@ -177,7 +173,10 @@ void cDPeco(
   if (*x0==1)
     for (i=0; i<x0_samp; i++) {
       W[(n_samp+x1_samp+i)][1]=x0_W2[i];
-      if (W[(n_samp+x1_samp+i)][1]==0) W[(n_samp+x1_samp+i)][1]=0.0001;
+      if (W[(n_samp+x1_samp+  /* the lower and upper bounds of W_1i */
+
+
+i)][1]==0) W[(n_samp+x1_samp+i)][1]=0.0001;
       if (W[(n_samp+x1_samp+i)][1]==1) W[(n_samp+x1_samp+i)][1]=0.9999;
       Wstar[(n_samp+x1_samp+i)][1]=log(W[(n_samp+x1_samp+i)][1])-log(1-W[(n_samp+x1_samp+i)][1]);
     }
@@ -412,8 +411,6 @@ void cDPeco(
   FreeMatrix(Wstar, t_samp);
   FreeMatrix(S_W, s_samp);
   FreeMatrix(S_Wstar, s_samp);
-  free(minW1);
-  free(maxW1);
   FreeMatrix(W1g, n_samp);
   FreeMatrix(W2g, n_samp);
   free(n_grid);
