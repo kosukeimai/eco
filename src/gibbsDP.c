@@ -140,6 +140,7 @@ void cDPeco(
   double *vtemp = doubleArray(n_dim);
   double **mtemp = doubleMatrix(n_dim,n_dim); 
   double **mtemp1 = doubleMatrix(n_dim,n_dim); 
+  double **onedata = doubleMatrix(1, n_dim);
 
   double *resid;         /* The centralizing vector for grids */
   resid=doubleArray(n_samp);
@@ -280,7 +281,8 @@ void cDPeco(
         W[n_samp+x1_samp+i][0]=exp(Wstar[n_samp+x1_samp+i][0])/(1+exp(Wstar[n_samp+x1_samp+i][0]));
     }
 
-  /**updating mu, Sigma given Wstar uisng effective sample size t_samp**/
+  /**updating mu, Sigma given Wstar uisng effective sample size W_star**/
+
   for (i=0; i<t_samp; i++){
        /* generate weight vector q */
        dtemp=0;
@@ -304,11 +306,15 @@ void cDPeco(
        while (dtemp > qq[j]) j++;
        /** Dirichlet update Sigma_i, mu_i|Sigma_i **/
        if (j==i){
+	 /* replace this with NIWUpdate as well */
 	 /*1. draw Sigma_i from Invwish(nun, Sn^-1) with E(Sigma_i)=Sn/(nun-3)*/
 	 /*   draw InvSigma_i from Wish(nun, Sn^-1) */
 	 /*2. draw mu_i from N(mun, Sigma_i) with Sigma_i/=taun */
 	 /*3. also update c[i]=nstar*/
-	 for (k=0; k<n_dim; k++)
+	 onedata[0][0] = Wstar[i][0];
+	 onedata[0][1] = Wstar[i][1];
+	 NIWupdate(onedata, mu[i], Sigma[i], InvSigma[i], mu0, tau0,nu0, S0, 1, n_dim);
+	 /* temp	 for (k=0; k<n_dim; k++)
 	   for (l=0; l<n_dim; l++)
 	     Sn[k][l]=S0[k][l]+tau0*(Wstar[i][k]-mu0[k])*(Wstar[i][l]-mu0[l])/(tau0+1);
 	 dinv(Sn, n_dim, mtemp);
@@ -318,7 +324,8 @@ void cDPeco(
 	   mun[k]=(tau0*mu0[k]+Wstar[i][k])/(tau0+1);
 	   for (l=0;l<n_dim;l++)  mtemp[k][l]=Sigma[i][k][l]/(tau0+1);
 	 }
-	 rMVN(mu[i], mun, mtemp, n_dim);
+	 rMVN(mu[i], mun, mtemp, n_dim); */
+
 	 C[i]=nstar;
 	 nstar++;
        }
@@ -344,11 +351,11 @@ void cDPeco(
   nstar=0;
   i=0;
   while (i<t_samp){
-    /*initialize the vector and matrix */
+    /*initialize the vector and matrix 
     for(k=0; k<n_dim; k++) {
       Wstar_bar[k]=0;
       for(l=0;l<n_dim;l++) Snj[k][l]=S0[k][l];
-    }
+      } tempout */
 
     j=sortC[i]; /*saves the first element in a block of same values */
     nj=0; /* counter for a block of same values */
@@ -358,7 +365,7 @@ void cDPeco(
       label[nj]=indexC[i];
       for (k=0; k<n_dim; k++) {
 	Wstarmix[nj][k]=Wstar[label[nj]][k];
-	Wstar_bar[k]+=Wstarmix[nj][k];
+	//tempout	Wstar_bar[k]+=Wstarmix[nj][k];
       }
       nj++;
       i++;
@@ -366,36 +373,40 @@ void cDPeco(
     /* nj records the # of obs in Psimix */
 
     /** posterior update for mu_mix, Sigma_mix based on Psimix **/
-    for (k=0; k<n_dim; k++)
-      Wstar_bar[k]/=nj;
+    NIWupdate(Wstarmix, mu_mix,Sigma_mix, InvSigma_mix, mu0, tau0, nu0, S0, nj, n_dim);     
+    //for (k=0; k<n_dim; k++)
+    //  Wstar_bar[k]/=nj;
     /* compute Snj */
     /*1. first two terms in Snj */
     /* Snj=S0 */
-    for (j=0; j<nj; j++)
+    /* temp   for (j=0; j<nj; j++)
       for (k=0; k<n_dim; k++)
 	for (l=0; l<n_dim; l++)
 	  Snj[k][l]+=(Wstarmix[j][k]-Wstar_bar[k])*(Wstarmix[j][l]-Wstar_bar[l]);
+    */
 
     /*2. plus third term in Snj*/
-    for (k=0;k<n_dim;k++)
+    /* temp  for (k=0;k<n_dim;k++)
       for (l=0;l<n_dim;l++)
 	Snj[k][l]+=tau0*nj*(Wstar_bar[k]-mu0[k])*(Wstar_bar[l]-mu0[l])/(tau0+nj);
-
+    */
 
     /*darw unscaled InvSigma_mix ~Wish(Snj^-1) */
-    dinv(Snj, n_dim, mtemp);
+    /* temp  dinv(Snj, n_dim, mtemp);
     rWish(InvSigma_mix, mtemp, nu0+nj, n_dim);
     dinv(InvSigma_mix, n_dim, Sigma_mix);
-
+    */
     /*2. draw mu_mix from N(munj, Sigma_mix) with Sigma_mix/=(tau0+nj) */
-    for (k=0; k<n_dim; k++){
+    /*temp  for (k=0; k<n_dim; k++){
       munj[k]=(tau0*mu0[k]+nj*Wstar_bar[k])/(tau0+nj);
       for (l=0; l<n_dim; l++)  mtemp[k][l]=Sigma_mix[k][l]/(tau0+nj);
     }
     rMVN(mu_mix, munj, mtemp, n_dim);
+    */
+
 
     /**update mu, Simgat with mu_mix, Sigmat_mix via label**/
-    for (j=0;j<nj;j++){
+     for (j=0;j<nj;j++){
       C[label[j]]=nstar;  /*updating C vector with no gap */
       for (k=0; k<n_dim; k++){
 	mu[label[j]][k]=mu_mix[k];
@@ -404,7 +415,7 @@ void cDPeco(
 	  InvSigma[label[j]][k][l]=InvSigma_mix[k][l];
 	}
       }
-    }
+     }
     nstar++; /*finish update one distinct value*/
   } /* nstar is the number of distinct values */
 
