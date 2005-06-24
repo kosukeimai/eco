@@ -127,60 +127,52 @@ void cDPeco(
   double **Wstarmix = doubleMatrix(t_samp,n_dim);     /* extracted data matrix used in remix step */ 
 
   int *label = intArray(t_samp);        /* store index values */
-  double *mu_mix;        /* store mu update from remixing step */
-  double **Sigma_mix;    /* store Sigma update from remixing step */
-  double **InvSigma_mix; /* store InvSigma update from remixing step */
-  double *Wstar_bar;     /* mean of Psi_nj at remixing step */
+  double *mu_mix = doubleArray(n_dim); /* store mu update from remixing step */
+  double **Sigma_mix = doubleMatrix(n_dim,n_dim);/* store Sigma update from remixing step */
+  double **InvSigma_mix = doubleMatrix(n_dim,n_dim); /* store InvSigma update from remixing step */
+  double *Wstar_bar = doubleArray(n_dim); /* mean of Psi_nj at remixing step */
 
   /* misc variables */
   int i, j, k, l, main_loop;   /* used for various loops */
   int itemp, itempS, itempC, itempA;
   int progress = 1, itempP = ftrunc((double) *n_gen/10);
   double dtemp, dtemp1, dtemp2;
-  double *vtemp;
-  double **mtemp, **mtemp1;
+  double *vtemp = doubleArray(n_dim);
+  double **mtemp = doubleMatrix(n_dim,n_dim); 
+  double **mtemp1 = doubleMatrix(n_dim,n_dim); 
 
   double *resid;         /* The centralizing vector for grids */
-
   resid=doubleArray(n_samp);
-
 
   /* get random seed */
   GetRNGstate();
 
-
-    Wstar_bar= doubleArray(n_dim);
-
-  mu_mix= doubleArray(n_dim);
-  Sigma_mix= doubleMatrix(n_dim,n_dim);
-  InvSigma_mix= doubleMatrix(n_dim,n_dim);
-
-
-  vtemp=doubleArray(n_dim);
-  mtemp=doubleMatrix(n_dim,n_dim);
-  mtemp1=doubleMatrix(n_dim,n_dim);
-
-
-  
-
-  /* read the data set */
-  /** Packing Y, X  **/
-  itemp = 0;
-  for (j = 0; j < n_dim; j++) 
-    for (i = 0; i < n_samp; i++) X[i][j] = pdX[itemp++];
-
-  /* priors under G0*/
+  /* read priors under G0*/
   itemp=0;
   for(k=0;k<n_dim;k++)
     for(j=0;j<n_dim;j++) S0[j][k]=pdS0[itemp++];
 
-  for (j=0; j<n_dim; j++)
-    for (i=0; i<n_samp; i++) {
-      W[i][j]=0;
-      Wstar[i][j]=0;
-      if (X[i][1]==0) W[i][j]=0.0001;
-      else if (X[i][1]==1) W[i][j]=0.9999;
+  /* read the data set */
+  itemp = 0;
+  for (j = 0; j < n_dim; j++) 
+    for (i = 0; i < n_samp; i++) X[i][j] = pdX[itemp++];
+
+  /*calcualte bounds and intialize W, Wsatr for n_samp */
+  for (i=0; i< n_samp; i++) {
+    if (X[i][1]!=0 && X[i][1]!=1) {
+      /* min and max for W1 */ 
+      minW1[i]=fmax2(0.0, (X[i][0]+X[i][1]-1)/X[i][0]);
+      maxW1[i]=fmin2(1.0, X[i][1]/X[i][0]);
+      W[i][0]=runif(minW1[i], maxW1[i]);
+      W[i][1]=(X[i][1]-X[i][0]*W[i][0])/(1-X[i][0]);
     }
+    if (X[i][1]==0) 
+      for (j=0; j<n_dim; j++) W[i][j]=0.0001;
+    if (X[i][1]==1) 
+      for (j=0; j<n_dim; j++) W[i][j]=0.9999;
+    for (j=0; j<n_dim; j++)
+      Wstar[i][j]=log(W[i][j])-log(1-W[i][j]);
+  }
 
   /*read homeogenous areas information */
   if (*x1==1)
@@ -217,45 +209,10 @@ void cDPeco(
   itempS=0; /* counter for storage */
   itempC=0; /* counter to control nth draw */
 
-  /*initialize W1g and W2g */
-  for(i=0; i<n_samp; i++)
-    for (j=0; j<n_step; j++){
-      W1g[i][j]=0;
-      W2g[i][j]=0;
-    }
+  /* Calcualte grids */
 
-  /*** calculate bounds and grids ***/
-  dtemp=(double)1/n_step;
-  for(i=0;i<n_samp;i++) {
-    if (X[i][1]!=0 && X[i][1]!=1) {
-      /* min and max for W1 */
-      minW1[i]=fmax2(0.0, (X[i][0]+X[i][1]-1)/X[i][0]);
-      maxW1[i]=fmin2(1.0, X[i][1]/X[i][0]);
-      W[i][0]=(maxW1[i]+minW1[i])/2;
-      W[i][1]=(X[i][1]-X[i][0]*W[i][0])/(1-X[i][0]);
-      /* number of grid points */
-      /* note: 1/n_step is the length of the grid */
-      if ((maxW1[i]-minW1[i]) > (2*dtemp)) {
-        n_grid[i]=ftrunc((maxW1[i]-minW1[i])*n_step);
-        resid[i]=(maxW1[i]-minW1[i])-n_grid[i]*dtemp;
-        j=0;
-        while (j<n_grid[i]) {
-          W1g[i][j]=minW1[i]+(j+1)*dtemp-(dtemp+resid[i])/2;
-          if ((W1g[i][j]-minW1[i])<resid[i]/2) W1g[i][j]+=resid[i]/2;
-	  if ((maxW1[i]-W1g[i][j])<resid[i]/2) W1g[i][j]-=resid[i]/2;
-	  W2g[i][j]=(X[i][1]-X[i][0]*W1g[i][j])/(1-X[i][0]);
-	  j++;
-        }
-      }
-      else {
-        W1g[i][0]=minW1[i]+(maxW1[i]-minW1[i])/3;
-        W2g[i][0]=(X[i][1]-X[i][0]*W1g[i][0])/(1-X[i][0]);
-        W1g[i][1]=minW1[i]+2*(maxW1[i]-minW1[i])/3;
-        W2g[i][1]=(X[i][1]-X[i][0]*W1g[i][1])/(1-X[i][0]);
-        n_grid[i]=2;
-      }
-    }
-  }
+  if (*Grid)
+    GridPrep(W1g,W2g, X, maxW1, minW1, n_grid, n_samp, n_step);
 
   /* parmeters for Bivaraite t-distribution-unchanged in MCMC */
   for (j=0;j<n_dim;j++)
