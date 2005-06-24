@@ -25,7 +25,7 @@ void cBase2C(
 	     double *pdWmin,  /* lower bounds */
 	     double *pdWmax,  /* uppwer bounds */
 	     int *pin_samp,   /* sample size */
-	     int *pin_dim,    /* number of columns */
+	     int *pin_col,    /* number of columns */
 	     
 	     /*MCMC draws */
 	     int *reject,      /* whether to use rejection sampling */
@@ -50,26 +50,26 @@ void cBase2C(
   /* some integers */
   int n_samp = *pin_samp;    /* sample size */
   int nth = *pinth;          /* keep every pth draw */
-  int n_dim = *pin_dim;      /* dimension */
+  int n_col = *pin_col;      /* dimension */
 
   /* prior parameters */ 
   double tau0 = *pdtau0;                          /* prior scale */
   int nu0 = *pinu0;                               /* prior degrees of freedom */   
-  double **S0 = doubleMatrix(n_dim, n_dim);       /* The prior S parameter for InvWish */
+  double **S0 = doubleMatrix(n_col, n_col);       /* The prior S parameter for InvWish */
 
   /* data */
-  double **X = doubleMatrix(n_samp, n_dim);       /* X */
-  double **W = doubleMatrix(n_samp, n_dim);       /* The W1 and W2 matrix */
-  double **Wstar = doubleMatrix(n_samp, n_dim);   /* logit tranformed W */       
+  double **X = doubleMatrix(n_samp, n_col);       /* X */
+  double **W = doubleMatrix(n_samp, n_col);       /* The W1 and W2 matrix */
+  double **Wstar = doubleMatrix(n_samp, n_col);   /* logit tranformed W */       
 
-  /* The lower and upper bounds of Z = W*X/Y **/
-  double **minZ = doubleMatrix(n_samp, n_dim);
-  double **maxZ = doubleMatrix(n_samp, n_dim);    
+  /* The lower and upper bounds of U = W*X/Y **/
+  double **minU = doubleMatrix(n_samp, n_col);
+  double **maxU = doubleMatrix(n_samp, n_col);    
 
   /* model parameters */
-  double *mu = doubleArray(n_dim);                /* The mean */
-  double **Sigma = doubleMatrix(n_dim, n_dim);    /* The covariance matrix */
-  double **InvSigma = doubleMatrix(n_dim, n_dim); /* The inverse covariance matrix */
+  double *mu = doubleArray(n_col);                /* The mean */
+  double **Sigma = doubleMatrix(n_col, n_col);    /* The covariance matrix */
+  double **InvSigma = doubleMatrix(n_col, n_col); /* The inverse covariance matrix */
 
   /* misc variables */
   int i, j, k, main_loop;   /* used for various loops */
@@ -80,44 +80,44 @@ void cBase2C(
   int itempC = 0; /* control nth draw */
   int progress = 1, itempP = ftrunc((double) *n_gen/10);
   double dtemp, dtemp1;
-  double *param = doubleArray(n_dim);   /* Dirichlet parameters */
-  double *dvtemp = doubleArray(n_dim);
+  double *param = doubleArray(n_col);   /* Dirichlet parameters */
+  double *dvtemp = doubleArray(n_col);
 
   /* get random seed */
   GetRNGstate();
   
   /* read X */
   itemp = 0;
-  for (j = 0; j < n_dim; j++) 
+  for (j = 0; j < n_col; j++) 
     for (i = 0; i < n_samp; i++) 
       X[i][j] = pdX[itemp++];
 
-  /* compute bounds on Z */
+  /* compute bounds on U */
   itemp = 0;
-  for (j = 0; j < n_dim; j++) 
+  for (j = 0; j < n_col; j++) 
     for (i = 0; i < n_samp; i++) 
-      minZ[i][j] = fmax2(0, pdWmin[itemp++]*X[i][j]/Y[i]);
+      minU[i][j] = fmax2(0, pdWmin[itemp++]*X[i][j]/Y[i]);
   itemp = 0;
-  for (j = 0; j < n_dim; j++) 
+  for (j = 0; j < n_col; j++) 
     for (i = 0; i < n_samp; i++) 
-      maxZ[i][j] = fmin2(1, pdWmax[itemp++]*X[i][j]/Y[i]);
+      maxU[i][j] = fmin2(1, pdWmax[itemp++]*X[i][j]/Y[i]);
 
   /* initial values for W */
-  for (j = 0; j < n_dim; j++)
+  for (j = 0; j < n_col; j++)
     param[j] = 1;
   for (i = 0; i < n_samp; i++) {
     k = 0; itemp = 1;
     while (itemp > 0) {
-    rDirich(dvtemp, param, n_dim);
+    rDirich(dvtemp, param, n_col);
     itemp = 0;
-    for (j = 0; j < n_dim; j++)
-      if (dvtemp[j] > maxZ[i][j] || dvtemp[j] < minZ[i][j])
+    for (j = 0; j < n_col; j++)
+      if (dvtemp[j] > maxU[i][j] || dvtemp[j] < minU[i][j])
         itemp++;
     k++;
     if (k > 100000)
       error("gibbs sampler cannot start because bounds are too tight.\n");
     }
-    for (j = 0; j < n_dim; j++) {
+    for (j = 0; j < n_col; j++) {
       W[i][j] = dvtemp[j]*Y[i]/X[i][j];
       Wstar[i][j] = log(W[i][j])-log(1-W[i][j]);
     }
@@ -125,42 +125,42 @@ void cBase2C(
 
   /* read the prior */
   itemp = 0;
-  for(k = 0; k < n_dim; k++)
-    for(j = 0; j < n_dim; j++) 
+  for(k = 0; k < n_col; k++)
+    for(j = 0; j < n_col; j++) 
       S0[j][k] = pdS0[itemp++];
 
   /* initialize vales of mu and Sigma */
-  for(j = 0; j < n_dim; j++){
+  for(j = 0; j < n_col; j++){
     mu[j] = mu0[j];
-    for(k = 0; k < n_dim; k++)
+    for(k = 0; k < n_col; k++)
       Sigma[j][k] = S0[j][k];
   }
-  dinv(Sigma, n_dim, InvSigma);
+  dinv(Sigma, n_col, InvSigma);
   
   /*** Gibbs sampler! ***/
   for(main_loop = 0; main_loop < *n_gen; main_loop++){
     /** update W, Wstar given mu, Sigma **/
     for (i = 0; i < n_samp; i++){
-      rMHrc(W[i], X[i], Y[i], minZ[i], maxZ[i], mu, InvSigma, n_dim, *reject);
-      for (j = 0; j < n_dim; j++) 
+      rMHrc(W[i], X[i], Y[i], minU[i], maxU[i], mu, InvSigma, n_col, *reject);
+      for (j = 0; j < n_col; j++) 
 	Wstar[i][j] = log(W[i][j])-log(1-W[i][j]);
     }
     
     /* update mu, Sigma given wstar using effective sample of Wstar */
-    NIWupdate(Wstar, mu, Sigma, InvSigma, mu0, tau0, nu0, S0, n_samp, n_dim);
+    NIWupdate(Wstar, mu, Sigma, InvSigma, mu0, tau0, nu0, S0, n_samp, n_col);
     
     /*store Gibbs draw after burn-in and every nth draws */      
     if (main_loop>=*burn_in){
       itempC++;
       if (itempC==nth){
-	for (j = 0; j < n_dim; j++) {
+	for (j = 0; j < n_col; j++) {
 	  pdSmu[itempM++]=mu[j];
-	  for (k = 0; k < n_dim; k++)
+	  for (k = 0; k < n_col; k++)
 	    if (j <=k)
 	      pdSSigma[itempS++]=Sigma[j][k];
 	}
 	for(i = 0; i < n_samp; i++)
-	  for (j = 0; j < n_dim; j++)
+	  for (j = 0; j < n_col; j++)
 	    pdSW[itempW++] = W[i][j];
 	itempC=0;
       }
@@ -184,12 +184,13 @@ void cBase2C(
   FreeMatrix(X, n_samp);
   FreeMatrix(W, n_samp);
   FreeMatrix(Wstar, n_samp);
-  FreeMatrix(minZ, n_samp);
-  FreeMatrix(maxZ, n_samp);
-  FreeMatrix(S0, n_dim);
+  FreeMatrix(minU, n_samp);
+  FreeMatrix(maxU, n_samp);
+  FreeMatrix(S0, n_col);
   free(mu);
-  FreeMatrix(Sigma, n_dim);
-  FreeMatrix(InvSigma, n_dim);
+  FreeMatrix(Sigma, n_col);
+  FreeMatrix(InvSigma, n_col);
   free(dvtemp);
+  free(param);
 } /* main */
 
