@@ -1,24 +1,110 @@
-bounds <- function(formula, data = parent.frame(), N=NULL){
+ecoBD <- function(formula, data = parent.frame(), N=NULL){
   tt <- terms(formula)
   attr(tt, "intercept") <- 0
-
+  
   if (is.matrix(eval.parent(call$data)))
     data <- as.data.frame(data)
   X <- model.matrix(tt, data)
   Y <- as.matrix(model.response(model.frame(tt, data = data)))
   N <- eval(call$N, data)
-
   n.obs <- nrow(X)
-  if (sum(apply(X, 1, sum) == 1) != n.obs)
-    X <- cbind(X, 1-X)
-  C <- ncol(X)
-  R <- ncol(Y)
-  Wmin <- Wmax <- array(NA, c(n.obs, C, R))
-  for (i in 1:C)
-    for (j in 1:R) {
-      Wmin[,i,j] <- apply(cbind(0, (X[,i]+Y[,j]-1)/X[,i]), 1, max)
-      Wmax[,i,j] <- apply(cbind(1, Y[,j]/X[,i]), 1, min)
+
+  ## counts
+  if (all(X>1) & all(Y>1)) {
+    if (!is.null(N)) {
+      if (!all(apply(X, 1, sum) == N))
+        X <- cbind(X, N-apply(X, 1, sum))
+      if (!all(apply(Y, 1, sum) == N))
+        Y <- cbind(Y, N-apply(Y, 1, sum))
+      if(any(X<0) || any(Y<0))
+        stop("Invalid inputs for X, Y, or/and N")
     }
-  return(list(call = match.call(), Wmin = if (R>1) Wmin else Wmin[,,1],
-              Wmax = if (R>1) Wmax else Wmax[,,1]))
+    else {
+      if (!all(apply(X, 1, sum) == apply(Y, 1, sum)))
+        stop("X and Y do not sum to the same number. Input N.")
+      N <- apply(X, 1, sum)
+    }
+    C <- ncol(X)
+    R <- ncol(Y)
+    Wmin <- Wmax <- Nmin <- Nmax <- array(NA, c(n.obs, R, C))
+    clab <- rlab <- NULL
+    for (i in 1:R) {
+      clab <- c(clab, paste("c", i, sep=""))
+      rlab <- c(rlab, paste("r", i, sep=""))
+      for (j in 1:C) {
+        Nmin[,i,j] <- apply(cbind(0, X[,j]+Y[,i]-N), 1, max)
+        Nmax[,i,j] <- apply(cbind(Y[,i], X[,j]), 1, min)
+        Wmin[,i,j] <- Nmin[,i,j]/X[,j]
+        Wmax[,i,j] <- Nmax[,i,j]/X[,j]
+      }
+    }
+    dimnames(Wmin) <- dimnames(Wmax) <- dimnames(Nmin) <-
+      dimnames(Nmax) <-
+        list(if (is.null(rownames(X))) 1:n.obs else rownames(X),
+             rlab, clab)
+  }
+  else { ## proportions
+    if (sum(apply(X, 1, sum) == 1) != n.obs)
+      X <- cbind(X, 1-X)
+    if (sum(apply(Y, 1, sum) == 1) != n.obs)
+      Y <- cbind(Y, 1-Y)
+    C <- ncol(X)
+    R <- ncol(Y)
+    Wmin <- Wmax <- array(NA, c(n.obs, R, C))
+    clab <- rlab <- NULL
+    for (i in 1:R) {
+      clab <- c(clab, paste("c", i, sep=""))
+      rlab <- c(rlab, paste("r", i, sep=""))
+      for (j in 1:C) {
+        Wmin[,i,j] <- apply(cbind(0, (X[,j]+Y[,i]-1)/X[,j]), 1, max)
+        Wmax[,i,j] <- apply(cbind(1, Y[,i]/X[,j]), 1, min)
+      }
+    }
+    dimnames(Wmin) <- dimnames(Wmax) <-
+      list(if (is.null(rownames(X))) 1:n.obs else rownames(X),
+           rlab, clab)
+    if (!is.null(N)) {
+      Nmin <- Nmax <- array(NA, c(n.obs, R, C), dimnames =
+                            dimnames(Wmin))
+      for (i in 1:R) 
+        for (j in 1:C) {
+          Nmin[,i,j] <- Wmin[,i,j]*X[,j]*N
+          Nmax[,i,j] <- Wmax[,i,j]*X[,j]*N
+        }
+    }
+    else
+      Nmin <- Nmax <- NULL
+  }
+
+  ## aggregate bounds
+  aggWmin <- aggWmax <- matrix(NA, R, C, dimnames =
+                               list(dimnames(Wmin)[[2]], dimnames(Wmin)[[3]]))
+  if (is.null(N))
+    for (j in 1:C) {
+      aggWmin[,j] <- apply(Wmin[,,j]*X[,j], 2, mean)
+      aggWmax[,j] <- apply(Wmax[,,j]*X[,j], 2, mean)
+    }
+  else
+    for (j in 1:C) {
+      aggWmin[,j] <- apply(Wmin[,,j]*X[,j], 2, weighted.mean, N)
+      aggWmax[,j] <- apply(Wmax[,,j]*X[,j], 2, weighted.mean, N)
+    }
+
+  if (!is.null(Nmin) & !is.null(Nmax)) {
+    aggNmin <- aggNmax <- matrix(NA, R, C, dimnames =
+                                 list(dimnames(Nmin)[[2]], dimnames(Nmin)[[3]]))
+    for (j in 1:C) {
+      aggNmin[,j] <- apply(Nmin[,,j], 2, sum)
+      aggNmax[,j] <- apply(Nmax[,,j], 2, sum)
+    }
+  }
+  else
+    aggNmin <- aggNmax <- NULL
+    
+  ## output
+  res <- list(call = match.call(), X = X, Y = Y, N = N,
+              aggWmin = aggWmin, aggWmax = aggWmax, aggNmin = aggNmin,
+              aggNmax = aggNmax, Wmin = Wmin, Wmax = Wmax, Nmin = Nmin, Nmax = Nmax)
+  class(res) <- c("ecoBD", "eco")
+  return(res)
 }
