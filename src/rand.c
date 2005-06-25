@@ -72,54 +72,6 @@ double dMVT(
 }
 
 
-/* Sample from a univariate truncated Normal distribution 
-   (truncated both from above and below): 
-   if the range is too far from mu, it uses standard rejection
-   sampling algorithm with exponential envelope function. */ 
-double TruncNorm(
-		 double lb,  /* lower bound */ 
-		 double ub,  /* upper bound */
-		 double mu,  /* mean */
-		 double var  /* variance */
-		 ) {
-
-  double stlb, stub, temp, M, u, z, exp_par;
-  int flag=0;  /* 1 if stlb, stub <-2 */
-  
-  stlb = (lb-mu)/sqrt(var);  /* standardized lower bound */
-  stub = (ub-mu)/sqrt(var);  /* standardized upper bound */
-  if(stlb >= stub)
-    error("TruncNorm: lower bound is greater than upper bound\n");
-  if(stub<=-2){
-    flag=1;
-    temp=stub;
-    stub=-stlb;
-    stlb=-temp;
-  }
-  if(stlb>=2){
-    exp_par=stlb;
-    while(pexp(stub,1/exp_par,1,0) - pexp(stlb,1/exp_par,1,0) < 0.000001) 
-      exp_par/=2.0;
-    if(dnorm(stlb,0,1,1) - dexp(stlb,1/exp_par,1) >=
-       dnorm(stub,0,1,1) - dexp(stub,1/exp_par,1)) 
-      M=exp(dnorm(stlb,0,1,1) - dexp(stlb,1/exp_par,1));
-    else
-      M=exp(dnorm(stub,0,1,1) - dexp(stub,1/exp_par,1));
-    do{ /* sample from Exponential by inverse cdf method */
-      u=unif_rand();
-      z=-log(1-u*(pexp(stub,1/exp_par,1,0)-pexp(stlb,1/exp_par,1,0))
-	     -pexp(stlb,1/exp_par,1,0))/exp_par;
-    }while(unif_rand() > exp(dnorm(z,0,1,1)-dexp(z,1/exp_par,1))/M );  
-    if(flag==1) z=-z;
-  } /* if(stlb>=2) */
-  else{ /* if the range is not extreme */
-    do z=norm_rand();
-    while( z<stlb || z>stub );
-  }/* else */
-  return(z*sqrt(var) + mu); 
-}
-
-
 /* Sample from the MVN dist */
 void rMVN(                      
 	  double *Sample,         /* Vector for the sample */
