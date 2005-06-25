@@ -20,38 +20,39 @@ summary.eco <- function(object, CI=c(2.5, 97.5), parameter=TRUE, long = FALSE, .
   rownames(agg.table) <- c("W1", "W2")
 
   if (class(object)[1]=="eco") { 
-  if (parameter) {
-  param <- cbind(object$mu, invlogit(object$mu), object$Sigma)
-  if (is.null(param))
-    param.table <- NULL
-  else {
-    param.table <- cbind(apply(param, 2, mean), apply(param, 2, sd),
-                         apply(param, 2, quantile, min(CI)/100),
-                         apply(param, 2, quantile, max(CI)/100))
-    colnames(param.table) <- table.names
-    rownames(param.table) <- c("mu1", "mu2", "E(W1)", "E(W2)",
-                               "Sigma11", "Sigma12", "Sigma22")
+    if (parameter) {
+      param <- cbind(invlogit(object$mu), object$mu, object$Sigma)
+      if (is.null(param))
+        param.table <- NULL
+      else {
+        param.table <- cbind(apply(param, 2, mean), apply(param, 2, sd),
+                             apply(param, 2, quantile, min(CI)/100),
+                             apply(param, 2, quantile, max(CI)/100))
+        colnames(param.table) <- table.names
+        rownames(param.table) <- c("E(W1)", "E(W2)", "mu1", "mu2",
+                                   "Sigma11", "Sigma12", "Sigma22")
+      }
+    }
+    else
+      param.table <- NULL
+    if (long) {
+      W1.table <- cbind(apply(object$W1, 2, mean), apply(object$W1, 2, sd),
+                        apply(object$W1, 2, quantile, min(CI)/100),
+                        apply(object$W1, 2, quantile, max(CI)/100))
+      W2.table <- cbind(apply(object$W2, 2, mean), apply(object$W2, 2, sd),
+                        apply(object$W2, 2, quantile, min(CI)/100),
+                        apply(object$W2, 2, quantile, max(CI)/100))
+      colnames(W2.table) <- colnames(W1.table) <- table.names
+      rownames(W1.table) <- rownames(W2.table) <- row.names(object$X)
+    }
+    else
+      W1.table <- W2.table <- NULL
   }
-  }
-  else param.table <- NULL
-  if (long) {
-    W1.table <- cbind(apply(object$W1, 2, mean), apply(object$W1, 2, sd),
-                      apply(object$W1, 2, quantile, min(CI)/100),
-                      apply(object$W1, 2, quantile, max(CI)/100))
-    W2.table <- cbind(apply(object$W2, 2, mean), apply(object$W2, 2, sd),
-                      apply(object$W2, 2, quantile, min(CI)/100),
-                      apply(object$W2, 2, quantile, max(CI)/100))
-    colnames(W2.table) <- colnames(W1.table) <- table.names
-    rownames(W1.table) <- rownames(W2.table) <- row.names(object$X)
-  }
-  else
-    W1.table <- W2.table <- NULL
-}
 
-if (class(object)[1]=="ecoNP") {
- 
-}
-
+  if (class(object)[1]=="ecoNP") {
+    
+  }
+  
   ans <- list(call = object$call, W1.table = W1.table, W2.table = W2.table,
               agg.table = agg.table, param.table = param.table,
               n.draws = n.draws, n.obs = n.obs) 
