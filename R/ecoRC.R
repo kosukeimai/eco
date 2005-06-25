@@ -26,23 +26,24 @@ ecoRC <- function(formula, data = parent.frame(),
   tmp <- bounds(Y ~ X)
   S0 <- diag(S0, C)
   mu0 <- rep(mu0, C)
-  
-  res <- .C("cBase2C", as.double(X), as.double(Y),
-            as.double(tmp$Wmin), as.double(tmp$Wmax),
-            as.integer(n.samp), as.integer(C),
-            as.integer(reject),
-            as.integer(n.draws), as.integer(burnin),
-            as.integer(thin+1), as.integer(verbose),
-            as.integer(nu0), as.double(tau0),
-            as.double(mu0), as.double(S0),
-            as.integer(parameter), pdSmu = double(n.store*C),
-            pdSSigma = double(n.store*C*(C+1)/2),
-            pdSW = double(n.store*n.samp*C), PACKAGE="eco")
 
   res.out <- list(call = call, X = X, Y = Y, Wmin = tmp$Wmin, Wmax = tmp$Wmax)
-  res.out$mu <- matrix(res$pdSmu, n.store, C, byrow=TRUE)
-  res.out$Sigma <- matrix(res$pdSSigma, n.store, C*(C+1)/2, byrow=TRUE)
-  res.out$W <- array(res$pdSW, c(C, n.samp, n.store))
+  if (R == 1) {
+    res <- .C("cBase2C", as.double(X), as.double(Y),
+              as.double(tmp$Wmin), as.double(tmp$Wmax),
+              as.integer(n.samp), as.integer(C),
+              as.integer(reject),
+              as.integer(n.draws), as.integer(burnin),
+              as.integer(thin+1), as.integer(verbose),
+              as.integer(nu0), as.double(tau0),
+              as.double(mu0), as.double(S0),
+              as.integer(parameter), pdSmu = double(n.store*C),
+              pdSSigma = double(n.store*C*(C+1)/2),
+              pdSW = double(n.store*n.samp*C), PACKAGE="eco")
+    res.out$mu <- matrix(res$pdSmu, n.store, C, byrow=TRUE)
+    res.out$Sigma <- matrix(res$pdSSigma, n.store, C*(C+1)/2, byrow=TRUE)
+    res.out$W <- array(res$pdSW, c(C, n.samp, n.store))
+  }
   
   class(res.out) <- c("ecoRC", "eco")
   return(res.out)
