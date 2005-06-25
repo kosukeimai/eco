@@ -23,14 +23,14 @@ ecoRC <- function(formula, data = parent.frame(),
   ## fitting the model
   n.store <- floor((n.draws-burnin)/(thin+1))
   n.par <- R
-  tmp <- bounds(Y ~ X)
+  tmp <- ecBD(formula, data=data)
   S0 <- diag(S0, C)
   mu0 <- rep(mu0, C)
 
   res.out <- list(call = call, X = X, Y = Y, Wmin = tmp$Wmin, Wmax = tmp$Wmax)
   if (R == 1) {
     res <- .C("cBase2C", as.double(X), as.double(Y),
-              as.double(tmp$Wmin), as.double(tmp$Wmax),
+              as.double(tmp$Wmin[,1,]), as.double(tmp$Wmax[,1,]),
               as.integer(n.samp), as.integer(C),
               as.integer(reject),
               as.integer(n.draws), as.integer(burnin),
