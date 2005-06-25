@@ -3,8 +3,8 @@ useDynLib(eco)
 importFrom(MASS, mvrnorm)
 
 export(
-       bounds,
        eco, 	
+       ecoBD,
        ecoNP,
        ecoRC,
        summary.eco,
