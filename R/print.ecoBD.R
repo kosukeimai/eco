@@ -8,7 +8,7 @@ print.ecoBD <- function(x, digits = max(3, getOption("digits") -3), ...)
     print.default(format(x$aggWmax, digits = digits), print.gap = 2, quote =
                   FALSE)
     if (!is.null(x$N))
-      cat("The size of aggregate table:", x$N)
-    cat("\n")
+      cat("\nThe size of aggregate table:", sum(x$N))
+    cat("\n\n")
     invisible(x)
   }
