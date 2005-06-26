@@ -122,8 +122,6 @@ summary(out)
 \value{
   An object of class \code{eco} containing the following elements:
   \item{call}{The matched call.}
-  \item{nonpar}{The logical variable indicating whether the
-    nonparametric model is fit.}
   \item{X}{The row margin, \eqn{X}.}
   \item{Y}{The column margin, \eqn{Y}.}
   \item{nu0}{The prior degrees of freedom.}
