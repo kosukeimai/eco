@@ -1,12 +1,13 @@
 ecoBD <- function(formula, data = parent.frame(), N=NULL){
+  mf <- match.call()
   tt <- terms(formula)
   attr(tt, "intercept") <- 0
   
-  if (is.matrix(eval.parent(call$data)))
+  if (is.matrix(eval.parent(mf$data)))
     data <- as.data.frame(data)
   X <- model.matrix(tt, data)
   Y <- as.matrix(model.response(model.frame(tt, data = data)))
-  N <- eval(call$N, data)
+  N <- eval(mf$N, data)
   n.obs <- nrow(X)
 
   ## counts
@@ -102,9 +103,9 @@ ecoBD <- function(formula, data = parent.frame(), N=NULL){
     aggNmin <- aggNmax <- NULL
     
   ## output
-  res <- list(call = match.call(), X = X, Y = Y, N = N,
-              aggWmin = aggWmin, aggWmax = aggWmax, aggNmin = aggNmin,
-              aggNmax = aggNmax, Wmin = Wmin, Wmax = Wmax, Nmin = Nmin, Nmax = Nmax)
+  res <- list(call = mf, X = X, Y = Y, N = N, aggWmin = aggWmin,
+              aggWmax = aggWmax, aggNmin = aggNmin, aggNmax = aggNmax,
+              Wmin = Wmin, Wmax = Wmax, Nmin = Nmin, Nmax = Nmax)
   class(res) <- c("ecoBD", "eco")
   return(res)
 }
