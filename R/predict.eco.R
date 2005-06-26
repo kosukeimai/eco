@@ -8,7 +8,7 @@ predict.eco <- function(object, newdraw = NULL, subset = NULL,
       stop("Posterior draws of both mu and Sigma must be supplied.")
     object <- newdraw
   }
-  mu <- coefeco(object, subset = subset)
+  mu <- coef(object, subset = subset)
   n.draws <- nrow(mu)
   p <- ncol(mu)
   Sigma <- varcov(object, subset = subset)
