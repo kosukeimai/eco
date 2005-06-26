@@ -1,11 +1,17 @@
-print.eco <- function(x, digits = max(3, getOption("digits") -3), ...)
-  {
-    cat("\nCall:\n", deparse(x$call), "\n\n", sep="")
-    mu <- apply(x$mu, 2, mean)
-    Sigma <- apply(x$Sigma, 2, mean)
-    cat("Parameter estimates (posterior means):\n")
-    print.default(format(c(mu, Sigma), digits = digits), print.gap = 2, quote =
-                  FALSE)
-    cat("\n")
-    invisible(x)
-  }
+print.eco <- function(x, digits = max(3, getOption("digits") -3),
+                      ...){ 
+  cat("\nCall:\n", deparse(x$call), "\n\n", sep="")
+  
+  if (is.null(x$N))
+    N <- rep(1, nrow(x$X))
+  W.mean <- cbind(mean(x$W1 %*% (x$X*N/sum(x$X*N))),
+                  mean(x$W2 %*% ((1-x$X)*N/sum((1-x$X)*N))))
+  colnames(W.mean) <- c("W1", "W2")
+  rownames(W.mean) <- "posterior mean"
+  
+  cat("Aggregate In-sample Estimates:\n\n")
+  print.default(format(W.mean, digits = digits), print.gap = 2, quote =
+                FALSE)
+  cat("\n")
+  invisible(x)
+}
