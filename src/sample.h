@@ -13,4 +13,4 @@ void rMH(double *W, double *XY, double W1min, double W1max,
 	 double *mu, double **InvSigma, int n_dim);
 void rMHrc(double *W, double *X, double Y, double *minU, 
 	   double *maxU, double *mu, double **InvSigma, int n_dim, 
-	   int reject);
+	   int maxit, int reject);

@@ -1,6 +1,6 @@
 ecoRC <- function(formula, data = parent.frame(),
                   mu0 = 0, tau0 = 2, nu0 = 4, S0 = 10, mu.start = 0,
-                  Sigma.start = 1, reject = TRUE, parameter = TRUE,
+                  Sigma.start = 1, reject = TRUE, maxit = 10e6, parameter = TRUE,
                   n.draws = 5000, burnin = 0, thin = 0, verbose = FALSE){ 
   
   ## checking inputs
@@ -33,7 +33,7 @@ ecoRC <- function(formula, data = parent.frame(),
     res <- .C("cBase2C", as.double(X), as.double(Y),
               as.double(tmp$Wmin[,1,]), as.double(tmp$Wmax[,1,]),
               as.integer(n.samp), as.integer(C), as.integer(reject),
-              as.integer(n.draws), as.integer(burnin),
+              as.integer(maxit), as.integer(n.draws), as.integer(burnin),
               as.integer(thin+1), as.integer(verbose),
               as.integer(nu0), as.double(tau0),
               as.double(mu0), as.double(S0), as.double(mu.start),

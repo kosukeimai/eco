@@ -28,7 +28,9 @@ void cBase2C(
 	     int *pin_col,    /* number of columns */
 	     
 	     /*MCMC draws */
-	     int *reject,      /* whether to use rejection sampling */
+	     int *reject,     /* whether to use rejection sampling */
+	     int *maxit,      /* max number of iterations for
+				 rejection sampling */
 	     int *n_gen,      /* number of gibbs draws */
 	     int *burn_in,    /* number of draws to be burned in */
 	     int *pinth,      /* keep every nth draw */
@@ -113,19 +115,31 @@ void cBase2C(
       maxU[i][j] = fmin2(1, pdWmax[itemp++]*X[i][j]/Y[i]);
 
   /* initial values for W */
+  /* rejection sampling */
   for (j = 0; j < n_col; j++)
     param[j] = 1;
   for (i = 0; i < n_samp; i++) {
     k = 0; itemp = 1;
     while (itemp > 0) {
-    rDirich(dvtemp, param, n_col);
-    itemp = 0;
-    for (j = 0; j < n_col; j++)
-      if (dvtemp[j] > maxU[i][j] || dvtemp[j] < minU[i][j])
-        itemp++;
-    k++;
-    if (k > 100000)
-      error("gibbs sampler cannot start because bounds are too tight.\n");
+      rDirich(dvtemp, param, n_col);
+      itemp = 0;
+      for (j = 0; j < n_col; j++)
+	if (dvtemp[j] > maxU[i][j] || dvtemp[j] < minU[i][j])
+	  itemp++;
+      k++;
+      if (k > *maxit) {
+	dtemp = Y[i];
+	dtemp1 = 1;
+	for (j = 0; j < n_col-1; j++) {
+	  W[i][j] = 0.5*(fmax2(0,(X[i][j]/dtemp1+dtemp-1)*dtemp1/X[i][j])+
+			 fmin2(1,dtemp*dtemp1/X[i][j]));
+	  dtemp -= W[i][j]*X[i][j]/dtemp1;
+	  dtemp1 -= X[i][j];
+	  Wstar[i][j] = log(W[i][j])-log(1-W[i][j]);
+	}
+	W[i][n_col-1] = dtemp;
+	Wstar[i][n_col-1] = log(W[i][n_col-1])-log(1-W[i][n_col-1]);
+      }
     }
     for (j = 0; j < n_col; j++) {
       W[i][j] = dvtemp[j]*Y[i]/X[i][j];
@@ -140,10 +154,13 @@ void cBase2C(
       S0[j][k] = pdS0[itemp++];
 
   /*** Gibbs sampler! ***/
+  if (*verbose)
+    Rprintf("Starting Gibbs sampler...\n");
   for(main_loop = 0; main_loop < *n_gen; main_loop++){
     /** update W, Wstar given mu, Sigma **/
     for (i = 0; i < n_samp; i++){
-      rMHrc(W[i], X[i], Y[i], minU[i], maxU[i], mu, InvSigma, n_col, *reject);
+      rMHrc(W[i], X[i], Y[i], minU[i], maxU[i], mu, InvSigma, n_col,
+	    *maxit, *reject);
       for (j = 0; j < n_col; j++) 
 	Wstar[i][j] = log(W[i][j])-log(1-W[i][j]);
     }
