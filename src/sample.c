@@ -189,7 +189,7 @@ void rMHrc(
 	  exceed++;
       i++;
       if (i > maxit)
-	error("rMHrc: rejection algorithm failed because bounds are too tight.\n use the gibbs sampler instead.");
+	error("rMHrc: rejection algorithm failed because bounds are too tight.\n increase maxit or use gibbs sampler instead.");
     }
   }
   else { /* gibbs sampler */

@@ -115,19 +115,20 @@ void cBase2C(
       maxU[i][j] = fmin2(1, pdWmax[itemp++]*X[i][j]/Y[i]);
 
   /* initial values for W */
-  /* rejection sampling */
   for (j = 0; j < n_col; j++)
     param[j] = 1;
   for (i = 0; i < n_samp; i++) {
-    k = 0; itemp = 1;
-    while (itemp > 0) {
+    k = 1; itemp = 1;
+    while (itemp > 0) { /* rejection sampling */
       rDirich(dvtemp, param, n_col);
       itemp = 0;
       for (j = 0; j < n_col; j++)
 	if (dvtemp[j] > maxU[i][j] || dvtemp[j] < minU[i][j])
 	  itemp++;
       k++;
-      if (k > *maxit) {
+      if (k > *maxit) { /* if rejection sampling fails, then use
+			   midpoits of bounds sequentially */
+	itemp = 0;
 	dtemp = Y[i];
 	dtemp1 = 1;
 	for (j = 0; j < n_col-1; j++) {
@@ -135,16 +136,14 @@ void cBase2C(
 			 fmin2(1,dtemp*dtemp1/X[i][j]));
 	  dtemp -= W[i][j]*X[i][j]/dtemp1;
 	  dtemp1 -= X[i][j];
-	  Wstar[i][j] = log(W[i][j])-log(1-W[i][j]);
 	}
 	W[i][n_col-1] = dtemp;
-	Wstar[i][n_col-1] = log(W[i][n_col-1])-log(1-W[i][n_col-1]);
       }
+      else if (itemp == 0)
+	W[i][j] = dvtemp[j]*Y[i]/X[i][j];
     }
-    for (j = 0; j < n_col; j++) {
-      W[i][j] = dvtemp[j]*Y[i]/X[i][j];
+    for (j = 0; j < n_col; j++) 
       Wstar[i][j] = log(W[i][j])-log(1-W[i][j]);
-    }
   }
 
   /* read the prior */
