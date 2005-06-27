@@ -28,3 +28,4 @@ S3method(print, eco)
 S3method(print, ecoBD)
 S3method(print, summary.eco)
 S3method(print, summary.predict.eco)
+
