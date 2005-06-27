@@ -45,9 +45,13 @@ ecoBD <- function(formula, data = parent.frame(), N=NULL){
              rlab, clab)
   }
   else { ## proportions
-    if (sum(apply(X, 1, sum) == 1) != n.obs)
+    if (any(apply(X, 1, sum) > 1.000000001))
+      stop("invalid input for X")
+    else if (any(apply(X, 1, sum) < 0.9999999999))
       X <- cbind(X, 1-X)
-    if (sum(apply(Y, 1, sum) == 1) != n.obs)
+    if (any(apply(Y, 1, sum) > 1.0000000001))
+      stop("invalid input for Y")
+    else if (any(apply(Y, 1, sum) < 0.9999999999))
       Y <- cbind(Y, 1-Y)
     C <- ncol(X)
     R <- ncol(Y)
