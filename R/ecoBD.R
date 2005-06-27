@@ -29,8 +29,9 @@ ecoBD <- function(formula, data = parent.frame(), N=NULL){
     R <- ncol(Y)
     Wmin <- Wmax <- Nmin <- Nmax <- array(NA, c(n.obs, R, C))
     clab <- rlab <- NULL
+    for (j in 1:C) 
+      clab <- c(clab, paste("c", j, sep=""))
     for (i in 1:R) {
-      clab <- c(clab, paste("c", i, sep=""))
       rlab <- c(rlab, paste("r", i, sep=""))
       for (j in 1:C) {
         Nmin[,i,j] <- apply(cbind(0, X[,j]+Y[,i]-N), 1, max)
@@ -47,18 +48,19 @@ ecoBD <- function(formula, data = parent.frame(), N=NULL){
   else { ## proportions
     if (any(apply(X, 1, sum) > 1.000000001))
       stop("invalid input for X")
-    else if (any(apply(X, 1, sum) < 0.9999999999))
+    if (any(apply(X, 1, sum) < 0.9999999999))
       X <- cbind(X, 1-X)
     if (any(apply(Y, 1, sum) > 1.0000000001))
       stop("invalid input for Y")
-    else if (any(apply(Y, 1, sum) < 0.9999999999))
+    if (any(apply(Y, 1, sum) < 0.9999999999))
       Y <- cbind(Y, 1-Y)
     C <- ncol(X)
     R <- ncol(Y)
     Wmin <- Wmax <- array(NA, c(n.obs, R, C))
     clab <- rlab <- NULL
+    for (j in 1:C) 
+      clab <- c(clab, paste("c", j, sep=""))
     for (i in 1:R) {
-      clab <- c(clab, paste("c", i, sep=""))
       rlab <- c(rlab, paste("r", i, sep=""))
       for (j in 1:C) {
         Wmin[,i,j] <- apply(cbind(0, (X[,j]+Y[,i]-1)/X[,j]), 1, max)
