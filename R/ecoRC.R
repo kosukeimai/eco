@@ -24,12 +24,13 @@ ecoRC <- function(formula, data = parent.frame(),
   n.store <- floor((n.draws-burnin)/(thin+1))
   n.par <- R
   tmp <- ecoBD(formula, data=data)
-  S0 <- diag(S0, C)
   mu0 <- rep(mu0, C)
-  Sigma.start <- diag(Sigma.start, C)
+  S0 <- diag(S0, C)
 
   res.out <- list(call = call, X = X, Y = Y, Wmin = tmp$Wmin, Wmax = tmp$Wmax)
   if (R == 1) {
+    mu.start <- rep(mu.start, C)
+    Sigma.start <- diag(Sigma.start, C)
     res <- .C("cBase2C", as.double(X), as.double(Y),
               as.double(tmp$Wmin[,1,]), as.double(tmp$Wmax[,1,]),
               as.integer(n.samp), as.integer(C), as.integer(reject),
@@ -53,6 +54,7 @@ ecoRC <- function(formula, data = parent.frame(),
               as.integer(thin+1), as.integer(verbose),
               as.integer(nu0), as.double(tau0),
               as.double(mu0), as.double(S0),
+              as.double(mu.start), as.double(Sigma.start),
               as.integer(parameter), pdSmu = double(n.store*C),
               pdSSigma = double(n.store*C*(C+1)/2),
               pdSW = double(n.store*n.samp*C), PACKAGE="eco")
