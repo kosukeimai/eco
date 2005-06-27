@@ -39,6 +39,10 @@ void cBase2C(
 	     double *pdtau0,  /* prior scale parameter for Sigma */
 	     double *mu0,     /* prior mean for mu */
 	     double *pdS0,    /* prior scale for Sigma */
+
+	     /* starting values */
+	     double *mu,
+	     double *SigmaStart,
 	     
 	     /* storage */
 	     int *parameter,  /* 1 if save population parameter */
@@ -53,21 +57,20 @@ void cBase2C(
   int n_col = *pin_col;      /* dimension */
 
   /* prior parameters */ 
-  double tau0 = *pdtau0;                          /* prior scale */
+  double tau0 = *pdtau0;                          /* prior scale for mu */
   int nu0 = *pinu0;                               /* prior degrees of freedom */   
-  double **S0 = doubleMatrix(n_col, n_col);       /* The prior S parameter for InvWish */
+  double **S0 = doubleMatrix(n_col, n_col);       /* prior scale for Sigma */
 
   /* data */
   double **X = doubleMatrix(n_samp, n_col);       /* X */
-  double **W = doubleMatrix(n_samp, n_col);       /* The W1 and W2 matrix */
-  double **Wstar = doubleMatrix(n_samp, n_col);   /* logit tranformed W */       
+  double **W = doubleMatrix(n_samp, n_col);       /* The W matrix */
+  double **Wstar = doubleMatrix(n_samp, n_col);   /* logit(W) */     
 
   /* The lower and upper bounds of U = W*X/Y **/
   double **minU = doubleMatrix(n_samp, n_col);
   double **maxU = doubleMatrix(n_samp, n_col);    
 
   /* model parameters */
-  double *mu = doubleArray(n_col);                /* The mean */
   double **Sigma = doubleMatrix(n_col, n_col);    /* The covariance matrix */
   double **InvSigma = doubleMatrix(n_col, n_col); /* The inverse covariance matrix */
 
@@ -91,6 +94,13 @@ void cBase2C(
   for (j = 0; j < n_col; j++) 
     for (i = 0; i < n_samp; i++) 
       X[i][j] = pdX[itemp++];
+
+  /* read initial values of Sigma */
+  itemp = 0;
+  for (k = 0; k < n_col; k++) 
+    for (j = 0; j < n_col; j++) 
+      Sigma[j][k] = SigmaStart[itemp++];
+  dinv(Sigma, n_col, InvSigma);
 
   /* compute bounds on U */
   itemp = 0;
@@ -129,14 +139,6 @@ void cBase2C(
     for(j = 0; j < n_col; j++) 
       S0[j][k] = pdS0[itemp++];
 
-  /* initialize vales of mu and Sigma */
-  for(j = 0; j < n_col; j++){
-    mu[j] = mu0[j];
-    for(k = 0; k < n_col; k++)
-      Sigma[j][k] = S0[j][k];
-  }
-  dinv(Sigma, n_col, InvSigma);
-  
   /*** Gibbs sampler! ***/
   for(main_loop = 0; main_loop < *n_gen; main_loop++){
     /** update W, Wstar given mu, Sigma **/
@@ -187,7 +189,6 @@ void cBase2C(
   FreeMatrix(minU, n_samp);
   FreeMatrix(maxU, n_samp);
   FreeMatrix(S0, n_col);
-  free(mu);
   FreeMatrix(Sigma, n_col);
   FreeMatrix(InvSigma, n_col);
   free(dvtemp);
