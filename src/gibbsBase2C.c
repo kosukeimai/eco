@@ -129,8 +129,7 @@ void cBase2C(
       if (k > *maxit) { /* if rejection sampling fails, then use
 			   midpoits of bounds sequentially */
 	itemp = 0;
-	dtemp = Y[i];
-	dtemp1 = 1;
+	dtemp = Y[i]; dtemp1 = 1;
 	for (j = 0; j < n_col-1; j++) {
 	  W[i][j] = 0.5*(fmax2(0,(X[i][j]/dtemp1+dtemp-1)*dtemp1/X[i][j])+
 			 fmin2(1,dtemp*dtemp1/X[i][j]));
@@ -140,7 +139,8 @@ void cBase2C(
 	W[i][n_col-1] = dtemp;
       }
       else if (itemp == 0)
-	W[i][j] = dvtemp[j]*Y[i]/X[i][j];
+	for (j = 0; j < n_col; j++)
+	  W[i][j] = dvtemp[j]*Y[i]/X[i][j];
     }
     for (j = 0; j < n_col; j++) 
       Wstar[i][j] = log(W[i][j])-log(1-W[i][j]);
@@ -199,12 +199,12 @@ void cBase2C(
   PutRNGstate();
 
   /* Freeing the memory */
+  FreeMatrix(S0, n_col);
   FreeMatrix(X, n_samp);
   FreeMatrix(W, n_samp);
   FreeMatrix(Wstar, n_samp);
   FreeMatrix(minU, n_samp);
   FreeMatrix(maxU, n_samp);
-  FreeMatrix(S0, n_col);
   FreeMatrix(Sigma, n_col);
   FreeMatrix(InvSigma, n_col);
   free(dvtemp);
