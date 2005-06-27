@@ -46,9 +46,10 @@ eco <- function(formula, data = parent.frame(), N = NULL, supplement = NULL,
   
   W1.post <- matrix(res$pdSW1, n.store, unit.w, byrow=TRUE)[,tmp$order.old]
   W2.post <- matrix(res$pdSW2, n.store, unit.w, byrow=TRUE)[,tmp$order.old]
-  
-  res.out <- list(call = mf, X = X, Y = Y, N = N, W1 = W1.post,
-                  W2 = W2.post, burin = burnin, thin = thin, nu0 = nu0,
+  W <- array(rbind(W1.post, W2.post), c(n.store, 2, unit.w))
+  colnames(W) <- c("W1", "W2")
+  res.out <- list(call = mf, X = X, Y = Y, N = N, W = W,
+                  burin = burnin, thin = thin, nu0 = nu0,
                   tau0 = tau0, mu0 = mu0, S0 = S0)
 
   if (parameter) {
