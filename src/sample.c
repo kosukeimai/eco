@@ -161,7 +161,9 @@ void rMHrc(
 	   double **InvSigma,      /* Inverse covariance matrix for normal */
 	   int n_dim,              /* dimension of parameters */
 	   int reject)             /* if 1, use rejection sampling to
-				      draw from the truncated Dirichlet */  
+				      draw from the truncated Dirichlet
+				      if 0, use Gibbs sampling
+				   */  
 {
   int i, j, exceed, maxit = 100000;
   double dens1, dens2, ratio, dtemp;
