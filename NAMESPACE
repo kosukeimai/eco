@@ -8,21 +8,18 @@ export(
        ecoNP,
        ecoRC,
        summary.eco,
+       summary.ecoNP,
        print.summary.predict.eco,
        print.summary.eco,
        predict.eco,
-       varcov,
        varcov.eco,
-       varcov.ecoNP,
-       coef.eco,
-       coef.ecoNP)
+       coef.eco)
 
 S3method(varcov, eco)
-S3method(varcov, ecoNP)
 S3method(coef, eco)
-S3method(coef, ecoNP)
 S3method(predict, eco)
 S3method(summary, eco)
+S3method(summary, ecoNP)
 S3method(summary, predict.eco)
 S3method(print, eco)
 S3method(print, ecoBD)
