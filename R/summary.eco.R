@@ -1,4 +1,4 @@
-summary.eco <- function(object, CI=c(2.5, 97.5), param=NULL, units=FALSE, subset=NULL,...) {
+summary.eco <- function(object, CI=c(2.5, 97.5), param=TRUE, units=FALSE, subset=NULL,...) {
 
   n.obs <- ncol(object$W[,1,])
   n.draws <- nrow(object$W[,1,])
@@ -39,50 +39,14 @@ summary.eco <- function(object, CI=c(2.5, 97.5), param=NULL, units=FALSE, subset
    else
      W1.table <- W2.table <- NULL
 
-
-   if (!is.null(param))
-      if (param) {
+    if (is.null(param)) param <- TRUE
+    if (param) {
          if (is.null(object$mu) || is.null(object$Sigma))
            stop("Parameters are missing values.")
-      }
+    }
 
-  if (any(class(object)=="ecoNP"))
-    {
-      if (is.null(param)) param <- FALSE
-      if (param) {
-       mu1.table <- cbind(apply(object$mu[,1,subset], 2, mean), 
-                       apply(object$mu[,1,subset], 2, sd),
-                       apply(object$mu[,1,subset], 2, quantile, min(CI)/100),
-                       apply(object$mu[,1,subset], 2, quantile, max(CI)/100))
-       mu2.table <- cbind(apply(object$mu[,2,subset], 2, mean), 
-                       apply(object$mu[,2,subset], 2, sd),
-                       apply(object$mu[,2,subset], 2, quantile, min(CI)/100),
-                       apply(object$mu[,2,subset], 2, quantile, max(CI)/100))
-       Sigma11.table <- cbind(apply(object$Sigma[,1,subset], 2, mean), 
-                        apply(object$Sigma[,1,subset], 2, sd),
-                      apply(object$Sigma[,1,subset], 2, quantile, min(CI)/100),
-                      apply(object$Sigma[,1,subset], 2, quantile, max(CI)/100))
-       Sigma12.table <- cbind(apply(object$Sigma[,2,subset], 2, mean), 
-                       apply(object$Sigma[,2,subset], 2, sd),
-                      apply(object$Sigma[,2,subset], 2, quantile, min(CI)/100),
-                      apply(object$Sigma[,2,subset], 2, quantile, max(CI)/100))
-       Sigma22.table <- cbind(apply(object$Sigma[,3,subset], 2, mean), 
-                       apply(object$Sigma[,3,subset], 2, sd),
-                      apply(object$Sigma[,3,subset], 2, quantile, min(CI)/100),
-                      apply(object$Sigma[,3,subset], 2, quantile, max(CI)/100))
 
-       colnames(mu1.table) <- colnames(mu2.table) <- table.names
-       colnames(Sigma11.table) <- colnames(Sigma12.table) <- colnames(Sigma22.table) <- table.names
-       param.table=list(mu1.table=mu1.table,mu2.table=mu2.table,Sigma11.table=Sigma11.table,Sigma12.table=Sigma12.table,Sigma22.table=Sigma22.table)
-       }
-     else
-#       mu1.table  <- mu2.table <- Sigma11.table <- Sigma12.table <- Sigma22.table  <- NULL
-        param.table <- NULL
-  } 	
-  else 
-    {  #summary eco
-      if (is.null(param)) param <- TRUE
-      if (param) {
+    if (param) {
        param <- cbind(invlogit(object$mu), object$mu, object$Sigma)
 
        param.table <- cbind(apply(param, 2, mean), apply(param, 2, sd),
@@ -93,16 +57,13 @@ summary.eco <- function(object, CI=c(2.5, 97.5), param=NULL, units=FALSE, subset
       }
       else
         param.table <- NULL
-   }
+ 
 
- ans <- list(call = object$call, W1.table = W1.table, W2.table = W2.table,
+  ans <- list(call = object$call, W1.table = W1.table, W2.table = W2.table,
               agg.table = agg.table, param.table = param.table,
               n.draws = n.draws, n.obs = n.obs) 
 
-  if (any(class(object)=="ecoNP"))
-       class(ans) <-c("summary.eco", "summary.ecoNP") 
-  else
-      class(ans) <-"summary.eco"
-
+  class(ans) <-"summary.eco"
   return(ans)
+
 }
