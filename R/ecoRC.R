@@ -6,13 +6,12 @@ ecoRC <- function(formula, data = parent.frame(),
   ## checking inputs
   if (burnin >= n.draws)
     stop("n.draws should be larger than burnin")
-  
-  call <- match.call()
+  mf <- match.call()
 
   ## getting X, Y, and N
   tt <- terms(formula)
   attr(tt, "intercept") <- 0
-  if (is.matrix(eval.parent(call$data)))
+  if (is.matrix(eval.parent(mf$data)))
     data <- as.data.frame(data)
   X <- model.matrix(tt, data)
   n.samp <- nrow(X)
@@ -27,7 +26,7 @@ ecoRC <- function(formula, data = parent.frame(),
   mu0 <- rep(mu0, C)
   S0 <- diag(S0, C)
 
-  res.out <- list(call = call, X = X, Y = Y, Wmin = tmp$Wmin, Wmax = tmp$Wmax)
+  res.out <- list(call = mf, X = X, Y = Y, Wmin = tmp$Wmin, Wmax = tmp$Wmax)
   if (R == 1) {
     mu.start <- rep(mu.start, C)
     Sigma.start <- diag(Sigma.start, C)
@@ -47,6 +46,9 @@ ecoRC <- function(formula, data = parent.frame(),
     res.out$W <- array(res$pdSW, c(C, n.samp, n.store))
   }
   else {
+    mu.start <- matrix(rep(rep(mu.start, C), R), ncol = R, nrow = C,
+                       byrow = FALSE)
+    Sigma.start <- array(rep(diag(Sigma.start, C), R), c(C, C, R))
     res <- .C("cBaseRC", as.double(X), as.double(Y),
               as.double(tmp$Wmin[,1:R,]), as.double(tmp$Wmax[,1:R,]),
               as.integer(n.samp), as.integer(C), as.integer(reject),
