@@ -1,3 +1,6 @@
+varcov <- function(object, ...)
+  UseMethod("varcov")
+
 varcov.eco <- function(object, subset = NULL, ...) {
   if (is.null(subset))
     subset <- 1:nrow(object$mu)
