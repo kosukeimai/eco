@@ -1,6 +1,6 @@
 ecoRC <- function(formula, data = parent.frame(),
                   mu0 = 0, tau0 = 2, nu0 = 4, S0 = 10, mu.start = 0,
-                  Sigma.start = 1, reject = TRUE, maxit = 10e6, parameter = TRUE,
+                  Sigma.start = 1, reject = TRUE, maxit = 10e5, parameter = TRUE,
                   n.draws = 5000, burnin = 0, thin = 0, verbose = FALSE){ 
   
   ## checking inputs
@@ -16,12 +16,13 @@ ecoRC <- function(formula, data = parent.frame(),
   X <- model.matrix(tt, data)
   n.samp <- nrow(X)
   C <- ncol(X)
-  Y <- matrix(model.response(model.frame(tt, data = data)), nrow = n.samp)
+  Y <- matrix(model.response(model.frame(tt, data = data)),
+              nrow = n.samp)
   R <- ncol(Y)
 
   ## fitting the model
   n.store <- floor((n.draws-burnin)/(thin+1))
-  n.par <- R
+  n.par <- R-1
   tmp <- ecoBD(formula, data=data)
   mu0 <- rep(mu0, C)
   S0 <- diag(S0, C)
@@ -46,12 +47,13 @@ ecoRC <- function(formula, data = parent.frame(),
     res.out$W <- array(res$pdSW, c(C, n.samp, n.store))
   }
   else {
-    mu.start <- matrix(rep(rep(mu.start, C), R), ncol = R, nrow = C,
+    mu.start <- matrix(rep(rep(mu.start, C), R-1), ncol = R-1, nrow = C,
                        byrow = FALSE)
-    Sigma.start <- array(rep(diag(Sigma.start, C), R), c(C, C, R))
+    Sigma.start <- array(rep(diag(Sigma.start, C), R-1), c(C, C, R-1))
     res <- .C("cBaseRC", as.double(X), as.double(Y),
-              as.double(tmp$Wmin[,1:R,]), as.double(tmp$Wmax[,1:R,]),
-              as.integer(n.samp), as.integer(C), as.integer(reject),
+              as.double(tmp$Wmin[,1:(R-1),]), as.double(tmp$Wmax[,1:(R-1),]),
+              as.integer(n.samp), as.integer(C), as.integer(R),
+              as.integer(reject), as.integer(maxit),
               as.integer(n.draws), as.integer(burnin),
               as.integer(thin+1), as.integer(verbose),
               as.integer(nu0), as.double(tau0),

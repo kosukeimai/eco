@@ -118,14 +118,16 @@ void cBase2C(
   for (j = 0; j < n_col; j++)
     param[j] = 1;
   for (i = 0; i < n_samp; i++) {
-    k = 1; itemp = 1;
+    k = 0; itemp = 1;
     while (itemp > 0) { /* rejection sampling */
       rDirich(dvtemp, param, n_col);
-      itemp = 0;
+      itemp = 0; k++;
       for (j = 0; j < n_col; j++)
 	if (dvtemp[j] > maxU[i][j] || dvtemp[j] < minU[i][j])
 	  itemp++;
-      k++;
+      if (itemp == 0)
+	for (j = 0; j < n_col; j++)
+	  W[i][j] = dvtemp[j]*Y[i]/X[i][j];
       if (k > *maxit) { /* if rejection sampling fails, then use
 			   midpoits of bounds sequentially */
 	itemp = 0;
@@ -138,9 +140,6 @@ void cBase2C(
 	}
 	W[i][n_col-1] = dtemp;
       }
-      else if (itemp == 0)
-	for (j = 0; j < n_col; j++)
-	  W[i][j] = dvtemp[j]*Y[i]/X[i][j];
     }
     for (j = 0; j < n_col; j++) 
       Wstar[i][j] = log(W[i][j])-log(1-W[i][j]);
