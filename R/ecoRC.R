@@ -1,6 +1,7 @@
 ecoRC <- function(formula, data = parent.frame(),
                   mu0 = 0, tau0 = 2, nu0 = 4, S0 = 10, mu.start = 0,
-                  Sigma.start = 1, reject = TRUE, maxit = 10e5, parameter = TRUE,
+                  Sigma.start = 1, reject = TRUE, maxit = 10e5,
+                  parameter = TRUE,
                   n.draws = 5000, burnin = 0, thin = 0, verbose = FALSE){ 
   
   ## checking inputs
@@ -50,7 +51,7 @@ ecoRC <- function(formula, data = parent.frame(),
     mu.start <- matrix(rep(rep(mu.start, C), R-1), ncol = R-1, nrow = C,
                        byrow = FALSE)
     Sigma.start <- array(rep(diag(Sigma.start, C), R-1), c(C, C, R-1))
-    res <- .C("cBaseRC", as.double(X), as.double(Y),
+    res <- .C("cBaseRC", as.double(X), as.double(Y[,1:(R-1)]),
               as.double(tmp$Wmin[,1:(R-1),]), as.double(tmp$Wmax[,1:(R-1),]),
               as.integer(n.samp), as.integer(C), as.integer(R),
               as.integer(reject), as.integer(maxit),
@@ -59,9 +60,12 @@ ecoRC <- function(formula, data = parent.frame(),
               as.integer(nu0), as.double(tau0),
               as.double(mu0), as.double(S0),
               as.double(mu.start), as.double(Sigma.start),
-              as.integer(parameter), pdSmu = double(n.store*C),
-              pdSSigma = double(n.store*C*(C+1)/2),
-              pdSW = double(n.store*n.samp*C), PACKAGE="eco")
+              as.integer(parameter), pdSmu = double(n.store*(R-1)*C),
+              pdSSigma = double(n.store*(R-1)*C*(C+1)/2),
+              pdSW = double(n.store*n.samp*(R-1)*C), PACKAGE="eco")
+    res.out$mu <- array(res$pdSmu, c(R-1, C, n.store))
+    res.out$Sigma <- array(res$pdSSigma, c(R-1, C*(C+1)/2, n.store))
+    res.out$W <- array(res$pdSW, c(R-1, C, n.samp, n.store))
   }
   
   class(res.out) <- c("ecoRC", "eco")

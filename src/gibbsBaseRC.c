@@ -1,6 +1,6 @@
 /******************************************************************
   This file is a part of eco: R Package for Ecological Inference
-  by Ying Lu and Kosuke Imai
+  by Kosuke Imai and Ying Lu
   Copyright: GPL version 2 or later.
 *******************************************************************/
 
@@ -104,18 +104,14 @@ void cBaseRC(
   itemp = 0;
   for (j = 0; j < n_dim; j++) 
     for (i = 0; i < n_samp; i++) 
-      Y[i][j] = pdX[itemp++];
+      Y[i][j] = pdY[itemp++];
 
   /* compute bounds on U */
   itemp = 0; 
   for (k = 0; k < n_col; k++) 
     for (j = 0; j < n_dim; j++) 
-      for (i = 0; i < n_samp; i++) { 
+      for (i = 0; i < n_samp; i++) 
 	minU[i][j][k] = fmax2(0, pdWmin[itemp++]*(X[i][k]+Y[i][j]-1)/Y[i][j]);
-	/* maxU[i][j][k] = fmin2(1, pdWmax[itemp++]*X[i][k]/Y[i][j]); */
-	/* Rprintf("%14g%14g\n", minU[i][j][k], maxU[i][j][k]);
-	   R_FlushConsole(); */
-      }
 
   /* initial values for mu and Sigma */
   itemp = 0;
@@ -172,9 +168,6 @@ void cBaseRC(
 	R_CheckUserInterrupt();
       }
     }
-    for (k = 0; k < n_col; k++)
-      Rprintf("%14g", Wsum[i][k]);
-    Rprintf("\n");
   }
 
   /* read the prior */
@@ -188,7 +181,7 @@ void cBaseRC(
     Rprintf("Starting Gibbs sampler...\n");
   for(main_loop = 0; main_loop < *n_gen; main_loop++){
     /** update W, Wstar given mu, Sigma **/
-    for (i = 0; i < n_samp; i++) 
+    for (i = 0; i < n_samp; i++) {
       for (j = 0; j < n_dim; j++) {
 	for (k = 0; k < n_col; k++) {
 	  Wsum[i][k] -= W[i][j][k];
@@ -201,28 +194,33 @@ void cBaseRC(
 	  Wstar[j][i][k] = log(W[i][j][k])-log(1-W[i][j][k]);
 	}
       }
-    
+    }    
+
     /* update mu, Sigma given wstar using effective sample of Wstar */
     for (j = 0; j < n_dim; j++)
       NIWupdate(Wstar[j], mu[j], Sigma[j], InvSigma[j], mu0, tau0,
 		nu0, S0, n_samp, n_col); 
     
-    /*store Gibbs draw after burn-in and every nth draws 
-    if (main_loop>=*burn_in){
+    /*store Gibbs draw after burn-in and every nth draws */     
+    if (main_loop >= *burn_in){
       itempC++;
       if (itempC==nth){
-	for (j = 0; j < n_col; j++) {
-	  pdSmu[itempM++]=mu[j];
-	  for (k = 0; k < n_col; k++)
-	    if (j <=k)
-	      pdSSigma[itempS++]=Sigma[j][k];
+	for (k = 0; k < n_col; k++) {
+	  for (j = 0; j < n_dim; j++) {
+	    pdSmu[itempM++]=mu[j][k];
+	    for (i = 0; i < n_col; i++)
+	      if (k <= i)
+		pdSSigma[itempS++]=Sigma[j][k][i];
+	  }
 	}
 	for(i = 0; i < n_samp; i++)
-	  for (j = 0; j < n_col; j++)
-	    pdSW[itempW++] = W[i][j];
+	  for (k = 0; k < n_col; k++)
+	    for (j = 0; j < n_dim; j++)
+	      pdSW[itempW++] = W[i][j][k];
 	itempC=0;
       }
-    }  */      
+    }
+    
     if (*verbose)
       if (itempP == main_loop) {
 	Rprintf("%3d percent done.\n", progress*10);
@@ -231,6 +229,8 @@ void cBaseRC(
       }
     R_CheckUserInterrupt();
   } /* end of Gibbs sampler */ 
+  if (*verbose)
+    Rprintf("100 percent done.\n");
 
   /** write out the random seed **/
   PutRNGstate();
