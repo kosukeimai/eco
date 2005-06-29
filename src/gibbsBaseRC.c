@@ -154,7 +154,7 @@ void cBaseRC(
 	  itemp = 0;
 	  dtemp = Y[i][j]; dtemp1 = 1;
 	  for (k = 0; k < n_col-1; k++) {
-	    W[i][j][k] = 0.5*(fmax2(0,(X[i][k]/dtemp1+dtemp-1)*dtemp1/X[i][k])+
+	    W[i][j][k] = 0.25*(fmax2(0,(X[i][k]/dtemp1+dtemp-1)*dtemp1/X[i][k])+
 			      fmin2(1-Wsum[i][k],dtemp*dtemp1/X[i][k]));
 	    Wstar[j][i][k] = log(W[i][j][k])-log(1-W[i][j][k]);
 	    dtemp -= W[i][j][k]*X[i][k]/dtemp1;
@@ -186,11 +186,15 @@ void cBaseRC(
 	for (k = 0; k < n_col; k++) {
 	  Wsum[i][k] -= W[i][j][k];
 	  dvtemp[k] = fmin2(1, X[i][k]*(1-Wsum[i][k])/Y[i][j]);
+	  /* Rprintf("%14g%14g\n", minU[i][j][k], dvtemp[k]); */
 	}
+	/* Rprintf("\n"); */
 	rMHrc(W[i][j], X[i], Y[i][j], minU[i][j], dvtemp, mu[j], 
 	      InvSigma[j], n_col, *maxit, *reject);
 	for (k = 0; k < n_col; k++) {
 	  Wsum[i][k] += W[i][j][k];
+	  if (Wsum[i][k]>1)
+	    error("error");
 	  Wstar[j][i][k] = log(W[i][j][k])-log(1-W[i][j][k]);
 	}
       }

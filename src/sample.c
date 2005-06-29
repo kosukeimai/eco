@@ -195,15 +195,22 @@ void rMHrc(
   else { /* gibbs sampler */
     for (j = 0; j < n_dim; j++) 
       vtemp[j] = W[j]*X[j]/Y;
-    dtemp = 1.0 - vtemp[n_dim-1];
-    for (j = 0; j < n_dim-1; j++) {
-      dtemp -= vtemp[j];
-      vtemp[j] = runif(minU[j], maxU[j]);
-      dtemp += vtemp[j];
+    for (i = 0; i < 100; i++) {
+      dtemp = vtemp[n_dim-1];
+      for (j = 0; j < n_dim-1; j++) {
+	dtemp += vtemp[j];
+	/* Rprintf("%14g%14g\n", fmax2(minU[j], dtemp-maxU[n_dim-1]),
+	   maxU[j]); */
+	vtemp[j] = runif(fmax2(minU[j], dtemp-maxU[n_dim-1]), 
+			 fmin2(maxU[j], dtemp-minU[n_dim-1]));
+	dtemp -= vtemp[j];
+      }
+      vtemp[n_dim-1] = dtemp;
     }
-    vtemp[n_dim-1] = 1.0 - dtemp;
   }
-
+  /*  for (j = 0; j < n_dim; j++) 
+      Rprintf("%14g", vtemp[j]);
+      Rprintf("\n\n"); */
   /* calcualte W and its logit transformation */
   for (j = 0; j < n_dim; j++) {
     Sample[j] = vtemp[j]*Y/X[j];
