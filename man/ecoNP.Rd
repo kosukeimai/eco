@@ -127,7 +127,7 @@ data(reg)
 
 ## fit the nonparametric model to give in-sample predictions
 ## store the parameters to make population inference later
-res <- ecoNP(Y ~ X, data = reg, n.draws = 500, param=TRUE, verbose = TRUE) 
+res <- ecoNP(Y ~ X, data = reg, n.draws = 500, param = TRUE, verbose = TRUE) 
 ##summarize the results
 summary(res)
 
@@ -167,7 +167,7 @@ plot(density(out[,2]), main="W2")
   population mean parameter, \eqn{\mu}. The first dimension indexes the
   Monte Carlo draws, the second dimension indexes the columns of the
   table, and the third dimension represents the observations.} 
-  \item{Sigma}{A three dimensional array storing the poterior draws of
+  \item{Sigma}{A three dimensional array storing the posterior draws of
   the population variance matrix, \eqn{\Sigma}. The first dimension
   indexes the Monte Carlo draws, the second dimension indexes the
   parameters, and the third dimension represents the observations. }

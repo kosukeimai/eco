@@ -26,13 +26,16 @@ Ecological Inference in 2x2 Tables }
   \item{x}{An object of class \code{summary.ecoNP}.}
   \item{digits}{the number of significant digits to use when printing.}
   \item{param}{Logical. If \code{TRUE}, the posterior estimates of the 
-    population parameters will be provided. The default value is \code{FALSE}.
+    population parameters will be provided. The default value is
+    \code{FALSE}.
+  }
   \item{units}{Logical. If \code{TRUE}, the in-sample predictions for
     each unit or for a subset of units will be provided. The default 
-    value is \code{FALSE}.} 
+    value is \code{FALSE}.
+  } 
   \item{subset}{A numeric vector indicating the subset of the units whose 
     in-sample predications to be provided when \code{units} is 
-    \code{TRUE}. The defualt value is \code{NULL} where the in-sample 
+    \code{TRUE}. The default value is \code{NULL} where the in-sample 
     predictions for each unit will be provided.} 
   \item{...}{further arguments passed to or from other methods.}
 }
@@ -48,7 +51,7 @@ Ecological Inference in 2x2 Tables }
   If \code{param = TRUE}, the following elements are also included:
   \item{param.table}{Posterior estimates of model parameters: population
     mean estimates of \eqn{W_1} and \eqn{W_2}. If \code{subset} is 
-    specified, only a subset of the population parameters are inlcuded.}
+    specified, only a subset of the population parameters are included.}
   If \code{unit = TRUE}, the following elements are also included:
   \item{W1.table}{Unit-level posterior estimates for \eqn{W_1}.}
   \item{W2.table}{Unit-level posterior estimates for \eqn{W_2}.}

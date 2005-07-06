@@ -26,14 +26,18 @@
   \item{x}{An object of class \code{summary.eco}.}
   \item{digits}{the number of significant digits to use when printing.}
   \item{param}{Logical. If \code{TRUE}, the posterior estimates of the 
-    population parameters will be provided. The default value is \code{TRUE}.
+    population parameters will be provided. The default value is
+    \code{TRUE}.
+  }
   \item{units}{Logical. If \code{TRUE}, the in-sample predictions for
     each unit or for a subset of units will be provided. The default 
-    value is \code{FALSE}.} 
+    value is \code{FALSE}.
+  } 
   \item{subset}{A numeric vector indicating the subset of the units whose 
     in-sample predications to be provided when \code{units} is 
-    \code{TRUE}. The defualt value is \code{NULL} where the in-sample 
-    predictions for each unit will be provided.} 
+    \code{TRUE}. The default value is \code{NULL} where the in-sample 
+    predictions for each unit will be provided.
+  } 
   \item{...}{further arguments passed to or from other methods.}
 }
 

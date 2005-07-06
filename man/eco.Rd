@@ -81,7 +81,7 @@ eco(formula, data = parent.frame(), N = NULL, supplement = NULL,
     Markov chain; i.e. the number of Gibbs draws between the recorded
     values that are skipped. The default is \code{0}.
   } 
-  \item{verbose}{Logical. If \code{TRUE}, the progress of the gibbs 
+  \item{verbose}{Logical. If \code{TRUE}, the progress of the Gibbs 
    sampler is printed to the screen. The default is \code{FALSE}.
   }
 }
@@ -144,7 +144,7 @@ summary(out)
   \code{parameter = TRUE}.
   \item{mu}{The posterior draws of the population mean parameter,
     \eqn{\mu}.}
-  \item{Sigma}{The poterior draws of the population variance matrix,
+  \item{Sigma}{The posterior draws of the population variance matrix,
     \eqn{\Sigma}.}
 }
 
