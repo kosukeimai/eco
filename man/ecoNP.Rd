@@ -135,13 +135,9 @@ out <- predict(res, verbose=TRUE)
 ## summarize the results
 summary(out)
 ## density plot of the out-of-sample predictions
-## requires "KernSmooth" package
-library(KernSmooth)
-plot(c(0,1), c(0,0), xlim=c(0,1), ylim=c(0,6), pch='.', xlab=expression(W[1]), ylab=NA, yaxp=c(0,6,1))
-lines(bkde(out[,1], truncate=FALSE), lty=1)
-lines(bkde(out[,2], truncate=FALSE), lty=2)
-legend(0, 5.5, c(expression(W[1]), expression(W[2])), lty=c(1,2))
-title("Density Plot of W")
+par(mfrow=c(2,1))
+plot(density(out[,1]), main=expression(W[1]))
+plot(density(out[,2]), main=expression(W[2]))
 }
 
 \value{
