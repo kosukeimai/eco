@@ -11,6 +11,7 @@ export(
        summary.ecoNP,
        print.summary.predict.eco,
        print.summary.eco,
+       print.summary.ecoNP,
        predict.eco,
        varcov.eco,
        coef.eco)
@@ -24,5 +25,6 @@ S3method(summary, predict.eco)
 S3method(print, eco)
 S3method(print, ecoBD)
 S3method(print, summary.eco)
+S3method(print, summary.ecoNP)
 S3method(print, summary.predict.eco)
 

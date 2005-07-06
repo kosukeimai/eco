@@ -38,7 +38,8 @@
 }
 
 \details{The posterior predictive values are computed using the
-  Monte Carlo sample stored in the \code{eco} output (or other sample if
+  Monte Carlo sample stored in the \code{eco} or \code{ecoNP} output 
+  (or other sample if
   \code{newdraw} is specified). Given each Monte Carlo sample of the
   parameters, we sample the vector-valued latent variable from the
   appropriate multivariate Normal distribution. Then, we apply the
@@ -57,7 +58,8 @@
   \code{print.summary.predict.eco} will print the summary.
 }
 
-\seealso{\code{eco}, \code{ecoNP}, \code{summary.eco}; eco home
+\seealso{\code{eco}, \code{ecoNP}, \code{summary.eco}. \code{summary.ecoNP}; 
+  eco home
   page at \url{http://www.princeton.edu/~kimai/research/eco.html}}
 
 \author{

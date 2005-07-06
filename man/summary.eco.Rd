@@ -3,14 +3,14 @@
 \alias{summary.eco}
 \alias{print.summary.eco}
 
-\title{Summarizing the results for the nonparametric and parametric models for ecological inference in 2 by 2 tables }
+\title{Summarizing the results for the parametric models for ecological inference in 2 by 2 tables }
 
 \description{
   \code{summary} method for class \code{eco}.
 }
 
 \usage{
-  \method{summary}{eco}(object, CI=c(2.5, 97.5), long = FALSE, ...)
+  \method{summary}{eco}(object, CI=c(2.5, 97.5), param=TRUE, units=FALSE, subset=NULL, ...)
 
   \method{print}{summary.eco}(x, digits = max(3, getOption("digits") - 3), ...)
 }
@@ -23,8 +23,15 @@
   }
   \item{x}{An object of class \code{summary.eco}.}
   \item{digits}{the number of significant digits to use when printing.}
-  \item{long}{Logical. If \code{TRUE}, the in-sample predictions for
-    each unit will be provided. The default value is \code{FALSE}.} 
+  \item{param}{Logical. If \code{TRUE}, the posterior estimates of the 
+    population parameters will be provided. The default value is \code{TRUE}.
+  \item{units}{Logical. If \code{TRUE}, the in-sample predictions for
+    each unit or for a subset of units will be provided. The default 
+    value is \code{FALSE}.} 
+  \item{subset}{A numeric vector indicating the subset of the units whose 
+    in-sample predications to be provided when \code{units} is 
+    \code{TRUE}. The defualt value is \code{NULL} where the in-sample 
+    predictions for each unit will be provided.} 
   \item{...}{further arguments passed to or from other methods.}
 }
 
@@ -36,11 +43,15 @@
   \item{n.draws}{The number of Monte Carlo samples.}
   \item{agg.table}{Aggregate posterior estimates of the marginal means
     of \eqn{W_1} and \eqn{W_2} using \eqn{X} as a weight.}
-  If \code{long = TRUE}, the following elements are also included:
-  \item{W1.table}{Unit-level posterior estimates for \eqn{W_1}.}
-  \item{W2.table}{Unit-level posterior estimates for \eqn{W_2}.}
+  If \code{param = TRUE}, the following elements are also included:
   \item{param.table}{Posterior estimates of model parameters: population
-    mean estimates of \eqn{W_1} and \eqn{W_2} are also included.}
+    mean estimates of \eqn{W_1} and \eqn{W_2}.}
+  If \code{units = TRUE}, the following elements are also included:
+  \item{W1.table}{Unit-level posterior estimates for each unit or for 
+   a suset of \eqn{W_1}.}
+  \item{W2.table}{Unit-level posterior estimates for each unit or for 
+   a subset of \eqn{W_2}.}
+
   This object can be printed by \code{print.summary.eco}
 }
 

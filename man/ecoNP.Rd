@@ -16,7 +16,7 @@
 \usage{
 ecoNP(formula, data = parent.frame(), supplement = NULL,
       mu0 = c(0,0), tau0 = 2, nu0 = 4, S0 = diag(10,2), alpha = NULL,
-      a0 = 1, b0 = 0.1, predict = FALSE, parameter = FALSE, grid = FALSE,
+      a0 = 1, b0 = 0.1, parameter = TRUE, grid = FALSE,
       n.draws = 5000, burnin = 0, thin = 0, verbose = FALSE)
 }
 
@@ -61,11 +61,8 @@ ecoNP(formula, data = parent.frame(), supplement = NULL,
   \item{b0}{A positive integer. The scale parameter of the gamma prior
     for \eqn{\alpha}. The default is \code{0.1}.
   } 
-  \item{predict}{Logical. If \code{TRUE}, out-of sample predictions will
-    be returned. The default is \code{FALSE}.
-  } 
   \item{parameter}{Logical. If \code{TRUE}, the Gibbs draws of the population
-    parameters such as mu and sigma are returned. The default is \code{FALSE}.
+    parameters such as mu and sigma are returned. The default is \code{TRUE}.
   }
   \item{grid}{Logical. If \code{TRUE}, the grid method is used to sample
     \eqn{W} in the Gibbs sampler. If \code{FALSE}, the Metropolis
@@ -135,14 +132,6 @@ summary(res)
   \item{W1}{The posterior in-sample predictions of \eqn{W_1}.}
   \item{W2}{The posterior in-sample predictions of \eqn{W_2}.}
   The following additional elements are included in the output when
-  \code{predict = TRUE}:
-  \item{W1.pred}{The posterior predictive draws or out-of-sample
-    predictions of \eqn{W_1}. Export only if \code{predict=TRUE}.
-  }
-  \item{W2.pred}{The posterior predictive draws or out-of-sample
-    predictions of \eqn{W_2}. Export only if \code{predict=TRUE}.
-  }
-  The following additional elements are included in the output when
   \code{parameter = TRUE}.
   \item{mu1}{The posterior draws of the population mean parameter
     for \eqn{W_1}. It is an \eqn{m \times n} matrix, where \eqn{m} is
@@ -175,5 +164,5 @@ summary(res)
   Tables.} Proceedings of the American Statistical Association.
   \url{http://www.princeton.edu/~kimai/research/einonpar.html} }
 
-\seealso{\code{eco},\code{summary.eco}}
+\seealso{\code{eco},\code{summary.ecoNP}}
 \keyword{models}
