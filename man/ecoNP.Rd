@@ -126,7 +126,8 @@ data(reg)
 ## example. See Imai and Lu (2004) for more complete examples.
 
 ## fit the nonparametric model to give in-sample predictions
-res <- ecoNP(Y ~ X, data = reg, n.draws = 500, verbose = TRUE, param=TRUE) 
+## store the parameters to make population inference later
+res <- ecoNP(Y ~ X, data = reg, n.draws = 500, param=TRUE, verbose = TRUE) 
 ##summarize the results
 summary(res)
 
@@ -134,10 +135,11 @@ summary(res)
 out <- predict(res, verbose=TRUE)
 ## summarize the results
 summary(out)
-## density plot of the out-of-sample predictions
+
+## density plots of the out-of-sample predictions
 par(mfrow=c(2,1))
-plot(density(out[,1]), main=expression(W[1]))
-plot(density(out[,2]), main=expression(W[2]))
+plot(density(out[,1]), main="W1")
+plot(density(out[,2]), main="W2")
 }
 
 \value{
