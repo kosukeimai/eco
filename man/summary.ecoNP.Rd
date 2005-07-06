@@ -3,7 +3,8 @@
 \alias{summary.ecoNP}
 \alias{print.summary.ecoNP}
 
-\title{Summarizing the results for the nonparametric models for ecological inference in 2 by 2 tables }
+\title{Summarizing the Results for the Bayesian Nonparametric Model for
+Ecological Inference in 2x2 Tables }
 
 \description{
   \code{summary} method for class \code{ecoNP}.
@@ -11,7 +12,7 @@
 
 \usage{
   \method{summary}{ecoNP}(object, CI = c(2.5, 97.5), param = FALSE,
-                          units = FALSE, subset = NULL, ...)
+          units = FALSE, subset = NULL, ...)
 
   \method{print}{summary.ecoNP}(x, digits = max(3, getOption("digits") - 3), ...)
 }
@@ -43,7 +44,7 @@
   \item{n.obs}{The number of units.}
   \item{n.draws}{The number of Monte Carlo samples.}
   \item{agg.table}{Aggregate posterior estimates of the marginal means
-    of \eqn{W_1} and \eqn{W_2} using \eqn{X} as a weight.}
+    of \eqn{W_1} and \eqn{W_2} using \eqn{X} and \eqn{N} as weights.}
   If \code{param = TRUE}, the following elements are also included:
   \item{param.table}{Posterior estimates of model parameters: population
     mean estimates of \eqn{W_1} and \eqn{W_2}. If \code{subset} is 
@@ -55,7 +56,7 @@
   This object can be printed by \code{print.summary.ecoNP}
 }
 
-\seealso{\code{ecoNP}}
+\seealso{\code{ecoNP}, \code{predict.eco}}
 
 \author{
   Kosuke Imai, Department of Politics, Princeton University

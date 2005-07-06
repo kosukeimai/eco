@@ -12,7 +12,7 @@
 
 \usage{
   \method{summary}{eco}(object, CI = c(2.5, 97.5), param = TRUE,
-                        units = FALSE, subset = NULL, ...) 
+          units = FALSE, subset = NULL, ...) 
 
   \method{print}{summary.eco}(x, digits = max(3, getOption("digits") - 3), ...)
 }
@@ -56,11 +56,10 @@
   This object can be printed by \code{print.summary.eco}
 }
 
-\seealso{\code{eco}}
+\seealso{\code{eco}, \code{predict.eco}}
 
 \author{
-Kosuke Imai,
-  Department of Politics, Princeton University
+  Kosuke Imai, Department of Politics, Princeton University
   \email{kimai@Princeton.Edu}, \url{http://www.princeton.edu/~kimai};
   Ying Lu, Institute for Quantitative Social Sciences, 
   Harvard University \email{ylu@Latte.Harvard.Edu}

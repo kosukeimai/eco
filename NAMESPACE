@@ -9,7 +9,6 @@ export(
        ecoRC,
        summary.eco,
        summary.ecoNP,
-       print.summary.predict.eco,
        print.summary.eco,
        print.summary.ecoNP,
        predict.eco,

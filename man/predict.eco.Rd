@@ -58,9 +58,8 @@
   \code{print.summary.predict.eco} will print the summary.
 }
 
-\seealso{\code{eco}, \code{ecoNP}, \code{summary.eco}. \code{summary.ecoNP}; 
-  eco home
-  page at \url{http://www.princeton.edu/~kimai/research/eco.html}}
+\seealso{\code{eco}, \code{ecoNP}, \code{summary.eco},
+  \code{summary.ecoNP}}
 
 \author{
   Kosuke Imai, Department of Politics, Princeton University
