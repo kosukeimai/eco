@@ -83,8 +83,9 @@ ecoBD(formula, data = parent.frame(), N = NULL)
 data(reg)
 
 ## calculate the bounds
-res <- ecoBD(Y ~ X, data = reg)
-
+res <- ecoBD(Y ~ X, N = N, data = reg)
+## print the results
+print(res)
 }
 
 \value{
