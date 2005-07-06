@@ -2,6 +2,7 @@ print.summary.eco <- function(x, digits=max(3, getOption("digits")-3), ...) {
 	cat("\nCall: ") 
   	cat(paste(deparse(x$call), sep="\n", collapse="\n"))
 
+        cat("\n")
 	if (!is.null(x$param.table)) {
            cat("\nParameter Estimates:\n")
            printCoefmat(x$param.table, digits=digits, na.print="NA",...)

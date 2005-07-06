@@ -3,7 +3,7 @@ print.summary.ecoNP <- function(x, digits=max(3, getOption("digits")-3), ...)
   	cat("\nCall: ") 
   	cat(paste(deparse(x$call), sep="\n", collapse="\n"))
 
-	cat("\nAggregate Estimates:\n")
+	cat("\n\nAggregate Estimates:\n")
         printCoefmat(x$agg.table, digits=digits, na.print="NA",...)
        	cat("\nNumber of Units:", x$n.obs)
        	cat("\nNumber of Monte Carlo Draws:", x$n.draws)
