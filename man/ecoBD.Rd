@@ -108,6 +108,7 @@ res <- ecoBD(Y ~ X, data = reg)
     counts.}
   \item{Nmax}{A three dimensional array of upper bounds for
     counts.}
+  The object can be printed through \code{print.ecoBD}.
 }
 
 \author{
