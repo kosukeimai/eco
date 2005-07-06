@@ -3,20 +3,21 @@
 \alias{ecoNP}
 
 \title{Fitting the Nonparametric Bayesian Model of Ecological Inference
-  in 2 by 2 Tables}  
+  in 2x2 Tables}  
 
 \description{
-  \code{eco} is used to fit the nonparametric Bayesian model (based on
+  \code{ecoNP} is used to fit the nonparametric Bayesian model (based on
   a Dirichlet process prior) for ecological inference in \eqn{2 \times
-  2} tables via Markov chain Monte Carlo. It gives in-sample predictions
-  as well as out-of-sample predictions for population inference.  The
-  model and algorithm are described in Imai and Lu (2004).
+  2} tables via Markov chain Monte Carlo. It gives the in-sample
+  predictions as well as out-of-sample predictions for population
+  inference.  The model and algorithm are described in Imai and Lu
+  (2004).
 }
 
 \usage{
 ecoNP(formula, data = parent.frame(), supplement = NULL,
       mu0 = c(0,0), tau0 = 2, nu0 = 4, S0 = diag(10,2), alpha = NULL,
-      a0 = 1, b0 = 0.1, parameter = TRUE, grid = FALSE,
+      a0 = 1, b0 = 0.1, parameter = FALSE, grid = FALSE,
       n.draws = 5000, burnin = 0, thin = 0, verbose = FALSE)
 }
 
@@ -29,7 +30,7 @@ ecoNP(formula, data = parent.frame(), supplement = NULL,
   } 
   \item{data}{An optional data frame in which to interpret the variables
     in \code{formula}. The default is the environment in which
-    \code{eco} is called. 
+    \code{ecoNP} is called. 
   }  
   \item{supplement}{A numeric matrix. The matrix has two columns, which
     contain additional individual-level data such as survey data for
@@ -37,32 +38,44 @@ ecoNP(formula, data = parent.frame(), supplement = NULL,
     additional individual-level data are included in the model. The
     default is \code{NULL}.
   }      
-  \item{mu0}{A \eqn{2 \times 1} numeric vector. The prior mean. The
-    default is \eqn{(0,0)}.
+  \item{supplement}{An optional matrix of supplemental data. The matrix
+    has two columns, which contain additional individual-level data such
+    as survey data for \eqn{W_1} and \eqn{W_2}, respectively.  If
+    \code{NULL}, no additional individual-level data are included in the
+    model. The default is \code{NULL}.
+  }      
+  \item{mu0}{A \eqn{2 \times 1} numeric vector of the prior mean for the
+    mean parameter \eqn{\mu}. The default is \code{c(0,0)}.
   } 
-  \item{tau0}{A positive integer. The prior scale parameter. The default
-    is \code{2}. 
+  \item{tau0}{A positive integer representing the prior scale
+  for the mean parameter \eqn{\mu}. The default is \code{2}.
   } 
-  \item{nu0}{A positive integer. The prior degrees of freedom
-    parameter. the default is \code{4}.
+  \item{nu0}{A positive integer representing the prior degrees of
+  freedom of the variance matrix \eqn{\Sigma}. the default is \code{4}.
   } 
-  \item{S0}{A \eqn{2 \times 2} numeric matrix, representing a positive
-    definite prior scale matrix. The default is \code{diag(10,2)}. 
+  \item{S0}{A \eqn{2 \times 2} numeric matrix representing a positive
+    definite prior scale matrix for the variance matrix
+    \eqn{\Sigma}. The default is \code{diag(10,2)}.
   } 
-  \item{alpha}{A positive scalar. If \code{NULL}, the concentration
-    parameter \eqn{\alpha} will be updated at each Gibbs draw. The prior
-    parameters \code{a0} and \code{b0} need to be specified. Otherwise,
-    \eqn{\alpha} is fixed at a user specified value. 
-    The default is \code{NULL}.
+  \item{alpha}{A positive scalar representing a user-specified fixed
+    value of the concentration parameter, \eqn{\alpha}. If \code{NULL},
+    \eqn{\alpha} will be updated at each Gibbs draw, and its prior
+    parameters \code{a0} and \code{b0} need to be specified. The default
+    is \code{NULL}. 
   } 
-  \item{a0}{A positive integer. The shape parameter of the gamma prior
-    for \eqn{\alpha}. The default is \code{1}.
+  \item{a0}{A positive integer representing the value of shape parameter
+    of the gamma prior distribution for \eqn{\alpha}. The default is \code{1}.
   } 
-  \item{b0}{A positive integer. The scale parameter of the gamma prior
-    for \eqn{\alpha}. The default is \code{0.1}.
-  } 
+  \item{b0}{A positive integer representing the value of the scale
+    parameter of the gamma prior distribution for \eqn{\alpha}. The
+    default is \code{0.1}.
+  }
   \item{parameter}{Logical. If \code{TRUE}, the Gibbs draws of the population
-    parameters such as mu and sigma are returned. The default is \code{TRUE}.
+    parameters, \eqn{\mu} and \eqn{\Sigma}, are returned in addition to
+    the in-sample predictions of the missing internal cells,
+    \eqn{W}. The default is \code{FALSE}. This needs to be set to
+    \code{TRUE} if one wishes to make population inferences through
+    \code{predict.eco}. See an example below.
   }
   \item{grid}{Logical. If \code{TRUE}, the grid method is used to sample
     \eqn{W} in the Gibbs sampler. If \code{FALSE}, the Metropolis
@@ -108,7 +121,7 @@ ecoNP(formula, data = parent.frame(), supplement = NULL,
 data(reg)
 
 ## NOTE: convergence has not been properly assessed for the following
-## example.
+## example. See Imai and Lu (2004) for more complete examples.
 
 ## fit the nonparametric model to give in-sample predictions
 res <- ecoNP(Y ~ X, data = reg, n.draws = 500, verbose = TRUE) 
@@ -121,33 +134,28 @@ summary(res)
   \item{call}{The matched call.}
   \item{X}{The row margin, \eqn{X}.}
   \item{Y}{The column margin, \eqn{Y}.}
+  \item{burnin}{The number of initial burnin draws.}
+  \item{thin}{The thinning interval.}
   \item{nu0}{The prior degrees of freedom.}
   \item{tau0}{The prior scale parameter.}
   \item{mu0}{The prior mean.}
   \item{S0}{The prior scale matrix.}
   \item{a0}{The prior shape parameter.}
   \item{b0}{The prior scale parameter.}
-  \item{burnin}{The number of initial burnin draws.}
-  \item{thin}{Thinning interval.}
-  \item{W1}{The posterior in-sample predictions of \eqn{W_1}.}
-  \item{W2}{The posterior in-sample predictions of \eqn{W_2}.}
+  \item{W}{A three dimensional array storing the posterior in-sample
+  predictions of \eqn{W}. The first dimension indexes the Monte Carlo
+  draws, the second dimension indexes the columns of the table, and the
+  third dimension represents the observations.}
   The following additional elements are included in the output when
   \code{parameter = TRUE}.
-  \item{mu1}{The posterior draws of the population mean parameter
-    for \eqn{W_1}. It is an \eqn{m \times n} matrix, where \eqn{m} is
-    the number of Gibbs draws saved, \eqn{n} is the number of units.}
-  \item{mu2}{The posterior draws of the population mean parameter
-    of \eqn{W_2}. The dimension of \code{mu2} is the same as \code{mu1}.}
-  \item{Sigma11}{The posterior draws of the population variance
-    parameter for \eqn{W_1}. It is an \eqn{m \times n} matrix, where
-    \eqn{m} is the number of Gibbs draws saved, \eqn{n} is the number of
-    units.} 
-  \item{Sigma12}{The posterior draws of the population covariance
-    parameter for \eqn{W_1} and \eqn{W_2}. The dimension of
-    \code{Sigma12} is the same as \code{Sigma11}.}
-  \item{Sigma22}{The posterior draws of the population variance
-    parameter for \eqn{W_2}. The dimension of \code{Sigma22} is same
-    as \code{Sigma11}.}
+  \item{mu}{A three dimensional array storing the posterior draws of the
+  population mean parameter, \eqn{\mu}. The first dimension indexes the
+  Monte Carlo draws, the second dimension indexes the columns of the
+  table, and the third dimension represents the observations.} 
+  \item{Sigma}{A three dimensional array storing the poterior draws of
+  the population variance matrix, \eqn{\Sigma}. The first dimension
+  indexes the Monte Carlo draws, the second dimension indexes the
+  parameters, and the third dimension represents the observations. }
   \item{alpha}{The posterior draws of \eqn{\alpha}.}
   \item{nstar}{The number of clusters at each Gibbs draw.}
 }
@@ -164,5 +172,5 @@ summary(res)
   Tables.} Proceedings of the American Statistical Association.
   \url{http://www.princeton.edu/~kimai/research/einonpar.html} }
 
-\seealso{\code{eco},\code{summary.ecoNP}}
+\seealso{\code{eco}, \code{predict.eco}, \code{summary.ecoNP}}
 \keyword{models}

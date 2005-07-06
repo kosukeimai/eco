@@ -1,6 +1,6 @@
 ecoNP <- function(formula, data = parent.frame(), supplement = NULL,
                   mu0 = c(0,0), tau0 = 2, nu0 = 4, S0 = diag(10,2),
-                  alpha = NULL, a0 = 1, b0 = 0.1, parameter = TRUE,
+                  alpha = NULL, a0 = 1, b0 = 0.1, parameter = FALSE,
                   grid = FALSE, n.draws = 5000, burnin = 0, thin = 0,
                   verbose = FALSE){ 
 

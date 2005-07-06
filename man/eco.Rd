@@ -3,12 +3,12 @@
 \alias{eco}
 
 \title{Fitting the Parametric Bayesian Model of Ecological Inference in
-  2 by 2 Tables}  
+  2x2 Tables}
 
 \description{
   \code{eco} is used to fit the parametric Bayesian model (based on a
   Normal/Inverse-Wishart prior) for ecological inference in \eqn{2
-  \times 2} tables via Markov chain Monte Carlo. It gives in-sample
+  \times 2} tables via Markov chain Monte Carlo. It gives the in-sample
   predictions as well as the estimates of the model parameters. The
   model and algorithm are described in Imai and Lu (2004).
 }
@@ -16,7 +16,7 @@
 \usage{
 eco(formula, data = parent.frame(), N = NULL, supplement = NULL,
     mu0 = c(0,0), tau0 = 2, nu0 = 4, S0 = diag(10,2), mu.start = c(0,0),
-    Sigmastart = diag(10, 2), parameter = TRUE, grid = FALSE,
+    Sigma.start = diag(10, 2), parameter = TRUE, grid = FALSE,
     n.draws = 5000, burnin = 0, thin = 0, verbose = FALSE)
 }
 
@@ -39,27 +39,30 @@ eco(formula, data = parent.frame(), N = NULL, supplement = NULL,
     \code{NULL}, no additional individual-level data are included in the
     model. The default is \code{NULL}.
   }      
-  \item{mu0}{A \eqn{2 \times 1} numeric vector. The prior mean. The
-    default is \code{c(0,0)}.
+  \item{mu0}{A \eqn{2 \times 1} numeric vector of the prior mean for the
+    mean parameter \eqn{\mu}. The default is \code{c(0,0)}.
   } 
-  \item{tau0}{A positive integer. The prior scale parameter. The default
-    is \code{2}. 
+  \item{tau0}{A positive integer representing the prior scale
+  for the mean parameter \eqn{\mu}. The default is \code{2}.
   } 
-  \item{nu0}{A positive integer. The prior degrees of freedom
-    parameter. the default is \code{4}.
+  \item{nu0}{A positive integer representing the prior degrees of
+  freedom of the variance matrix \eqn{\Sigma}. the default is \code{4}.
   } 
-  \item{S0}{A \eqn{2 \times 2} numeric matrix, representing a positive
-    definite prior scale matrix. The default is \code{diag(10,2)}. 
+  \item{S0}{A \eqn{2 \times 2} numeric matrix representing a positive
+    definite prior scale matrix for the variance matrix
+    \eqn{\Sigma}. The default is \code{diag(10,2)}.
   } 
   \item{mu.start}{A \eqn{2 \times 1} numeric vector. The starting values
-    of the mean. The default is \code{c(0,0)}.
+    of the mean parameter \eqn{\mu}. The default is \code{c(0,0)}.
   }
-  \item{Sigma.start}{A \eqn{2 \times 2} numeric matrix, representing a
-    positive definite matrix for a starting value of the variance
-    matrix. The default is \code{diag(10,2)}.
+  \item{Sigma.start}{A \eqn{2 \times 2} numeric matrix representing
+    a starting value of the variance matrix \eqn{\Sigma}. The default is
+    \code{diag(10,2)}.
   } 
   \item{parameter}{Logical. If \code{TRUE}, the Gibbs draws of the population
-    parameters such as mu and sigma are returned. The default is \code{TRUE}.
+    parameters, \eqn{\mu} and \eqn{\Sigma}, are returned in addition to
+    the in-sample predictions of the missing internal cells,
+    \eqn{W}. The default is \code{TRUE}.
   }
   \item{grid}{Logical. If \code{TRUE}, the grid method is used to sample
     \eqn{W} in the Gibbs sampler. If \code{FALSE}, the Metropolis
@@ -105,7 +108,7 @@ eco(formula, data = parent.frame(), N = NULL, supplement = NULL,
 data(reg)
 
 ## NOTE: convergence has not been properly assessed for the following
-## examples.
+## examples. See Imai and Lu (2004) for more complete examples.
 
 ## fit the parametric model with the default prior specification
 res <- eco(Y ~ X, data = reg, verbose = TRUE)
@@ -124,20 +127,23 @@ summary(out)
   \item{call}{The matched call.}
   \item{X}{The row margin, \eqn{X}.}
   \item{Y}{The column margin, \eqn{Y}.}
+  \item{N}{The size of each table, \eqn{N}.}
+  \item{burnin}{The number of initial burnin draws.}
+  \item{thin}{The thinning interval.}
   \item{nu0}{The prior degrees of freedom.}
   \item{tau0}{The prior scale parameter.}
   \item{mu0}{The prior mean.}
   \item{S0}{The prior scale matrix.}
-  \item{burnin}{The number of initial burnin draws.}
-  \item{thin}{Thinning interval.}
-  \item{W1}{The posterior in-sample predictions of \eqn{W_1}.}
-  \item{W2}{The posterior in-sample predictions of \eqn{W_2}.}
+  \item{W}{A three dimensional array storing the posterior in-sample
+  predictions of \eqn{W}. The first dimension indexes the Monte Carlo
+  draws, the second dimension indexes the columns of the table, and the
+  third dimension represents the observations.}
   The following additional elements are included in the output when
   \code{parameter = TRUE}.
   \item{mu}{The posterior draws of the population mean parameter,
-    \eqn{mu}.}
+    \eqn{\mu}.}
   \item{Sigma}{The poterior draws of the population variance matrix,
-    \eqn{Sigma}.}
+    \eqn{\Sigma}.}
 }
 
 \author{

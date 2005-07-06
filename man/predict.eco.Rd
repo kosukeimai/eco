@@ -3,11 +3,11 @@
 \alias{predict.eco}
 
 \title{Out-of-Sample Posterior Prediction under the Parametric and
-  Nonparametric Bayesian Ecological Inference Models}
+  Nonparametric Bayesian Models for Ecological Inference in 2x2 Tables}
 
 \description{
-  Obtains out-of-sample posterior predictions under a fitted parametric
-  and nonparametric Bayesian models for ecological
+  Obtains out-of-sample posterior predictions under the fitted
+  parametric and nonparametric Bayesian models for ecological
   inference. \code{predict} method for class \code{eco}.
 }
 

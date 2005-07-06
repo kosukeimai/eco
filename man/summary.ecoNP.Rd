@@ -10,16 +10,17 @@
 }
 
 \usage{
-  \method{summary}{ecoNP}(object, CI=c(2.5, 97.5), param=FALSE, units=FALSE, subset=NULL, ...)
+  \method{summary}{ecoNP}(object, CI = c(2.5, 97.5), param = FALSE,
+                          units = FALSE, subset = NULL, ...)
 
   \method{print}{summary.ecoNP}(x, digits = max(3, getOption("digits") - 3), ...)
 }
 
 \arguments{
   \item{object}{An output object from \code{ecoNP}.}
-  \item{CI}{A 2 dimensional vector of lower and upper bounds for the
-    credible intervals used to summarize the results. The default is the
-    equal tail 95 percent credible interval.
+  \item{CI}{A vector of lower and upper bounds for the Bayesian credible
+    intervals used to summarize the results. The default is the equal
+    tail 95 percent credible interval. 
   }
   \item{x}{An object of class \code{summary.ecoNP}.}
   \item{digits}{the number of significant digits to use when printing.}
@@ -48,10 +49,8 @@
     mean estimates of \eqn{W_1} and \eqn{W_2}. If \code{subset} is 
     specified, only a subset of the population parameters are inlcuded.}
   If \code{unit = TRUE}, the following elements are also included:
-  \item{W1.table}{Unit-level posterior estimates for each unit or for 
-    a subset of \eqn{W_1}.}
-  \item{W2.table}{Unit-level posterior estimates for each unit or for 
-    a subset of \eqn{W_2}.}
+  \item{W1.table}{Unit-level posterior estimates for \eqn{W_1}.}
+  \item{W2.table}{Unit-level posterior estimates for \eqn{W_2}.}
 
   This object can be printed by \code{print.summary.ecoNP}
 }
@@ -59,8 +58,7 @@
 \seealso{\code{ecoNP}}
 
 \author{
-Kosuke Imai,
-  Department of Politics, Princeton University
+  Kosuke Imai, Department of Politics, Princeton University
   \email{kimai@Princeton.Edu}, \url{http://www.princeton.edu/~kimai};
   Ying Lu, Institute for Quantitative Social Sciences, 
   Harvard University \email{ylu@Latte.Harvard.Edu}

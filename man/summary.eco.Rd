@@ -3,22 +3,24 @@
 \alias{summary.eco}
 \alias{print.summary.eco}
 
-\title{Summarizing the results for the parametric models for ecological inference in 2 by 2 tables }
+\title{Summarizing the Results for the Bayesian Parametric Model for
+  Ecological Inference in 2x2 Tables}
 
 \description{
   \code{summary} method for class \code{eco}.
 }
 
 \usage{
-  \method{summary}{eco}(object, CI=c(2.5, 97.5), param=TRUE, units=FALSE, subset=NULL, ...)
+  \method{summary}{eco}(object, CI = c(2.5, 97.5), param = TRUE,
+                        units = FALSE, subset = NULL, ...) 
 
   \method{print}{summary.eco}(x, digits = max(3, getOption("digits") - 3), ...)
 }
 
 \arguments{
   \item{object}{An output object from \code{eco}.}
-  \item{CI}{A 2 dimensional vector of lower and upper bounds for the
-    credible intervals used to summarize the results. The default is the
+  \item{CI}{A vector of lower and upper bounds for the Bayesian credible
+    intervals used to summarize the results. The default is the
     equal tail 95 percent credible interval.
   }
   \item{x}{An object of class \code{summary.eco}.}
@@ -42,15 +44,14 @@
   \item{n.obs}{The number of units.}
   \item{n.draws}{The number of Monte Carlo samples.}
   \item{agg.table}{Aggregate posterior estimates of the marginal means
-    of \eqn{W_1} and \eqn{W_2} using \eqn{X} as a weight.}
+    of \eqn{W_1} and \eqn{W_2} using \eqn{X} and \eqn{N} as weights.}
   If \code{param = TRUE}, the following elements are also included:
   \item{param.table}{Posterior estimates of model parameters: population
-    mean estimates of \eqn{W_1} and \eqn{W_2}.}
+    mean estimates of \eqn{W_1} and \eqn{W_2} and their logit
+    transformations.} 
   If \code{units = TRUE}, the following elements are also included:
-  \item{W1.table}{Unit-level posterior estimates for each unit or for 
-   a suset of \eqn{W_1}.}
-  \item{W2.table}{Unit-level posterior estimates for each unit or for 
-   a subset of \eqn{W_2}.}
+  \item{W1.table}{Unit-level posterior estimates for \eqn{W_1}.}
+  \item{W2.table}{Unit-level posterior estimates for \eqn{W_2}.}
 
   This object can be printed by \code{print.summary.eco}
 }
