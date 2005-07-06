@@ -34,12 +34,6 @@ ecoNP(formula, data = parent.frame(), N = NULL, supplement = NULL,
   }  
   \item{N}{An optional variable representing the size of the unit; e.g.,
     the total number of voters.}
-  \item{supplement}{A numeric matrix. The matrix has two columns, which
-    contain additional individual-level data such as survey data for
-    \eqn{W_1} and \eqn{W_2}, respectively.  If \code{NULL}, no
-    additional individual-level data are included in the model. The
-    default is \code{NULL}.
-  }      
   \item{supplement}{An optional matrix of supplemental data. The matrix
     has two columns, which contain additional individual-level data such
     as survey data for \eqn{W_1} and \eqn{W_2}, respectively.  If
