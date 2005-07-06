@@ -1,4 +1,4 @@
-ecoNP <- function(formula, data = parent.frame(), supplement = NULL,
+ecoNP <- function(formula, data = parent.frame(), N = NULL, supplement = NULL,
                   mu0 = c(0,0), tau0 = 2, nu0 = 4, S0 = diag(10,2),
                   alpha = NULL, a0 = 1, b0 = 0.1, parameter = FALSE,
                   grid = FALSE, n.draws = 5000, burnin = 0, thin = 0,
@@ -9,12 +9,14 @@ ecoNP <- function(formula, data = parent.frame(), supplement = NULL,
     stop("n.draws should be larger than burnin")
   mf <- match.call()
 
+  ## getting X, Y and N
   tt <- terms(formula)
   attr(tt, "intercept") <- 0
   if (is.matrix(eval.parent(mf$data)))
     data <- as.data.frame(data)
   X <- model.matrix(tt, data)
   Y <- model.response(model.frame(tt, data = data))
+  N <- eval(mf$N, data)
 
   ## alpha
   if (is.null(alpha)) {
@@ -57,7 +59,7 @@ ecoNP <- function(formula, data = parent.frame(), supplement = NULL,
   W2.post <- matrix(res$pdSW2, n.store, unit.w, byrow=TRUE)[,tmp$order.old]
   W <- array(rbind(W1.post, W2.post), c(n.store, 2, unit.w))
   colnames(W) <- c("W1", "W2")
-  res.out <- list(call = mf, X = X, Y = Y, W = W,
+  res.out <- list(call = mf, X = X, Y = Y, N = N, W = W,
                   Wmin = bdd$Wmin[,1,], Wmax = bdd$Wmax[,1,],
                   burin = burnin, thin = thin, nu0 = nu0, tau0 = tau0,
                   mu0 = mu0, a0 = a0, b0 = b0, S0 = S0)

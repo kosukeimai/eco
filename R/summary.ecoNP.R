@@ -13,6 +13,7 @@ summary.ecoNP <- function(object, CI=c(2.5, 97.5), param=FALSE, units=FALSE, sub
 
   if (is.null(object$N))
     N <- rep(1, nrow(object$X))
+  else N <- object$N
 
   W1.agg.mean <- object$W[,1,] %*% (object$X*N/sum(object$X*N))
   W2.agg.mean <- object$W[,2,] %*% ((1-object$X)*N/sum((1-object$X)*N))

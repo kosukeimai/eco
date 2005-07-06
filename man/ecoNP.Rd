@@ -15,7 +15,7 @@
 }
 
 \usage{
-ecoNP(formula, data = parent.frame(), supplement = NULL,
+ecoNP(formula, data = parent.frame(), N = NULL, supplement = NULL,
       mu0 = c(0,0), tau0 = 2, nu0 = 4, S0 = diag(10,2), alpha = NULL,
       a0 = 1, b0 = 0.1, parameter = FALSE, grid = FALSE,
       n.draws = 5000, burnin = 0, thin = 0, verbose = FALSE)
@@ -32,6 +32,8 @@ ecoNP(formula, data = parent.frame(), supplement = NULL,
     in \code{formula}. The default is the environment in which
     \code{ecoNP} is called. 
   }  
+  \item{N}{An optional variable representing the size of the unit; e.g.,
+    the total number of voters.}
   \item{supplement}{A numeric matrix. The matrix has two columns, which
     contain additional individual-level data such as survey data for
     \eqn{W_1} and \eqn{W_2}, respectively.  If \code{NULL}, no
@@ -124,9 +126,22 @@ data(reg)
 ## example. See Imai and Lu (2004) for more complete examples.
 
 ## fit the nonparametric model to give in-sample predictions
-res <- ecoNP(Y ~ X, data = reg, n.draws = 500, verbose = TRUE) 
+res <- ecoNP(Y ~ X, data = reg, n.draws = 500, verbose = TRUE, param=TRUE) 
 ##summarize the results
 summary(res)
+
+## obtain out-of-sample prediction
+out <- predict(res, verbose=TRUE)
+## summarize the results
+summary(out)
+## density plot of the out-of-sample predictions
+## requires "KernSmooth" package
+library(KernSmooth)
+plot(c(0,1), c(0,0), xlim=c(0,1), ylim=c(0,6), pch='.', xlab=expression(W[1]), ylab=NA, yaxp=c(0,6,1))
+lines(bkde(out[,1], truncate=FALSE), lty=1)
+lines(bkde(out[,2], truncate=FALSE), lty=2)
+legend(0, 5.5, c(expression(W[1]), expression(W[2])), lty=c(1,2))
+title("Density Plot of W")
 }
 
 \value{
@@ -146,6 +161,8 @@ summary(res)
   predictions of \eqn{W}. The first dimension indexes the Monte Carlo
   draws, the second dimension indexes the columns of the table, and the
   third dimension represents the observations.}
+  \item{Wmin}{A numeric matrix storing the lower bounds of \eqn{W}.
+  \item{Wmax}{A numeric matrix storing the upper bounds of \eqn{W}.
   The following additional elements are included in the output when
   \code{parameter = TRUE}.
   \item{mu}{A three dimensional array storing the posterior draws of the

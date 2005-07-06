@@ -138,6 +138,8 @@ summary(out)
   predictions of \eqn{W}. The first dimension indexes the Monte Carlo
   draws, the second dimension indexes the columns of the table, and the
   third dimension represents the observations.}
+  \item{Wmin}{A numeric matrix storing the lower bounds of \eqn{W}.
+  \item{Wmax}{A numeric matrix storing the upper bounds of \eqn{W}.
   The following additional elements are included in the output when
   \code{parameter = TRUE}.
   \item{mu}{The posterior draws of the population mean parameter,

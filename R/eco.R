@@ -49,7 +49,8 @@ eco <- function(formula, data = parent.frame(), N = NULL, supplement = NULL,
   W <- array(rbind(W1.post, W2.post), c(n.store, 2, unit.w))
   colnames(W) <- c("W1", "W2")
   res.out <- list(call = mf, X = X, Y = Y, N = N, W = W,
-                  burin = burnin, thin = thin, nu0 = nu0,
+                  Wmin=bdd$Wmin[,1,], Wmax = bdd$Wmax[,1,],
+		  burin = burnin, thin = thin, nu0 = nu0,
                   tau0 = tau0, mu0 = mu0, S0 = S0)
 
   if (parameter) {
