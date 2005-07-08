@@ -36,13 +36,13 @@ void cBaseeco(
 	      double *mustart, /* starting values for mu */
 	      double *Sigmastart, /* starting values for Sigma */
 
-	      /*incorporating survey data */
-	      int *survey,     /*1 if survey data available (set of W_1, W_2) */
-	                       /*0 not*/
+	      /* incorporating survey data */
+	      int *survey,     /*1 if survey data available (set of W_1, W_2)
+				 0 not*/
 	      int *sur_samp,   /*sample size of survey data*/
 	      double *sur_W,   /*set of known W_1, W_2 */ 
 				  
-	      /*incorporating homeogenous areas */
+	      /* incorporating homeogenous areas */
 	      int *x1,         /* 1 if X=1 type areas available 
 				  W_1 known, W_2 unknown */
 	      int *sampx1,     /* number X=1 type areas */
@@ -55,7 +55,7 @@ void cBaseeco(
 	      /* bounds of W1 */
 	      double *minW1, double *maxW1,
 
-	      /* storage */
+	      /* flags */
 	      int *parameter,  /* 1 if save population parameter */
 	      int *Grid,       /* 1 if Grid algorithm is used; 0 for
 				  Metropolis */
