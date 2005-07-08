@@ -47,13 +47,11 @@ summary.eco <- function(object, CI = c(2.5, 97.5), param = TRUE,
     if (is.null(object$mu) || is.null(object$Sigma))
       stop("Parameters are missing values.")
     else {
-      param <- cbind(invlogit(object$mu), object$mu, object$Sigma)
+      param <- cbind(object$mu, object$Sigma)
       param.table <- cbind(apply(param, 2, mean), apply(param, 2, sd),
                            apply(param, 2, quantile, min(CI)/100),
                            apply(param, 2, quantile, max(CI)/100))
       colnames(param.table) <- table.names
-      rownames(param.table) <- c("E(W1)", "E(W2)", "mu1", "mu2",
-                                 "Sigma11", "Sigma12", "Sigma22") 
     }
   }
   else
