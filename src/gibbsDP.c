@@ -224,6 +224,8 @@ void cDPeco(
   for(i=0;i<t_samp;i++)
     C[i]=i; /*cluster is from 0...n_samp-1 */
   
+  if (*verbose)
+    Rprintf("Starting Gibbs Sampler...\n");
   for(main_loop=0; main_loop<*n_gen; main_loop++){
     /**update W, Wstar given mu, Sigma only for the unknown W/Wstar**/
     for (i=0;i<n_samp;i++){

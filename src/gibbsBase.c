@@ -183,6 +183,8 @@ void cBaseeco(
   dinv(Sigma, n_dim, InvSigma);
   
   /*** Gibbs sampler! ***/
+  if (*verbose)
+    Rprintf("Starting Gibbs Sampler...\n");
   for(main_loop=0; main_loop<*n_gen; main_loop++){
     /** update W, Wstar given mu, Sigma in regular areas **/
     for (i=0;i<n_samp;i++){
