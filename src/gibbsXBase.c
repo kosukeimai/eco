@@ -217,7 +217,7 @@ void cBaseecoX(
 	  rGrid(W[i], W1g[i],W2g[i], n_grid[i], mu_w, InvSigma_w,
 		n_dim);
 	else
-	  rMH(W[i], X[i], minW1[i], maxW1[i], mu, InvSigma, n_dim);
+	  rMH(W[i], X[i], minW1[i], maxW1[i], mu_w, InvSigma_w, n_dim);
       } 
       /*3 compute Wsta_i from W_i*/
       Wstar[i][0]=log(W[i][0])-log(1-W[i][0]);
