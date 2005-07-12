@@ -150,7 +150,7 @@ void rMH(
 }
 
 
-/* sample W via MH for RxC table */
+/* sample W via MH for 2xC table */
 void rMH2c(
 	   double *W,              /* W */
 	   double *X,              /* X_i */
@@ -167,6 +167,7 @@ void rMH2c(
 				      if 0, use Gibbs sampling
 				   */  
 {
+  int iter = 100;   /* number of Gibbs iterations */
   int i, j, exceed;
   double dens1, dens2, ratio, dtemp;
   double *Sample = doubleArray(n_dim);
@@ -189,18 +190,16 @@ void rMH2c(
 	  exceed++;
       i++;
       if (i > maxit)
-	error("rMHrc: rejection algorithm failed because bounds are too tight.\n increase maxit or use gibbs sampler instead.");
+	error("rMH2c: rejection algorithm failed because bounds are too tight.\n increase maxit or use gibbs sampler instead.");
     }
   }
   else { /* gibbs sampler */
     for (j = 0; j < n_dim; j++) 
       vtemp[j] = W[j]*X[j]/Y;
-    for (i = 0; i < 100; i++) {
+    for (i = 0; i < iter; i++) {
       dtemp = vtemp[n_dim-1];
       for (j = 0; j < n_dim-1; j++) {
 	dtemp += vtemp[j];
-	/* Rprintf("%14g%14g\n", fmax2(minU[j], dtemp-maxU[n_dim-1]),
-	   maxU[j]); */
 	vtemp[j] = runif(fmax2(minU[j], dtemp-maxU[n_dim-1]), 
 			 fmin2(maxU[j], dtemp-minU[n_dim-1]));
 	dtemp -= vtemp[j];
@@ -208,9 +207,6 @@ void rMH2c(
       vtemp[n_dim-1] = dtemp;
     }
   }
-  /*  for (j = 0; j < n_dim; j++) 
-      Rprintf("%14g", vtemp[j]);
-      Rprintf("\n\n"); */
   /* calcualte W and its logit transformation */
   for (j = 0; j < n_dim; j++) {
     Sample[j] = vtemp[j]*Y/X[j];
