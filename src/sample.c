@@ -151,7 +151,7 @@ void rMH(
 
 
 /* sample W via MH for RxC table */
-void rMHrc(
+void rMH2c(
 	   double *W,              /* W */
 	   double *X,              /* X_i */
 	   double Y,               /* Y_i */

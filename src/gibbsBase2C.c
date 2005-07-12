@@ -157,7 +157,7 @@ void cBase2C(
   for(main_loop = 0; main_loop < *n_gen; main_loop++){
     /** update W, Wstar given mu, Sigma **/
     for (i = 0; i < n_samp; i++){
-      rMHrc(W[i], X[i], Y[i], minU[i], maxU[i], mu, InvSigma, n_col,
+      rMH2c(W[i], X[i], Y[i], minU[i], maxU[i], mu, InvSigma, n_col,
 	    *maxit, *reject);
       for (j = 0; j < n_col; j++) 
 	Wstar[i][j] = log(W[i][j])-log(1-W[i][j]);
