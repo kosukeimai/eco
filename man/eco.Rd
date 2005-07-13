@@ -10,14 +10,15 @@
   Normal/Inverse-Wishart prior) for ecological inference in \eqn{2
   \times 2} tables via Markov chain Monte Carlo. It gives the in-sample
   predictions as well as the estimates of the model parameters. The
-  model and algorithm are described in Imai and Lu (2004).
+  model and algorithm are described in Imai and Lu (2004, 2005). The
+  contextual effect can also be modeled.
 }
 
 \usage{
-eco(formula, data = parent.frame(), N = NULL, supplement = NULL,
-    mu0 = c(0,0), tau0 = 2, nu0 = 4, S0 = diag(10,2), mu.start = c(0,0),
-    Sigma.start = diag(10, 2), parameter = TRUE, grid = FALSE,
-    n.draws = 5000, burnin = 0, thin = 0, verbose = FALSE)
+eco(formula, data = parent.frame(), N = NULL, context = FALSE,
+    supplement = NULL, mu0 = c(0,0), tau0 = 2, nu0 = 4, S0 = diag(10,2),
+    mu.start = c(0,0), Sigma.start = diag(10, 2), parameter = TRUE,
+    grid = FALSE, n.draws = 5000, burnin = 0, thin = 0, verbose = FALSE)
 }
 
 \arguments{
@@ -38,7 +39,11 @@ eco(formula, data = parent.frame(), N = NULL, supplement = NULL,
     as survey data for \eqn{W_1} and \eqn{W_2}, respectively.  If
     \code{NULL}, no additional individual-level data are included in the
     model. The default is \code{NULL}.
-  }      
+  }
+  \item{context}{Logical. If \code{TRUE}, the contextual effect is also
+    modeled. See Imai and Lu (2005) for details. The default is
+    \code{FALSE}. 
+  }
   \item{mu0}{A \eqn{2 \times 1} numeric vector of the prior mean for the
     mean parameter \eqn{\mu}. The default is \code{c(0,0)}.
   } 
@@ -120,6 +125,15 @@ out <- predict(res, verbose=TRUE)
 ## summarize the results
 summary(out)
 
+## load the Robinson data
+data(cens1910)
+
+## fit the parametric model with contextual effects and N 
+## using the default prior specification
+res1 <- eco(Y ~ X, N = N, context = TRUE, data = cens1910, verbose = TRUE)
+## summarize the results
+summary(res1)
+
 }
 
 \value{
@@ -157,8 +171,16 @@ summary(out)
 \references{
   Imai, Kosuke and Ying Lu. (2004) \dQuote{ Parametric and Nonparametric
   Bayesian Models for Ecological Inference in \eqn{2 \times 2}
-  Tables.} Proceedings of the American Statistical Association.
+  Tables.} Proceedings of the American Statistical
+  Association. available at
+  \url{http://www.princeton.edu/~kimai/research/einonpar.html}
+
+  Imai, Kosuke and Ying Lu. (2005) \dQuote{An Incomplete Data Approach
+  to Ecological Inference.} Working Paper, Princeton University,
+  available at
   \url{http://www.princeton.edu/~kimai/research/einonpar.html} }
+
+}
 
 \seealso{\code{ecoNP}, \code{predict.eco}, \code{summary.eco}}
 \keyword{models}
