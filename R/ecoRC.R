@@ -64,8 +64,8 @@ ecoRC <- function(formula, data = parent.frame(),
               as.integer(parameter), pdSmu = double(n.store*C*(R-1)),
               pdSSigma = double(n.store*C*(R-1)*R/2),
               pdSW = double(n.store*n.samp*(R-1)*C), PACKAGE="eco")
-    res.out$mu <- array(res$pdSmu, c(C, R-1, n.store))
-    res.out$Sigma <- array(res$pdSSigma, c(C, R*(R-1)/2, n.store))
+    res.out$mu <- array(res$pdSmu, c(R-1, C, n.store))
+    res.out$Sigma <- array(res$pdSSigma, c(R*(R-1)/2, C, n.store))
     res.out$W <- array(res$pdSW, c(R-1, C, n.samp, n.store))
   }
   

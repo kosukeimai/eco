@@ -215,7 +215,7 @@ void cBaseRC(
 	  if (l > *maxit)
 	    error("rejection algorithm failed because bounds are too tight.\n increase maxit or use gibbs sampler instead.");
 	}
-	/* calcualte W and its log-ratio transformation */
+	/* get W and its log-ratio transformation */
 	for (k = 0; k < n_col; k++) {
 	  dvtemp[k] = dvtemp[k]*Y[i][j]/X[i][k];
 	  dvtemp1[k] = Wsum[i][k]+dvtemp[k];
@@ -226,7 +226,7 @@ void cBaseRC(
 	      SWstar[k][l] = log(dvtemp[k])-log(1-dvtemp1[k]);
 	    else
 	      SWstar[k][l] = log(W[i][j][k])-log(1-dvtemp1[k]);
-	/* acceptance ratio */
+	/* computing acceptance ratio */
 	dtemp = 0; dtemp1 = 0;
 	for (k= 0; k < n_col; k++) {
 	  dtemp += dMVN(SWstar[k], mu[k], InvSigma[k], n_dim, 1);
@@ -237,20 +237,21 @@ void cBaseRC(
 	if (unif_rand() < fmin2(1, exp(dtemp-dtemp1))) 
 	  for (k = 0; k < n_col; k++)
 	    W[i][j][k] = dvtemp[k]; 
-	/* recomputing Wsum with new draws */
+	/* updating Wsum with new draws */
 	for (k = 0; k < n_col; k++) {
 	  Wsum[i][k] += W[i][j][k];
 	  if (Wsum[i][k]>1)
 	    error("error");
 	}
       }
+      /* updating Wstar with new draws */
       for (j = 0; j < n_dim; j++) 
 	for (k = 0; k < n_col; k++)
 	  Wstar[k][i][j] = log(W[i][j][k])-log(1-Wsum[i][k]);
     }    
-      
+    
     /* update mu, Sigma given wstar using effective sample of Wstar */
-    for (k = 0; k < n_dim; k++)
+    for (k = 0; k < n_col; k++)
       NIWupdate(Wstar[k], mu[k], Sigma[k], InvSigma[k], mu0, tau0,
 		nu0, S0, n_samp, n_dim); 
     
@@ -258,14 +259,13 @@ void cBaseRC(
     if (main_loop >= *burn_in){
       itempC++;
       if (itempC==nth){
-	for (k = 0; k < n_col; k++) {
+	for (k = 0; k < n_col; k++) 
 	  for (j = 0; j < n_dim; j++) {
 	    pdSmu[itempM++]=mu[k][j];
-	    for (i = 0; i < n_col; i++)
-	      if (k <= i)
-		pdSSigma[itempS++]=Sigma[j][k][i];
+	    for (i = 0; i < n_dim; i++)
+	      if (j <= i)
+		pdSSigma[itempS++]=Sigma[k][j][i];
 	  }
-	}
 	for(i = 0; i < n_samp; i++)
 	  for (k = 0; k < n_col; k++)
 	    for (j = 0; j < n_dim; j++)
