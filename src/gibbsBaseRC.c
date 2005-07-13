@@ -70,9 +70,11 @@ void cBaseRC(
   double ***W = doubleMatrix3D(n_samp, n_dim, n_col);     /* W */
   double ***Wstar = doubleMatrix3D(n_col, n_samp, n_dim); /* logratio(W) */       
   double **Wsum = doubleMatrix(n_samp, n_col);            /* sum_{r=1}^{R-1} W_{irc} */
+  double **SWstar = doubleMatrix(n_col, n_dim);
 
-  /* The lower bounds of U = W*X/Y **/
+  /* The lower and upper bounds of U = W*X/Y **/
   double ***minU = doubleMatrix3D(n_samp, n_dim, n_col);
+  double *maxU = doubleArray(n_col);
 
   /* model parameters */
   double **mu = doubleMatrix(n_col, n_dim);                 /* mean */
@@ -80,7 +82,7 @@ void cBaseRC(
   double ***InvSigma = doubleMatrix3D(n_col, n_dim, n_dim); /* inverse */
 
   /* misc variables */
-  int i, j, k, main_loop;   /* used for various loops */
+  int i, j, k, l, main_loop;   /* used for various loops */
   int itemp, counter;
   int itempM = 0;           /* for mu */
   int itempS = 0;           /* for Sigma */
@@ -90,6 +92,7 @@ void cBaseRC(
   double dtemp, dtemp1;
   double *param = doubleArray(n_col);   /* Dirichlet parameters */
   double *dvtemp = doubleArray(n_col);
+  double *dvtemp1 = doubleArray(n_col);
 
   /* get random seed */
   GetRNGstate();
@@ -148,7 +151,7 @@ void cBaseRC(
 	    Wsum[i][k] += W[i][j][k];
 	  }
 	counter++;
-	if (counter > *maxit & itemp > 0) { /* if rejection sampling fails, then
+	if (counter > *maxit && itemp > 0) { /* if rejection sampling fails, then
 				   use midpoints of bounds */
 	  itemp = 0;
 	  dtemp = Y[i][j]; dtemp1 = 1;
@@ -170,6 +173,16 @@ void cBaseRC(
 	Wstar[k][i][j] = log(W[i][j][k])-log(1-Wsum[i][k]);
   }
 
+  /* 
+  for (i = 0; i < n_samp; i++) {
+    for (k = 0; k < n_col; k++) {
+      for (j = 0; j < n_dim; j++) 
+	Rprintf("%14g", W[i][j][k]);
+      Rprintf("%14g\n", Wsum[i][k]);
+    }
+    Rprintf("\n");
+    } */
+
   /* read the prior */
   itemp = 0;
   for(k = 0; k < n_dim; k++)
@@ -187,28 +200,55 @@ void cBaseRC(
 	/* computing upper bounds for U */
 	for (k = 0; k < n_col; k++) {
 	  Wsum[i][k] -= W[i][j][k];
-	  Rprintf("%14g", Wsum[i][k]);
-	  dvtemp[k] = fmin2(1, X[i][k]*(1-Wsum[i][k])/Y[i][j]);
+	  maxU[k] = fmin2(1, X[i][k]*(1-Wsum[i][k])/Y[i][j]);
 	}
-	Rprintf("hi\n");
-	/* MH step */
-	rMHrc(W[i], Wsum[i], X[i], Y[i][j], minU[i][j], dvtemp, mu, 
-	      InvSigma, n_dim, n_col, j, *maxit, *reject);
+	/** MH step **/
+	/* Sample a candidate draw of W from truncated Dirichlet */
+	l = 0; itemp = 1;
+	while (itemp > 0) {
+	  rDirich(dvtemp, param, n_col);
+	  itemp = 0;
+	  for (k = 0; k < n_col; k++) 
+	    if (dvtemp[k] > maxU[k] || dvtemp[k] < minU[i][j][k])
+	      itemp++;
+	  l++;
+	  if (l > *maxit)
+	    error("rejection algorithm failed because bounds are too tight.\n increase maxit or use gibbs sampler instead.");
+	}
+	/* calcualte W and its log-ratio transformation */
+	for (k = 0; k < n_col; k++) {
+	  dvtemp[k] = dvtemp[k]*Y[i][j]/X[i][k];
+	  dvtemp1[k] = Wsum[i][k]+dvtemp[k];
+	}
+	for (k = 0; k < n_col; k++) 
+	  for (l = 0; l < n_dim; l++) 
+	    if (l == j)
+	      SWstar[k][l] = log(dvtemp[k])-log(1-dvtemp1[k]);
+	    else
+	      SWstar[k][l] = log(W[i][j][k])-log(1-dvtemp1[k]);
+	/* acceptance ratio */
+	dtemp = 0; dtemp1 = 0;
+	for (k= 0; k < n_col; k++) {
+	  dtemp += dMVN(SWstar[k], mu[k], InvSigma[k], n_dim, 1);
+	  dtemp1 += dMVN(Wstar[k][i], mu[k], InvSigma[k], n_dim, 1);
+	  dtemp -= log(dvtemp[k]);
+	  dtemp1 -= log(W[i][j][k]);
+	}
+	if (unif_rand() < fmin2(1, exp(dtemp-dtemp1))) 
+	  for (k = 0; k < n_col; k++)
+	    W[i][j][k] = dvtemp[k]; 
 	/* recomputing Wsum with new draws */
 	for (k = 0; k < n_col; k++) {
-	  Rprintf("%14g", W[i][j][k]);
 	  Wsum[i][k] += W[i][j][k];
 	  if (Wsum[i][k]>1)
 	    error("error");
 	}
-	Rprintf("hey\n");
       }
-      Rprintf("\nhoi\n");
       for (j = 0; j < n_dim; j++) 
 	for (k = 0; k < n_col; k++)
 	  Wstar[k][i][j] = log(W[i][j][k])-log(1-Wsum[i][k]);
     }    
-
+      
     /* update mu, Sigma given wstar using effective sample of Wstar */
     for (k = 0; k < n_dim; k++)
       NIWupdate(Wstar[k], mu[k], Sigma[k], InvSigma[k], mu0, tau0,
