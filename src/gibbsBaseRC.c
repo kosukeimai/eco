@@ -16,7 +16,7 @@
 #include "bayes.h"
 #include "sample.h"
 
-/* Normal Parametric Model for RxC (with R > 2, C >= 2) Tables */
+/* Normal Parametric Model for RxC (with R >= 2, C >= 2) Tables */
 void cBaseRC(
 	     /*data input */
 	     double *pdX,     /* X */
@@ -68,16 +68,16 @@ void cBaseRC(
   double **Y = doubleMatrix(n_samp, n_dim);               /* Y */
   double **X = doubleMatrix(n_samp, n_col);               /* X */
   double ***W = doubleMatrix3D(n_samp, n_dim, n_col);     /* W */
-  double ***Wstar = doubleMatrix3D(n_dim, n_samp, n_col); /* logit(W) */       
-  double **Wsum = doubleMatrix(n_samp, n_col);
+  double ***Wstar = doubleMatrix3D(n_col, n_samp, n_dim); /* logratio(W) */       
+  double **Wsum = doubleMatrix(n_samp, n_col);            /* sum_{r=1}^{R-1} W_{irc} */
 
   /* The lower bounds of U = W*X/Y **/
   double ***minU = doubleMatrix3D(n_samp, n_dim, n_col);
 
   /* model parameters */
-  double **mu = doubleMatrix(n_dim, n_col);                 /* mean */
-  double ***Sigma = doubleMatrix3D(n_dim, n_col, n_col);    /* covariance */
-  double ***InvSigma = doubleMatrix3D(n_dim, n_col, n_col); /* inverse */
+  double **mu = doubleMatrix(n_col, n_dim);                 /* mean */
+  double ***Sigma = doubleMatrix3D(n_col, n_dim, n_dim);    /* covariance */
+  double ***InvSigma = doubleMatrix3D(n_col, n_dim, n_dim); /* inverse */
 
   /* misc variables */
   int i, j, k, main_loop;   /* used for various loops */
@@ -115,16 +115,16 @@ void cBaseRC(
 
   /* initial values for mu and Sigma */
   itemp = 0;
-  for (k = 0; k < n_col; k++)
-    for (j = 0; j < n_dim; j++)
+  for (k = 0; k < n_dim; k++)
+    for (j = 0; j < n_col; j++)
       mu[j][k] = pdMu[itemp++]; 
   itemp = 0;
-  for (i = 0; i < n_dim; i++)
-    for (k = 0; k < n_col; k++)
-      for (j = 0; j < n_col; j++)
-	Sigma[i][j][k] = pdSigma[itemp++]; 
-  for (j = 0; j < n_dim; j++)
-    dinv(Sigma[j], n_col, InvSigma[j]);
+  for (i = 0; i < n_col; i++)
+    for (k = 0; k < n_dim; k++) 
+      for (j = 0; j < n_dim; j++) 
+	Sigma[i][j][k] = pdSigma[itemp++];
+  for (j = 0; j < n_col; j++)
+    dinv(Sigma[j], n_dim, InvSigma[j]);
   
   /* initial values for W */
   for (j = 0; j < n_col; j++)
@@ -145,35 +145,35 @@ void cBaseRC(
 	if (itemp < 1) 
 	  for (k = 0; k < n_col; k++) {
 	    W[i][j][k] = dvtemp[k]*Y[i][j]/X[i][k];
-	    Wstar[j][i][k] = log(W[i][j][k])-log(1-W[i][j][k]);
 	    Wsum[i][k] += W[i][j][k];
 	  }
 	counter++;
-	if (counter > *maxit) { /* if rejection sampling fails, then
+	if (counter > *maxit & itemp > 0) { /* if rejection sampling fails, then
 				   use midpoints of bounds */
 	  itemp = 0;
 	  dtemp = Y[i][j]; dtemp1 = 1;
 	  for (k = 0; k < n_col-1; k++) {
 	    W[i][j][k] = 0.25*(fmax2(0,(X[i][k]/dtemp1+dtemp-1)*dtemp1/X[i][k])+
 			      fmin2(1-Wsum[i][k],dtemp*dtemp1/X[i][k]));
-	    Wstar[j][i][k] = log(W[i][j][k])-log(1-W[i][j][k]);
 	    dtemp -= W[i][j][k]*X[i][k]/dtemp1;
 	    dtemp1 -= X[i][k];
 	    Wsum[i][k] += W[i][j][k];
 	  }
 	  W[i][j][n_col-1] = dtemp;
-	  Wstar[j][i][n_col-1] = log(W[i][j][n_col-1])-log(1-W[i][j][n_col-1]);
 	  Wsum[i][n_col-1] += dtemp;
 	}
 	R_CheckUserInterrupt();
       }
     }
+    for (j = 0; j < n_dim; j++) 
+      for (k = 0; k < n_col; k++)
+	Wstar[k][i][j] = log(W[i][j][k])-log(1-Wsum[i][k]);
   }
 
   /* read the prior */
   itemp = 0;
-  for(k = 0; k < n_col; k++)
-    for(j = 0; j < n_col; j++) 
+  for(k = 0; k < n_dim; k++)
+    for(j = 0; j < n_dim; j++) 
       S0[j][k] = pdS0[itemp++];
 
   /*** Gibbs sampler! ***/
@@ -182,28 +182,37 @@ void cBaseRC(
   for(main_loop = 0; main_loop < *n_gen; main_loop++){
     /** update W, Wstar given mu, Sigma **/
     for (i = 0; i < n_samp; i++) {
+      /* sampling W through Metropolis Step for each row */
       for (j = 0; j < n_dim; j++) {
+	/* computing upper bounds for U */
 	for (k = 0; k < n_col; k++) {
 	  Wsum[i][k] -= W[i][j][k];
+	  Rprintf("%14g", Wsum[i][k]);
 	  dvtemp[k] = fmin2(1, X[i][k]*(1-Wsum[i][k])/Y[i][j]);
-	  /* Rprintf("%14g%14g\n", minU[i][j][k], dvtemp[k]); */
 	}
-	/* Rprintf("\n"); */
-	rMHrc(W[i][j], X[i], Y[i][j], minU[i][j], dvtemp, mu[j], 
-	      InvSigma[j], n_col, *maxit, *reject);
+	Rprintf("hi\n");
+	/* MH step */
+	rMHrc(W[i], Wsum[i], X[i], Y[i][j], minU[i][j], dvtemp, mu, 
+	      InvSigma, n_dim, n_col, j, *maxit, *reject);
+	/* recomputing Wsum with new draws */
 	for (k = 0; k < n_col; k++) {
+	  Rprintf("%14g", W[i][j][k]);
 	  Wsum[i][k] += W[i][j][k];
 	  if (Wsum[i][k]>1)
 	    error("error");
-	  Wstar[j][i][k] = log(W[i][j][k])-log(1-W[i][j][k]);
 	}
+	Rprintf("hey\n");
       }
+      Rprintf("\nhoi\n");
+      for (j = 0; j < n_dim; j++) 
+	for (k = 0; k < n_col; k++)
+	  Wstar[k][i][j] = log(W[i][j][k])-log(1-Wsum[i][k]);
     }    
 
     /* update mu, Sigma given wstar using effective sample of Wstar */
-    for (j = 0; j < n_dim; j++)
-      NIWupdate(Wstar[j], mu[j], Sigma[j], InvSigma[j], mu0, tau0,
-		nu0, S0, n_samp, n_col); 
+    for (k = 0; k < n_dim; k++)
+      NIWupdate(Wstar[k], mu[k], Sigma[k], InvSigma[k], mu0, tau0,
+		nu0, S0, n_samp, n_dim); 
     
     /*store Gibbs draw after burn-in and every nth draws */     
     if (main_loop >= *burn_in){
@@ -211,7 +220,7 @@ void cBaseRC(
       if (itempC==nth){
 	for (k = 0; k < n_col; k++) {
 	  for (j = 0; j < n_dim; j++) {
-	    pdSmu[itempM++]=mu[j][k];
+	    pdSmu[itempM++]=mu[k][j];
 	    for (i = 0; i < n_col; i++)
 	      if (k <= i)
 		pdSSigma[itempS++]=Sigma[j][k][i];
@@ -244,12 +253,12 @@ void cBaseRC(
   FreeMatrix(X, n_samp);
   FreeMatrix(Y, n_samp);
   Free3DMatrix(W, n_samp, n_dim);
-  Free3DMatrix(Wstar, n_dim, n_samp);
+  Free3DMatrix(Wstar, n_col, n_samp);
   FreeMatrix(Wsum, n_samp);
   Free3DMatrix(minU, n_samp, n_dim);
-  FreeMatrix(mu, n_dim);
-  Free3DMatrix(Sigma, n_dim, n_col);
-  Free3DMatrix(InvSigma, n_dim, n_col);
+  FreeMatrix(mu, n_col);
+  Free3DMatrix(Sigma, n_col, n_dim);
+  Free3DMatrix(InvSigma, n_col, n_dim);
   free(param);
   free(dvtemp);
 } /* main */

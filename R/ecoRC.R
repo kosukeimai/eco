@@ -23,13 +23,12 @@ ecoRC <- function(formula, data = parent.frame(),
 
   ## fitting the model
   n.store <- floor((n.draws-burnin)/(thin+1))
-  n.par <- R-1
   tmp <- ecoBD(formula, data=data)
-  mu0 <- rep(mu0, C)
-  S0 <- diag(S0, C)
 
   res.out <- list(call = mf, X = X, Y = Y, Wmin = tmp$Wmin, Wmax = tmp$Wmax)
   if (R == 1) {
+    mu0 <- rep(mu0, C)
+    S0 <- diag(S0, C)
     mu.start <- rep(mu.start, C)
     Sigma.start <- diag(Sigma.start, C)
     res <- .C("cBase2C", as.double(X), as.double(Y),
@@ -48,9 +47,11 @@ ecoRC <- function(formula, data = parent.frame(),
     res.out$W <- array(res$pdSW, c(C, n.samp, n.store))
   }
   else {
-    mu.start <- matrix(rep(rep(mu.start, C), R-1), ncol = R-1, nrow = C,
+    mu0 <- rep(mu0, R-1)
+    S0 <- diag(S0, R-1)
+    mu.start <- matrix(rep(rep(mu.start, R-1), C), nrow = R-1, ncol = C,
                        byrow = FALSE)
-    Sigma.start <- array(rep(diag(Sigma.start, C), R-1), c(C, C, R-1))
+    Sigma.start <- array(rep(diag(Sigma.start, R-1), C), c(R-1, R-1, C))
     res <- .C("cBaseRC", as.double(X), as.double(Y[,1:(R-1)]),
               as.double(tmp$Wmin[,1:(R-1),]), as.double(tmp$Wmax[,1:(R-1),]),
               as.integer(n.samp), as.integer(C), as.integer(R),
@@ -60,11 +61,11 @@ ecoRC <- function(formula, data = parent.frame(),
               as.integer(nu0), as.double(tau0),
               as.double(mu0), as.double(S0),
               as.double(mu.start), as.double(Sigma.start),
-              as.integer(parameter), pdSmu = double(n.store*(R-1)*C),
-              pdSSigma = double(n.store*(R-1)*C*(C+1)/2),
+              as.integer(parameter), pdSmu = double(n.store*C*(R-1)),
+              pdSSigma = double(n.store*C*(R-1)*R/2),
               pdSW = double(n.store*n.samp*(R-1)*C), PACKAGE="eco")
-    res.out$mu <- array(res$pdSmu, c(R-1, C, n.store))
-    res.out$Sigma <- array(res$pdSSigma, c(R-1, C*(C+1)/2, n.store))
+    res.out$mu <- array(res$pdSmu, c(C, R-1, n.store))
+    res.out$Sigma <- array(res$pdSSigma, c(C, R*(R-1)/2, n.store))
     res.out$W <- array(res$pdSW, c(R-1, C, n.samp, n.store))
   }
   
