@@ -114,24 +114,24 @@ void cBaseRC(
   for (k = 0; k < n_col; k++) 
     for (j = 0; j < n_dim; j++) 
       for (i = 0; i < n_samp; i++) 
-	minU[i][j][k] = fmax2(0, pdWmin[itemp++]*(X[i][k]+Y[i][j]-1)/Y[i][j]);
+	minU[i][j][k] = fmax2(0, (X[i][k]+Y[i][j]-1)/Y[i][j]);
 
   /* initial values for mu and Sigma */
   itemp = 0;
-  for (k = 0; k < n_dim; k++)
-    for (j = 0; j < n_col; j++)
-      mu[j][k] = pdMu[itemp++]; 
+  for (k = 0; k < n_col; k++)
+    for (j = 0; j < n_dim; j++)
+      mu[k][j] = pdMu[itemp++]; 
   itemp = 0;
-  for (i = 0; i < n_col; i++)
-    for (k = 0; k < n_dim; k++) 
-      for (j = 0; j < n_dim; j++) 
-	Sigma[i][j][k] = pdSigma[itemp++];
-  for (j = 0; j < n_col; j++)
-    dinv(Sigma[j], n_dim, InvSigma[j]);
+  for (k = 0; k < n_col; k++)
+    for (j = 0; j < n_dim; j++) 
+      for (i = 0; i < n_dim; i++) 
+	Sigma[k][j][i] = pdSigma[itemp++];
+  for (k = 0; k < n_col; k++)
+    dinv(Sigma[k], n_dim, InvSigma[k]);
   
   /* initial values for W */
-  for (j = 0; j < n_col; j++)
-    param[j] = 1.0;
+  for (k = 0; k < n_col; k++)
+    param[k] = 1.0;
   for (i = 0; i < n_samp; i++) {
     for (k = 0; k < n_col; k++)
       Wsum[i][k] = 0.0;
@@ -167,21 +167,11 @@ void cBaseRC(
 	}
 	R_CheckUserInterrupt();
       }
+      for (l = 0; l < n_dim; l++) 
+	for (k = 0; k < n_col; k++)
+	  Wstar[k][i][l] = log(W[i][l][k])-log(1-Wsum[i][k]);
     }
-    for (j = 0; j < n_dim; j++) 
-      for (k = 0; k < n_col; k++)
-	Wstar[k][i][j] = log(W[i][j][k])-log(1-Wsum[i][k]);
   }
-
-  /* 
-  for (i = 0; i < n_samp; i++) {
-    for (k = 0; k < n_col; k++) {
-      for (j = 0; j < n_dim; j++) 
-	Rprintf("%14g", W[i][j][k]);
-      Rprintf("%14g\n", Wsum[i][k]);
-    }
-    Rprintf("\n");
-    } */
 
   /* read the prior */
   itemp = 0;
@@ -237,17 +227,13 @@ void cBaseRC(
 	if (unif_rand() < fmin2(1, exp(dtemp-dtemp1))) 
 	  for (k = 0; k < n_col; k++)
 	    W[i][j][k] = dvtemp[k]; 
-	/* updating Wsum with new draws */
+	/* updating Wsum and Wstar with new draws */
 	for (k = 0; k < n_col; k++) {
 	  Wsum[i][k] += W[i][j][k];
-	  if (Wsum[i][k]>1)
-	    error("error");
+	  for (l = 0; l < n_dim; l++) 
+	    Wstar[k][i][l] = log(W[i][l][k])-log(1-Wsum[i][k]);
 	}
       }
-      /* updating Wstar with new draws */
-      for (j = 0; j < n_dim; j++) 
-	for (k = 0; k < n_col; k++)
-	  Wstar[k][i][j] = log(W[i][j][k])-log(1-Wsum[i][k]);
     }    
     
     /* update mu, Sigma given wstar using effective sample of Wstar */
