@@ -7,10 +7,9 @@
 \title{Voter Registration in US Southern States} 
 
 \description{
-  This data set contains the racial composition (\eqn{X}), the
-  registration rate (\eqn{Y}), the number of eligible voters
-  (\eqn{N}) as well as the actual observed racial registration rates
-  (\eqn{BB} and \eqn{BW}) for every county in four US southern states: 
+  This data set contains the racial composition, the registration rate,
+  the number of eligible voters as well as the actual observed racial
+  registration rates for every county in four US southern states:
   Florida, Louisiana, North Carolina, and South Carolina.
 }
 
@@ -18,11 +17,12 @@
 
 \format{A data frame containing 5 variables and 275 observations 
  \tabular{lll}{
-    X \tab numeric \tab the fraction of Black people \cr
-    Y \tab numeric \tab the fraction of perople who register \cr
-    N \tab numeric \tab the total number of people in each county \cr
-    BB \tab numeric \tab the actual fraction of Black who register \cr
-    BW \tab numeric \tab the actual fraction of White who register 
+    X \tab numeric \tab the fraction of Black voters \cr
+    Y \tab numeric \tab the fraction of voters who registered themselves\cr
+    N \tab numeric \tab the total number of voters in each county \cr
+    W1 \tab numeric \tab the actual fraction of Black voters who
+    registered themselves \cr
+    W2 \tab numeric \tab the actual fraction of White voters who registered themselves 
   }
 }
 \references{Gary King (1997) \dQuote{A Solution to the Ecological

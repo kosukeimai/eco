@@ -125,12 +125,12 @@ out <- predict(res, verbose=TRUE)
 ## summarize the results
 summary(out)
 
-## load the Robinson data
-data(cens1910)
+## load the Robinson's census data
+data(census)
 
 ## fit the parametric model with contextual effects and N 
 ## using the default prior specification
-res1 <- eco(Y ~ X, N = N, context = TRUE, data = cens1910, verbose = TRUE)
+res1 <- eco(Y ~ X, N = N, context = TRUE, data = census, verbose = TRUE)
 ## summarize the results
 summary(res1)
 
