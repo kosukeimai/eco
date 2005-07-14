@@ -25,7 +25,7 @@
     W2 \tab numeric \tab the actual fraction of White voters who registered themselves 
   }
 }
-\references{Gary King (1997) \dQuote{A Solution to the Ecological
+\references{King, G. (1997). \dQuote{A Solution to the Ecological
     Inference Problem: Reconstructing Individual Behavior from Aggregate
     Data}. Princeton University Press, Princeton, NJ.
 }

@@ -28,10 +28,10 @@
   }
 }
 \references{
- Robinson, W.S. (1950) ``Ecological Correlations and the Behavior 
+ Robinson, W.S. (1950). ``Ecological Correlations and the Behavior 
  of Individuals.'' \emph{American Sociologic Review}, vol. 15,
  pp.351-357. \cr \cr
- Gary King (1997) \dQuote{A Solution to the Ecological
+ King, G. (1997). \dQuote{A Solution to the Ecological
  Inference Problem: Reconstructing Individual Behavior from Aggregate
  Data}. Princeton University Press, Princeton, NJ.
 }
