@@ -66,125 +66,75 @@ void cBaseecoZ(
 	      double *pdSWt1, double *pdSWt2
 	      ){	   
   
-  int n_samp = *pin_samp;    /* sample size */
-  int nth=*pinth;  
+  int n_samp = *pin_samp; /* sample size */
+  int nth = *pinth;  
+  int s_samp = *sur_samp; /* sample size of survey data */ 
+  int x1_samp = *sampx1;
+  int x0_samp = *sampx0;
+  int t_samp = n_samp+s_samp+x1_samp+x0_samp;  /* total sample size */ 
+  int n_dim = 2;          /* The dimension of the ecological table */
+  int n_cov = *pinZp;     /* The dimension of the covariates */
 
-  int n_dim=2;           /* The dimension of the ecological table */
-  int n_cov=*pinZp;      /* The dimension of the covariates */
+  /* priors */
+  double *beta0 = doubleArray(n_cov); /* prior mean of beta */
+  double **S0 = doubleMatrix(n_dim, n_dim); /* prior scale for Sigma */
+  double **A0 = doubleMatrix(n_cov, n_cov); /* prior precision for beta */ 
+  int nu0 = *pinu0;                         /* prior df for Sigma */   
 
-  double *beta;        /* vector of regression coefficients */
-  double *beta0;          /* prior mean of beta */
-  double **A0;             /* prior precision matrix for beta */ 
-  int nu0 = *pinu0;    /* prior scale parameter for Sigma */   
-  double **S0;         /* The prior S parameter for Sigma */
+  /* data */
+  double **X = doubleMatrix(n_samp, n_dim); /* The Y and X */
 
-  double **X;	    	 /* The Y and X */
-  double **Z;	    	 /* The covariates and W matrix for sweep , X can be in Z*/
-  double **Zstar;	 /* Z*cholesky factor of covaraince matrix*/
-
-  int s_samp= *sur_samp;   /* sample size of survey data */ 
-  double **S_W;            /*The known W1 and W2 matrix*/
-  double **S_Wstar;        /*The inverse logit transformation of S_W*/
-
-  int x1_samp=*sampx1;
-  int x0_samp=*sampx0;
-
-  int t_samp;              /* total effective sample size =n_samp+s_samp;*/
-
-  /*bounds condition variables */
-  double **W;            /* The W1 and W2 matrix */
-  double *minW1, *maxW1; /* The lower and upper bounds of W_1i */
-  int n_step=1000;    /* 1/The default size of grid step */  
-  int *n_grid;           /* The number of grids for sampling on tomoline */
-  double **W1g, **W2g;   /* The grids taken for W1 and W2 on tomoline */
-  /* double *prob_grid;      The projected density on tomoline */
-  /* double *prob_grid_cum;  The projected cumulative density on tomoline */
-  double *resid;         /* The centralizing vector for grids */
+  /*The known W1 and W2 matrix*/
+  double **S_W = doubleMatrix(s_samp, n_dim); 
+  double **S_Wstar=doubleMatrix(s_samp, n_dim); 
 
   /* pseudo data Wstar */
-  double **Wstar;        /* The pseudo data  */
-  double *Wstar_bar;
+  double **W = doubleMatrix(t_samp, n_dim);
+  double **Wstar = doubleMatrix(t_samp, n_dim);
+  double *Wstar_bar = doubleArray(n_dim);
+
+  /* The covariates and W */ 
+  double **Z = doubleMatrix(t_samp*n_dim+n_cov, n_cov+1);
+  /* Z*cholesky factor of covaraince matrix*/ 
+  double **Zstar = doubleMatrix(t_samp*n_dim+n_cov, n_cov+1);
+
+  /*bounds condition variables */
+  double *minW1 = doubleArray(n_samp);
+  double *maxW1 = doubleArray(n_samp);
+  int n_step = 1000;     /* 1/The default size of grid step */  
+  int *n_grid = intArray(n_samp);
+  double *resid = doubleArray(n_samp);         /* number of grids */
+  double **W1g = doubleMatrix(n_samp, n_step); /* grids */
+  double **W2g = doubleMatrix(n_samp, n_step); /* vector for grids */
 
   /* paramters for Wstar under Normal baseline model */
-  double **Sigma_ord;   /* The posterior estimation of covariance matrix of Wstar*/
-  double **InvSigma_ord;
-  double **mu_ord;        /* The posterior estimation of mean of Wstar=Z*beta*/
+  double *beta = doubleArray(n_cov); /* vector of regression coefficients */
+  double **mu = doubleMatrix(t_samp, n_dim); 
+  double **Sigma = doubleMatrix(n_dim, n_dim);
+  double **InvSigma = doubleMatrix(n_dim, n_dim);
 
   /*posterior parameters for beta and Sigma*/
-  double *mbeta;           /* The posterior mean of beta*/
-  double **Vbeta;          /* The posterior varaince of beta */ 
-  /* unused: double **Sn;               The posterior S parameter for InvWish */
+  double *mbeta = doubleArray(n_cov);         /* posterior mean of beta*/
+  double **Vbeta = doubleMatrix(n_cov,n_cov); /* posterior varaince of beta */ 
 
   /* matrices used for sweep */
-  double **SS;           /* the sum of square matrix used for sweep operator */
-  double *epsilon;       /* The error term of the regression */
-  double **R;            /* The sum of square matrix of ee' */
-
+  /* quantities used in sweep */
+  double **SS = doubleMatrix(n_cov+1, n_cov+1); /* the sum of square matrix */
+  double *epsilon = doubleArray(t_samp*n_dim);  /* The error term */
+  double **R = doubleMatrix(n_dim, n_dim);      /* ee' */
+ 
   /* misc variables */
   int i, j, k, t, l, main_loop;   /* used for various loops */
   int itemp, itempS, itempC, itempA, itempB;
   int progress = 1, itempP = ftrunc((double) *n_gen/10);
   double dtemp, dtemp1;
-  double *vtemp;
-  double **mtemp, **mtemp2, **mtemp3;
+  double *vtemp = doubleArray(n_dim);
+  double **mtemp = doubleMatrix(n_dim, n_dim);
+  double **mtemp2 = doubleMatrix(n_dim, n_dim);
+  double **mtemp3 = doubleMatrix(n_cov, n_cov);
 
   /* get random seed */
   GetRNGstate();
-
-  /* defining vectors and matricies */
-  /* data */
-  X=doubleMatrix(n_samp,n_dim);
-  W=doubleMatrix((n_samp+s_samp+x0_samp+x1_samp),n_dim);
-  Wstar=doubleMatrix((n_samp+s_samp+x0_samp+x1_samp),n_dim);
-
-  Z=doubleMatrix((n_samp+s_samp+x0_samp+x1_samp)*n_dim+n_cov, n_cov+1);
-  Zstar=doubleMatrix((n_samp+s_samp+x0_samp+x1_samp)*n_dim+n_cov, n_cov+1);
-
-  S_W=doubleMatrix(s_samp, n_dim);
-  S_Wstar=doubleMatrix(s_samp, n_dim);
-
-
-  /* bounds */
-  minW1=doubleArray(n_samp);
-  maxW1=doubleArray(n_samp);
-  n_grid=intArray(n_samp);
-  resid=doubleArray(n_samp);
-
-  /*bounds condition */
-  W1g=doubleMatrix(n_samp, n_step);
-  W2g=doubleMatrix(n_samp, n_step);
-  /* prob_grid=doubleArray(n_step);
-     prob_grid_cum=doubleArray(n_step);*/
-
-
-  /*priors of beta/sigma*/
-  beta0=doubleArray(n_cov);
-  S0=doubleMatrix(n_dim,n_dim);
-  A0=doubleMatrix(n_cov,n_cov);
-
-  /*posteriors of beta*/
-  mbeta=doubleArray(n_cov);
-  Vbeta=doubleMatrix(n_cov,n_cov);
-
-  /*Normal model */
-  beta=doubleArray(n_cov);
-
- /* mu for Wstar*/
-  mu_ord=doubleMatrix((n_samp+s_samp+x1_samp+x0_samp), n_dim); 
-  Sigma_ord=doubleMatrix(n_dim,n_dim);
-  InvSigma_ord=doubleMatrix(n_dim,n_dim);
-  Wstar_bar=doubleArray(n_dim);
-
-  vtemp=doubleArray(n_dim);
-  mtemp=doubleMatrix(n_dim,n_dim);
-  mtemp2=doubleMatrix(n_dim,n_dim);
-  mtemp3=doubleMatrix(n_cov,n_cov);
-
-  /* quantities used in sweep */
-  SS=doubleMatrix(n_cov+1, n_cov+1);
-  epsilon=doubleArray((n_samp+s_samp+x1_samp+x0_samp)*n_dim);
-  R=doubleMatrix(n_dim, n_dim);
- 
 
   /**read prior information*/
   itemp=0;
@@ -201,9 +151,6 @@ void cBaseecoZ(
     for (j=0; j<n_dim; j++) 
       S0[j][k]=pdS0[itemp++];
     
-
-  t_samp=n_samp+s_samp+x1_samp+x0_samp;  
-
   /* read the data set */
   /** Packing Y, X  **/
   itemp = 0;
@@ -343,41 +290,41 @@ void cBaseecoZ(
     }
   }
 
-  /* initialize vales of mu_ord and Sigma_ord */
+  /* initialize vales of mu and Sigma */
   for(j=0;j<n_dim;j++)
     for(k=0;k<n_dim;k++)
-      Sigma_ord[j][k]=S0[j][k];
+      Sigma[j][k]=S0[j][k];
   
-  dinv(Sigma_ord, n_dim, InvSigma_ord);
+  dinv(Sigma, n_dim, InvSigma);
   /*    for(j=0; j<n_dim; j++)
       for(k=j; k<n_dim; k++)
-      Rprintf("%14g", InvSigma_ord[j][k]);*/
+      Rprintf("%14g", InvSigma[j][k]);*/
 
   /***Gibbs for  normal prior ***/
   for(main_loop=0; main_loop<*n_gen; main_loop++){
 
     for (i=0; i<t_samp; i++)
       for (j=0; j<n_dim; j++) 
-	mu_ord[i][j]=0;
+	mu[i][j]=0;
 
     /**update W, Wstar given mu, Sigma in regular areas**/
     for (i=0;i<t_samp;i++)
       for (j=0; j<n_dim; j++)
 	for (k=0; k<n_cov; k++) 
-	  mu_ord[i][j]+=Z[i*n_dim+j][k]*beta[k];
+	  mu[i][j]+=Z[i*n_dim+j][k]*beta[k];
 
     for (i=0; i<n_samp; i++) {
       if ( X[i][1]!=0 && X[i][1]!=1 ) {
-	/*1 project BVN(mu_ord, Sigma_ord) on the inth tomo line */
+	/*1 project BVN(mu, Sigma) on the inth tomo line */
 	/*2 sample W_i on the ith tomo line */
 
-	rGrid(W[i], W1g[i], W2g[i], n_grid[i], mu_ord[i], InvSigma_ord, n_dim);
+	rGrid(W[i], W1g[i], W2g[i], n_grid[i], mu[i], InvSigma, n_dim);
 	/*
 	dtemp=0;
 	for (j=0;j<n_grid[i];j++){
 	    vtemp[0]=log(W1g[i][j])-log(1-W1g[i][j]);
 	    vtemp[1]=log(W2g[i][j])-log(1-W2g[i][j]);
-	    prob_grid[j]=dMVN(vtemp, mu_ord[i], InvSigma_ord, 2, 1) -
+	    prob_grid[j]=dMVN(vtemp, mu[i], InvSigma, 2, 1) -
 	      log(W1g[i][j])-log(W2g[i][j])-log(1-W1g[i][j])-log(1-W2g[i][j]);
 	  prob_grid[j]=exp(prob_grid[j]);
 	  dtemp+=prob_grid[j];
@@ -401,12 +348,12 @@ void cBaseecoZ(
 	Z[i*n_dim+1][n_cov]=Wstar[i][1];
     }
 
-    /*update W2 given W1, mu_ord and Sigma_ord in x1 homeogeneous areas */
+    /*update W2 given W1, mu and Sigma in x1 homeogeneous areas */
     /*printf("W2 draws\n");*/
     if (*x1==1)
       for (i=0; i<x1_samp; i++) {
-	dtemp=mu_ord[n_samp+i][1]+Sigma_ord[0][1]/Sigma_ord[0][0]*(Wstar[n_samp+i][0]-mu_ord[n_samp+i][0]);
-	dtemp1=Sigma_ord[1][1]*(1-Sigma_ord[0][1]*Sigma_ord[0][1]/(Sigma_ord[0][0]*Sigma_ord[1][1]));
+	dtemp=mu[n_samp+i][1]+Sigma[0][1]/Sigma[0][0]*(Wstar[n_samp+i][0]-mu[n_samp+i][0]);
+	dtemp1=Sigma[1][1]*(1-Sigma[0][1]*Sigma[0][1]/(Sigma[0][0]*Sigma[1][1]));
 	printf("\n%14g%14g\n", dtemp, dtemp1);
 	dtemp1=sqrt(dtemp1);
 	Wstar[n_samp+i][1]=rnorm(dtemp, dtemp1);
@@ -415,12 +362,12 @@ void cBaseecoZ(
 	Z[(i+n_samp)*n_dim+1][n_cov]=Wstar[(i+n_samp)][1];
       }
 
-    /*update W1 given W2, mu_ord and Sigma_ord in x0 homeogeneous areas */
+    /*update W1 given W2, mu and Sigma in x0 homeogeneous areas */
     /*printf("W1 draws\n");*/
     if (*x0==1)
       for (i=0; i<x0_samp; i++) {
-	dtemp=mu_ord[n_samp+x1_samp+i][0]+Sigma_ord[0][1]/Sigma_ord[1][1]*(Wstar[n_samp+x1_samp+i][1]-mu_ord[n_samp+x1_samp+i][1]);
-	dtemp1=Sigma_ord[0][0]*(1-Sigma_ord[0][1]*Sigma_ord[0][1]/(Sigma_ord[0][0]*Sigma_ord[1][1]));
+	dtemp=mu[n_samp+x1_samp+i][0]+Sigma[0][1]/Sigma[1][1]*(Wstar[n_samp+x1_samp+i][1]-mu[n_samp+x1_samp+i][1]);
+	dtemp1=Sigma[0][0]*(1-Sigma[0][1]*Sigma[0][1]/(Sigma[0][0]*Sigma[1][1]));
 	dtemp1=sqrt(dtemp1);
 	Wstar[n_samp+x1_samp+i][0]=rnorm(dtemp, dtemp1);
 	W[n_samp+x1_samp+i][0]=exp(Wstar[n_samp+x1_samp+i][0])/(1+exp(Wstar[n_samp+x1_samp+i][0]));
@@ -440,16 +387,16 @@ void cBaseecoZ(
     for (i=0; i<n_dim; i++)
       for (j=0; j<n_dim; j++)
 	for (k=0; k<n_dim; k++) 
-	  mtemp[j][k]+=S0[j][i]*InvSigma_ord[i][k];
+	  mtemp[j][k]+=S0[j][i]*InvSigma[i][k];
     for (j=0; j<n_dim; j++)
     ss+=mtemp[j][j];*/
 
     /* mutliply Z and W by the Inverse of hte Cholesky factor */
     /*    for(j=0; j<n_dim; j++)
       for(k=j; k<n_dim; k++)
-      Rprintf("%14g", InvSigma_ord[j][k]);*/
+      Rprintf("%14g", InvSigma[j][k]);*/
 
-    dcholdc(InvSigma_ord, n_dim, mtemp);
+    dcholdc(InvSigma, n_dim, mtemp);
 
     for (i=0; i<t_samp*n_dim; i++)
       for (j=0; j<=n_cov; j++)
@@ -471,7 +418,7 @@ void cBaseecoZ(
     }
   for (j=0; j<n_dim; j++)
     for (k=0; k<n_dim; k++)
-      Rprintf("%5d%5d%14g%14g\n", j, k, InvSigma_ord[j][k], mtemp[j][k]);
+      Rprintf("%5d%5d%14g%14g\n", j, k, InvSigma[j][k], mtemp[j][k]);
     */
 
     /*construct SS matrix for SWEEP */
@@ -540,8 +487,8 @@ void cBaseecoZ(
       for (k=0; k<n_dim; k++)
 	mtemp[j][k]=S0[j][k]+R[j][k];
     dinv(mtemp, n_dim, mtemp2);
-    rWish(InvSigma_ord, mtemp2, nu0+t_samp, n_dim);
-    dinv(InvSigma_ord, n_dim, Sigma_ord);
+    rWish(InvSigma, mtemp2, nu0+t_samp, n_dim);
+    dinv(InvSigma, n_dim, Sigma);
 
 
     
@@ -554,13 +501,13 @@ void cBaseecoZ(
 	  pdSBeta[itempA++]=beta[j];
 	for (j=0; j<n_dim; j++)
 	  for (k=j; k<n_dim; k++)
-	    pdSSigma[itempB++]=Sigma_ord[j][k];
+	    pdSSigma[itempB++]=Sigma[j][k];
 	for(i=0; i<(n_samp+x1_samp+x0_samp); i++){
 	  pdSW1[itempS]=W[i][0];
 	  pdSW2[itempS]=W[i][1];
 	  /*Wstar prediction */
 	  if (*pred) {
-	    rMVN(vtemp, mu_ord[i], Sigma_ord, n_dim);
+	    rMVN(vtemp, mu[i], Sigma, n_dim);
 	      pdSWt1[itempS]=exp(vtemp[0])/(exp(vtemp[0])+1);
 	      pdSWt2[itempS]=exp(vtemp[1])/(exp(vtemp[1])+1);
 	  }
@@ -595,11 +542,9 @@ void cBaseecoZ(
   FreeMatrix(S0, n_dim);
   FreeMatrix(W1g, n_samp);
   FreeMatrix(W2g, n_samp);
-  /*  free(prob_grid);
-      free(prob_grid_cum); */
-  FreeMatrix(mu_ord,t_samp);
-  FreeMatrix(Sigma_ord,n_dim);
-  FreeMatrix(InvSigma_ord, n_dim);
+  FreeMatrix(mu,t_samp);
+  FreeMatrix(Sigma,n_dim);
+  FreeMatrix(InvSigma, n_dim);
   FreeMatrix(Z, t_samp*n_dim+n_cov);
   FreeMatrix(Zstar, t_samp*n_dim+n_cov);
   free(Wstar_bar);
