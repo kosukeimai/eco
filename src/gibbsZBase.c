@@ -125,7 +125,12 @@ void cBaseecoZ(
  
   /* misc variables */
   int i, j, k, t, l, main_loop;   /* used for various loops */
-  int itemp, itempS, itempC, itempA, itempB;
+  int itemp;
+  int itempA=0; /* counter for alpha */
+  int itempB=0; 
+  int itempC=0; /* counter to control nth draw */
+  int itempS=0; /* counter for storage */
+
   int progress = 1, itempP = ftrunc((double) *n_gen/10);
   double dtemp, dtemp1;
   double *vtemp = doubleArray(n_dim);
@@ -144,8 +149,6 @@ void cBaseecoZ(
     for (j=0; j<n_cov; j++) 
       A0[j][k]=pdA0[itemp++];
   }
-
-
   itemp=0;
   for (k=0; k<n_dim; k++)
     for (j=0; j<n_dim; j++) 
@@ -155,32 +158,23 @@ void cBaseecoZ(
   /** Packing Y, X  **/
   itemp = 0;
   for (j = 0; j < n_dim; j++) 
-    for (i = 0; i < n_samp; i++) {
+    for (i = 0; i < n_samp; i++) 
       X[i][j] = pdX[itemp++];
-    }
-
+  
   /**read Z **/
-    for (i=0; i<t_samp*n_dim+n_cov; i++)
-      for(j=0; j<=n_cov;j++) {
-	Z[i][j]=0;
-	Zstar[i][j]=0;
+  for (i=0; i<t_samp*n_dim+n_cov; i++)
+    for(j=0; j<=n_cov;j++) {
+      Z[i][j]=0;
+      Zstar[i][j]=0;
     }
   itemp = 0;
   for (k=0; k<n_cov; k++)
     for (j=0; j<n_dim; j++)
       for (i=0; i<t_samp; i++)
 	Z[j*t_samp+i][k]=pdZ[itemp++];
-
-
+  
   /* add prior information to Z*/
-
   dcholdc(A0, n_cov, mtemp3);  /*Cholesky decomopsition*/
-
-  /*  for (j=0; j<n_dim; j++)
-    for (k=0; k<n_dim; k++)
-      Rprintf("%5d%5d%14g%14g\n", j, k, A0[j][k], mtemp3[j][k]);
-  */
-
 
   for (j=0; j<n_cov; j++) {
     Zstar[t_samp*n_dim+j][n_cov]=beta0[j];
@@ -190,7 +184,6 @@ void cBaseecoZ(
     }
   }      
     
-
   /* initialize W, Wstar for n_samp*/
   for (j=0; j<n_dim; j++)
     for (i=0; i< n_samp; i++) {
@@ -198,16 +191,12 @@ void cBaseecoZ(
       if (X[i][1]==0) W[i][j]=0.0001;
       else if (X[i][1]==1) W[i][j]=0.9999;
     }
-
   for (j=0; j<n_dim; j++)
     Wstar_bar[j]=0;
-
-  for (i=0; i< n_samp; i++) {
+  for (i=0; i< n_samp; i++) 
     for (j=0; j<n_dim; j++)
       Wstar[i][j]=0;
-  }
-
-
+  
   /*read homeogenous areas information */
   if (*x1==1) 
     for (i=0; i<x1_samp; i++) {
@@ -225,9 +214,7 @@ void cBaseecoZ(
       Wstar[(n_samp+x1_samp+i)][1]=log(W[(n_samp+x1_samp+i)][1])-log(1-W[(n_samp+x1_samp+i)][1]);
     }
 
-
   /*read the survey data */
-
   if (*survey==1) {
     itemp = 0;
     for (j=0; j<n_dim; j++)
@@ -242,20 +229,13 @@ void cBaseecoZ(
       }
   }
 
-  itempA=0; /* counter for alpha */
-  itempS=0; /* counter for storage */
-  itempB=0; 
-  itempC=0; /* counter to control nth draw */
-
-  /*initialize W and Wstar */
-  
   /*initialize W1g and W2g */
   for(i=0; i<n_samp; i++)
     for (j=0; j<n_step; j++){
       W1g[i][j]=0;
       W2g[i][j]=0;
     }
-
+  
   /*** calculate bounds and grids ***/
   for(i=0;i<n_samp;i++) {
     if (X[i][1]!=0 && X[i][1]!=1) {
@@ -294,25 +274,19 @@ void cBaseecoZ(
   for(j=0;j<n_dim;j++)
     for(k=0;k<n_dim;k++)
       Sigma[j][k]=S0[j][k];
-  
   dinv(Sigma, n_dim, InvSigma);
-  /*    for(j=0; j<n_dim; j++)
-      for(k=j; k<n_dim; k++)
-      Rprintf("%14g", InvSigma[j][k]);*/
 
   /***Gibbs for  normal prior ***/
   for(main_loop=0; main_loop<*n_gen; main_loop++){
-
     for (i=0; i<t_samp; i++)
       for (j=0; j<n_dim; j++) 
 	mu[i][j]=0;
-
     /**update W, Wstar given mu, Sigma in regular areas**/
     for (i=0;i<t_samp;i++)
       for (j=0; j<n_dim; j++)
 	for (k=0; k<n_cov; k++) 
 	  mu[i][j]+=Z[i*n_dim+j][k]*beta[k];
-
+    
     for (i=0; i<n_samp; i++) {
       if ( X[i][1]!=0 && X[i][1]!=1 ) {
 	/*1 project BVN(mu, Sigma) on the inth tomo line */
@@ -332,22 +306,19 @@ void cBaseecoZ(
 	}
 	for (j=0;j<n_grid[i];j++)
 	  prob_grid_cum[j]/=dtemp; 
-
-
-
-	j=0;
-	dtemp=unif_rand();
-	while (dtemp > prob_grid_cum[j]) j++;
-	W[i][0]=W1g[i][j];
-	W[i][1]=W2g[i][j]; */
+	  j=0;
+	  dtemp=unif_rand();
+	  while (dtemp > prob_grid_cum[j]) j++;
+	  W[i][0]=W1g[i][j];
+	  W[i][1]=W2g[i][j]; */
       } 
-	/*3 compute Wsta_i from W_i*/
-	Wstar[i][0]=log(W[i][0])-log(1-W[i][0]);
-	Wstar[i][1]=log(W[i][1])-log(1-W[i][1]);
-	Z[i*n_dim][n_cov]=Wstar[i][0];
-	Z[i*n_dim+1][n_cov]=Wstar[i][1];
+      /*3 compute Wsta_i from W_i*/
+      Wstar[i][0]=log(W[i][0])-log(1-W[i][0]);
+      Wstar[i][1]=log(W[i][1])-log(1-W[i][1]);
+      Z[i*n_dim][n_cov]=Wstar[i][0];
+      Z[i*n_dim+1][n_cov]=Wstar[i][1];
     }
-
+    
     /*update W2 given W1, mu and Sigma in x1 homeogeneous areas */
     /*printf("W2 draws\n");*/
     if (*x1==1)
@@ -374,30 +345,8 @@ void cBaseecoZ(
 	Z[(i+n_samp+x1_samp)*n_dim][n_cov]=Wstar[(i+n_samp+x1_samp)][0];
 	Z[(i+n_samp+x1_samp)*n_dim+1][n_cov]=Wstar[(i+n_samp+x1_samp)][1];
       }
-  
-
-
-
-
-    /***regression block, given Wstar, beta/sigma priors*****/
-    /*ss=0;
-    for (j=0; j<n_dim; j++)
-      for (k<0; k<n_dim; k++) 
-	mtemp[j][k]=0;
-    for (i=0; i<n_dim; i++)
-      for (j=0; j<n_dim; j++)
-	for (k=0; k<n_dim; k++) 
-	  mtemp[j][k]+=S0[j][i]*InvSigma[i][k];
-    for (j=0; j<n_dim; j++)
-    ss+=mtemp[j][j];*/
-
-    /* mutliply Z and W by the Inverse of hte Cholesky factor */
-    /*    for(j=0; j<n_dim; j++)
-      for(k=j; k<n_dim; k++)
-      Rprintf("%14g", InvSigma[j][k]);*/
 
     dcholdc(InvSigma, n_dim, mtemp);
-
     for (i=0; i<t_samp*n_dim; i++)
       for (j=0; j<=n_cov; j++)
 	Zstar[i][j]=0;
@@ -407,48 +356,22 @@ void cBaseecoZ(
 	  for(l=0; l<=n_cov; l++)
 	    Zstar[i*n_dim+k][l]+=mtemp[k][j]*Z[i*n_dim+j][l];
 
-
-    /*    for (i=0; i<t_samp*n_dim+n_cov; i++){
-      Rprintf("\n%5d\n",i);
-      for(j=0; j<=n_cov;j++)
-	Rprintf("%14g", Z[i][j]);
-      Rprintf("\n%5d\n",i);
-      for(j=0; j<=n_cov;j++)
-	Rprintf("%14g", Zstar[i][j]);
-    }
-  for (j=0; j<n_dim; j++)
-    for (k=0; k<n_dim; k++)
-      Rprintf("%5d%5d%14g%14g\n", j, k, InvSigma[j][k], mtemp[j][k]);
-    */
-
     /*construct SS matrix for SWEEP */
     for (j=0; j<=n_cov; j++)
       for (k=0; k<=n_cov; k++)
 	SS[j][k]=0;
-    /*    for(i=0; i<t_samp; i++)
-      for(j=0; j<n_dim; j++)
-	for(k=0; k<=n_cov; k++)
-	  for(l=0; l<=n_cov; l++)
-	  SS[k][l]+=Zstar[i*n_dim+j][k]*Zstar[i*n_dim+j][l]; */
-
     for(i=0; i<(t_samp*n_dim); i++)
       for(k=0; k<=n_cov; k++)
 	for(l=0; l<=n_cov; l++)
 	  SS[k][l]+=Zstar[i][k]*Zstar[i][l];
-
     for(j=0; j<n_cov; j++)
       for(k=0; k<=n_cov; k++)
 	for(l=0; l<=n_cov; l++)
 	  SS[k][l]+=Zstar[n_samp*n_dim+j][k]*Zstar[n_samp*n_dim+j][l];
 
-
     /*SWEEP to get posterior mean anf variance for beta */
     for (j=0; j<n_cov; j++) 
       SWP(SS,j,n_cov+1);
-
-    /*draw alpha2 given Sigma and W */
-    /*ss+=SS[n_cov][n_cov];
-      alpha2=ss/(double)rchisq((double)(n_samp+nu0)*n_dim);*/
 
     /*draw beta given Sigma and W */
     for (j=0; j<n_cov; j++) {
@@ -456,18 +379,7 @@ void cBaseecoZ(
       for (k=0; k<n_cov; k++)
 	Vbeta[j][k]=-SS[j][k];
     }
-    /*
-    Rprintf("beta\n");
-        for (j=0; j<n_cov; j++)
-      Rprintf("%14g", mbeta[j]);
-    Rprintf("vbeta\n");
-    for (k=0; k<n_cov; k++) {
-    Rprintf("\n");
-      for (j=0; j<n_cov; j++)
-      Rprintf("%14g", Vbeta[k][j]);
-      }*/
-
-    /*    rMVN(beta, mbeta, Vbeta, n_cov); */
+    rMVN(beta, mbeta, Vbeta, n_cov);
 
     /*draw Sigmar give beta and Wstar */
     for(i=0; i<t_samp; i++)
