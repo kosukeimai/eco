@@ -38,32 +38,35 @@ void cBaseecoZ(
 	      double *pdbeta0,      /* prior mean for beta*/
 	      double *pdA0,   /* prior PRECISION=1/SCALE parameter for beta*/
 
+	      /* staring values */
+	      double *betastart, double *Sigmastart,
+
 	      /*incorporating survey data */
-	      int *survey,      /*1 if survey data available (set of W_1, W_2) */
-	                       /*0 not*/
-	      int *sur_samp,     /*sample size of survey data*/
+	      int *survey,      /*1 if survey data available (set of W_1, W_2)
+				  0 not*/
+	      int *sur_samp,    /*sample size of survey data*/
 	      double *sur_W,    /*set of known W_1, W_2 */ 
-				  
+	      
 	      /*incorporating homeogenous areas */
 	      int *x1,       /* 1 if X=1 type areas available W_1 known, W_2 unknown */
-	      int *sampx1,  /* number X=1 type areas */
+	      int *sampx1,   /* number X=1 type areas */
 	      double *x1_W1, /* values of W_1 for X1 type areas */
 
 	      int *x0,       /* 1 if X=0 type areas available W_2 known, W_1 unknown */
-	      int *sampx0,  /* number X=0 type areas */
+	      int *sampx0,   /* number X=0 type areas */
 	      double *x0_W2, /* values of W_2 for X0 type areas */
 
+	      /* bounds of W1 */
+	      double *minW1, double *maxW1,
+
 	      /* storage */
-	      int *pred,       /* 1 if draw posterior prediction */
-	      int *parameter,   /* 1 if save population parameter */
+	      int *parameter,/* 1 if save population parameter */
+	      int *Grid,
 
 	      /* storage for Gibbs draws of beta and Sigam, packed */
-	      double *pdSBeta, 
-	      double *pdSSigma,
+	      double *pdSBeta, double *pdSSigma,
 	      /* storage for Gibbs draws of W*/
-	      double *pdSW1, double *pdSW2,
-	      /* storage for posterior predictions of W */
-	      double *pdSWt1, double *pdSWt2
+	      double *pdSW1, double *pdSW2
 	      ){	   
   
   int n_samp = *pin_samp; /* sample size */
@@ -74,7 +77,8 @@ void cBaseecoZ(
   int t_samp = n_samp+s_samp+x1_samp+x0_samp;  /* total sample size */ 
   int n_dim = 2;          /* The dimension of the ecological table */
   int n_cov = *pinZp;     /* The dimension of the covariates */
-
+  int n_step = 1000;
+  
   /* priors */
   double *beta0 = doubleArray(n_cov); /* prior mean of beta */
   double **S0 = doubleMatrix(n_dim, n_dim); /* prior scale for Sigma */
@@ -98,14 +102,10 @@ void cBaseecoZ(
   /* Z*cholesky factor of covaraince matrix*/ 
   double **Zstar = doubleMatrix(t_samp*n_dim+n_cov, n_cov+1);
 
-  /*bounds condition variables */
-  double *minW1 = doubleArray(n_samp);
-  double *maxW1 = doubleArray(n_samp);
-  int n_step = 1000;     /* 1/The default size of grid step */  
-  int *n_grid = intArray(n_samp);
-  double *resid = doubleArray(n_samp);         /* number of grids */
-  double **W1g = doubleMatrix(n_samp, n_step); /* grids */
-  double **W2g = doubleMatrix(n_samp, n_step); /* vector for grids */
+  /* grids */
+  double **W1g = doubleMatrix(n_samp, n_step); /* grids for W1 */
+  double **W2g = doubleMatrix(n_samp, n_step); /* grids for W2 */
+  int *n_grid = intArray(n_samp);              /* grid size */
 
   /* paramters for Wstar under Normal baseline model */
   double *beta = doubleArray(n_cov); /* vector of regression coefficients */
@@ -135,8 +135,8 @@ void cBaseecoZ(
   double dtemp, dtemp1;
   double *vtemp = doubleArray(n_dim);
   double **mtemp = doubleMatrix(n_dim, n_dim);
-  double **mtemp2 = doubleMatrix(n_dim, n_dim);
-  double **mtemp3 = doubleMatrix(n_cov, n_cov);
+  double **mtemp1 = doubleMatrix(n_dim, n_dim);
+  double **mtemp2 = doubleMatrix(n_cov, n_cov);
 
   /* get random seed */
   GetRNGstate();
@@ -145,7 +145,6 @@ void cBaseecoZ(
   itemp=0;
   for (k=0; k<n_cov; k++) {
     beta0[k]=pdbeta0[k];
-    beta[k]=pdbeta0[k];
     for (j=0; j<n_cov; j++) 
       A0[j][k]=pdA0[itemp++];
   }
@@ -174,28 +173,29 @@ void cBaseecoZ(
 	Z[j*t_samp+i][k]=pdZ[itemp++];
   
   /* add prior information to Z*/
-  dcholdc(A0, n_cov, mtemp3);  /*Cholesky decomopsition*/
+  dcholdc(A0, n_cov, mtemp2);  /*Cholesky decomopsition*/
 
   for (j=0; j<n_cov; j++) {
     Zstar[t_samp*n_dim+j][n_cov]=beta0[j];
     for (k=0; k<n_cov; k++){
-      Zstar[t_samp*n_dim+j][n_cov]+=mtemp3[j][k]*beta0[j];
-      Zstar[t_samp*n_dim+j][k]=mtemp3[j][k];
+      Zstar[t_samp*n_dim+j][n_cov]+=mtemp2[j][k]*beta0[j];
+      Zstar[t_samp*n_dim+j][k]=mtemp2[j][k];
     }
   }      
     
   /* initialize W, Wstar for n_samp*/
-  for (j=0; j<n_dim; j++)
-    for (i=0; i< n_samp; i++) {
-      W[i][j]=0;
-      if (X[i][1]==0) W[i][j]=0.0001;
-      else if (X[i][1]==1) W[i][j]=0.9999;
+  for (i=0; i< n_samp; i++) {
+    if (X[i][1]!=0 && X[i][1]!=1) {
+      W[i][0]=runif(minW1[i], maxW1[i]);
+      W[i][1]=(X[i][1]-X[i][0]*W[i][0])/(1-X[i][0]);
     }
-  for (j=0; j<n_dim; j++)
-    Wstar_bar[j]=0;
-  for (i=0; i< n_samp; i++) 
+    if (X[i][1]==0)
+      for (j=0; j<n_dim; j++) W[i][j]=0.0001;
+    if (X[i][1]==1)
+      for (j=0; j<n_dim; j++) W[i][j]=0.9999;
     for (j=0; j<n_dim; j++)
-      Wstar[i][j]=0;
+      Wstar[i][j]=log(W[i][j])-log(1-W[i][j]);
+  }
   
   /*read homeogenous areas information */
   if (*x1==1) 
@@ -229,51 +229,17 @@ void cBaseecoZ(
       }
   }
 
-  /*initialize W1g and W2g */
-  for(i=0; i<n_samp; i++)
-    for (j=0; j<n_step; j++){
-      W1g[i][j]=0;
-      W2g[i][j]=0;
-    }
-  
-  /*** calculate bounds and grids ***/
-  for(i=0;i<n_samp;i++) {
-    if (X[i][1]!=0 && X[i][1]!=1) {
-      /* min and max for W1 */ 
-      minW1[i]=fmax2(0.0, (X[i][0]+X[i][1]-1)/X[i][0]);
-      maxW1[i]=fmin2(1.0, X[i][1]/X[i][0]);
-      /* number of grid points */
-      /* note: 1/n_step is the length of the grid */
-      dtemp=(double)1/n_step;
-      if ((maxW1[i]-minW1[i]) > (2*dtemp)) { 
-	n_grid[i]=ftrunc((maxW1[i]-minW1[i])*n_step);
-	resid[i]=(maxW1[i]-minW1[i])-n_grid[i]*dtemp;
-	/*if (maxW1[i]-minW1[i]==1) resid[i]=dtemp/4;*/
-	j=0; 
-	while (j<n_grid[i]) {
-	  W1g[i][j]=minW1[i]+(j+1)*dtemp-(dtemp+resid[i])/2;
-	  if ((W1g[i][j]-minW1[i])<resid[i]/2) W1g[i][j]+=resid[i]/2;
-	  if ((maxW1[i]-W1g[i][j])<resid[i]/2) W1g[i][j]-=resid[i]/2;
-	  W2g[i][j]=(X[i][1]-X[i][0]*W1g[i][j])/(1-X[i][0]);
-	  /*if (i<20) printf("\n%5d%5d%14g%14g", i, j, W1g[i][j], W2g[i][j]);*/
-	  j++;
-	}
-      }
-      else {
-	W1g[i][0]=minW1[i]+(maxW1[i]-minW1[i])/3;
-	W2g[i][0]=(X[i][1]-X[i][0]*W1g[i][0])/(1-X[i][0]);
-	W1g[i][1]=minW1[i]+2*(maxW1[i]-minW1[i])/3;
-	W2g[i][1]=(X[i][1]-X[i][0]*W1g[i][1])/(1-X[i][0]);
-	n_grid[i]=2;
-	
-      }
-    }
-  }
+  /* calculate grids */
+  if (*Grid)
+    GridPrep(W1g, W2g, X, maxW1, minW1, n_grid, n_samp, n_step);
 
-  /* initialize vales of mu and Sigma */
+  /* starting vales of mu and Sigma */
+  itemp = 0;
+  for(j=0;j<n_cov;j++)
+    beta[j] = betastart[j];
   for(j=0;j<n_dim;j++)
     for(k=0;k<n_dim;k++)
-      Sigma[j][k]=S0[j][k];
+      Sigma[j][k]=Sigmastart[itemp++];
   dinv(Sigma, n_dim, InvSigma);
 
   /***Gibbs for  normal prior ***/
@@ -291,26 +257,10 @@ void cBaseecoZ(
       if ( X[i][1]!=0 && X[i][1]!=1 ) {
 	/*1 project BVN(mu, Sigma) on the inth tomo line */
 	/*2 sample W_i on the ith tomo line */
-
-	rGrid(W[i], W1g[i], W2g[i], n_grid[i], mu[i], InvSigma, n_dim);
-	/*
-	dtemp=0;
-	for (j=0;j<n_grid[i];j++){
-	    vtemp[0]=log(W1g[i][j])-log(1-W1g[i][j]);
-	    vtemp[1]=log(W2g[i][j])-log(1-W2g[i][j]);
-	    prob_grid[j]=dMVN(vtemp, mu[i], InvSigma, 2, 1) -
-	      log(W1g[i][j])-log(W2g[i][j])-log(1-W1g[i][j])-log(1-W2g[i][j]);
-	  prob_grid[j]=exp(prob_grid[j]);
-	  dtemp+=prob_grid[j];
-	  prob_grid_cum[j]=dtemp;
-	}
-	for (j=0;j<n_grid[i];j++)
-	  prob_grid_cum[j]/=dtemp; 
-	  j=0;
-	  dtemp=unif_rand();
-	  while (dtemp > prob_grid_cum[j]) j++;
-	  W[i][0]=W1g[i][j];
-	  W[i][1]=W2g[i][j]; */
+	if (*Grid)
+	  rGrid(W[i], W1g[i], W2g[i], n_grid[i], mu[i], InvSigma, n_dim);
+	else
+	  rMH(W[i], X[i], minW1[i], maxW1[i], mu[i], InvSigma, n_dim);
       } 
       /*3 compute Wsta_i from W_i*/
       Wstar[i][0]=log(W[i][0])-log(1-W[i][0]);
@@ -320,7 +270,6 @@ void cBaseecoZ(
     }
     
     /*update W2 given W1, mu and Sigma in x1 homeogeneous areas */
-    /*printf("W2 draws\n");*/
     if (*x1==1)
       for (i=0; i<x1_samp; i++) {
 	dtemp=mu[n_samp+i][1]+Sigma[0][1]/Sigma[0][0]*(Wstar[n_samp+i][0]-mu[n_samp+i][0]);
@@ -334,7 +283,6 @@ void cBaseecoZ(
       }
 
     /*update W1 given W2, mu and Sigma in x0 homeogeneous areas */
-    /*printf("W1 draws\n");*/
     if (*x0==1)
       for (i=0; i<x0_samp; i++) {
 	dtemp=mu[n_samp+x1_samp+i][0]+Sigma[0][1]/Sigma[1][1]*(Wstar[n_samp+x1_samp+i][1]-mu[n_samp+x1_samp+i][1]);
@@ -375,7 +323,7 @@ void cBaseecoZ(
 
     /*draw beta given Sigma and W */
     for (j=0; j<n_cov; j++) {
-      beta[j]=SS[j][n_cov]; /*mbeta[j]=SS[j][n_cov];*/
+      mbeta[j]=SS[j][n_cov]; 
       for (k=0; k<n_cov; k++)
 	Vbeta[j][k]=-SS[j][k];
     }
@@ -398,11 +346,9 @@ void cBaseecoZ(
     for(j=0; j<n_dim; j++)
       for (k=0; k<n_dim; k++)
 	mtemp[j][k]=S0[j][k]+R[j][k];
-    dinv(mtemp, n_dim, mtemp2);
-    rWish(InvSigma, mtemp2, nu0+t_samp, n_dim);
+    dinv(mtemp, n_dim, mtemp1);
+    rWish(InvSigma, mtemp1, nu0+t_samp, n_dim);
     dinv(InvSigma, n_dim, Sigma);
-
-
     
     /*store Gibbs draw after burn-in and every nth draws */      
     R_CheckUserInterrupt();
@@ -417,12 +363,6 @@ void cBaseecoZ(
 	for(i=0; i<(n_samp+x1_samp+x0_samp); i++){
 	  pdSW1[itempS]=W[i][0];
 	  pdSW2[itempS]=W[i][1];
-	  /*Wstar prediction */
-	  if (*pred) {
-	    rMVN(vtemp, mu[i], Sigma, n_dim);
-	      pdSWt1[itempS]=exp(vtemp[0])/(exp(vtemp[0])+1);
-	      pdSWt2[itempS]=exp(vtemp[1])/(exp(vtemp[1])+1);
-	  }
 	  itempS++;
 	}
 	itempC=0;
@@ -450,7 +390,6 @@ void cBaseecoZ(
   free(minW1);
   free(maxW1);
   free(n_grid);
-  free(resid);
   FreeMatrix(S0, n_dim);
   FreeMatrix(W1g, n_samp);
   FreeMatrix(W2g, n_samp);
@@ -462,8 +401,8 @@ void cBaseecoZ(
   free(Wstar_bar);
   free(vtemp);
   FreeMatrix(mtemp, n_dim);
-  FreeMatrix(mtemp2, n_dim);
-  FreeMatrix(mtemp3, n_cov);
+  FreeMatrix(mtemp1, n_dim);
+  FreeMatrix(mtemp2, n_cov);
   free(beta);
   free(beta0);
   FreeMatrix(A0, n_cov);
