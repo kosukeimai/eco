@@ -1,12 +1,31 @@
 ecoNP <- function(formula, data = parent.frame(), N = NULL, supplement = NULL,
-                  mu0 = c(0,0), tau0 = 2, nu0 = 4, S0 = diag(10,2),
+                  context=FALSE, mu0 = 0, tau0 = 2, 
+		  nu0 = 4, S0 = 10,
                   alpha = NULL, a0 = 1, b0 = 0.1, parameter = FALSE,
                   grid = FALSE, n.draws = 5000, burnin = 0, thin = 0,
                   verbose = FALSE){ 
 
+ ## contextual effects
+  if (context)
+    ndim <- 3
+  else
+    ndim <- 2
+
   ## checking inputs
   if (burnin >= n.draws)
     stop("n.draws should be larger than burnin")
+
+ if (length(mu0)==1)
+    mu0 <- rep(mu0, ndim)
+  else if (length(mu0)!=ndim)
+    stop("invalid inputs for mu0")
+  if (is.matrix(S0)) {
+    if (any(dim(S0)==c(ndim, ndim)))
+      stop("invalid inputs for S0")
+  }
+  else
+    S0 <- diag(S0, ndim)
+
   mf <- match.call()
 
   ## getting X, Y and N
@@ -37,6 +56,28 @@ ecoNP <- function(formula, data = parent.frame(), N = NULL, supplement = NULL,
   n.w <- n.store * unit.w
   unit.a <- 1
 
+  if (context) 
+  res <- .C("cDPecoX", as.double(tmp$d), as.integer(tmp$n.samp),
+            as.integer(n.draws), as.integer(burnin), as.integer(thin+1),
+            as.integer(verbose), as.integer(nu0), as.double(tau0),
+            as.double(mu0), as.double(S0), as.double(alpha),
+            as.integer(alpha.update), as.double(a0), as.double(b0),
+            as.integer(tmp$survey.yes), as.integer(tmp$survey.samp),
+            as.double(tmp$survey.data), as.integer(tmp$X1type),
+            as.integer(tmp$samp.X1), as.double(tmp$X1.W1),
+            as.integer(tmp$X0type), as.integer(tmp$samp.X0),
+            as.double(tmp$X0.W2), 
+	    as.double(bdd$Wmin[,1,1]), as.double(bdd$Wmax[,1,1]), 
+            as.integer(parameter), as.integer(grid),
+            pdSMu0=double(n.par), pdSMu1=double(n.par),
+	    pdSMu2=double(n.par),	
+            pdSSig00=double(n.par), pdSSig01=double(n.par),
+	    pdSSig02=double(n.par), pdSSig11=double(n.par),
+            pdSSig12=double(n.par), pdSSig22=double(n.par), 
+	    pdSW1=double(n.w), pdSW2=double(n.w), 
+            pdSa=double(n.store), pdSn=integer(n.store), PACKAGE="eco")
+
+ else 
   res <- .C("cDPeco", as.double(tmp$d), as.integer(tmp$n.samp),
             as.integer(n.draws), as.integer(burnin), as.integer(thin+1),
             as.integer(verbose), as.integer(nu0), as.double(tau0),
@@ -66,6 +107,22 @@ ecoNP <- function(formula, data = parent.frame(), N = NULL, supplement = NULL,
 
   ## optional outputs
   if (parameter){
+  if (context) {
+    mu1.post <- matrix(res$pdSMu0, n.store, unit.par, byrow=TRUE)[,tmp$order.old]
+    mu2.post <- matrix(res$pdSMu1, n.store, unit.par, byrow=TRUE)[,tmp$order.old]
+    mu3.post <- matrix(res$pdSMu2, n.store, unit.par, byrow=TRUE)[,tmp$order.old]
+    Sigma11.post <- matrix(res$pdSSig00, n.store, unit.par, byrow=TRUE)[,tmp$order.old]
+    Sigma12.post <- matrix(res$pdSSig01, n.store, unit.par, byrow=TRUE)[,tmp$order.old]
+    Sigma13.post <- matrix(res$pdSSig02, n.store, unit.par, byrow=TRUE)[,tmp$order.old]
+    Sigma23.post <- matrix(res$pdSSig12, n.store, unit.par, byrow=TRUE)[,tmp$order.old]
+    Sigma22.post <- matrix(res$pdSSig11, n.store, unit.par, byrow=TRUE)[,tmp$order.old]
+    Sigma33.post <- matrix(res$pdSSig22, n.store, unit.par, byrow=TRUE)[,tmp$order.old]
+    res.out$mu <- array(rbind(mu1.post, mu2.post, mu3.post), c(n.store, 3, unit.par))
+    res.out$Sigma <- array(rbind(Sigma11.post, Sigma12.post,
+                                 Sigma22.post, Sigma23.post,
+				 Sigma33.post), c(n.store, 6, unit.par))
+}
+  else {
     mu1.post <- matrix(res$pdSMu0, n.store, unit.par, byrow=TRUE)[,tmp$order.old]
     mu2.post <- matrix(res$pdSMu1, n.store, unit.par, byrow=TRUE)[,tmp$order.old]
     Sigma11.post <- matrix(res$pdSSig00, n.store, unit.par, byrow=TRUE)[,tmp$order.old]
@@ -74,6 +131,7 @@ ecoNP <- function(formula, data = parent.frame(), N = NULL, supplement = NULL,
     res.out$mu <- array(rbind(mu1.post, mu2.post), c(n.store, 2, unit.par))
     res.out$Sigma <- array(rbind(Sigma11.post, Sigma12.post,
                                  Sigma22.post), c(n.store, 3, unit.par))
+}
     if (alpha.update)
       res.out$alpha <- matrix(res$pdSa, n.store, unit.a, byrow=TRUE)
     else
