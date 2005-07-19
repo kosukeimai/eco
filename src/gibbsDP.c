@@ -263,9 +263,9 @@ void cDPeco(
     dtemp=0;
     for (j=0; j<t_samp; j++){
       if (j!=i)
-	q[j]=dMVN(Wstar[i], mu[j], InvSigma[j], 2, 0);
+	q[j]=dMVN(Wstar[i], mu[j], InvSigma[j], n_dim, 0);
       else
-	q[j]=alpha*dMVT(Wstar[i], mu0, S_bvt, nu0-n_dim+11, 2, 0);
+	q[j]=alpha*dMVT(Wstar[i], mu0, S_bvt, nu0-n_dim+1, 2, 0);
       dtemp+=q[j]; 
       qq[j]=dtemp; /*compute qq, the cumlative of q*/    
     }
@@ -352,8 +352,8 @@ void cDPeco(
     if (itempC==nth){
       if(*pinUpdate) {
 	pdSa[itempA]=alpha;
-      }
-      pdSn[itempA]=nstar;
+     }
+	pdSn[itempA]=nstar;     
       itempA++;
       
       for(i=0; i<(n_samp+x1_samp+x0_samp); i++) {
