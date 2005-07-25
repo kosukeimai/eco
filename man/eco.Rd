@@ -104,7 +104,7 @@ eco(formula, data = parent.frame(), N = NULL, context = FALSE,
   \eqn{W_1} and \eqn{W_2} are unknown variables. All variables are
   proportions and hence bounded between 0 and 1. For each \eqn{i}, the
   following deterministic relationship holds,
-  \eqn{Y_i=X W_{1i}+(1-X_i)W_{2i}}.
+  \eqn{Y_i=X_i W_{1i}+(1-X_i)W_{2i}}.
 }
 
 \examples{
