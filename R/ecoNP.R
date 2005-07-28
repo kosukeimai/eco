@@ -118,7 +118,7 @@ ecoNP <- function(formula, data = parent.frame(), N = NULL, supplement = NULL,
     Sigma22.post <- matrix(res$pdSSig11, n.store, unit.par, byrow=TRUE)[,tmp$order.old]
     Sigma33.post <- matrix(res$pdSSig22, n.store, unit.par, byrow=TRUE)[,tmp$order.old]
     res.out$mu <- array(rbind(mu1.post, mu2.post, mu3.post), c(n.store, 3, unit.par))
-    res.out$Sigma <- array(rbind(Sigma11.post, Sigma12.post,
+    res.out$Sigma <- array(rbind(Sigma11.post, Sigma12.post, Sigma13.post,
                                  Sigma22.post, Sigma23.post,
 				 Sigma33.post), c(n.store, 6, unit.par))
 }

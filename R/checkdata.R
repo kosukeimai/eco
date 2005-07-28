@@ -1,4 +1,4 @@
-checkdata <- function(X,Y, supplement) {
+checkdata <- function(X,Y, supplement, ndim) {
    # check and reorganize inputs 
    if (any(X<0) || any(X>1) || any(Y<0) || any(Y>1))
      stop("Values of X and Y have to be between 0 and 1.")
@@ -33,10 +33,11 @@ checkdata <- function(X,Y, supplement) {
 
    ## check survey data
   
-   if (any(supplement)<0 || any(supplement >1)) 
+   if (any(supplement <0) || any(supplement >1)) 
       stop("survey data have to be between 0 and 1.")  
-   if ((dim(supplement)[2] != 2) && (length(supplement)>0))
-      stop("use n by 2 matrix for survey data")
+   if ((dim(supplement)[2] != ndim) && (length(supplement)>0))
+      stop("when context=TRUE, use n by 3 otherwise use n by 2 matrix\ 
+           for survey data, when context=TRUE")
    if (is.null(supplement)) 
       res$survey.samp <- res$survey.data <- res$survey.yes <- 0
    else {
