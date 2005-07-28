@@ -19,7 +19,6 @@ coef.eco <- function(object, subset = NULL, ...) {
 }
  else if (length(dim(object$mu))==3) {
     out <- NULL
-    print(out)
     nobs <- dim(object$mu)[3]
     for ( i in 1:nobs) {
     if (dim(object$mu)[2]==2) 
