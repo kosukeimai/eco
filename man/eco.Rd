@@ -15,10 +15,11 @@
 }
 
 \usage{
-eco(formula, data = parent.frame(), N = NULL, context = FALSE,
-    supplement = NULL, mu0 = c(0,0), tau0 = 2, nu0 = 4, S0 = diag(10,2),
-    mu.start = c(0,0), Sigma.start = diag(10, 2), parameter = TRUE,
-    grid = FALSE, n.draws = 5000, burnin = 0, thin = 0, verbose = FALSE)
+eco(formula, data = parent.frame(), N = NULL, supplement = NULL, 
+    context = FALSE, mu0 = 0, tau0 = 2, nu0 = 4, S0 = 10,
+    mu.start = 0, Sigma.start = 10, parameter = TRUE,
+    grid = FALSE, n.draws = 5000, burnin = 0, thin = 0, 
+    verbose = FALSE)
 }
 
 \arguments{
@@ -44,8 +45,12 @@ eco(formula, data = parent.frame(), N = NULL, context = FALSE,
     modeled. See Imai and Lu (2005) for details. The default is
     \code{FALSE}. 
   }
-  \item{mu0}{A \eqn{2 \times 1} numeric vector of the prior mean for the
-    mean parameter \eqn{\mu}. The default is \code{c(0,0)}.
+  \item{mu0}{A scalar or a numeric vector that specifies the prior mean 
+    for the mean parameter \eqn{\mu}. If it is a scalar, then its value
+    will be repeated to yield a vector of the length of \eqn{\mu}, otherwise,
+    it needs to be a vector of same length as \eqn{\mu}.
+    When \code{context=TRUE}, the length of \eqn{\mu} is 3, 
+    otherwise it is 2. The default is \code{0}. 
   } 
   \item{tau0}{A positive integer representing the prior scale
   for the mean parameter \eqn{\mu}. The default is \code{2}.
@@ -53,16 +58,32 @@ eco(formula, data = parent.frame(), N = NULL, context = FALSE,
   \item{nu0}{A positive integer representing the prior degrees of
   freedom of the variance matrix \eqn{\Sigma}. the default is \code{4}.
   } 
-  \item{S0}{A \eqn{2 \times 2} numeric matrix representing a positive
-    definite prior scale matrix for the variance matrix
-    \eqn{\Sigma}. The default is \code{diag(10,2)}.
+  \item{S0}{A postive scalar or a positive definite matrix that specifies 
+  the prior scale matrix for the variance matrix \eqn{\Sigma}. If it is 
+  a scalar, then the prior scale matrix will be a digonal matrix with 
+  the same dimensions as \eqn{\Sigma} and the diagonal elements all take value 
+  of \code{S0}, otherwise \code{S0} needs to have same dimensions as 
+  \eqn{\Sigma}. When \code{context=TRUE}, \eqn{\Sigma} is a 
+  \eqn{3 \times 3} matrix, otherwise, it is \eqn{2 \times 2}. 
+   The default is \code{10}.
   } 
-  \item{mu.start}{A \eqn{2 \times 1} numeric vector. The starting values
-    of the mean parameter \eqn{\mu}. The default is \code{c(0,0)}.
+  \item{mu.start}{A scalar or a numeric vector that specifies the 
+    starting values of the mean parameter \eqn{\mu}. 
+    If it is a scalar, then its value will be repeated to 
+    yield a vector of the length of \eqn{\mu}, otherwise,
+    it needs to be a vector of same length as \eqn{\mu}.
+    When \code{context=FALSE}, the length of \eqn{\mu} is 2, 
+    otherwise it is 3. The default is \code{0}. 
   }
-  \item{Sigma.start}{A \eqn{2 \times 2} numeric matrix representing
-    a starting value of the variance matrix \eqn{\Sigma}. The default is
-    \code{diag(10,2)}.
+  \item{Sigma.start}{A scalar or a positive definite matrix
+   that specified the starting value of the variance matrix 
+   \eqn{\Sigma}. If it is  a scalar, then the prior scale 
+  matrix will be a digonal matrix with the same dimensions 
+  as \eqn{\Sigma} and the diagonal elements all take value 
+  of \code{S0}, otherwise \code{S0} needs to have same dimensions as 
+  \eqn{\Sigma}. When \code{context=TRUE}, \eqn{\Sigma} is a 
+  \eqn{3 \times 3} matrix, otherwise, it is \eqn{2 \times 2}. 
+   The default is \code{10}.
   } 
   \item{parameter}{Logical. If \code{TRUE}, the Gibbs draws of the population
     parameters, \eqn{\mu} and \eqn{\Sigma}, are returned in addition to

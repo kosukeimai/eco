@@ -18,7 +18,7 @@ eco <- function(formula, data = parent.frame(), N = NULL, supplement = NULL,
   else if (length(mu0)!=ndim)
     stop("invalid inputs for mu0")
   if (is.matrix(S0)) {
-    if (any(dim(S0)==c(ndim, ndim)))
+    if (any(dim(S0)!=ndim))
       stop("invalid inputs for S0")
   }
   else
@@ -28,7 +28,7 @@ eco <- function(formula, data = parent.frame(), N = NULL, supplement = NULL,
   else if (length(mu.start)!=ndim)
     stop("invalid inputs for mu.start")
   if (is.matrix(Sigma.start)) {
-    if (any(dim(Sigma.start)==c(ndim, ndim)))
+    if (any(dim(Sigma.start)!=ndim))
       stop("invalid inputs for Sigma.start")
   }
   else
@@ -45,7 +45,7 @@ eco <- function(formula, data = parent.frame(), N = NULL, supplement = NULL,
   N <- eval(mf$N, data)
   
   # check data and modify inputs 
-  tmp <- checkdata(X,Y, supplement)  
+  tmp <- checkdata(X,Y, supplement, ndim)  
   bdd <- ecoBD(formula=formula, data=data)
 
   ## fitting the model

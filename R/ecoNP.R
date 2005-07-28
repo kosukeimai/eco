@@ -20,7 +20,7 @@ ecoNP <- function(formula, data = parent.frame(), N = NULL, supplement = NULL,
   else if (length(mu0)!=ndim)
     stop("invalid inputs for mu0")
   if (is.matrix(S0)) {
-    if (any(dim(S0)==c(ndim, ndim)))
+    if (any(dim(S0)!=ndim))
       stop("invalid inputs for S0")
   }
   else
@@ -46,7 +46,7 @@ ecoNP <- function(formula, data = parent.frame(), N = NULL, supplement = NULL,
     alpha.update <- FALSE
 
   ## checking the data and calculating the bounds 
-  tmp <- checkdata(X, Y, supplement)
+  tmp <- checkdata(X, Y, supplement, ndim)
   bdd <- ecoBD(formula, data=data)
 
   ## fitting the model

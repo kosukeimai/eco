@@ -37,7 +37,7 @@ void cDPecoX(
 	    double *pda0, double *pdb0, /* prior for alpha if alpha updated*/  
 
 	    /*incorporating survey data */
-	    int *survey,      /*1 if survey data available (set of W_1, W_2) */
+	    int *survey,      /*1 if survey data available(set of W_1, W_2,X)*/
 	                      /*0 otherwise*/
 	    int *sur_samp,     /*sample size of survey data*/
 	    double *sur_W,    /*set of known W_1, W_2 */
@@ -92,8 +92,9 @@ void cDPecoX(
   double **X = doubleMatrix(n_samp,n_dim);     /* The Y and covariates */
   double **W = doubleMatrix(t_samp,n_dim);     /* The W1 and W2 matrix */
   double **Wstar = doubleMatrix(t_samp,(n_dim+1)); /* The pseudo data  */
-  double **S_W = doubleMatrix(s_samp,n_dim);    /* The known W1 and W2 matrix*/
-  double **S_Wstar = doubleMatrix(s_samp,n_dim); /* The logit transformed S_W*/
+  double **S_W = doubleMatrix(s_samp,n_dim+1);   /* The known W1 and W2,X */
+  double **S_Wstar = doubleMatrix(s_samp,n_dim+1);/* The logit 
+						     transformed S_W*/
 
   /* grids */
   double **W1g = doubleMatrix(n_samp, n_step); /* grids for W1 */
@@ -194,14 +195,18 @@ void cDPecoX(
   /*read the survey data */
   if (*survey==1) {
     itemp = 0;
-    for (j=0; j<n_dim; j++)
+    for (j=0; j<=n_dim; j++)
       for (i=0; i<s_samp; i++) {
         S_W[i][j]=sur_W[itemp++];
         if (S_W[i][j]==0) S_W[i][j]=0.0001;
         if (S_W[i][j]==1) S_W[i][j]=0.9999;
         S_Wstar[i][j]=log(S_W[i][j])-log(1-S_W[i][j]);
-	W[n_samp+x1_samp+x0_samp+i][j]=S_W[i][j];
-	Wstar[n_samp+x1_samp+x0_samp+i][j]=S_Wstar[i][j];
+	if (j<n_dim) {
+	  W[(n_samp+x1_samp+x0_samp+i)][j]=S_W[i][j];
+	  Wstar[(n_samp+x1_samp+x0_samp+i)][j]=S_Wstar[i][j];
+        }
+	else 
+	  Wstar[(n_samp+x1_samp+x0_samp+i)][j]=S_Wstar[i][j];
       }
   }
 
