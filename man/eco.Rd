@@ -200,7 +200,6 @@ summary(res1)
   to Ecological Inference.} Working Paper, Princeton University,
   available at
   \url{http://www.princeton.edu/~kimai/research/einonpar.html} }
-
 }
 
 \seealso{\code{ecoNP}, \code{predict.eco}, \code{summary.eco}}

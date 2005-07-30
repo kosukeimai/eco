@@ -204,7 +204,13 @@ summary(res1)
   Imai, Kosuke and Ying Lu. (2004) \dQuote{ Parametric and Nonparametric
   Bayesian Models for Ecological Inference in \eqn{2 \times 2}
   Tables.} Proceedings of the American Statistical Association.
-  \url{http://www.princeton.edu/~kimai/research/einonpar.html} }
+\url{http://www.princeton.edu/~kimai/research/einonpar.html}
+
+Imai, Kosuke and Ying Lu. (2005) \dQuote{An Incomplete Data Approach
+  to Ecological Inference.} Working Paper, Princeton University,
+available at
+\url{http://www.princeton.edu/~kimai/research/einonpar.html} 
+}
 
 \seealso{\code{eco}, \code{predict.eco}, \code{summary.ecoNP}}
 \keyword{models}
