@@ -10,8 +10,9 @@
   Normal/Inverse-Wishart prior) for ecological inference in \eqn{2
   \times 2} tables via Markov chain Monte Carlo. It gives the in-sample
   predictions as well as the estimates of the model parameters. The
-  model and algorithm are described in Imai and Lu (2004, 2005). The
-  contextual effect can also be modeled.
+  model and algorithm are described in Imai and Lu (2004). The
+  contextual effect can also be modeled by following the strategy
+  described in Imai and Lu (2005).
 }
 
 \usage{

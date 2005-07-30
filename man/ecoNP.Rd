@@ -11,7 +11,8 @@
   2} tables via Markov chain Monte Carlo. It gives the in-sample
   predictions as well as out-of-sample predictions for population
   inference.  The model and algorithm are described in Imai and Lu
-  (2004). The contextual effect can also be modeled.
+  (2004). The contextual effect can also be modeled by following the
+  strategy described in Imai and Lu (2005).
 }
 
 \usage{
@@ -131,7 +132,7 @@ ecoNP(formula, data = parent.frame(), N = NULL, supplement = NULL,
 data(reg)
 
 ## NOTE: convergence has not been properly assessed for the following
-## example. See Imai and Lu (2004) for more complete examples.
+## example. See Imai and Lu (2004, 2005) for more complete examples.
 
 ## fit the nonparametric model to give in-sample predictions
 ## store the parameters to make population inference later
