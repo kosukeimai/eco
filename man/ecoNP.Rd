@@ -160,6 +160,10 @@ res1 <- ecoNP(Y ~ X, N = N, context = TRUE, data = census, n.draws=500,
               verbose = TRUE)
 ## summarize the results
 summary(res1)
+
+## out-of sample prediction 
+pres1 <- predict(res1)
+summary(pres1)
 }
 
 \value{
