@@ -17,7 +17,7 @@ fisher.back<-function(Y) {
   X[2]<-Y[2]
   X[3]<-exp(Y[3])
   X[4]<-exp(Y[4])
-  X[5]<-(exp(2*Y[5])-1)/(exp(2*Y[5]+1))
+  X[5]<-(exp(2*Y[5])-1)/(exp(2*Y[5])+1)
   return(X)
 }
   
@@ -32,80 +32,43 @@ thetacov<-function(Z) {
 }
 
 
-eco.em <- function(Y, X, data = parent.frame(),supplement=NULL, 
+eco.em <- function(formula, data = parent.frame(),supplement=NULL, 
                    theta.old=c(0,0,1,1,0), convergence=0.000001,
                    iteration.max=1000, Ioc.yes=TRUE, Fisher=TRUE,
                    n.draws = 100000, by.draw=100000,
-                   draw.max=10000000, printon=TRUE) { 
+                   draw.max=10000000, printon=TRUE, grid=TRUE) { 
 
-  ## checking inputs
-  if ((dim(supplement)[2] != 2) && (length(supplement)>0))
-    stop("Error: use n by 2 matrix for survey data")
-  call <- match.call()
-  ff <- as.formula(paste(call$Y, "~ -1 +", call$X))
-  if (is.matrix(eval.parent(call$data)))
+  # getting X and Y
+  mf <- match.call()
+  tt <- terms(formula)
+  attr(tt, "intercept") <- 0
+  if (is.matrix(eval.parent(mf$data)))
     data <- as.data.frame(data)
-  X <- model.matrix(ff, data)
-  Y <- model.response(model.frame(ff, data=data))
-  
-  ##survey data
-  if (length(supplement) == 0) {
-    survey.samp <- 0
-    survey.data <- 0
-    survey.yes<-0
-  }
-  else {
-    survey.samp <- length(supplement[,1])
-    survey.data <- as.matrix(supplement)
-    survey.yes<-1
-  }
-  
-  ind<-c(1:length(X))
-  X1type<-0
-  X0type<-0
-  samp.X1<-0
-  samp.X0<-0
-  X1.W1<-0
-  X0.W2<-0
-  
-  ##Xtype x=1
-  X1.ind<-ind[along=(X==1)]
-  if (length(X[X!=1])<length(X)){
-    X1type<-1
-    samp.X1<-length(X1.ind)
-    X1.W1<-Y[X1.ind]
-  }
-  
-  ##Xtype x=0
-  X0.ind<-ind[along=(X==0)]
-  if (length(X[X!=0])<length(X)){
-    X0type<-1
-    samp.X0<-length(X0.ind)
-    X0.W2<-Y[X0.ind]
-  }
-  
-  XX.ind<-setdiff(ind, union(X0.ind, X1.ind))
-  X.use<-X[XX.ind]
-  Y.use<-Y[XX.ind]
+  X <- model.matrix(tt, data)
+  Y <- model.response(model.frame(tt, data=data))
 
-  order.old<-order(c(XX.ind, X0.ind, X1.ind))
+  ndim <- 2
   
-  ## fitting the model
-  n.samp <- length(Y.use)	 
-  d <- cbind(X.use, Y.use)
+  tmp <- checkdata(X,Y, supplement, ndim)
+  bdd <- ecoBD(formula=formula, data=data)
+
+  # Fitting the model 
   n.var<-5
   n.Imat<-n.var
   cdiff<-1
   em.converge<-FALSE
   i<-1
-
+  draw <- 1
   
   while ((!em.converge) && (i<iteration.max)) {
-    res <- .C("cEMeco", as.double(d), as.double(theta.old),
-              as.integer(n.samp),  as.integer(n.draws), 
-              as.integer(survey.yes), as.integer(survey.samp), as.double(survey.data),
-              as.integer(X1type), as.integer(samp.X1), as.double(X1.W1),
-              as.integer(X0type), as.integer(samp.X0), as.double(X0.W2),
+    res <- .C("cEMeco", as.double(tmp$d), as.double(theta.old),
+              as.integer(tmp$n.samp),  as.integer(n.draws), 
+              as.integer(tmp$survey.yes), as.integer(tmp$survey.samp), 
+	      as.double(tmp$survey.data),
+              as.integer(tmp$X1type), as.integer(tmp$samp.X1), as.double(tmp$X1.W1),
+              as.integer(tmp$X0type), as.integer(tmp$samp.X0), as.double(tmp$X0.W2),
+	      as.double(bdd$Wmin[,1,1]), as.double(bdd$Wmax[,1,1]),
+	      as.integer(grid), 
               pdTheta=double(n.var), S=double(n.var),
               PACKAGE="eco")
     
@@ -147,13 +110,17 @@ eco.em <- function(Y, X, data = parent.frame(),supplement=NULL,
   
   if (em.converge && Ioc.yes) {
     ##output Ioc 
-    res <- .C("cEMeco", as.double(d), as.double(theta.old),
-	      as.integer(n.samp),  as.integer(n.draws), 
-              as.integer(survey.yes), as.integer(survey.samp), as.double(survey.data),
-   	      as.integer(X1type), as.integer(samp.X1), as.double(X1.W1),
-   	      as.integer(X0type), as.integer(samp.X0), as.double(X0.W2),
-	      pdTheta=double(n.var), S=double(n.var),
+    res <- .C("cEMeco", as.double(tmp$d), as.double(theta.old),
+              as.integer(tmp$n.samp),  as.integer(n.draws), 
+              as.integer(tmp$survey.yes), as.integer(tmp$survey.samp), 
+	      as.double(tmp$survey.data),
+              as.integer(tmp$X1type), as.integer(tmp$samp.X1), as.double(tmp$X1.W1),
+              as.integer(tmp$X0type), as.integer(tmp$samp.X0), as.double(tmp$X0.W2),
+	      as.double(bdd$Wmin[,1,1]), as.double(bdd$Wmax[,1,1]),
+	      as.integer(grid), 
+              pdTheta=double(n.var), S=double(n.var),
               PACKAGE="eco")
+
     ##based on pdTheta and S compute Ioc
     
     S1<-res$S[1]
@@ -168,7 +135,7 @@ eco.em <- function(Y, X, data = parent.frame(),supplement=NULL,
     v2<-res$pdTheta[4]
     r<-res$pdTheta[5]
     
-    n<-n.samp+survey.samp+samp.X1+samp.X0
+    n<-tmp$n.samp+tmp$survey.samp+tmp$samp.X1+tmp$samp.X0
     
     Ioc[1,1]<- -n/((1-r^2)*v1)
     Ioc[1,2]<- Ioc[2,1] <- n*r/((1-r^2)*sqrt(v1*v2))
@@ -256,68 +223,26 @@ eco.em <- function(Y, X, data = parent.frame(),supplement=NULL,
 }
 
 
-eco.sem<-function(Y, X, data = parent.frame(),supplement=NULL, 
+eco.sem<-function(formula, data = parent.frame(),supplement=NULL, 
                   theta.old=c(0,0,1,1,0), theta.em=NULL, Ioc.em=NULL,
                   R.convergence=0.001, iteration.max=50, Fisher=TRUE,
-                  n.draws = 10, by.draw=10, draw.max=200, printon=TRUE) {
+                  n.draws = 10, by.draw=10, draw.max=200, printon=TRUE, grid=TRUE) {
   
-  ## checking inputs
-  if ((dim(supplement)[2] != 2) && (length(supplement)>0))
-    stop("Error: use n by 2 matrix for survey data")
-  
-  call <- match.call()
-
-  ff <- as.formula(paste(call$Y, "~ -1 +", call$X))
-  if (is.matrix(eval.parent(call$data)))
+  # getting X and Y
+  mf <- match.call()
+  tt <- terms(formula)
+  attr(tt, "intercept") <- 0
+  if (is.matrix(eval.parent(mf$data)))
     data <- as.data.frame(data)
-  X <- model.matrix(ff, data)
-  Y <- model.response(model.frame(ff, data=data))
+  X <- model.matrix(tt, data)
+  Y <- model.response(model.frame(tt, data=data))
 
-  ##survey data
-  if (length(supplement) == 0) {
-    survey.samp <- 0
-    survey.data <- 0
-    survey.yes<-0
-  }
-  else {
-    survey.samp <- length(supplement[,1])
-    survey.data <- as.matrix(supplement)
-    survey.yes<-1
-  }
+  ndim <- 2
   
-  ind<-c(1:length(X))
-  X1type<-0
-  X0type<-0
-  samp.X1<-0
-  samp.X0<-0
-  X1.W1<-0
-  X0.W2<-0
-  
-  ##Xtype x=1
-  X1.ind<-ind[along=(X==1)]
-  if (length(X[X!=1])<length(X)){
-    X1type<-1
-    samp.X1<-length(X1.ind)
-    X1.W1<-Y[X1.ind]
-  }
-  
-  ##Xtype x=0
-  X0.ind<-ind[along=(X==0)]
-  if (length(X[X!=0])<length(X)){
-    X0type<-1
-    samp.X0<-length(X0.ind)
-    X0.W2<-Y[X0.ind]
-  }
-  
-  XX.ind<-setdiff(ind, union(X0.ind, X1.ind))
-  X.use<-X[XX.ind]
-  Y.use<-Y[XX.ind]
+  tmp <- checkdata(X,Y, supplement, ndim)
+  bdd <- ecoBD(formula=formula, data=data)
 
-  order.old<-order(c(XX.ind, X0.ind, X1.ind))
-  
-  ## fitting the model
-  n.samp <- length(Y.use)	 
-  d <- cbind(X.use, Y.use)
+  # Fitting the model 
   n.var<-5
   n.Imat<-n.var*(n.var+1)/2
 
@@ -326,15 +251,18 @@ eco.sem<-function(Y, X, data = parent.frame(),supplement=NULL,
   rowdiff<-rep(1, n.var)
 
   k<-1
-
+  draw <- 1
   Rconverge<-FALSE
 
   while (!Rconverge && (k<iteration.max)) {
-    res <- .C("cEMeco", as.double(d), as.double(theta.old),
-              as.integer(n.samp),  as.integer(n.draws), 
-              as.integer(survey.yes), as.integer(survey.samp), as.double(survey.data),
-              as.integer(X1type), as.integer(samp.X1), as.double(X1.W1),
-              as.integer(X0type), as.integer(samp.X0), as.double(X0.W2),
+    res <- .C("cEMeco", as.double(tmp$d), as.double(theta.old),
+              as.integer(tmp$n.samp),  as.integer(n.draws), 
+              as.integer(tmp$survey.yes), as.integer(tmp$survey.samp), 
+	      as.double(tmp$survey.data),
+              as.integer(tmp$X1type), as.integer(tmp$samp.X1), as.double(tmp$X1.W1),
+              as.integer(tmp$X0type), as.integer(tmp$samp.X0), as.double(tmp$X0.W2),
+	      as.double(bdd$Wmin[,1,1]), as.double(bdd$Wmax[,1,1]),
+	      as.integer(grid), 
               pdTheta=double(n.var), S=double(n.var),
               PACKAGE="eco")
     
@@ -348,21 +276,25 @@ eco.sem<-function(Y, X, data = parent.frame(),supplement=NULL,
         Rconverge<-FALSE
         theta.t.i<-theta.em
         theta.t.i[i]<-theta.t[i]
-        
-        temp<-.C("cEMeco", as.double(d), as.double(theta.t.i),
-                 as.integer(n.samp),  as.integer(n.draws), 
-                 as.integer(survey.yes), as.integer(survey.samp), as.double(survey.data),
-                 as.integer(X1type), as.integer(samp.X1), as.double(X1.W1),
-                 as.integer(X0type), as.integer(samp.X0), as.double(X0.W2),
-                 pdTheta=double(n.var), S=double(n.var),
-                 PACKAGE="eco")$pdTheta
+        temp <- .C("cEMeco", as.double(tmp$d), as.double(theta.t.i),
+              as.integer(tmp$n.samp),  as.integer(n.draws), 
+              as.integer(tmp$survey.yes), as.integer(tmp$survey.samp), 
+	      as.double(tmp$survey.data),
+              as.integer(tmp$X1type), as.integer(tmp$samp.X1), as.double(tmp$X1.W1),
+              as.integer(tmp$X0type), as.integer(tmp$samp.X0), as.double(tmp$X0.W2),
+	      as.double(bdd$Wmin[,1,1]), as.double(bdd$Wmax[,1,1]),
+	      as.integer(grid), 
+              pdTheta=double(n.var), S=double(n.var),
+              PACKAGE="eco")$pdTheta
         
         for (j in 1:n.var) {
           if (Fisher) {
-            R.t2[i,j]<-(fisher(temp)[j]-fisher(theta.em)[j])/(fisher(theta.t)[i]-fisher(theta.em)[i])
+	    tempR<-(fisher(temp)[j]-fisher(theta.em)[j])/(fisher(theta.t)[i]-fisher(theta.em)[i])
+            if ((tempR!=0) && (tempR<Inf)&& (tempR>-Inf)) R.t2[i,j]<-tempR
           }
           else if (!Fisher) {
-            R.t2[i,j]<-(temp[j]-theta.em[j])/(theta.t[i]-theta.em[i])
+            tempR<-(temp[j]-theta.em[j])/(theta.t[i]-theta.em[i])
+            if ((tempR!=0) && (tempR<Inf)&& (tempR>-Inf)) R.t2[i,j]<-tempR
           }
           rowdiff.temp<-max(abs(R.t2[i,j]-R.t1[i,j]), rowdiff.temp)    
         }   
