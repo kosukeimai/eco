@@ -63,6 +63,7 @@ void NIWupdate(
   for (j=0; j<n_dim; j++)
     for (k=0; k<n_dim; k++)
       mtemp[j][k] = Sigma[j][k]/(tau0+n_samp);
+
   rMVN(mu, mun, mtemp, n_dim);
 
   free(Ybar);

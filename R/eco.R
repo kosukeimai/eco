@@ -82,7 +82,8 @@ eco <- function(formula, data = parent.frame(), N = NULL, supplement = NULL,
               as.integer(tmp$samp.X0), as.double(tmp$X0.W2),
               as.double(bdd$Wmin[,1,1]), as.double(bdd$Wmax[,1,1]),
               as.integer(parameter), as.integer(grid), 
-              pdSMu0=double(n.store), pdSMu1=double(n.store), pdSSig00=double(n.store),
+              pdSMu0=double(n.store), pdSMu1=double(n.store), 
+	      pdSSig00=double(n.store),
               pdSSig01=double(n.store), pdSSig11=double(n.store),
               pdSW1=double(n.w), pdSW2=double(n.w),
               PACKAGE="eco")
@@ -127,6 +128,7 @@ eco <- function(formula, data = parent.frame(), N = NULL, supplement = NULL,
     class(res.out) <- c("eco")
   
   return(res.out)
+
 }
 
 

@@ -1,5 +1,4 @@
 coef.eco <- function(object, subset = NULL, ...) {
-
   mu <- object$mu
   Sigma <- object$Sigma
 
