@@ -15,6 +15,9 @@
 #include "rand.h"
 #include "sample.h"
 #include "bayes.h"
+#include "fintegrate.h"
+#include "macros.h"
+
 
 void cEMeco(
 	    /*data input */
@@ -120,6 +123,37 @@ void cEMeco(
   Sigma[0][1] = pdTheta_in[4]*sqrt(pdTheta_in[2]*pdTheta_in[3]);
   Sigma[1][0] = Sigma[0][1];
   dinv(Sigma, n_dim, InvSigma);
+
+  double normc;
+  int inf=2;
+  double bound=0.0;
+  double epsabs=0.0000001, epsrel=0.0000001;
+  double result=9999, anserr=9999;
+  int limit=100;
+  int last, neval, ier;
+  int lenw=4*limit;
+  int *iwork=(int *) R_alloc(limit, sizeof(int));
+  double *work=(double *)R_alloc(lenw, sizeof(double));
+
+
+  Param param;
+
+  param.u1=mu[0];
+  param.u2=mu[1];
+  param.s1=Sigma[0][0];
+  param.s2=Sigma[1][1];
+  param.rho=Sigma[1][0]/sqrt(param.s1*param.s2);
+
+  param.X=X[0][0];
+  param.Y=X[0][1];
+
+  Rdqagi(&test, (void *)&param, &bound, &inf, &epsabs, &epsrel, &result,
+	 &anserr, &neval, &ier, &limit, &lenw, &last, iwork, work);
+ 
+  Rprintf("result%14g\n", result); 
+  Rprintf("anserr%14g\n", anserr); 
+  Rprintf("ier%5d\n", ier); 
+
 
   /* initialize W, Wstar for t_samp*/
   for (i=0; i< t_samp; i++) 
