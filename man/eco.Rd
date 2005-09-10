@@ -135,7 +135,7 @@ eco(formula, data = parent.frame(), N = NULL, supplement = NULL,
 data(reg)
 
 ## NOTE: convergence has not been properly assessed for the following
-## examples. See Imai and Lu (2004, 2005) for more complete examples.
+## examples. See Imai and Lu (2004, 2005) for more complete analyses.
 
 ## fit the parametric model with the default prior specification
 res <- eco(Y ~ X, data = reg, verbose = TRUE)
@@ -143,7 +143,7 @@ res <- eco(Y ~ X, data = reg, verbose = TRUE)
 summary(res)
 
 ## obtain out-of-sample prediction
-out <- predict(res, verbose=TRUE)
+out <- predict(res, verbose = TRUE)
 ## summarize the results
 summary(out)
 
