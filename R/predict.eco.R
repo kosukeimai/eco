@@ -25,6 +25,10 @@ predict.eco <- function(object, newdraw = NULL, subset = NULL,
     }
   }
   res <- apply(Wstar, 2, invlogit)
+  if (ncol(res) == 2)
+    colnames(res) <- c("W1", "W2")
+  else # this is called from predict.ecoX
+    colnames(res) <- c("W1", "W2", "X")
   class(res) <- c("predict.eco", "matrix")
   return(res)
 }

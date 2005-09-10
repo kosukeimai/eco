@@ -1,17 +1,18 @@
 summary.predict.eco <- function(object, CI=c(2.5, 97.5), ...) {
-  
+
+  if (any(CI < 0) || any(CI > 100))
+    stop("Invalid input for CI")
   n.draws <- nrow(object)
+  n.var <- ncol(object)
   table.names<-c("mean", "std.dev", paste(min(CI), "%", sep=" "),
 			paste(max(CI), "%", sep=" "))
-
-  W.table <- rbind(cbind(mean(object[,1]), sd(object[,1]), 
-                         quantile(object[,1], min(CI)/100), 
-                         quantile(object[,1], max(CI)/100)),
-                   cbind(mean(object[,2]), sd(object[,2]), 
-                         quantile(object[,2], min(CI)/100), 
-                         quantile(object[,2], max(CI)/100)))
+  W.table <- matrix(NA, ncol=length(table.names), nrow=n.var)
+  for (i in 1:n.var)
+    W.table[i,] <- cbind(mean(object[,i]), sd(object[,i]), 
+                         quantile(object[,i], min(CI)/100), 
+                         quantile(object[,i], max(CI)/100))
   colnames(W.table) <- table.names
-  rownames(W.table) <- c("W1", "W2")
+  rownames(W.table) <- colnames(object)
 
   res <- list(W.table = W.table, n.draws = n.draws)
   class(res) <- "summary.predict.eco"

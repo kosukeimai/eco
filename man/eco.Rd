@@ -156,6 +156,11 @@ res1 <- eco(Y ~ X, N = N, context = TRUE, data = census, verbose = TRUE)
 ## summarize the results
 summary(res1)
 
+## obtain out-of-sample prediction
+out1 <- predict(res1, verbose = TRUE)
+## summarize the results
+summary(out1)
+
 }
 
 \value{
@@ -186,21 +191,21 @@ summary(res1)
 
 \author{
   Kosuke Imai, Department of Politics, Princeton University
-  \email{kimai@Princeton.Edu}, \url{http://www.princeton.edu/~kimai};
+  \email{kimai@Princeton.Edu}, \url{http://imai.princeton.edu};
   Ying Lu, Institute for Quantitative Social Sciences, 
   Harvard University \email{ylu@Latte.Harvard.Edu}}
 
 \references{
   Imai, Kosuke and Ying Lu. (2004) \dQuote{ Parametric and Nonparametric
   Bayesian Models for Ecological Inference in \eqn{2 \times 2}
-  Tables.} Proceedings of the American Statistical
-  Association. available at
-  \url{http://www.princeton.edu/~kimai/research/einonpar.html}
+  Tables.} Working Paper, Princeton University,
+  available at
+  \url{http://imai.princeton.edu/research/einonpar.html}
 
   Imai, Kosuke and Ying Lu. (2005) \dQuote{An Incomplete Data Approach
   to Ecological Inference.} Working Paper, Princeton University,
   available at
-  \url{http://www.princeton.edu/~kimai/research/einonpar.html} }
+  \url{http://imai.princeton.edu/research/coarse.html} }
 }
 
 \seealso{\code{ecoNP}, \code{predict.eco}, \code{summary.eco}}
