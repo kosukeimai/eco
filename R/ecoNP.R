@@ -123,6 +123,7 @@ ecoNP <- function(formula, data = parent.frame(), N = NULL, supplement = NULL,
                              dim=c(n.store, 6, unit.par),
                              dimnames=list(1:n.store, c("Sigma11",
                                "Sigma12", "Sigma13", "Sigma22", "Sigma23", "Sigma33"), 1:unit.par))
+      class(res.out) <- c("ecoNPX", "ecoNP", "eco")
     }
     else {
       mu1.post <- matrix(res$pdSMu0, n.store, unit.par, byrow=TRUE)[,tmp$order.old]
@@ -141,9 +142,9 @@ ecoNP <- function(formula, data = parent.frame(), N = NULL, supplement = NULL,
     else
       res.out$alpha <- alpha
     res.out$nstar <- matrix(res$pdSn, n.store, unit.a, byrow=TRUE)
+    class(res.out) <- c("ecoNP", "eco")
   }
   
-  class(res.out) <- c("ecoNP", "eco")
   return(res.out)
 }
 
