@@ -115,10 +115,14 @@ ecoNP <- function(formula, data = parent.frame(), N = NULL, supplement = NULL,
       Sigma23.post <- matrix(res$pdSSig12, n.store, unit.par, byrow=TRUE)[,tmp$order.old]
       Sigma22.post <- matrix(res$pdSSig11, n.store, unit.par, byrow=TRUE)[,tmp$order.old]
       Sigma33.post <- matrix(res$pdSSig22, n.store, unit.par, byrow=TRUE)[,tmp$order.old]
-      res.out$mu <- array(rbind(mu1.post, mu2.post, mu3.post), c(n.store, 3, unit.par))
+      res.out$mu <- array(rbind(mu1.post, mu2.post, mu3.post),
+                          dim=c(n.store, 3, unit.par),
+                          dimnames=list(1:n.store, c("mu1", "mu2", "mu3"), 1:unit.par))
       res.out$Sigma <- array(rbind(Sigma11.post, Sigma12.post, Sigma13.post,
-                                   Sigma22.post, Sigma23.post,
-                                   Sigma33.post), c(n.store, 6, unit.par))
+                                   Sigma22.post, Sigma23.post, Sigma33.post),
+                             dim=c(n.store, 6, unit.par),
+                             dimnames=list(1:n.store, c("Sigma11",
+                               "Sigma12", "Sigma13", "Sigma22", "Sigma23", "Sigma33"), 1:unit.par))
     }
     else {
       mu1.post <- matrix(res$pdSMu0, n.store, unit.par, byrow=TRUE)[,tmp$order.old]
@@ -126,9 +130,11 @@ ecoNP <- function(formula, data = parent.frame(), N = NULL, supplement = NULL,
       Sigma11.post <- matrix(res$pdSSig00, n.store, unit.par, byrow=TRUE)[,tmp$order.old]
       Sigma12.post <- matrix(res$pdSSig01, n.store, unit.par, byrow=TRUE)[,tmp$order.old]
       Sigma22.post <- matrix(res$pdSSig11, n.store, unit.par, byrow=TRUE)[,tmp$order.old]
-      res.out$mu <- array(rbind(mu1.post, mu2.post), c(n.store, 2, unit.par))
-      res.out$Sigma <- array(rbind(Sigma11.post, Sigma12.post,
-                                   Sigma22.post), c(n.store, 3, unit.par))
+      res.out$mu <- array(rbind(mu1.post, mu2.post), dim=c(n.store, 2, unit.par),
+                          dimnames=list(1:n.store, c("mu1", "mu2"), 1:unit.par))
+      res.out$Sigma <- array(rbind(Sigma11.post, Sigma12.post, Sigma22.post),
+                             dim=c(n.store, 3, unit.par),
+                             dimnames=list(1:n.store, c("Sigma11", "Sigma12", "Sigma22"), 1:unit.par))
     }
     if (alpha.update)
       res.out$alpha <- matrix(res$pdSa, n.store, unit.a, byrow=TRUE)
