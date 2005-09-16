@@ -10,7 +10,6 @@ predict.ecoNPX <- function(object, newdraw = NULL, subset = NULL,
   }
 
   n.draws <- dim(object$mu)[1]
-  p <- dim(object$mu)[2]
   n <- dim(object$mu)[3]
   mu <- aperm(coef(object, subset = subset, obs = obs), c(2,3,1))
   
@@ -21,14 +20,20 @@ predict.ecoNPX <- function(object, newdraw = NULL, subset = NULL,
   Sigma <- aperm(res$Sigma[subset,,obs], c(2,3,1))
 
   if (cond) { # conditional prediction
-    
+    X <- object$X
+    res <- .C("preDPX", as.double(mu), as.double(Sigma), as.double(X),
+              as.integer(n), as.integer(n.draws), as.integer(2),
+              as.integer(verbose), pdStore = double(n.draws*2*n),
+              PACKAGE="eco")$pdStore
+    res <- matrix(res, ncol=2, nrow=n.draws*n, byrow=TRUE)
+    colnames(res) <- c("W1", "W2")
   }
   else { # unconditional prediction
     res <- .C("preDP", as.double(mu), as.double(Sigma), as.integer(n),
-              as.integer(n.draws), as.integer(p), as.integer(verbose),
-              pdStore = double(n.draws*p*n), PACKAGE="eco")$pdStore
+              as.integer(n.draws), as.integer(3), as.integer(verbose),
+              pdStore = double(n.draws*3*n), PACKAGE="eco")$pdStore
     
-    res <- matrix(res, ncol=p, nrow=n.draws*n, byrow=TRUE)
+    res <- matrix(res, ncol=3, nrow=n.draws*n, byrow=TRUE)
     colnames(res) <- c("W1", "W2", "X")
   }
   
