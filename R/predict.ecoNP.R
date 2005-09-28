@@ -18,7 +18,7 @@ predict.ecoNP <- function(object, newdraw = NULL, subset = NULL,
     subset <- 1:n.draws
   if (is.null(obs))
     obs <- 1:n
-  Sigma <- aperm(res$Sigma[subset,,obs], c(2,3,1))
+  Sigma <- aperm(object$Sigma[subset,,obs], c(2,3,1))
   
   res <- .C("preDP", as.double(mu), as.double(Sigma), as.integer(n),
             as.integer(n.draws), as.integer(p), as.integer(verbose),
