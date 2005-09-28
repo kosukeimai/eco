@@ -131,12 +131,13 @@ ecoNP(formula, data = parent.frame(), N = NULL, supplement = NULL,
 ## load the registration data
 data(reg)
 
-## NOTE: convergence has not been properly assessed for the following
-## example. See Imai and Lu (2004, 2005) for more complete examples.
+## NOTE: We set the number of MCMC draws to be a very small number in
+## the following examples; i.e., convergence has not been properly
+## assessed. See Imai and Lu (2004, 2005) for more complete examples.
 
 ## fit the nonparametric model to give in-sample predictions
 ## store the parameters to make population inference later
-res <- ecoNP(Y ~ X, data = reg, n.draws = 500, param = TRUE, verbose = TRUE) 
+res <- ecoNP(Y ~ X, data = reg, n.draws = 50, param = TRUE, verbose = TRUE) 
 ##summarize the results
 summary(res)
 
@@ -156,7 +157,7 @@ data(census)
 
 ## fit the parametric model with contextual effects and N 
 ## using the default prior specification
-res1 <- ecoNP(Y ~ X, N = N, context = TRUE, data = census, n.draws=500,
+res1 <- ecoNP(Y ~ X, N = N, context = TRUE, data = census, n.draws=50,
               verbose = TRUE)
 ## summarize the results
 summary(res1)
