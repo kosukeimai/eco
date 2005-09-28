@@ -1,39 +1,40 @@
 \name{predict.eco}
 
-\alias{predict.eco}
-\alias{predict.ecoX}
+\alias{predict.ecoNP}
+\alias{predict.ecoNPX}
 
-\title{Out-of-Sample Posterior Prediction under the Parametric Bayesian
-Model for Ecological Inference in 2x2 Tables}
+\title{Out-of-Sample Posterior Prediction under the
+  Nonparametric Bayesian Model for Ecological Inference in 2x2 Tables}
 
 \description{
   Obtains out-of-sample posterior predictions under the fitted
-  parametric Bayesian model for ecological
-  inference. \code{predict} method for class \code{eco} and \code{ecoX}.
+  nonparametric Bayesian model for ecological
+  inference. \code{predict} method for class \code{ecoNP} and \code{ecoNPX}.
 }
 
 \usage{
-  \method{predict}{eco}(object, newdraw = NULL, subset = NULL, verbose = FALSE, ...)
-  \method{predict}{ecoX}(object, newdraw = NULL, subset = NULL, newdata = NULL, cond = FALSE, verbose = FALSE, ...)
+  \method{predict}{ecoNP}(object, newdraw = NULL, subset = NULL, obs = NULL, verbose = FALSE, ...)
+  \method{predict}{ecoNPX}(object, newdraw = NULL, subset = NULL, obs = NULL, cond = FALSE, verbose = FALSE, ...)
 }
 
 \arguments{
-  \item{object}{An output object from \code{eco} or \code{ecoNP}.}
+  \item{object}{An output object from \code{ecoNP}.}
   \item{newdraw}{An optional list containing two matrices (or three
     dimensional arrays for the nonparametric model) of MCMC draws
     of \eqn{\mu} and \eqn{\Sigma}. Those elements should be named as
     \code{mu} and \code{Sigma}, respectively. The default is the
     original MCMC draws stored in \code{object}.
   }
-  \item{newdata}{An optional data frame containing a new data set for
-    which posterior predictions will be made. The new data set must have
-    the same variable names as those in the original data.
-  }
   \item{subset}{A scalar or numerical vector specifying the row
     number(s) of \code{mu} and \code{Sigma} in the output object from
     \code{eco}. If specified, the posterior draws of parameters for
     those rows are used for posterior prediction. The default is
     \code{NULL} where all the posterior draws are used. 
+  }
+  \item{obs}{An integer or vector of integers specifying the observation
+    number(s) whose posterior draws will be used for predictions. The
+    default is \code{NULL} where all the observations in the data set
+    are selected.
   }
   \item{cond}{logical. If \code{TRUE}, then the conditional prediction
     will made for the parametric model with contextual effects. The
@@ -48,7 +49,8 @@ Model for Ecological Inference in 2x2 Tables}
 }
 
 \details{The posterior predictive values are computed using the
-  Monte Carlo sample stored in the \code{eco} output (or other sample if
+  Monte Carlo sample stored in the \code{eco} or \code{ecoNP} output 
+  (or other sample if
   \code{newdraw} is specified). Given each Monte Carlo sample of the
   parameters, we sample the vector-valued latent variable from the
   appropriate multivariate Normal distribution. Then, we apply the
@@ -67,7 +69,8 @@ Model for Ecological Inference in 2x2 Tables}
   \code{print.summary.predict.eco} will print the summary.
 }
 
-\seealso{\code{eco}, \code{predict.ecoNP}}
+\seealso{\code{eco}, \code{ecoNP}, \code{summary.eco},
+  \code{summary.ecoNP}}
 
 \author{
   Kosuke Imai, Department of Politics, Princeton University
