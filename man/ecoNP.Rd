@@ -142,14 +142,14 @@ res <- ecoNP(Y ~ X, data = reg, n.draws = 50, param = TRUE, verbose = TRUE)
 summary(res)
 
 ## obtain out-of-sample prediction
-out <- predict(res, verbose=TRUE)
+out <- predict(res, verbose = TRUE)
 ## summarize the results
 summary(out)
 
 ## density plots of the out-of-sample predictions
 par(mfrow=c(2,1))
-plot(density(out[,1]), main="W1")
-plot(density(out[,2]), main="W2")
+plot(density(out[,1]), main = "W1")
+plot(density(out[,2]), main = "W2")
 
 
 ## load the Robinson's census data
@@ -157,8 +157,8 @@ data(census)
 
 ## fit the parametric model with contextual effects and N 
 ## using the default prior specification
-res1 <- ecoNP(Y ~ X, N = N, context = TRUE, data = census, n.draws=50,
-              verbose = TRUE)
+res1 <- ecoNP(Y ~ X, N = N, context = TRUE, param = TRUE, data = census,
+              n.draws = 25, verbose = TRUE)
 ## summarize the results
 summary(res1)
 
