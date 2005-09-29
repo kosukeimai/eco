@@ -17,7 +17,7 @@ predict.ecoNPX <- function(object, newdraw = NULL, subset = NULL,
     subset <- 1:n.draws
   if (is.null(obs))
     obs <- 1:n
-  Sigma <- aperm(res$Sigma[subset,,obs], c(2,3,1))
+  Sigma <- aperm(object$Sigma[subset,,obs], c(2,3,1))
 
   if (cond) { # conditional prediction
     X <- object$X
