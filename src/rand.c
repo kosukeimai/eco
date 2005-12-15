@@ -15,6 +15,8 @@
 #include "subroutines.h"
 #include "rand.h"
 #include "sample.h"
+#include "fintegrate.h"
+#include "macros.h"
 
 /* Multivariate Normal density */
 double dMVN(			
@@ -181,4 +183,71 @@ void rDirich(
   }
   for (j=0 ; j<size; j++)
     Sample[j] /= dtemp;
+}
+
+/** density function on tomography line Y=XW_1+ (1-X)W_2 */
+double dBVNtomo(double *Wstar,  /* Wstar values */ 
+		double X,   /* X value   */
+		double Y,   /* Y value */
+		double *MEAN, 
+		double **SIGMA,
+		int give_log)  /* 1 if log-scale, 0 otherwise */
+		
+{
+  double density;
+  double rho, dtemp;
+  
+  /*  if (1/(1+exp(-Wstar[1]))!=Y/(1-X)-X/(1-X)/(1+exp(-Wstar[0]))) {
+      return(0);
+  }
+  else {*/
+
+    rho=SIGMA[0][1]/sqrt(SIGMA[0][0]*SIGMA[1][1]);
+    Rprintf("rho %15g \n", rho);
+
+    dtemp=1/(2*M_PI*sqrt(SIGMA[0][0]*SIGMA[1][1]*(1-rho*rho)));
+
+    Rprintf("dtemp %15g \n", dtemp);
+
+    /* integrate normalizing constant */
+    double normc;
+    int inf=2;
+    double bound=0.0;
+    double epsabs=0.0000001, epsrel=0.0000001;
+    double result=9999, anserr=9999;
+    int limit=100;
+    int last, neval, ier;
+    int lenw=4*limit;
+    int *iwork=(int *) R_alloc(limit, sizeof(int));
+    double *work=(double *)R_alloc(lenw, sizeof(double));
+
+    Param param;
+    
+    param.mu[0]=MEAN[0];
+    param.mu[1]=MEAN[1];
+    param.Sigma[0][0]=SIGMA[0][0];
+    param.Sigma[1][1]=SIGMA[1][1];
+    param.Sigma[0][1]=SIGMA[0][1];
+    param.Sigma[1][0]=SIGMA[1][0];
+
+    param.X=X;
+    param.Y=X;
+
+    Rdqagi(&NormConst, (void *)&param, &bound, &inf, &epsabs, &epsrel, &result,
+	   &anserr, &neval, &ier, &limit, &lenw, &last, iwork, work);
+    /**/
+    Rprintf("result %15g\n", result);
+    density=-0.5*(1-rho*rho)*
+      ((Wstar[0]-MEAN[0])*(Wstar[0]-MEAN[0])/SIGMA[0][0]+
+       +(Wstar[1]-MEAN[1])*(Wstar[1]-MEAN[1])/SIGMA[1][1]
+       -2*rho*(Wstar[0]-MEAN[0])*(Wstar[1]-MEAN[0])/sqrt(SIGMA[0][0]*SIGMA[1][1]))
+      -log(dtemp)-log(result);
+
+     Rprintf("density %15g\n", density);
+    if (give_log)
+      return(density);
+    else
+      return(exp(density));
+	
+    //  }
 }

@@ -138,15 +138,17 @@ void cEMeco(
 
   Param param;
 
-  param.u1=mu[0];
-  param.u2=mu[1];
-  param.s1=Sigma[0][0];
-  param.s2=Sigma[1][1];
-  param.rho=Sigma[1][0]/sqrt(param.s1*param.s2);
+  param.mu[0]=mu[0];
+  param.mu[1]=mu[1];
+  param.Sigma[0][0]=Sigma[0][0];
+  param.Sigma[1][1]=Sigma[1][1];
+  param.Sigma[1][0]=Sigma[1][0];
+  param.Sigma[0][1]=Sigma[0][1];
+  //param.rho=Sigma[1][0]/sqrt(param.s1*param.s2);
 
   param.X=X[0][0];
   param.Y=X[0][1];
-
+  /*
   Rdqagi(&test, (void *)&param, &bound, &inf, &epsabs, &epsrel, &result,
 	 &anserr, &neval, &ier, &limit, &lenw, &last, iwork, work);
  
@@ -154,7 +156,7 @@ void cEMeco(
   Rprintf("anserr%14g\n", anserr); 
   Rprintf("ier%5d\n", ier); 
 
-
+  */
   /* initialize W, Wstar for t_samp*/
   for (i=0; i< t_samp; i++) 
     for (j=0; j<5; j++) {
@@ -256,7 +258,10 @@ void cEMeco(
       for (j=0;j<n_grid[i];j++){
 	prob_grid_cum[j]/=dtemp; /*standardize prob.grid */ 
       }
-      /*2 sample W_i on the ith tomo line */
+      /* MC numerical integration, compute E(W_i|Y_i, X_i, theta) */
+      /*2 sample ndraw W_i on the ith tomo line */
+      /*   use inverse CDF method to draw  */
+      /*   0-1 by 1/ndraw approx uniform distribution */
       /*3 compute Wsta_i from W_i*/
       j=0;
       itemp=1;
@@ -264,7 +269,9 @@ void cEMeco(
       for (k=0; k<ndraw; k++){
 	j=findInterval(prob_grid_cum, n_grid[i],
 		       (double)(1+k)/(ndraw+1), 1, 1, itemp, mflag); 
-	itemp=j;
+	itemp=j-1;
+
+
       if ((W1g[i][j]==0) || (W1g[i][j]==1)) 
 	Rprintf("W1g%5d%5d%14g", i, j, W1g[i][j]);
       if ((W2g[i][j]==0) || (W2g[i][j]==1)) 
