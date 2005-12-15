@@ -140,6 +140,7 @@ void W1Exp(double *W1, int n, void *param)
 
 
 /**E(W1*W1)*/
+/*
 void W1W1Exp(double *W1, int n, void *param)
 {
   int ii;
@@ -178,3 +179,4 @@ void W1W1Exp(double *W1, int n, void *param)
   free(W2);
 }
 
+*/

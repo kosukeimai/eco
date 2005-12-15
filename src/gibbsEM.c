@@ -116,6 +116,9 @@ void cEMeco(
       }
 
   /** read mu_org, Simga_ord **/
+  /***the following section is still under construction, 
+      I am trying the R numerical integration function ***/
+  /*
   mu[0] = pdTheta_in[0];
   mu[1] = pdTheta_in[1];
   Sigma[0][0] = pdTheta_in[2];
@@ -144,10 +147,11 @@ void cEMeco(
   param.Sigma[1][1]=Sigma[1][1];
   param.Sigma[1][0]=Sigma[1][0];
   param.Sigma[0][1]=Sigma[0][1];
+  param.X=X[0][0];
+  param.Y=X[0][1]; */
+
   //param.rho=Sigma[1][0]/sqrt(param.s1*param.s2);
 
-  param.X=X[0][0];
-  param.Y=X[0][1];
   /*
   Rdqagi(&test, (void *)&param, &bound, &inf, &epsabs, &epsrel, &result,
 	 &anserr, &neval, &ier, &limit, &lenw, &last, iwork, work);
@@ -157,6 +161,8 @@ void cEMeco(
   Rprintf("ier%5d\n", ier); 
 
   */
+  /* The code starts from here */
+
   /* initialize W, Wstar for t_samp*/
   for (i=0; i< t_samp; i++) 
     for (j=0; j<5; j++) {
