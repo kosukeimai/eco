@@ -19,7 +19,9 @@ export(
        varcov.eco,
        varcov.ecoNP,
        coef.eco,
-       coef.ecoNP)
+       coef.ecoNP,
+	eco.em,
+	eco.sem)
 
 S3method(varcov, eco)
 S3method(varcov, ecoNP)
