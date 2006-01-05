@@ -7,6 +7,7 @@ export(
        ecoBD,
        ecoNP,
        ecoRC,
+       eco.em,
        summary.eco,
        summary.ecoNP,
        print.summary.eco,
