@@ -60,15 +60,15 @@ eco.em <- function(formula, data = parent.frame(),supplement=NULL,
   i<-1
   draw <- 1
   
-  while ((!em.converge) && (i<iteration.max)) {
+  while ((!em.converge) && (i<=iteration.max)) {
     res <- .C("cEMeco", as.double(tmp$d), as.double(theta.old),
               as.integer(tmp$n.samp),  as.integer(n.draws), 
               as.integer(tmp$survey.yes), as.integer(tmp$survey.samp), 
-	      as.double(tmp$survey.data),
+          as.double(tmp$survey.data),
               as.integer(tmp$X1type), as.integer(tmp$samp.X1), as.double(tmp$X1.W1),
               as.integer(tmp$X0type), as.integer(tmp$samp.X0), as.double(tmp$X0.W2),
-	      as.double(bdd$Wmin[,1,1]), as.double(bdd$Wmax[,1,1]),
-	      as.integer(grid), 
+          as.double(bdd$Wmin[,1,1]), as.double(bdd$Wmax[,1,1]),
+          as.integer(grid), 
               pdTheta=double(n.var), S=double(n.var),
               PACKAGE="eco")
     
@@ -113,11 +113,11 @@ eco.em <- function(formula, data = parent.frame(),supplement=NULL,
     res <- .C("cEMeco", as.double(tmp$d), as.double(theta.old),
               as.integer(tmp$n.samp),  as.integer(n.draws), 
               as.integer(tmp$survey.yes), as.integer(tmp$survey.samp), 
-	      as.double(tmp$survey.data),
+          as.double(tmp$survey.data),
               as.integer(tmp$X1type), as.integer(tmp$samp.X1), as.double(tmp$X1.W1),
               as.integer(tmp$X0type), as.integer(tmp$samp.X0), as.double(tmp$X0.W2),
-	      as.double(bdd$Wmin[,1,1]), as.double(bdd$Wmax[,1,1]),
-	      as.integer(grid), 
+          as.double(bdd$Wmin[,1,1]), as.double(bdd$Wmax[,1,1]),
+          as.integer(grid), 
               pdTheta=double(n.var), S=double(n.var),
               PACKAGE="eco")
 
@@ -145,7 +145,7 @@ eco.em <- function(formula, data = parent.frame(),supplement=NULL,
     Ioc[1,5]<- Ioc[5,1] <- -2*r/((1-r^2)^2*v1)*(-S1+n*u1) +
       (1+r^2)/((1-r^2)^2*v1^(1/2)*v2^(1/2))*(-S2+n*u2) 
     
-    Ioc[2,2]<- -n/((1-r^2)*v2)	
+    Ioc[2,2]<- -n/((1-r^2)*v2)  
     Ioc[2,3]<- Ioc[3,2] <- -r/(2*(1-r^2)*v1^(3/2)*v2^(1/2))*(-S1+n*u1)
     Ioc[2,4]<- Ioc[4,2] <- 1/((1-r^2)*v2^2)*(-S2+n*u2) -
       r/(2*(1-r^2)*v1^(1/2)*v2^(3/2))*(-S1+n*u1) 
@@ -258,11 +258,11 @@ eco.sem<-function(formula, data = parent.frame(),supplement=NULL,
     res <- .C("cEMeco", as.double(tmp$d), as.double(theta.old),
               as.integer(tmp$n.samp),  as.integer(n.draws), 
               as.integer(tmp$survey.yes), as.integer(tmp$survey.samp), 
-	      as.double(tmp$survey.data),
+          as.double(tmp$survey.data),
               as.integer(tmp$X1type), as.integer(tmp$samp.X1), as.double(tmp$X1.W1),
               as.integer(tmp$X0type), as.integer(tmp$samp.X0), as.double(tmp$X0.W2),
-	      as.double(bdd$Wmin[,1,1]), as.double(bdd$Wmax[,1,1]),
-	      as.integer(grid), 
+          as.double(bdd$Wmin[,1,1]), as.double(bdd$Wmax[,1,1]),
+          as.integer(grid), 
               pdTheta=double(n.var), S=double(n.var),
               PACKAGE="eco")
     
@@ -279,17 +279,17 @@ eco.sem<-function(formula, data = parent.frame(),supplement=NULL,
         temp <- .C("cEMeco", as.double(tmp$d), as.double(theta.t.i),
               as.integer(tmp$n.samp),  as.integer(n.draws), 
               as.integer(tmp$survey.yes), as.integer(tmp$survey.samp), 
-	      as.double(tmp$survey.data),
+          as.double(tmp$survey.data),
               as.integer(tmp$X1type), as.integer(tmp$samp.X1), as.double(tmp$X1.W1),
               as.integer(tmp$X0type), as.integer(tmp$samp.X0), as.double(tmp$X0.W2),
-	      as.double(bdd$Wmin[,1,1]), as.double(bdd$Wmax[,1,1]),
-	      as.integer(grid), 
+          as.double(bdd$Wmin[,1,1]), as.double(bdd$Wmax[,1,1]),
+          as.integer(grid), 
               pdTheta=double(n.var), S=double(n.var),
               PACKAGE="eco")$pdTheta
         
         for (j in 1:n.var) {
           if (Fisher) {
-	    tempR<-(fisher(temp)[j]-fisher(theta.em)[j])/(fisher(theta.t)[i]-fisher(theta.em)[i])
+        tempR<-(fisher(temp)[j]-fisher(theta.em)[j])/(fisher(theta.t)[i]-fisher(theta.em)[i])
             if ((tempR!=0) && (tempR<Inf)&& (tempR>-Inf)) R.t2[i,j]<-tempR
           }
           else if (!Fisher) {
