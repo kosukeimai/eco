@@ -11,6 +11,7 @@ struct Param{
   double Sigma[2][2];
   double X;
   double Y;
+  double normc; //normalized const on tomog line
 };
 
 typedef struct Param Param;

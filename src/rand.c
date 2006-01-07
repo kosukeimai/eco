@@ -1,5 +1,5 @@
 /******************************************************************
-  This file is a part of eco: R Package for Fitting Bayesian Models 
+  This file is a part of eco: R Package for Fitting Bayesian Models
   of Ecological Inference for 2x2 Tables
   by Kosuke Imai and Ying Lu
   Copyright: GPL version 2 or later.
@@ -19,13 +19,13 @@
 #include "macros.h"
 
 /* Multivariate Normal density */
-double dMVN(			
+double dMVN(
 	double *Y,		/* The data */
 	double *MEAN,		/* The parameters */
-	double **SIG_INV,         /* inverse of the covariance matrix */	
+	double **SIG_INV,         /* inverse of the covariance matrix */
 	int dim,                /* dimension */
 	int give_log){          /* 1 if log_scale 0 otherwise */
-  
+
   int j,k;
   double value=0.0;
 
@@ -38,7 +38,7 @@ double dMVN(
   value=-0.5*value-0.5*dim*log(2*M_PI)+0.5*ddet(SIG_INV, dim, 1);
 
 
-  if(give_log)  
+  if(give_log)
     return(value);
   else
     return(exp(value));
@@ -75,7 +75,7 @@ double dMVT(
 
 
 /* Sample from the MVN dist */
-void rMVN(                      
+void rMVN(
 	  double *Sample,         /* Vector for the sample */
 	  double *mean,           /* The vector of means */
 	  double **Var,           /* The matrix Variance */
@@ -84,9 +84,9 @@ void rMVN(
   int j,k;
   double **Model = doubleMatrix(size+1, size+1);
   double cond_mean;
-    
+
   /* draw from mult. normal using SWP */
-  for(j=1;j<=size;j++){       
+  for(j=1;j<=size;j++){
     for(k=1;k<=size;k++)
       Model[j][k]=Var[j-1][k-1];
     Model[0][j]=mean[j-1];
@@ -100,7 +100,7 @@ void rMVN(
     for(k=1;k<j;k++) cond_mean+=Sample[k-1]*Model[j][k];
     Sample[j-1]=(double)norm_rand()*sqrt(Model[j][j])+cond_mean;
   }
-  
+
   FreeMatrix(Model,size+1);
 }
 
@@ -110,7 +110,7 @@ void rMVN(
    a Sample Covariance Matrix'' Journal of the American Statistical
    Association, Vol. 61, No. 313. (Mar., 1966), pp. 199-203. */
 
-void rWish(                  
+void rWish(
 	   double **Sample,        /* The matrix with to hold the sample */
 	   double **S,             /* The parameter */
 	   int df,                 /* the degrees of freedom */
@@ -122,7 +122,7 @@ void rWish(
   double **C = doubleMatrix(size, size);
   double **N = doubleMatrix(size, size);
   double **mtemp = doubleMatrix(size, size);
-  
+
   for(i=0;i<size;i++) {
     V[i]=rchisq((double) df-i-1);
     B[i][i]=V[i];
@@ -141,7 +141,7 @@ void rWish(
 	  for(k=0;k<j;k++)
 	    B[j][j]+=N[k][j]*N[k][j];
       }
-      else { 
+      else {
 	B[i][j]=N[i][j]*sqrt(V[i]);
 	if(i>0)
 	  for(k=0;k<i;k++)
@@ -150,7 +150,7 @@ void rWish(
       B[j][i]=B[i][j];
     }
   }
-  
+
   dcholdc(S, size, C);
   for(i=0;i<size;i++)
     for(j=0;j<size;j++)
@@ -176,7 +176,7 @@ void rDirich(
 {
   int j;
   double dtemp=0;
-  
+
   for (j=0; j<size; j++) {
     Sample[j] = rgamma(theta[j], 1.0);
     dtemp += Sample[j];
@@ -186,44 +186,42 @@ void rDirich(
 }
 
 /** density function on tomography line Y=XW_1+ (1-X)W_2 */
-double dBVNtomo(double *Wstar,  /* Wstar values */ 
-		double X,   /* X value   */
-		double Y,   /* Y value */
-		double *MEAN, 
-		double **SIGMA,
+double dBVNtomo(double *Wstar,  /* Wstar values */
+		void* pp,     //parameter
 		int give_log)  /* 1 if log-scale, 0 otherwise */
-		
+
 {
+  int dim=2;
+  double *MEAN=doubleArray(dim);
+  double **SIGMA=doubleMatrix(dim,dim);
+  double normc;
   double density;
   double rho, dtemp;
-  
+
   /*  if (1/(1+exp(-Wstar[1]))!=Y/(1-X)-X/(1-X)/(1+exp(-Wstar[0]))) {
       return(0);
   }
   else {*/
 
-    rho=SIGMA[0][1]/sqrt(SIGMA[0][0]*SIGMA[1][1]);
-    Rprintf("rho %15g \n", rho);
+    Param *param=(Param *)pp;
+    MEAN[0]=param->mu[0];
+    MEAN[1]=param->mu[1];
+    SIGMA[0][0]=param->Sigma[0][0];
+    SIGMA[1][1]=param->Sigma[1][1];
+    SIGMA[0][1]=param->Sigma[0][1];
+    SIGMA[1][0]=param->Sigma[1][0];
+    normc=param->normc;
 
+
+    rho=SIGMA[0][1]/sqrt(SIGMA[0][0]*SIGMA[1][1]);
+    //rho=0;
+    //Rprintf("rho %15g \n", rho);
     dtemp=1/(2*M_PI*sqrt(SIGMA[0][0]*SIGMA[1][1]*(1-rho*rho)));
 
-    Rprintf("dtemp %15g \n", dtemp);
+    //Rprintf("dtemp %15g normc %5g\n", dtemp,normc);
 
-    /* integrate normalizing constant */
-    double normc;
-    int inf=2;
-    double bound=0.0;
-    double epsabs=0.0000001, epsrel=0.0000001;
-    double result=9999, anserr=9999;
-    int limit=100;
-    int last, neval, ier;
-    int lenw=4*limit;
-    int *iwork=(int *) R_alloc(limit, sizeof(int));
-    double *work=(double *)R_alloc(lenw, sizeof(double));
 
-    Param param;
-    
-    param.mu[0]=MEAN[0];
+    /*param.mu[0]=MEAN[0];
     param.mu[1]=MEAN[1];
     param.Sigma[0][0]=SIGMA[0][0];
     param.Sigma[1][1]=SIGMA[1][1];
@@ -231,23 +229,29 @@ double dBVNtomo(double *Wstar,  /* Wstar values */
     param.Sigma[1][0]=SIGMA[1][0];
 
     param.X=X;
-    param.Y=X;
+    param.Y=Y;*/
 
-    Rdqagi(&NormConst, (void *)&param, &bound, &inf, &epsabs, &epsrel, &result,
-	   &anserr, &neval, &ier, &limit, &lenw, &last, iwork, work);
+    //Rdqagi(&NormConst, (void *)&param, &bound, &inf, &epsabs, &epsrel, &result,
+	   //&anserr, &neval, &ier, &limit, &lenw, &last, iwork, work);
     /**/
-    Rprintf("result %15g\n", result);
-    density=-0.5*(1-rho*rho)*
+    //Rprintf("Wstar1 %8g Wstar2 %8g Sig00 %8g\n", Wstar[0],Wstar[1],SIGMA[0][0]);
+    /* density=-0.5*(1-rho*rho)*
       ((Wstar[0]-MEAN[0])*(Wstar[0]-MEAN[0])/SIGMA[0][0]+
        +(Wstar[1]-MEAN[1])*(Wstar[1]-MEAN[1])/SIGMA[1][1]
        -2*rho*(Wstar[0]-MEAN[0])*(Wstar[1]-MEAN[0])/sqrt(SIGMA[0][0]*SIGMA[1][1]))
-      -log(dtemp)-log(result);
+      -log(dtemp)-log(result); */
+      density=-0.5*(1-rho*rho)*
+      ((Wstar[0]-MEAN[0])*(Wstar[0]-MEAN[0])/SIGMA[0][0]+
+       +(Wstar[1]-MEAN[1])*(Wstar[1]-MEAN[1])/SIGMA[1][1]
+       -2*rho*(Wstar[0]-MEAN[0])*(Wstar[1]-MEAN[1])/sqrt(SIGMA[0][0]*SIGMA[1][1]))
+      +log(dtemp)-log(normc);
 
-     Rprintf("density %15g\n", density);
-    if (give_log)
-      return(density);
-    else
-      return(exp(density));
-	
+    //Rprintf("s11 %5g s22 %5g normc %5g dtemp %5g ldensity %5g\n", SIGMA[0][0],SIGMA[1][1],normc, dtemp, density);
+     if (give_log==0) density=exp(density);
+     // Rprintf("density %15g\n", density);
+     // char ch;
+      //scanf(" %c", &ch );
+     return density;
+
     //  }
 }

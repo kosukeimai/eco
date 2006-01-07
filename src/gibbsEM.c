@@ -1,12 +1,12 @@
 /******************************************************************
-  This file is a part of eco: R Package for Estimating Fitting 
+  This file is a part of eco: R Package for Estimating Fitting
   Bayesian Models of Ecological Inference for 2X2 tables
   by Ying Lu and Kosuke Imai
   Copyright: GPL version 2 or later.
 *******************************************************************/
 
 #include <stddef.h>
-#include <stdio.h>      
+#include <stdio.h>
 #include <math.h>
 #include <Rmath.h>
 #include <R_ext/Utils.h>
@@ -22,7 +22,7 @@
 void cEMeco(
 	    /*data input */
 	    double *pdX,         /* data (X, Y) */
-	    double *pdTheta_in,  /* Theta^ t 
+	    double *pdTheta_in,  /* Theta^ t
 				    mu1, mu2, var1, var2, rho */
 	    int *pin_samp,       /* sample size */
 
@@ -33,15 +33,15 @@ void cEMeco(
 	    int *survey,         /*1 if survey data available(W_1, W_2)
 				   0 not*/
 	    int *sur_samp,       /*sample size of survey data*/
-	    double *sur_W,       /*set of known W_1, W_2 */ 
-	    
+	    double *sur_W,       /*set of known W_1, W_2 */
+
 	    /*incorporating homeogenous areas */
-	    int *x1,       /* 1 if X=1 type areas available W_1 known, 
+	    int *x1,       /* 1 if X=1 type areas available W_1 known,
 			      W_2 unknown */
 	    int *sampx1,   /* number X=1 type areas */
 	    double *x1_W1, /* values of W_1 for X1 type areas */
-	    
-	    int *x0,       /* 1 if X=0 type areas available W_2 known, 
+
+	    int *x0,       /* 1 if X=0 type areas available W_2 known,
 			      W_1 unknown */
 	    int *sampx0,   /* number X=0 type areas */
 	    double *x0_W2, /* values of W_2 for X0 type areas */
@@ -52,28 +52,28 @@ void cEMeco(
 	    /* flags */
 	    int *Grid,    /*1 if intergration is approximated by grids
 			    0 R function */
-	    
+
 	    /* storage */
 	    double *pdTheta,  /*EM result for Theta^(t+1) */
-	    double *Suff      /*out put suffucient statistics (E(W_1i|Y_i), 
+	    double *Suff      /*out put suffucient statistics (E(W_1i|Y_i),
 				E(E_1i*W_1i|Y_i..) when  conveges */
-	    ){	   
-  
+	    ){
+
   int n_samp = *pin_samp;    /* sample size */
-  int s_samp= *sur_samp;     /* sample size of survey data */ 
+  int s_samp= *sur_samp;     /* sample size of survey data */
   int x1_samp=*sampx1;       /* sample size for X=1 */
   int x0_samp=*sampx0;       /* sample size for X=0 */
   int t_samp=n_samp+s_samp+x1_samp+x0_samp;  /* total sample size*/
   int n_dim=2;        /* dimensions */
   int trapod=0;       /* 1 if use trapozodial ~= in numer. int.*/
-  int n_step=5000;    /* The default size of grid step */  
+  int n_step=5000;    /* The default size of grid step */
   int data=0;         /* one to print the data */
   int ndraw=*n_gen;   /* number of draws */
 
   /* data */
 
   double **X=doubleMatrix(n_samp,n_dim);     /* Y and covariates */
-  double **W=doubleMatrix(t_samp,n_dim);     /* W1 and W2 matrix */  
+  double **W=doubleMatrix(t_samp,n_dim);     /* W1 and W2 matrix */
   double **Wstar=doubleMatrix(t_samp,5);     /* pseudo data(transformed*/
   double **S_W=doubleMatrix(s_samp, n_dim);  /* known W1 and W2 matrix*/
   double **S_Wstar=doubleMatrix(s_samp, n_dim);   /* transformed S_W*/
@@ -105,20 +105,20 @@ void cEMeco(
   /* read the data set */
   /** Packing Y, X  **/
   itemp = 0;
-  for (j = 0; j < n_dim; j++) 
+  for (j = 0; j < n_dim; j++)
     for (i = 0; i < n_samp; i++) {
       X[i][j] = pdX[itemp++];
     }
-  if (data) { 
+  if (data) {
     printf("Y X\n");
     for(i=0;i<n_samp;i++)
       Rprintf("%5d%14g%14g\n",i,X[i][1],X[i][0]);
       }
 
   /** read mu_org, Simga_ord **/
-  /***the following section is still under construction, 
+  /***the following section is still under construction,
       I am trying the R numerical integration function ***/
-  /*
+
   mu[0] = pdTheta_in[0];
   mu[1] = pdTheta_in[1];
   Sigma[0][0] = pdTheta_in[2];
@@ -147,24 +147,40 @@ void cEMeco(
   param.Sigma[1][1]=Sigma[1][1];
   param.Sigma[1][0]=Sigma[1][0];
   param.Sigma[0][1]=Sigma[0][1];
-  param.X=X[0][0];
-  param.Y=X[0][1]; */
-
   //param.rho=Sigma[1][0]/sqrt(param.s1*param.s2);
 
-  /*
-  Rdqagi(&test, (void *)&param, &bound, &inf, &epsabs, &epsrel, &result,
-	 &anserr, &neval, &ier, &limit, &lenw, &last, iwork, work);
- 
-  Rprintf("result%14g\n", result); 
-  Rprintf("anserr%14g\n", anserr); 
-  Rprintf("ier%5d\n", ier); 
+  //really need to loop through all i's
+  Rprintf("i    X Y NC W1* W2* W1s W2s W1W2\n");
+  //for (i = 0; i<n_samp; i++) {
+  for (i = 0; i<20; i++) {
+    param.X=X[i][0];
+    param.Y=X[i][1];
+    //param.normc=getNormConst((void *)&param);
+    double normc=getNormConst((void *)&param);
+    param.normc=normc;
 
-  */
-  /* The code starts from here */
+    Rdqagi(&W1Exp, (void *)&param, &bound, &inf, &epsabs, &epsrel, &result,
+	    &anserr, &neval, &ier, &limit, &lenw, &last, iwork, work);
+    Wstar[i][0]=result;
+    Wstar[i][1] = param.Y/(1-param.X)-param.X/(1-param.X)/(1+exp(-Wstar[i][0]));
+      if(Wstar[i][1]>=1)
+        Wstar[i][1]=99; //an otherwise impossible value
+      else Wstar[i][1] = log(Wstar[i][1]/(1-Wstar[i][1]));
+    Rdqagi(&W1W1Exp, (void *)&param, &bound, &inf, &epsabs, &epsrel, &result,
+	    &anserr, &neval, &ier, &limit, &lenw, &last, iwork, work);
+    Wstar[i][2]=result;
+    Rdqagi(&W2W2Exp, (void *)&param, &bound, &inf, &epsabs, &epsrel, &result,
+	    &anserr, &neval, &ier, &limit, &lenw, &last, iwork, work);
+    Wstar[i][3]=result;
+    Wstar[i][4]=Wstar[i][0]*Wstar[i][1] + Sigma[1][0]; //E[XY]=E[X]E[y]+cov(X,Y)
+
+    Rprintf("i %d: %5g %5g %5g %5g %5g %5g %5g %5g\n", i, param.X, X[i][1], normc, Wstar[i][0],Wstar[i][1],Wstar[i][2],Wstar[i][3],Wstar[i][4]);
+  }
+
+  /* The old code starts from here */
 
   /* initialize W, Wstar for t_samp*/
-  for (i=0; i< t_samp; i++) 
+  /*for (i=0; i< t_samp; i++)
     for (j=0; j<5; j++) {
       if (j<2)
 	W[i][j]=0;
@@ -184,7 +200,7 @@ void cEMeco(
       Wstar[i][4]=temp1*temp1;
     }
     else if (X[i][1]==1) {
-      W[i][0]=0.9999; 
+      W[i][0]=0.9999;
       W[i][1]=0.9999;
       temp0=log(W[i][0])-log(1-W[i][0]);
       temp1=log(W[i][1])-log(1-W[i][1]);
@@ -194,26 +210,26 @@ void cEMeco(
       Wstar[i][3]=temp0*temp1;
       Wstar[i][4]=temp1*temp1;
     }
-  } 
-  
+  }*/
+
   /*read homeogenous areas information */
-  if (*x1) 
+  if (*x1)
     for (i=0; i<x1_samp; i++) {
       W[(n_samp+i)][0]=x1_W1[i];
       if (W[(n_samp+i)][0]==0) W[(n_samp+i)][0]=0.0001;
       if (W[(n_samp+i)][0]==1) W[(n_samp+i)][0]=0.9999;
     }
-  
-  if (*x0) 
+
+  if (*x0)
     for (i=0; i<x0_samp; i++) {
       W[(n_samp+x1_samp+i)][1]=x0_W2[i];
       if (W[(n_samp+x1_samp+i)][1]==0) W[(n_samp+x1_samp+i)][1]=0.0001;
       if (W[(n_samp+x1_samp+i)][1]==1) W[(n_samp+x1_samp+i)][1]=0.9999;
     }
-  
-  
+
+
   /*read the survey data */
-  
+
   if (*survey==1) {
     itemp = 0;
     for (j=0; j<n_dim; j++)
@@ -230,15 +246,15 @@ void cEMeco(
       Wstar[(n_samp+x1_samp+x0_samp+i)][3]=S_Wstar[i][0]*S_Wstar[i][1];
       Wstar[(n_samp+x1_samp+x0_samp+i)][4]=S_Wstar[i][1]*S_Wstar[i][1];
     }
-  }    
-  /*    if (data) { 
+  }
+  /*    if (data) {
       Rprintf("survey W1 W2 W1* W2*\n");
       for(i=0;i<(n_samp+s_samp+x1_samp+x0_samp);i++)
 	Rprintf("%5d%14g%14g%14g%14g\n",i,W[i][0],W[i][1],Wstar[i][0], Wstar[i][1]);
     }
   */
-  
-  /*** calculate grids ***/
+/* No longer necessary now that we're using R's integration
+  // calculate grids
   if (*Grid)
     GridPrep(W1g, W2g, X, maxW1, minW1, n_grid, n_samp, n_step);
 
@@ -247,10 +263,10 @@ void cEMeco(
   }
 
 
-  /**update W, Wstar given mu, Sigma in regular areas**/
+  //update W, Wstar given mu, Sigma in regular areas
   for (i=0;i<n_samp;i++){
     if ( X[i][1]!=0 && X[i][1]!=1 ) {
-      /*1 project BVN(mu, Sigma) on the inth tomo line */
+      // project BVN(mu, Sigma) on the inth tomo line
       dtemp=0;
       for (j=0;j<n_grid[i];j++){
 	vtemp[0]=log(W1g[i][j])-log(1-W1g[i][j]);
@@ -262,25 +278,25 @@ void cEMeco(
 	prob_grid_cum[j]=dtemp;
       }
       for (j=0;j<n_grid[i];j++){
-	prob_grid_cum[j]/=dtemp; /*standardize prob.grid */ 
+	prob_grid_cum[j]/=dtemp; //standardize prob.grid
       }
-      /* MC numerical integration, compute E(W_i|Y_i, X_i, theta) */
-      /*2 sample ndraw W_i on the ith tomo line */
-      /*   use inverse CDF method to draw  */
-      /*   0-1 by 1/ndraw approx uniform distribution */
-      /*3 compute Wsta_i from W_i*/
+      // MC numerical integration, compute E(W_i|Y_i, X_i, theta)
+      //2 sample ndraw W_i on the ith tomo line
+      //   use inverse CDF method to draw
+      //   0-1 by 1/ndraw approx uniform distribution
+      //3 compute Wsta_i from W_i
       j=0;
       itemp=1;
-      
+
       for (k=0; k<ndraw; k++){
 	j=findInterval(prob_grid_cum, n_grid[i],
-		       (double)(1+k)/(ndraw+1), 1, 1, itemp, mflag); 
+		       (double)(1+k)/(ndraw+1), 1, 1, itemp, mflag);
 	itemp=j-1;
 
 
-      if ((W1g[i][j]==0) || (W1g[i][j]==1)) 
+      if ((W1g[i][j]==0) || (W1g[i][j]==1))
 	Rprintf("W1g%5d%5d%14g", i, j, W1g[i][j]);
-      if ((W2g[i][j]==0) || (W2g[i][j]==1)) 
+      if ((W2g[i][j]==0) || (W2g[i][j]==1))
 	Rprintf("W2g%5d%5d%14g", i, j, W2g[i][j]);
 
 	if (j==0 || trapod==0) {
@@ -308,19 +324,19 @@ void cEMeco(
       }
     }
   }
-  
-  /* compute E_{W_i|Y_i} for n_samp*/
+
+  // compute E_{W_i|Y_i} for n_samp
   for (i=0; i<n_samp; i++) {
-    if ( X[i][1]!=0 && X[i][1]!=1 ) {  
-      Wstar[i][0]/=ndraw;  /*E(W1i) */
-      Wstar[i][1]/=ndraw;  /*E(W2i) */
-      Wstar[i][2]/=ndraw;  /*E(W1i^2) */
-      Wstar[i][3]/=ndraw;  /*E(W1iW2i) */
-      Wstar[i][4]/=ndraw;  /*E(W2i^2) */
+    if ( X[i][1]!=0 && X[i][1]!=1 ) {
+      Wstar[i][0]/=ndraw;  //E(W1i)
+      Wstar[i][1]/=ndraw;  //E(W2i)
+      Wstar[i][2]/=ndraw;  //E(W1i^2)
+      Wstar[i][3]/=ndraw;  //E(W1iW2i)
+      Wstar[i][4]/=ndraw;  //E(W2i^2)
     }
-  } /*for x0type, x1type and survey data, E-step is either the observed value or the analytical expectation*/
-  
-  
+  } //for x0type, x1type and survey data, E-step is either the observed value or the analytical expectation
+*/
+
     /* analytically compute E{W2_i|Y_i} given W1_i, mu and Sigma in x1 homeogeneous areas */
   if (*x1==1)
     for (i=0; i<x1_samp; i++) {
@@ -333,7 +349,7 @@ void cEMeco(
       Wstar[n_samp+i][3]=temp0*temp1;
       Wstar[n_samp+i][4]=temp1*temp1;
     }
-    
+
   /*analytically compute E{W1_i|Y_i} given W2_i, mu and Sigma in x0 homeogeneous areas */
   if (*x0==1)
     for (i=0; i<x0_samp; i++) {
@@ -347,16 +363,16 @@ void cEMeco(
       Wstar[n_samp+x1_samp+i][4]=temp1*temp1;
     }
 
-    if (data) { 
+    if (data) {
       Rprintf("survey W1 W2 W1* W2*\n");
       for(i=0;i<(n_samp+s_samp+x1_samp+x0_samp);i++)
 	Rprintf("%5d%14g%14g%14g%14g\n",i,W[i][0],W[i][1],Wstar[i][0], Wstar[i][1]);
     }
-       
+
   /*M-step: same procedure as normal model */
-  for (j=0; j<5; j++) 
+  for (j=0; j<5; j++)
     Suff[j]=0;
-  
+
   /* compute sufficient statistics */
   for (i=0; i<t_samp; i++) {
     Suff[0]+=Wstar[i][0];  /* sumE(W_i1|Y_i) */
@@ -365,7 +381,7 @@ void cEMeco(
     Suff[3]+=Wstar[i][4];  /* sumE(W_i2^2|Y_i) */
     Suff[4]+=Wstar[i][3];  /* sumE(W_i1^W_i2|Y_i) */
   }
-  
+
   pdTheta[0]=Suff[0]/t_samp;  /*mu1*/
   pdTheta[1]=Suff[1]/t_samp;  /*mu2*/
   pdTheta[2]=(Suff[2]-2*Suff[0]*pdTheta[0]+t_samp*pdTheta[0]*pdTheta[0])/t_samp;  /*sigma11*/
@@ -373,13 +389,13 @@ void cEMeco(
   pdTheta[4]=(Suff[4]-Suff[0]*pdTheta[1]-Suff[1]*pdTheta[0]+t_samp*pdTheta[0]*pdTheta[1])/t_samp; /*sigma12*/
   pdTheta[4]=pdTheta[4]/sqrt(pdTheta[2]*pdTheta[3]); /*rho*/
 
-  if (data) { 
+  if (data) {
       Rprintf("theta and suff\n");
 
 	Rprintf("%14g%14g%14g%14g\n",pdTheta[0],pdTheta[1],pdTheta[2],pdTheta[3]);
 	Rprintf("%14g%14g%14g%14g\n",Suff[0],Suff[1],Suff[2],Suff[3]);
 
-    }  
+    }
   /* write out the random seed */
   PutRNGstate();
 
