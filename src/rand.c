@@ -15,8 +15,8 @@
 #include "subroutines.h"
 #include "rand.h"
 #include "sample.h"
-#include "fintegrate.h"
 #include "macros.h"
+#include "fintegrate.h"
 
 /* Multivariate Normal density */
 double dMVN(
@@ -188,13 +188,13 @@ void rDirich(
 /** density function on tomography line Y=XW_1+ (1-X)W_2 */
 double dBVNtomo(double *Wstar,  /* Wstar values */
 		void* pp,     //parameter
-		int give_log)  /* 1 if log-scale, 0 otherwise */
+		int give_log, /* 1 if log-scale, 0 otherwise */
+		double normc)  //Normalization factor
 
 {
   int dim=2;
   double *MEAN=doubleArray(dim);
   double **SIGMA=doubleMatrix(dim,dim);
-  double normc;
   double density;
   double rho, dtemp;
 
@@ -210,7 +210,7 @@ double dBVNtomo(double *Wstar,  /* Wstar values */
     SIGMA[1][1]=param->Sigma[1][1];
     SIGMA[0][1]=param->Sigma[0][1];
     SIGMA[1][0]=param->Sigma[1][0];
-    normc=param->normc;
+    //normc=(W1orW2==1) ? param->normcW1 : param->normcW2;
 
 
     rho=SIGMA[0][1]/sqrt(SIGMA[0][0]*SIGMA[1][1]);
@@ -240,7 +240,7 @@ double dBVNtomo(double *Wstar,  /* Wstar values */
        +(Wstar[1]-MEAN[1])*(Wstar[1]-MEAN[1])/SIGMA[1][1]
        -2*rho*(Wstar[0]-MEAN[0])*(Wstar[1]-MEAN[0])/sqrt(SIGMA[0][0]*SIGMA[1][1]))
       -log(dtemp)-log(result); */
-      density=-0.5*(1-rho*rho)*
+      density=-1/(2*(1-rho*rho))*
       ((Wstar[0]-MEAN[0])*(Wstar[0]-MEAN[0])/SIGMA[0][0]+
        +(Wstar[1]-MEAN[1])*(Wstar[1]-MEAN[1])/SIGMA[1][1]
        -2*rho*(Wstar[0]-MEAN[0])*(Wstar[1]-MEAN[1])/sqrt(SIGMA[0][0]*SIGMA[1][1]))
