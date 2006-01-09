@@ -9,6 +9,8 @@
 #include <stdio.h>
 #include <math.h>
 #include <Rmath.h>
+#include <R.h>
+#include <Rinternals.h>
 #include <R_ext/Utils.h>
 #include "vector.h"
 #include "subroutines.h"
@@ -54,7 +56,7 @@ void NormConstW1(double *W1, int n, void *param)
   double dtemp, inp;
   int imposs;
 
-  W2 = (double *) malloc(n*sizeof(double));
+  W2 = Calloc(n,double);
   if (W2==NULL) Rprintf("Malloc Error");
 
   Param *pp=(Param *)param;
@@ -98,7 +100,7 @@ void NormConstW1(double *W1, int n, void *param)
       //scanf(" %c", &ch );
     }
   //Rprintf("W1[0] %15g\n", W1[0]);
-  free(W2);
+  Free(W2);
 }
 
 //Bivariate normal distribution, with W1* dependent on W2* (which we are integrating over)
@@ -113,7 +115,7 @@ void NormConstW2(double *W2, int n, void *param)
   double dtemp, inp;
   int imposs;
 
-  W1 = (double *) malloc(n*sizeof(double));
+  W1 = Calloc(n,double);
   if (W1==NULL) Rprintf("Malloc Error");
 
   Param *pp=(Param *)param;
@@ -161,46 +163,6 @@ void NormConstW2(double *W2, int n, void *param)
 }
 
 
-/*
-//for GSL integration
-double NormConst2(double W1, void *param)
-{
-  double mu[2];
-  double Sigma[2][2];
-  double W2;
-  double X, Y, rho;
-  double dtemp, inp;
-  int imposs;
-
-  Param *pp=(Param *)param;
-  mu[0]=pp->mu[0];
-  mu[1]=pp->mu[1];
-  Sigma[0][0]=pp->Sigma[0][0];
-  Sigma[1][1]=pp->Sigma[1][1];
-  Sigma[0][1]=pp->Sigma[0][1];
-  Sigma[1][0]=pp->Sigma[1][0];
-  rho=Sigma[0][1]/sqrt(Sigma[0][0]*Sigma[1][1]);
-  X=pp->X;
-  Y=pp->Y;
-  imposs=0;
-
-  dtemp=1/(2*M_PI*sqrt(Sigma[0][0]*Sigma[1][1]*(1-rho*rho)));
-  imposs=0;
-  W2=getW2starFromW1star(X,Y,W1,&imposs);
-
-  if (imposs==1) W1=0;
-  else W1=exp(-1/(2*(1-rho*rho))*
-		((W1-mu[0])*(W1-mu[0])/Sigma[0][0]+
-		 (W2-mu[1])*(W2-mu[1])/Sigma[1][1]-
-		  2*rho*(W1-mu[0])*(W2-mu[1])
-		  /sqrt(Sigma[0][0]*Sigma[1][1])))*dtemp;
-  return W1;
-}
-*/
-
-/*E(W1)
-  assumes bivariate normal distribution
-*/
 
 void W1Exp(double *W1, int n, void *param)
 {
@@ -214,7 +176,7 @@ void W1Exp(double *W1, int n, void *param)
 
   double *vtemp=doubleArray(dim);
 
-  W2 = (double *) malloc(n*sizeof(double));
+  W2 = (double *) Calloc(n,double);
   if (W2==NULL) Rprintf("Malloc Error");
 
   Param *pp=(Param *)param;
@@ -276,6 +238,7 @@ void W1Exp(double *W1, int n, void *param)
 
 /*E(W2)
   assumes bivariate normal distribution
+  integral over W2
 */
 
 void W2Exp(double *W2, int n, void *param)
@@ -290,7 +253,7 @@ void W2Exp(double *W2, int n, void *param)
 
   double *vtemp=doubleArray(dim);
 
-  W1 = (double *) malloc(n*sizeof(double));
+  W1 = (double *) Calloc(n,double);
   if (W1==NULL) Rprintf("Malloc Error");
 
   Param *pp=(Param *)param;
@@ -349,6 +312,82 @@ void W2Exp(double *W2, int n, void *param)
 }
 
 
+/*E(W2)
+  assumes bivariate normal distribution
+  integral over W1
+*/
+
+void W2ExpW1(double *W1, int n, void *param)
+{
+  int ii,imposs;
+  int dim=2;
+  double *mu=doubleArray(dim);
+  double **Sigma=doubleMatrix(dim,dim);
+  double *W2;
+  double X, Y, normc;
+  double dtemp, rho, inp,density;
+
+  double *vtemp=doubleArray(dim);
+
+  W2 = (double *) Calloc(n,double);
+  if (W2==NULL) Rprintf("Malloc Error");
+
+  Param *pp=(Param *)param;
+  mu[0]=pp->mu[0];
+  mu[1]=pp->mu[1];
+  Sigma[0][0]=pp->Sigma[0][0];
+  Sigma[1][1]=pp->Sigma[1][1];
+  Sigma[0][1]=pp->Sigma[0][1];
+  Sigma[1][0]=pp->Sigma[1][0];
+  X=pp->X;
+  Y=pp->Y;
+  normc=pp->normcW1;
+
+  //Rprintf("mu1 %15g\n", mu[0]);
+  //Rprintf("mu2 %15g\n", mu[1]);
+  //Rprintf("Sigma00 %15g\n", Sigma[0][0]);
+  //Rprintf("Sigma11 %15g\n", Sigma[1][1]);
+  //Rprintf("Sigma01 %15g\n", Sigma[0][1]);
+  imposs=0;
+
+
+  for (ii=0; ii<n; ii++)
+  //for (ii=0; ii<1; ii++)
+    {
+      inp=W1[ii]; //just for debugging
+      imposs=0;
+      //W2[ii] = Y/(1-X)-X/(1-X)/(1+exp(-W1[ii]));
+      //if(W2[ii]>=1) imposs=1; //impossible pair of values
+      //else W2[ii] = log(W2[ii]/(1-W2[ii]));
+      W2[ii]=getW2starFromW1star(X,Y,W1[ii],&imposs);
+    //}
+
+
+  //this is constant over all W1's, so just calc once
+  //double normc=getNormConst((void*)pp);
+  //Rprintf("NC %15g\n", normc);
+
+  //for (ii=0; ii<n; ii++)
+  //for (ii=0; ii<1; ii++)
+    //{
+      vtemp[0] = W1[ii];
+      vtemp[1] = W2[ii];
+      if (imposs==1) W1[ii]=0;
+      else {
+        density=dBVNtomo(vtemp, pp, 0,normc);
+        W1[ii] = W2[ii]*density;
+      }
+      //Rprintf("W1Exp... %d %d %5g -> %5g via %5g imposs %d\n", ii, n, inp, W1[ii],density,imposs);
+    }
+    //Rprintf("W1[0] %15g\n", W1[0]);
+      //char ch;
+      //scanf(" %c", &ch );
+  free(W2);
+  //free(mu);
+  //FreeMatrix(Sigma,dim);
+}
+
+
 //E(W1*W1)
 
 void W1W1Exp(double *W1, int n, void *param)
@@ -362,7 +401,7 @@ void W1W1Exp(double *W1, int n, void *param)
   double dtemp, rho, inp, density;
   int imposs;
   double vtemp[2];
-  W2 = (double *) malloc(1000*sizeof(double));
+  W2 = (double *) Calloc(n,double);
   if (W2==NULL) Rprintf("Malloc Error");
 
   Param *pp=(Param *)param;
@@ -433,7 +472,7 @@ void W2W2Exp(double *W2, int n, void *param)
   double dtemp, rho,density;
 
   double vtemp[2];
-  W1 = (double *) malloc(1000*sizeof(double));
+  W1 = (double *) Calloc(n,double);
   if (W1==NULL) Rprintf("Malloc Error");
 
   Param *pp=(Param *)param;
@@ -482,6 +521,80 @@ void W2W2Exp(double *W2, int n, void *param)
   //FreeMatrix(Sigma,dim);
 }
 
+
+//E(W2*W2)
+//integrate over W1
+void W2W2ExpW1(double *W1, int n, void *param)
+{
+  int ii;
+  int dim=2;
+  double *mu=doubleArray(dim);
+  double **Sigma=doubleMatrix(dim,dim);
+  double *W2;
+  double X, Y, normc;
+  double dtemp, rho, inp, density;
+  int imposs;
+  double vtemp[2];
+  W2 = (double *) Calloc(n,double);
+  if (W2==NULL) Rprintf("Malloc Error");
+
+  Param *pp=(Param *)param;
+  mu[0]=pp->mu[0];
+  mu[1]=pp->mu[1];
+  Sigma[0][0]=pp->Sigma[0][0];
+  Sigma[1][1]=pp->Sigma[1][1];
+  Sigma[0][1]=pp->Sigma[0][1];
+  Sigma[1][0]=pp->Sigma[1][0];
+  rho=Sigma[0][1]/sqrt(Sigma[0][0]*Sigma[1][1]);
+  X=pp->X;
+  Y=pp->Y;
+  normc=pp->normcW1;
+  imposs=0;
+
+  //Rprintf("mu1 %15g mu2 %15g\n", mu[0],mu[1]);
+  //Rprintf("X %15g Y %15g\n", X,Y);
+  //Rprintf("Sigma00 %15g\n", Sigma[0][0]);
+  //Rprintf("Sigma11 %15g\n", Sigma[1][1]);
+  //Rprintf("Sigma01 %15g\n", Sigma[0][1]);
+
+  for (ii=0; ii<n; ii++)
+    {
+      imposs=0; inp=W1[ii];
+      //W2[ii] = Y/(1-X)-X/(1-X)/(1+exp(-W1[ii]));
+      //if(W2[ii]>=1) imposs=1;
+      //else W2[ii] = log(W2[ii]/(1-W2[ii]));
+      W2[ii]=getW2starFromW1star(X,Y,W1[ii],&imposs);
+      //Rprintf(" %5g %5g\n", inp,W1[ii]);
+    //}
+
+  //Rprintf("%d W2[0] %5g\n", imposs,W2[0]);
+  //this is constant over all W1's, so just calc once
+  //double normc=getNormConst((void*)pp);
+  //Rprintf("%d W2[0] %5g NC %5g\n", imposs,W2[0],normc);
+
+  //for (ii=0; ii<n; ii++)
+    //{
+      vtemp[0] = W1[ii];
+      vtemp[1] = W2[ii];
+      if (imposs==1) W1[ii]=0;
+      else {
+        density=dBVNtomo(vtemp, pp,0,normc);
+        //if (rho==0) W1[ii] = W1[ii] * W1[ii] * density;
+        //else W1[ii] = density;
+        W1[ii] = W2[ii] * W2[ii] * density;
+      }
+      //Rprintf("W1W1 ... %d %d %5g -> %5g via %5g imp:%d\n", ii,n,inp,W1[ii],density,imposs);
+    }
+      //wait so I can see output
+      //take out
+      //char ch;
+      //scanf(" %c", &ch );
+  free(W2);
+  //free(mu);
+  //FreeMatrix(Sigma,dim);
+}
+
+
 //E(W1*W2)
 void W1W2Exp(double *W1, int n, void *param)
 {
@@ -494,7 +607,7 @@ void W1W2Exp(double *W1, int n, void *param)
   double dtemp, rho, inp, density;
   int imposs;
   double vtemp[2];
-  W2 = (double *) malloc(1000*sizeof(double));
+  W2 = (double *) Calloc(n,double);
   if (W2==NULL) Rprintf("Malloc Error");
 
   Param *pp=(Param *)param;
@@ -566,7 +679,7 @@ void W2W1Exp(double *W2, int n, void *param)
   double dtemp, rho, inp, density;
   int imposs;
   double vtemp[2];
-  W1 = (double *) malloc(1000*sizeof(double));
+  W1 = (double *) Calloc(n,double);
   if (W1==NULL) Rprintf("Malloc Error");
 
   Param *pp=(Param *)param;
@@ -673,8 +786,8 @@ double numIntegration(integr_fn f, void *ex, int inf, double lb, double ub) {
   int limit=100;
   int last, neval, ier;
   int lenw=5*limit;
-  int *iwork=(int *) R_alloc(limit, sizeof(int));
-  double *work=(double *)R_alloc(lenw, sizeof(double));
+  int *iwork=(int *) Calloc(limit, int);
+  double *work=(double *)Calloc(lenw, double);
   if (inf==0) {
     Rdqags(f, ex, &lb, &ub, &epsabs, &epsrel, &result,
       &anserr, &neval, &ier, &limit, &lenw, &last, iwork, work);
@@ -684,6 +797,8 @@ double numIntegration(integr_fn f, void *ex, int inf, double lb, double ub) {
     Rdqagi(f, ex, &bound, &inf, &epsabs, &epsrel, &result,
       &anserr, &neval, &ier, &limit, &lenw, &last, iwork, work);
   }
+  Free(iwork);
+  Free(work);
   if (ier==0) return result;
   else {
     Rprintf("Integration error: %d\n",ier);

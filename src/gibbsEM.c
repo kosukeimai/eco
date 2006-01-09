@@ -140,8 +140,8 @@ void cEMeco(
   Rprintf("start cycle:%5g %5g %5g %5g %5g rho2: %5g\n",mu[0],mu[1],Sigma[0][0],Sigma[1][1],Sigma[1][0],rho*rho);
   //char ch;
   //    scanf(" %c", &ch );
-  //for (i = 0; i<n_samp; i++) {
-  for (i = 0; i<20; i++) {
+  for (i = 0; i<n_samp; i++) {
+  //for (i = 0; i<20; i++) {
     param.X=X[i][0];
     param.Y=X[i][1];
     setBounds((Param*)&param);
@@ -159,16 +159,18 @@ void cEMeco(
     double testw1w2;
 
     Wstar[i][0]=numIntegration(&W1Exp,(void *)&param,w1_inf,w1_lb,w1_ub);
-    Wstar[i][1]=numIntegration(&W2Exp,(void *)&param,w2_inf,w2_lb,w2_ub);
+    //Wstar[i][1]=numIntegration(&W2Exp,(void *)&param,w2_inf,w2_lb,w2_ub);
+    Wstar[i][1]=numIntegration(&W2ExpW1,(void *)&param,w1_inf,w1_lb,w1_ub);
     //Wstar[i][1]=getW2starFromW1star(param.X,param.Y,Wstar[i][0],&imposs);
     Wstar[i][2]=numIntegration(&W1W1Exp,(void *)&param,w1_inf,w1_lb,w1_ub);
     Wstar[i][3]=numIntegration(&W1W2Exp,(void *)&param,w1_inf,w1_lb,w1_ub);
-    Wstar[i][4]=numIntegration(&W2W2Exp,(void *)&param,w2_inf,w2_lb,w2_ub);
-    testw1w2=numIntegration(&W2W1Exp,(void *)&param,w2_inf,w2_lb,w2_ub);
+    //Wstar[i][4]=numIntegration(&W2W2Exp,(void *)&param,w2_inf,w2_lb,w2_ub);
+    Wstar[i][4]=numIntegration(&W2W2ExpW1,(void *)&param,w1_inf,w1_lb,w1_ub);
+    //testw1w2=numIntegration(&W2W1Exp,(void *)&param,w2_inf,w2_lb,w2_ub);
   if (Wstar[i][4]<pow(Wstar[i][1],2) || Wstar[i][2]<pow(Wstar[i][0],2))
     Rprintf("E1 %d %5g %5g %5g %5g %5g %5g %5g %5g\n", i, param.X, X[i][1], param.normcW1, Wstar[i][0],Wstar[i][1],Wstar[i][2],Wstar[i][3],Wstar[i][4]);
   //if (fabs(testw1w2-Wstar[i][3])>0.001)
-    Rprintf("E2 %d %5g %5g %5g %5g %5g %5g %5g %5g %5g %5g\n", i, param.X, X[i][1], param.normcW1, param.normcW2, Wstar[i][0],Wstar[i][1],Wstar[i][2],Wstar[i][3],Wstar[i][4],testw1w2);
+    //Rprintf("E2 %d %5g %5g %5g %5g %5g %5g %5g %5g %5g %5g\n", i, param.X, X[i][1], param.normcW1, param.normcW2, Wstar[i][0],Wstar[i][1],Wstar[i][2],Wstar[i][3],Wstar[i][4],testw1w2);
   }
 
   /* The old code starts from here */
