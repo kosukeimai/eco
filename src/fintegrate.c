@@ -1060,16 +1060,16 @@ double getW2starFromT(double t, Param* param, int* imposs) {
 }
 //W1star'(t)
 double getW1starPrimeFromT(double t, Param* param) {
-    double c=(param->W1_ub - param->W1_lb);
-    double W1=c*t + param->W1_lb;
-    W1=((1-W1)/W1)*((c/(1-W1))-c*W1);
+    double m=(param->W1_ub - param->W1_lb);
+    double W1=m*t + param->W1_lb;
+    W1=(1/W1)*(m/(1-W1));
     return W1;
 }
 //W2star'(t)
 double getW2starPrimeFromT(double t, Param* param) {
-    double c=(param->W2_lb - param->W2_ub);
-    double W2=c*t + param->W2_ub;
-    W2=((1-W2)/W2)*((c/(1-W2))-c*W2);
+    double m=(param->W2_lb - param->W2_ub);
+    double W2=m*t + param->W2_ub;
+    W2=(1/W2)*(m/(1-W2));
     return W2;
 }
 
