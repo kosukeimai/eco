@@ -27,7 +27,7 @@ void cEMeco(
 	    int *pin_samp,       /* sample size */
 
 	    /*MCMC draws?? */
-	    int *n_gen,          /* number of gibbs draws */
+	    int *iteration_max,          /* number of gibbs draws */
 
 	    /*incorporating survey data */
 	    int *survey,         /*1 if survey data available(W_1, W_2)
@@ -68,7 +68,7 @@ void cEMeco(
   int trapod=0;       /* 1 if use trapozodial ~= in numer. int.*/
   int n_step=5000;    /* The default size of grid step */
   int data=0;         /* one to print the data */
-  int ndraw=*n_gen;   /* number of draws */
+  //int ndraw=*n_gen;   /* number of draws */
 
   /* data */
 
@@ -91,13 +91,18 @@ void cEMeco(
   double *mu=doubleArray(n_dim);        /* mean vector*/
   double **Sigma=doubleMatrix(n_dim,n_dim);   /* covariance matrix*/
   double **InvSigma=doubleMatrix(n_dim,n_dim);/* inverse covariance matrix*/
+  double *pdTheta_old=doubleArray(5);
 
   /* misc variables */
-  int i, j, k, l, main_loop;   /* used for various loops */
+  int i, j, k, l, main_loop, start;   /* used for various loops */
   int itemp, itemp0;
   double dtemp, dtemp1, temp0, temp1,rho;
   double *vtemp=doubleArray(n_dim);
   int *mflag=intArray(n_step);
+
+  /* bounds */
+      double w1_lb,w1_ub,w2_lb,w2_ub,testw1w2;
+      int w1_inf,w2_inf,imposs;
 
   /* get random seed */
   GetRNGstate();
@@ -119,16 +124,26 @@ void cEMeco(
   /***the following section is still under construction,
       I am trying the R numerical integration function ***/
 
-  mu[0] = pdTheta_in[0];
-  mu[1] = pdTheta_in[1];
-  Sigma[0][0] = pdTheta_in[2];
-  Sigma[1][1] = pdTheta_in[3];
-  Sigma[0][1] = pdTheta_in[4]*sqrt(pdTheta_in[2]*pdTheta_in[3]);
-  Sigma[1][0] = Sigma[0][1];
-  dinv(Sigma, n_dim, InvSigma);
+
+
 
   Param param;
 
+main_loop=1;start=1;
+while (main_loop<=*iteration_max && (start==1 || fabs(pdTheta[0]-pdTheta_old[0])>0.0001 || fabs(pdTheta[1]-pdTheta_old[1])>0.0001 || fabs(pdTheta[4]-pdTheta_old[4])>0.0001)) {
+
+  if (start)
+    for(i=0;i<5;i++) pdTheta[i]=pdTheta_in[i];
+  start=0;
+
+  mu[0] = pdTheta[0];
+  mu[1] = pdTheta[1];
+  Sigma[0][0] = pdTheta[2];
+  Sigma[1][1] = pdTheta[3];
+  Sigma[0][1] = pdTheta[4]*sqrt(pdTheta[2]*pdTheta[3]);
+  Sigma[1][0] = Sigma[0][1];
+  for(i=0;i<5;i++) pdTheta_old[i]=pdTheta[i];
+  //dinv(Sigma, n_dim, InvSigma);
   param.mu[0]=mu[0];
   param.mu[1]=mu[1];
   param.Sigma[0][0]=Sigma[0][0];
@@ -136,41 +151,72 @@ void cEMeco(
   param.Sigma[1][0]=Sigma[1][0];
   param.Sigma[0][1]=Sigma[0][1];
   rho=Sigma[1][0]/sqrt(param.Sigma[0][0]*param.Sigma[1][1]);
+  Rprintf("cycle %d/%d: %5g %5g %5g %5g %5g rho2: %5g\n",main_loop,*iteration_max,mu[0],mu[1],Sigma[0][0],Sigma[1][1],Sigma[1][0],rho*rho);
 
-  Rprintf("start cycle:%5g %5g %5g %5g %5g rho2: %5g\n",mu[0],mu[1],Sigma[0][0],Sigma[1][1],Sigma[1][0],rho*rho);
   //char ch;
   //    scanf(" %c", &ch );
   for (i = 0; i<n_samp; i++) {
   //for (i = 0; i<20; i++) {
     param.X=X[i][0];
     param.Y=X[i][1];
-    setBounds((Param*)&param);
-    setNormConst((Param*)&param);
 
-    //Rprintf("%d: %5g %5g %5g %5g %d %5g %5g %d\n", i, param.X,param.Y,param.W1_lb, param.W1_ub, param.W1_inf, param.W2_lb, param.W2_ub, param.W2_inf);
+     if (param.Y>=.9999 || param.Y<=.0001) {
+      Wstar[i][0]=param.Y;
+      Wstar[i][1]=param.Y;
+      Wstar[i][2]=Wstar[i][0]*Wstar[i][0];
+      Wstar[i][3]=Wstar[i][0]*Wstar[i][1];
+      Wstar[i][4]=Wstar[i][1]*Wstar[i][1];
+    }
+    else {
+      setBounds((Param*)&param);
+      setNormConst((Param*)&param);
 
-    double w1_lb=param.W1_lb;
-    double w1_ub=param.W1_ub;
-    double w2_lb=param.W2_lb;
-    double w2_ub=param.W2_ub;
-    int w1_inf=param.W1_inf;
-    int w2_inf=param.W2_inf;
-    int imposs;
-    double testw1w2;
+      //Rprintf("%d: %5g %5g %5g %5g %5g %5g %5g\n", i, param.X,param.Y,param.W1_lb, param.W1_ub, param.W2_lb, param.W2_ub, param.normcT);
 
-    Wstar[i][0]=numIntegration(&W1Exp,(void *)&param,w1_inf,w1_lb,w1_ub);
-    //Wstar[i][1]=numIntegration(&W2Exp,(void *)&param,w2_inf,w2_lb,w2_ub);
-    Wstar[i][1]=numIntegration(&W2ExpW1,(void *)&param,w1_inf,w1_lb,w1_ub);
-    //Wstar[i][1]=getW2starFromW1star(param.X,param.Y,Wstar[i][0],&imposs);
-    Wstar[i][2]=numIntegration(&W1W1Exp,(void *)&param,w1_inf,w1_lb,w1_ub);
-    Wstar[i][3]=numIntegration(&W1W2Exp,(void *)&param,w1_inf,w1_lb,w1_ub);
-    //Wstar[i][4]=numIntegration(&W2W2Exp,(void *)&param,w2_inf,w2_lb,w2_ub);
-    Wstar[i][4]=numIntegration(&W2W2ExpW1,(void *)&param,w1_inf,w1_lb,w1_ub);
-    //testw1w2=numIntegration(&W2W1Exp,(void *)&param,w2_inf,w2_lb,w2_ub);
+      for (j=0;j<5;j++) {
+        param.suff=j;
+        Wstar[i][j]=paramIntegration(&SuffExp,(void *)&param);
+      }
+
+
+/*
+      w1_lb=param.W1_lb;
+      w1_ub=param.W1_ub;
+      w2_lb=param.W2_lb;
+      w2_ub=param.W2_ub;
+      w1_inf=param.W1_inf;
+      w2_inf=param.W2_inf;
+      if (1==0) { //integrate over W1
+        Wstar[i][0]=numIntegration(&W1Exp,(void *)&param,w1_inf,w1_lb,w1_ub);
+        Wstar[i][1]=numIntegration(&W2ExpW1,(void *)&param,w1_inf,w1_lb,w1_ub);
+        Wstar[i][2]=numIntegration(&W1W1Exp,(void *)&param,w1_inf,w1_lb,w1_ub);
+        Wstar[i][3]=numIntegration(&W1W2Exp,(void *)&param,w1_inf,w1_lb,w1_ub);
+        Wstar[i][4]=numIntegration(&W2W2ExpW1,(void *)&param,w1_inf,w1_lb,w1_ub);
+
+        //older
+        //Wstar[i][1]=numIntegration(&W2Exp,(void *)&param,w2_inf,w2_lb,w2_ub);
+        //testw1w2=numIntegration(&W2W1Exp,(void *)&param,w2_inf,w2_lb,w2_ub);
+      }
+      else if (1==0) {
+        Wstar[i][0]=numIntegration(&W1ExpW2,(void *)&param,w2_inf,w2_lb,w2_ub);
+        Wstar[i][1]=numIntegration(&W2Exp,(void *)&param,w2_inf,w2_lb,w2_ub);
+        Wstar[i][2]=numIntegration(&W1W1ExpW2,(void *)&param,w2_inf,w2_lb,w2_ub);
+        Wstar[i][3]=numIntegration(&W2W1Exp,(void *)&param,w2_inf,w2_lb,w2_ub);
+        Wstar[i][4]=numIntegration(&W2W2Exp,(void *)&param,w2_inf,w2_lb,w2_ub);
+      }
+      else {
+        Wstar[i][0]=.5*(numIntegration(&W1Exp,(void *)&param,w1_inf,w1_lb,w1_ub)+numIntegration(&W1ExpW2,(void *)&param,w2_inf,w2_lb,w2_ub));
+        Wstar[i][1]=.5*(numIntegration(&W2ExpW1,(void *)&param,w1_inf,w1_lb,w1_ub)+numIntegration(&W2Exp,(void *)&param,w2_inf,w2_lb,w2_ub));
+        Wstar[i][2]=.5*(numIntegration(&W1W1Exp,(void *)&param,w1_inf,w1_lb,w1_ub)+numIntegration(&W1W1ExpW2,(void *)&param,w2_inf,w2_lb,w2_ub));
+        Wstar[i][3]=.5*(numIntegration(&W1W2Exp,(void *)&param,w1_inf,w1_lb,w1_ub)+numIntegration(&W2W1Exp,(void *)&param,w2_inf,w2_lb,w2_ub));
+        Wstar[i][4]=.5*(numIntegration(&W2W2ExpW1,(void *)&param,w1_inf,w1_lb,w1_ub)+numIntegration(&W2W2Exp,(void *)&param,w2_inf,w2_lb,w2_ub));
+      }*/
+    }
   if (Wstar[i][4]<pow(Wstar[i][1],2) || Wstar[i][2]<pow(Wstar[i][0],2))
-    Rprintf("E1 %d %5g %5g %5g %5g %5g %5g %5g %5g\n", i, param.X, X[i][1], param.normcW1, Wstar[i][0],Wstar[i][1],Wstar[i][2],Wstar[i][3],Wstar[i][4]);
+   Rprintf("E1 %d %5g %5g %5g %5g %5g %5g %5g %5g\n", i, param.X, X[i][1], param.normcW1, Wstar[i][0],Wstar[i][1],Wstar[i][2],Wstar[i][3],Wstar[i][4]);
   //if (fabs(testw1w2-Wstar[i][3])>0.001)
-    //Rprintf("E2 %d %5g %5g %5g %5g %5g %5g %5g %5g %5g %5g\n", i, param.X, X[i][1], param.normcW1, param.normcW2, Wstar[i][0],Wstar[i][1],Wstar[i][2],Wstar[i][3],Wstar[i][4],testw1w2);
+    //Rprintf("E2 %d %5g %5g %5g %5g %5g %5g %5g %5g %5g %5g\n", i, param.X, X[i][1], param.normcT, Wstar[i][0],Wstar[i][1],Wstar[i][2],Wstar[i][3],Wstar[i][4]);
+  //Rprintf("TO %d %5g %5g %5g %5g %5g %5g %5g %5g %5g\n", i, param.X, X[i][1], param.normcT, Wstar[i][0],Wstar[i][1],Wstar[i][2],Wstar[i][3],Wstar[i][4]);
   }
 
   /* The old code starts from here */
@@ -380,21 +426,26 @@ void cEMeco(
 
   pdTheta[0]=Suff[0]/t_samp;  /*mu1*/
   pdTheta[1]=Suff[1]/t_samp;  /*mu2*/
-  //pdTheta[2]=(Suff[2]-2*Suff[0]*pdTheta[0]+t_samp*pdTheta[0]*pdTheta[0])/t_samp;  /*sigma11*/
-  //pdTheta[3]=(Suff[3]-2*Suff[1]*pdTheta[1]+t_samp*pdTheta[1]*pdTheta[1])/t_samp;  /*sigma22*/
-  pdTheta[2]=(Suff[2]-2*Suff[0]*mu[0]+t_samp*mu[0]*mu[0])/t_samp;  /*sigma11*/
-  pdTheta[3]=(Suff[3]-2*Suff[1]*mu[1]+t_samp*mu[1]*mu[1])/t_samp;  /*sigma22*/
-  //pdTheta[4]=(Suff[4]-Suff[0]*pdTheta[1]-Suff[1]*pdTheta[0]+t_samp*pdTheta[0]*pdTheta[1])/t_samp; /*sigma12*/
-  pdTheta[4]=(Suff[4]-Suff[0]*mu[1]-Suff[1]*mu[0]+t_samp*mu[0]*mu[1])/t_samp; /*sigma12*/
+  pdTheta[2]=(Suff[2]-2*Suff[0]*pdTheta[0]+t_samp*pdTheta[0]*pdTheta[0])/t_samp;  /*sigma11*/
+  pdTheta[3]=(Suff[3]-2*Suff[1]*pdTheta[1]+t_samp*pdTheta[1]*pdTheta[1])/t_samp;  /*sigma22*/
+  //pdTheta[2]=(Suff[2]-2*Suff[0]*mu[0]+t_samp*mu[0]*mu[0])/t_samp;  /*sigma11*/
+  //pdTheta[3]=(Suff[3]-2*Suff[1]*mu[1]+t_samp*mu[1]*mu[1])/t_samp;  /*sigma22*/
+  pdTheta[4]=(Suff[4]-Suff[0]*pdTheta[1]-Suff[1]*pdTheta[0]+t_samp*pdTheta[0]*pdTheta[1])/t_samp; /*sigma12*/
+  //pdTheta[4]=(Suff[4]-Suff[0]*mu[1]-Suff[1]*mu[0]+t_samp*mu[0]*mu[1])/t_samp; /*sigma12*/
   pdTheta[4]=pdTheta[4]/sqrt(pdTheta[2]*pdTheta[3]); /*rho*/
 
-  if (data || 1==1) {
+  if (data) {
       Rprintf("theta and suff\n");
 
 	Rprintf("%10g%10g%10g%10g%10g (%10g)\n",pdTheta[0],pdTheta[1],pdTheta[2],pdTheta[3],pdTheta[4],pdTheta[4]*sqrt(pdTheta[2]*pdTheta[3]));
 	Rprintf("%10g%10g%10g%10g%10g\n",Suff[0],Suff[1],Suff[2],Suff[3],Suff[4]);
 
     }
+ main_loop++;
+}
+
+Rprintf("End loop PDT:%5g %5g %5g %5g %5g\n",pdTheta[0],pdTheta[1],pdTheta[2],pdTheta[3],pdTheta[4]);
+
   /* write out the random seed */
   PutRNGstate();
 

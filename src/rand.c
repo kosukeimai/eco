@@ -251,6 +251,10 @@ double dBVNtomo(double *Wstar,  /* Wstar values */
      // Rprintf("density %15g\n", density);
      // char ch;
       //scanf(" %c", &ch );
+
+    free(MEAN);
+    FreeMatrix(SIGMA,dim);
+
      return density;
 
     //  }
