@@ -11,3 +11,5 @@ void rMVN(double *Sample, double *mean, double **inv_Var, int size);
 void rWish(double **Sample, double **S, int df, int size);
 void rDirich(double *Sample, double *theta, int size);
 double dBVNtomo(double *Wstar, void* pp, int give_log, double normc);
+double invLogit(double x);
+

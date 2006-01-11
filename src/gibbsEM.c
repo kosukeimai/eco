@@ -50,8 +50,7 @@ void cEMeco(
 	    double *minW1, double *maxW1,
 
 	    /* flags */
-	    int *Grid,    /*1 if intergration is approximated by grids
-			    0 R function */
+	    int *flag,    /*option flag: 1 for update with current mu, 0 previous mu*/
 
 	    /* storage */
 	    double *pdTheta,  /*EM result for Theta^(t+1) */
@@ -95,14 +94,14 @@ void cEMeco(
 
   /* misc variables */
   int i, j, k, l, main_loop, start;   /* used for various loops */
-  int itemp, itemp0;
+  int itemp, itemp0, imposs;
   double dtemp, dtemp1, temp0, temp1,rho;
   double *vtemp=doubleArray(n_dim);
   int *mflag=intArray(n_step);
 
   /* bounds */
       double w1_lb,w1_ub,w2_lb,w2_ub,testw1w2;
-      int w1_inf,w2_inf,imposs;
+      int w1_inf,w2_inf;
 
   /* get random seed */
   GetRNGstate();
@@ -178,15 +177,16 @@ while (main_loop<=*iteration_max && (start==1 || fabs(pdTheta[0]-pdTheta_old[0])
         Wstar[i][j]=paramIntegration(&SuffExp,(void *)&param);
       }
 
+          //param.suff=-1;
+          //Wstar[i][0]=paramIntegration(&SuffExp,(void *)&param);
 
-/*
-      w1_lb=param.W1_lb;
+ /*     w1_lb=param.W1_lb;
       w1_ub=param.W1_ub;
       w2_lb=param.W2_lb;
       w2_ub=param.W2_ub;
       w1_inf=param.W1_inf;
       w2_inf=param.W2_inf;
-      if (1==0) { //integrate over W1
+/      if (1==0) { //integrate over W1
         Wstar[i][0]=numIntegration(&W1Exp,(void *)&param,w1_inf,w1_lb,w1_ub);
         Wstar[i][1]=numIntegration(&W2ExpW1,(void *)&param,w1_inf,w1_lb,w1_ub);
         Wstar[i][2]=numIntegration(&W1W1Exp,(void *)&param,w1_inf,w1_lb,w1_ub);
@@ -211,12 +211,13 @@ while (main_loop<=*iteration_max && (start==1 || fabs(pdTheta[0]-pdTheta_old[0])
         Wstar[i][3]=.5*(numIntegration(&W1W2Exp,(void *)&param,w1_inf,w1_lb,w1_ub)+numIntegration(&W2W1Exp,(void *)&param,w2_inf,w2_lb,w2_ub));
         Wstar[i][4]=.5*(numIntegration(&W2W2ExpW1,(void *)&param,w1_inf,w1_lb,w1_ub)+numIntegration(&W2W2Exp,(void *)&param,w2_inf,w2_lb,w2_ub));
       }*/
-    }
+  if ((fabs(invLogit(getW1starFromW2star(param.X,param.Y,Wstar[i][1],&imposs)) - invLogit(Wstar[i][0])))>0.08)
+    Rprintf("E1 %d %5g %5g %5g %5g %5g %5g %5g %5g \n", i, param.X, param.Y, param.normcT, Wstar[i][0],Wstar[i][1],Wstar[i][2],Wstar[i][3],Wstar[i][4]);
   if (Wstar[i][4]<pow(Wstar[i][1],2) || Wstar[i][2]<pow(Wstar[i][0],2))
-   Rprintf("E1 %d %5g %5g %5g %5g %5g %5g %5g %5g\n", i, param.X, X[i][1], param.normcW1, Wstar[i][0],Wstar[i][1],Wstar[i][2],Wstar[i][3],Wstar[i][4]);
-  //if (fabs(testw1w2-Wstar[i][3])>0.001)
-    //Rprintf("E2 %d %5g %5g %5g %5g %5g %5g %5g %5g %5g %5g\n", i, param.X, X[i][1], param.normcT, Wstar[i][0],Wstar[i][1],Wstar[i][2],Wstar[i][3],Wstar[i][4]);
-  //Rprintf("TO %d %5g %5g %5g %5g %5g %5g %5g %5g %5g\n", i, param.X, X[i][1], param.normcT, Wstar[i][0],Wstar[i][1],Wstar[i][2],Wstar[i][3],Wstar[i][4]);
+     Rprintf("E2 %d %5g %5g %5g %5g %5g %5g %5g %5g\n", i, param.X, X[i][1], param.normcW1, Wstar[i][0],Wstar[i][1],Wstar[i][2],Wstar[i][3],Wstar[i][4]);
+  //if (main_loop==2 && i<20)
+  //Rprintf("TO %d %5g %5g %5g %5g %5g %5g %5g %5g\n", i, param.X, X[i][1], param.normcT, Wstar[i][0],Wstar[i][1],Wstar[i][2],Wstar[i][3],,Wstar[i][4]);
+    }
   }
 
   /* The old code starts from here */
@@ -426,12 +427,16 @@ while (main_loop<=*iteration_max && (start==1 || fabs(pdTheta[0]-pdTheta_old[0])
 
   pdTheta[0]=Suff[0]/t_samp;  /*mu1*/
   pdTheta[1]=Suff[1]/t_samp;  /*mu2*/
-  pdTheta[2]=(Suff[2]-2*Suff[0]*pdTheta[0]+t_samp*pdTheta[0]*pdTheta[0])/t_samp;  /*sigma11*/
-  pdTheta[3]=(Suff[3]-2*Suff[1]*pdTheta[1]+t_samp*pdTheta[1]*pdTheta[1])/t_samp;  /*sigma22*/
-  //pdTheta[2]=(Suff[2]-2*Suff[0]*mu[0]+t_samp*mu[0]*mu[0])/t_samp;  /*sigma11*/
-  //pdTheta[3]=(Suff[3]-2*Suff[1]*mu[1]+t_samp*mu[1]*mu[1])/t_samp;  /*sigma22*/
-  pdTheta[4]=(Suff[4]-Suff[0]*pdTheta[1]-Suff[1]*pdTheta[0]+t_samp*pdTheta[0]*pdTheta[1])/t_samp; /*sigma12*/
-  //pdTheta[4]=(Suff[4]-Suff[0]*mu[1]-Suff[1]*mu[0]+t_samp*mu[0]*mu[1])/t_samp; /*sigma12*/
+  if (flag) {
+    pdTheta[2]=(Suff[2]-2*Suff[0]*pdTheta[0]+t_samp*pdTheta[0]*pdTheta[0])/t_samp;  /*sigma11*/
+    pdTheta[3]=(Suff[3]-2*Suff[1]*pdTheta[1]+t_samp*pdTheta[1]*pdTheta[1])/t_samp;  /*sigma22*/
+    pdTheta[4]=(Suff[4]-Suff[0]*pdTheta[1]-Suff[1]*pdTheta[0]+t_samp*pdTheta[0]*pdTheta[1])/t_samp; /*sigma12*/
+  }
+  else {
+    pdTheta[2]=(Suff[2]-2*Suff[0]*mu[0]+t_samp*mu[0]*mu[0])/t_samp;  /*sigma11*/
+    pdTheta[3]=(Suff[3]-2*Suff[1]*mu[1]+t_samp*mu[1]*mu[1])/t_samp;  /*sigma22*/
+    pdTheta[4]=(Suff[4]-Suff[0]*mu[1]-Suff[1]*mu[0]+t_samp*mu[0]*mu[1])/t_samp; /*sigma12*/
+  }
   pdTheta[4]=pdTheta[4]/sqrt(pdTheta[2]*pdTheta[3]); /*rho*/
 
   if (data) {
