@@ -35,8 +35,7 @@ thetacov<-function(Z) {
 eco.em <- function(formula, data = parent.frame(),supplement=NULL, 
                    theta.old=c(0,0,1,1,0), convergence=0.000001,
                    iteration.max=1000, Ioc.yes=TRUE, Fisher=TRUE,
-                   n.draws = 100000, by.draw=100000,
-                   draw.max=10000000, printon=TRUE, grid=TRUE) { 
+                   draw.max=10000000, printon=TRUE, flag=1) { 
 
   # getting X and Y
   mf <- match.call()
@@ -60,15 +59,15 @@ eco.em <- function(formula, data = parent.frame(),supplement=NULL,
   i<-1
   draw <- 1
   
-  while ((!em.converge) && (i<=iteration.max)) {
+  while ((!em.converge) && (i<=iteration.max) && i<=1) {
     res <- .C("cEMeco", as.double(tmp$d), as.double(theta.old),
-              as.integer(tmp$n.samp),  as.integer(n.draws), 
+              as.integer(tmp$n.samp),  as.integer(iteration.max), 
               as.integer(tmp$survey.yes), as.integer(tmp$survey.samp), 
           as.double(tmp$survey.data),
               as.integer(tmp$X1type), as.integer(tmp$samp.X1), as.double(tmp$X1.W1),
               as.integer(tmp$X0type), as.integer(tmp$samp.X0), as.double(tmp$X0.W2),
           as.double(bdd$Wmin[,1,1]), as.double(bdd$Wmax[,1,1]),
-          as.integer(grid), 
+          as.integer(flag), 
               pdTheta=double(n.var), S=double(n.var),
               PACKAGE="eco")
     
@@ -82,28 +81,32 @@ eco.em <- function(formula, data = parent.frame(),supplement=NULL,
       else
         cat(temp, "\n") 
     }
-
-    if (!Fisher) {
-      for (j in 1:5) {   
-        if (abs(temp[j]-theta.old[j]) > convergence) em.converge<-FALSE
-      }
+    
+    if (i>1) {
+        if (!Fisher) {
+            for (j in 1:5) {   
+                if (abs(temp[j]-theta.old[j]) > convergence) em.converge<-FALSE
+            }
+        }
+    
+        if (Fisher) {
+            for (j in 1:5) {   
+                if (abs(fisher(temp)[j]-fisher(theta.old)[j])>convergence) em.converge<-FALSE
+            }
+        }
     }
-  
-    if (Fisher) {
-      for (j in 1:5) {   
-        if (abs(fisher(temp)[j]-fisher(theta.old)[j])>convergence) em.converge<-FALSE
-      }
+    if (i<=1) {
+      em.converge<-FALSE
     }
-
     theta.old<-temp
     
     i<-i+1
-    if (em.converge & (draw < draw.max)) {
+    if (em.converge && (draw < draw.max)) {
       em.converge <- FALSE
       draw <- draw.max
-      print("hi")
+      print("hi\n")
     }
-    if (draw<=draw.max) draw<-draw+by.draw
+    #if (draw<=draw.max) draw<-draw+by.draw
   }
   
   Ioc<-matrix(NA, n.var, n.var)
