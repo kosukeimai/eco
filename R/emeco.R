@@ -33,7 +33,7 @@ thetacov<-function(Z) {
 
 
 eco.em <- function(formula, data = parent.frame(),supplement=NULL, 
-                   theta.old=c(0,0,1,1,0), convergence=0.000001,
+                   theta.old=c(0,0,1,1,0), convergence=0.0001,
                    iteration.max=1000, Ioc.yes=TRUE, Fisher=TRUE,
                    draw.max=10000000, printon=TRUE, flag=1) { 
 
@@ -61,13 +61,12 @@ eco.em <- function(formula, data = parent.frame(),supplement=NULL,
   
   while ((!em.converge) && (i<=iteration.max) && i<=1) {
     res <- .C("cEMeco", as.double(tmp$d), as.double(theta.old),
-              as.integer(tmp$n.samp),  as.integer(iteration.max), 
+              as.integer(tmp$n.samp),  as.integer(iteration.max), as.double(convergence),
               as.integer(tmp$survey.yes), as.integer(tmp$survey.samp), 
           as.double(tmp$survey.data),
               as.integer(tmp$X1type), as.integer(tmp$samp.X1), as.double(tmp$X1.W1),
               as.integer(tmp$X0type), as.integer(tmp$samp.X0), as.double(tmp$X0.W2),
           as.double(bdd$Wmin[,1,1]), as.double(bdd$Wmax[,1,1]),
-          as.integer(flag), 
               pdTheta=double(n.var), S=double(n.var),
               PACKAGE="eco")
     
