@@ -10,6 +10,7 @@
 #include <math.h>
 #include <Rmath.h>
 #include <R_ext/Utils.h>
+#include <R_ext/PrtUtil.h>
 #include <R.h>
 #include "vector.h"
 #include "subroutines.h"
@@ -185,7 +186,10 @@ void rDirich(
     Sample[j] /= dtemp;
 }
 
-/** density function on tomography line Y=XW_1+ (1-X)W_2 */
+/** density function on tomography line Y=XW_1+ (1-X)W_2
+ * Note: asssumes that the two points given W1* and W2*
+ * are on the tomography line
+ */
 double dBVNtomo(double *Wstar,  /* Wstar values */
 		void* pp,     //parameter
 		int give_log, /* 1 if log-scale, 0 otherwise */
@@ -198,11 +202,6 @@ double dBVNtomo(double *Wstar,  /* Wstar values */
   double density;
   double rho, dtemp;
 
-  /*  if (1/(1+exp(-Wstar[1]))!=Y/(1-X)-X/(1-X)/(1+exp(-Wstar[0]))) {
-      return(0);
-  }
-  else {*/
-
     Param *param=(Param *)pp;
     MEAN[0]=param->mu[0];
     MEAN[1]=param->mu[1];
@@ -210,54 +209,28 @@ double dBVNtomo(double *Wstar,  /* Wstar values */
     SIGMA[1][1]=param->Sigma[1][1];
     SIGMA[0][1]=param->Sigma[0][1];
     SIGMA[1][0]=param->Sigma[1][0];
-    //normc=(W1orW2==1) ? param->normcW1 : param->normcW2;
 
 
     rho=SIGMA[0][1]/sqrt(SIGMA[0][0]*SIGMA[1][1]);
-    //rho=0;
-    //Rprintf("rho %15g \n", rho);
     dtemp=1/(2*M_PI*sqrt(SIGMA[0][0]*SIGMA[1][1]*(1-rho*rho)));
 
-    //Rprintf("dtemp %15g normc %5g\n", dtemp,normc);
 
+    density=-1/(2*(1-rho*rho))*
+    ((Wstar[0]-MEAN[0])*(Wstar[0]-MEAN[0])/SIGMA[0][0]+
+     +(Wstar[1]-MEAN[1])*(Wstar[1]-MEAN[1])/SIGMA[1][1]
+     -2*rho*(Wstar[0]-MEAN[0])*(Wstar[1]-MEAN[1])/sqrt(SIGMA[0][0]*SIGMA[1][1]))
+    +log(dtemp)-log(normc);
 
-    /*param.mu[0]=MEAN[0];
-    param.mu[1]=MEAN[1];
-    param.Sigma[0][0]=SIGMA[0][0];
-    param.Sigma[1][1]=SIGMA[1][1];
-    param.Sigma[0][1]=SIGMA[0][1];
-    param.Sigma[1][0]=SIGMA[1][0];
-
-    param.X=X;
-    param.Y=Y;*/
-
-    //Rdqagi(&NormConst, (void *)&param, &bound, &inf, &epsabs, &epsrel, &result,
-	   //&anserr, &neval, &ier, &limit, &lenw, &last, iwork, work);
-    /**/
-    //Rprintf("Wstar1 %8g Wstar2 %8g Sig00 %8g\n", Wstar[0],Wstar[1],SIGMA[0][0]);
-    /* density=-0.5*(1-rho*rho)*
-      ((Wstar[0]-MEAN[0])*(Wstar[0]-MEAN[0])/SIGMA[0][0]+
-       +(Wstar[1]-MEAN[1])*(Wstar[1]-MEAN[1])/SIGMA[1][1]
-       -2*rho*(Wstar[0]-MEAN[0])*(Wstar[1]-MEAN[0])/sqrt(SIGMA[0][0]*SIGMA[1][1]))
-      -log(dtemp)-log(result); */
-      density=-1/(2*(1-rho*rho))*
-      ((Wstar[0]-MEAN[0])*(Wstar[0]-MEAN[0])/SIGMA[0][0]+
-       +(Wstar[1]-MEAN[1])*(Wstar[1]-MEAN[1])/SIGMA[1][1]
-       -2*rho*(Wstar[0]-MEAN[0])*(Wstar[1]-MEAN[1])/sqrt(SIGMA[0][0]*SIGMA[1][1]))
-      +log(dtemp)-log(normc);
-
-    //Rprintf("s11 %5g s22 %5g normc %5g dtemp %5g ldensity %5g\n", SIGMA[0][0],SIGMA[1][1],normc, dtemp, density);
      if (give_log==0) density=exp(density);
-     // Rprintf("density %15g\n", density);
-     // char ch;
-      //scanf(" %c", &ch );
+      /*Rprintf("s11 %5g s22 %5g normc %5g dtemp %5g ldensity %5g\n", SIGMA[0][0],SIGMA[1][1],normc, dtemp, density);
+      char ch;
+     scanf(" %c", &ch );*/
 
-    free(MEAN);
+    Free(MEAN);
     FreeMatrix(SIGMA,dim);
 
      return density;
 
-    //  }
 
 }
 

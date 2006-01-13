@@ -9,12 +9,12 @@
 struct Param{
   double mu[2];
   double Sigma[2][2];
-  double X;
+  double data[2]; //collect the data
+  double X; //X,Y here for ease of use
   double Y;
-  double normcW1; //normalized const on tomog line (integrating over W1)
-  double normcW2; //normalized const on tomog line (integrating over W2)
   double normcT; //normalized const on tomog line (integrating with parameterization)
-  double W1_lb; //lower and upper bounds for W1 and W2 (no starred)
+  double W[2]; //only if W is known
+  double W1_lb; //lower and upper bounds for W1 and W2 (not starred)
   double W1_ub;
   double W2_lb;
   double W2_ub;
@@ -29,7 +29,7 @@ typedef struct Param Param;
 /** typedef functions     **/
 /***************************/
 
-typedef void integr_fn(double *x, int n, void *ex);
+//typedef void integr_fn(double *x, int n, void *ex); //is already defined in Applic.h
 typedef double gsl_fn(double x, void *ex);
 
 # endif
