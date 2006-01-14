@@ -14,7 +14,7 @@ struct Param{
   double X; //X,Y here for ease of use
   double Y;
   double normcT; //normalized const on tomog line (integrating with parameterization)
-  double W[2]; //only if W is known
+  double W[2]; //if W is known, also handy place to store E[W1] when we calculate it each step
   double W1_lb; //lower and upper bounds for W1 and W2 (not starred)
   double W1_ub;
   double W2_lb;

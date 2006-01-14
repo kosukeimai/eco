@@ -60,6 +60,9 @@ void cEMeco(
 	    /* bounds of W1 */
 	    double *minW1, double *maxW1,
 
+	    /* flags */
+	    int *flag,    /*1 if NCAR 0 otherwise */
+
 	    /* storage */
 	    double *pdTheta,  /*EM result for Theta^(t+1) */
 	    double *Suff      /*out put suffucient statistics (E(W_1i|Y_i),
@@ -81,7 +84,7 @@ void cEMeco(
   double *pdTheta_old=doubleArray(5);
 
   /* misc variables */
-  int i, main_loop, start;   /* used for various loops */
+  int i, j,k,main_loop, start;   /* used for various loops */
   double rho;
 
   /* get random seed */
@@ -93,10 +96,25 @@ void cEMeco(
 
 /***Begin main loop ***/
 main_loop=1;start=1;
+Rprintf("Begin %sNCAR loop:%5g %5g %5g %5g %5g\n",(*flag==0) ? "non-" : "",pdTheta_in[0],pdTheta_in[1],pdTheta_in[2],pdTheta_in[3],pdTheta_in[4]);
 while (main_loop<=*iteration_max && (start==1 || !closeEnough(pdTheta,pdTheta_old,*convergence))) {
 
   if (start) {
     for(i=0;i<5;i++) pdTheta[i]=pdTheta_in[i];
+    Sigma[0][0] = pdTheta[2];
+    Sigma[1][1] = pdTheta[3];
+    Sigma[0][1] = pdTheta[4]*sqrt(pdTheta[2]*pdTheta[3]);
+    Sigma[1][0] = Sigma[0][1];
+    dinv(Sigma, 2, InvSigma);
+    for(i=0;i<t_samp;i++) {
+      params[i].mu[0]=pdTheta[0];
+      params[i].mu[1]=pdTheta[1];
+      for(j=0; j<2;j++)
+        for(k=0; k<2;k++) {
+          params[i].Sigma[j][k] = Sigma[j][k];
+          params[i].InvSigma[j][k] = InvSigma[j][k];
+        }
+    }
     start=0;
   }
   //keep the old theta around for comaprison
@@ -107,7 +125,7 @@ while (main_loop<=*iteration_max && (start==1 || !closeEnough(pdTheta,pdTheta_ol
   Rprintf("cycle %d/%d: %5g %5g %5g %5g %5g rho: %5g\n",main_loop,*iteration_max,pdTheta[0],pdTheta[1],Sigma[0][0],Sigma[1][1],Sigma[1][0],rho);
 
   ecoEStep(params, n_samp, s_samp, x1_samp, x0_samp, Suff,verbose);
-  if (1==1)
+  if (*flag==0)
     ecoMStep(Suff,pdTheta,Sigma,InvSigma,params,t_samp,verbose);
   else
     ecoMStepNCAR(Suff,pdTheta,Sigma,InvSigma,params,t_samp,verbose);
@@ -156,7 +174,7 @@ int t_samp,i,j,temp0,temp1, loglik;
 double testw1, testw2,testll;
 Param param;
 
-loglik=0;
+loglik=1;
 
 t_samp=n_samp+x1_samp+x0_samp+s_samp;
 
@@ -170,6 +188,8 @@ testll=0;
       Wstar[i][2]=Wstar[i][0]*Wstar[i][0];
       Wstar[i][3]=Wstar[i][0]*Wstar[i][1];
       Wstar[i][4]=Wstar[i][1]*Wstar[i][1];
+      params[i].W[0]=invLogit(Wstar[i][0]);
+      params[i].W[1]=invLogit(Wstar[i][1]);
     }
     else {
       setBounds((Param*)&param);
@@ -178,6 +198,8 @@ testll=0;
       for (j=0;j<5;j++) {
         param.suff=j;
         Wstar[i][j]=paramIntegration(&SuffExp,(void *)&param);
+        if (j<2) //store the current W1 and W2
+          params[i].W[j]=invLogit(Wstar[i][j]);
       }
       param.suff=5;
       testw1=paramIntegration(&SuffExp,(void *)&param);
@@ -249,7 +271,7 @@ testll=0;
     suff[j]=suff[j]/t_samp;
 
     if (loglik)
-      if(verbose>=1) Rprintf("Log liklihood %15g",testll);
+      if(verbose>=1) Rprintf("Log liklihood %15g\n",testll);
 
 FreeMatrix(Wstar,t_samp);
 
@@ -298,13 +320,20 @@ void ecoMStepNCAR(double* Suff, double* pdTheta,  double** Sigma, double** InvSi
   int i,j,k;
 
   //find mean of X
-  double mu3=0;
-  double mu3sq=0;
+  double mu3=0; double mu3sq=0; double XW1=0; double XW2=0;
+  char ebuffer[30];
   for(i=0;i<t_samp;i++) {
-    mu3 += logit(params[i].X);
-    mu3sq += pow(logit(params[i].X),2);
+    sprintf(ebuffer, "mstep X %i", i);
+    double lx= logit(params[i].X,ebuffer);
+    mu3 += lx;
+    mu3sq += lx*lx;
+    sprintf(ebuffer, "mstep W1 %i", i);
+    XW1 += logit(params[i].W[0],ebuffer)*lx;
+    sprintf(ebuffer, "mstep W2 %i", i);
+    XW2 += logit(params[i].W[1],ebuffer)*lx;
   }
   mu3 = mu3/t_samp; mu3sq = mu3sq/t_samp;
+  XW1 = XW1/t_samp; XW2 = XW2/t_samp;
 
 
   pdTheta[0]=Suff[0];  /*mu1*/
@@ -313,12 +342,12 @@ void ecoMStepNCAR(double* Suff, double* pdTheta,  double** Sigma, double** InvSi
   //set Sigma3 (3x3 sigma) ..probably needs fixing by using prior mus
   Sigma3[0][0] = Suff[2]-2*Suff[0]*pdTheta[0]+pdTheta[0]*pdTheta[0];
   Sigma3[0][1] = Suff[4]-Suff[0]*pdTheta[1]-Suff[1]*pdTheta[0]+pdTheta[0]*pdTheta[1];
-  Sigma3[0][2] = 0; //What to do here?
+  Sigma3[0][2] = XW1 - mu3*Suff[0];
   Sigma3[1][0] = Sigma[0][1];
   Sigma3[1][1] = Suff[3]-2*Suff[1]*pdTheta[1]+pdTheta[1]*pdTheta[1];
-  Sigma3[1][2] = 0;
-  Sigma3[2][0] = 0;
-  Sigma3[2][1] = 0;
+  Sigma3[1][2] = XW2 - mu3*Suff[1];
+  Sigma3[2][0] = Sigma3[0][2];
+  Sigma3[2][1] = Sigma3[1][2];
   Sigma3[2][2] = mu3sq-mu3*mu3;
 
   Sigma[0][0]= Sigma3[0][0] - Sigma3[0][2]*Sigma3[0][2]/Sigma3[2][2];
@@ -366,7 +395,7 @@ double dtemp;
     params[i].X=params[i].data[0];
     params[i].Y=params[i].data[1];
     //fix X edge cases
-    params[i].X=(params[i].X == 1) ? .9999 : ((params[i].X == 0) ? 0.0001 : params[i].X);
+    params[i].X=(params[i].X >= 1) ? .9999 : ((params[i].X <= 0) ? 0.0001 : params[i].X);
   }
 
   if (verbose>=2) {
