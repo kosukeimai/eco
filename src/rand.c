@@ -238,3 +238,8 @@ double dBVNtomo(double *Wstar,  /* Wstar values */
       if (x>30) return 0;
       else return (1/(1+exp(-1*x)));
     }
+
+    double logit(double x) {
+      if (x>=1 || x<=0) error("%5g is out of logit range",x);
+      return log(x/(1-x));
+    }

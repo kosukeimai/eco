@@ -94,6 +94,7 @@ void SuffExp(double *t, int n, void *param)
   int dim=2;
   double *mu=doubleArray(dim);
   double **Sigma=doubleMatrix(dim,dim);
+  double **InvSigma=doubleMatrix(dim,dim);/* inverse covariance matrix*/
   double *W1,*W1p,*W2,*W2p,*vtemp;
   double inp,density,pfact,normc;
 
@@ -102,7 +103,6 @@ void SuffExp(double *t, int n, void *param)
   W1p = doubleArray(n);
   W2 = doubleArray(n);
   W2p = doubleArray(n);
-
   Param *pp=(Param *)param;
   mu[0]=pp->mu[0];
   mu[1]=pp->mu[1];
@@ -110,6 +110,10 @@ void SuffExp(double *t, int n, void *param)
   Sigma[1][1]=pp->Sigma[1][1];
   Sigma[0][1]=pp->Sigma[0][1];
   Sigma[1][0]=pp->Sigma[1][0];
+  InvSigma[0][0]=pp->InvSigma[0][0];
+  InvSigma[1][1]=pp->InvSigma[1][1];
+  InvSigma[0][1]=pp->InvSigma[0][1];
+  InvSigma[1][0]=pp->InvSigma[1][0];
   normc=pp->normcT;
   suff=pp->suff;
   imposs=0;
@@ -136,11 +140,14 @@ void SuffExp(double *t, int n, void *param)
           else if (suff==4) t[ii]=W2[ii]*W2[ii]*t[ii];
           else if (suff==5) t[ii]=invLogit(W1[ii])*t[ii];
           else if (suff==6) t[ii]=invLogit(W2[ii])*t[ii];
+          else if (suff==7) {
+            t[ii]=dMVN(vtemp,mu,InvSigma,2,1)*t[ii];
+          }
           else if (suff!=-1) Rprintf("Error Suff= %d",suff);
         }
     }
   Free(W1);Free(W1p);Free(W2);Free(W2p);Free(mu);Free(vtemp);
-  FreeMatrix(Sigma,dim);
+  FreeMatrix(Sigma,dim); FreeMatrix(InvSigma,dim);
 }
 
 

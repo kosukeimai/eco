@@ -9,6 +9,7 @@
 struct Param{
   double mu[2];
   double Sigma[2][2];
+  double InvSigma[2][2];
   double data[2]; //collect the data
   double X; //X,Y here for ease of use
   double Y;
@@ -20,7 +21,7 @@ struct Param{
   double W2_ub;
   int W1_inf; //inf: 0->(lb,ub), -1->(-inf,ub), 1->(lb,inf), 2->(-inf,inf)
   int W2_inf;
-  int suff; //the sufficient stat we're calculating: 1->W1, 2->W2,3->W1^2,4->W1W2,5->W2^2, -1 ->test case
+  int suff; //the sufficient stat we're calculating: 0->W1, 1->W2,2->W1^2,3->W1W2,4->W2^2,7->Log Lik, 5/6,-1 ->test case
 };
 
 typedef struct Param Param;

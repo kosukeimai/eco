@@ -1,5 +1,5 @@
 /******************************************************************
-  This file is a part of eco: R Package for Fitting Bayesian Models 
+  This file is a part of eco: R Package for Fitting Bayesian Models
   of Ecological Inference for 2x2 Tables
   by Kosuke Imai and Ying Lu
   Copyright: GPL version 2 or later.
@@ -10,7 +10,7 @@
 #include <string.h>
 #include <math.h>
 #include <R_ext/Utils.h>
-#include <R.h> 
+#include <R.h>
 #include "vector.h"
 #include "rand.h"
 
@@ -22,7 +22,7 @@ void SWP(
 {
   int i,j;
 
-  if (X[k][k] < 10e-20) 
+  if (X[k][k] < 10e-20)
     error("SWP: singular matrix.\n");
   else
     X[k][k]=-1/X[k][k];
@@ -35,7 +35,7 @@ void SWP(
     for(j=0;j<size;j++)
       if(i!=k && j!=k)
 	X[i][j]=X[i][j]+X[i][k]*X[k][j]/X[k][k];
-  
+
 }
 
 
@@ -47,8 +47,8 @@ void dinv(double **X,
   int i,j, k, errorM;
   double *pdInv = doubleArray(size*size);
 
-  for (i = 0, j = 0; j < size; j++) 
-    for (k = 0; k <= j; k++) 
+  for (i = 0, j = 0; j < size; j++)
+    for (k = 0; k <= j; k++)
       pdInv[i++] = X[k][j];
   F77_CALL(dpptrf)("U", &size, pdInv, &errorM);
   if (!errorM) {
@@ -69,7 +69,7 @@ void dinv(double **X,
     }
   }
 
-  free(pdInv);
+  Free(pdInv);
 }
 
 
@@ -80,8 +80,8 @@ void dcholdc(double **X, int size, double **L)
   int i, j, k, errorM;
   double *pdTemp = doubleArray(size*size);
 
-  for (j = 0, i = 0; j < size; j++) 
-    for (k = 0; k <= j; k++) 
+  for (j = 0, i = 0; j < size; j++)
+    for (k = 0; k <= j; k++)
       pdTemp[i++] = X[k][j];
   F77_CALL(dpptrf)("U", &size, pdTemp, &errorM);
   if (errorM) {
@@ -97,8 +97,8 @@ void dcholdc(double **X, int size, double **L)
     }
   }
 
-  free(pdTemp);
-} 
+  Free(pdTemp);
+}
 
 /* calculate the determinant of the positive definite symmetric matrix
    using the Cholesky decomposition  */
@@ -107,7 +107,7 @@ double ddet(double **X, int size, int give_log)
   int i;
   double logdet=0.0;
   double **pdTemp = doubleMatrix(size, size);
-  
+
   dcholdc(X, size, pdTemp);
   for(i = 0; i < size; i++)
     logdet += log(pdTemp[i][i]);
