@@ -66,8 +66,9 @@ void cEMeco(
 
 	    /* storage */
 	    double *pdTheta,  /*EM result for Theta^(t+1) */
-	    double *Suff      /*out put suffucient statistics (E(W_1i|Y_i),
+	    double *Suff,      /*out put suffucient statistics (E(W_1i|Y_i),
 				E(E_1i*W_1i|Y_i..) when  conveges */
+      double *inSample /* In Sample info */
 	    ){
 
   int n_samp  = *pin_samp;    /* sample size */
@@ -151,6 +152,10 @@ while (main_loop<=*iteration_max && (start==1 || !closeEnough(pdTheta,pdTheta_ol
 
 Rprintf("End loop PDT:%5g %5g %5g %5g %5g\n",pdTheta[0],pdTheta[1],pdTheta[2],pdTheta[3],pdTheta[4]);
 
+for(i=0;i<t_samp;i++)
+ for(j=0;j<2;j++)
+   inSample[i*2+j]=params[i].W[j];
+
 /* write out the random seed */
 PutRNGstate();
 
@@ -177,7 +182,7 @@ FreeMatrix(InvSigma,n_dim);
 void ecoEStep(Param* params, int n_samp, int s_samp, int x1_samp, int x0_samp, double* suff, int verbose) {
 
 int t_samp,i,j,temp0,temp1, loglik;
-double testll,testw1,testw2,testdens;
+double testll,testdens;
 Param param;
 
 loglik=1;
@@ -189,13 +194,15 @@ testll=0;
   for (i = 0; i<n_samp; i++) {
     param = params[i];
     if (param.Y>=.9999 || param.Y<=.0001) { //if Y is near the edge, then W1 and W2 are very constrained
-      Wstar[i][0]=param.Y;
-      Wstar[i][1]=param.Y;
+      Wstar[i][0]=logit(param.Y,"Y maxmin W1");
+      Wstar[i][1]=logit(param.Y,"Y maxmin W2");
       Wstar[i][2]=Wstar[i][0]*Wstar[i][0];
       Wstar[i][3]=Wstar[i][0]*Wstar[i][1];
       Wstar[i][4]=Wstar[i][1]*Wstar[i][1];
-      params[i].W[0]=Wstar[i][0];
-      params[i].W[1]=Wstar[i][1];
+      params[i].Wstar[0]=Wstar[i][0];
+      params[i].Wstar[1]=Wstar[i][1];
+      params[i].W[0]=param.Y;
+      params[i].W[1]=param.Y;
     }
     else {
       setBounds((Param*)&param);
@@ -205,12 +212,12 @@ testll=0;
         param.suff=j;
         Wstar[i][j]=paramIntegration(&SuffExp,(void *)&param);
         if (j<2)
-          params[i].W[j]=Wstar[i][j];
+          params[i].Wstar[j]=Wstar[i][j];
       }
       param.suff=5;
-      testw1=paramIntegration(&SuffExp,(void *)&param);;
+      params[i].W[0]=paramIntegration(&SuffExp,(void *)&param);;
       param.suff=6;
-      testw2=paramIntegration(&SuffExp,(void *)&param);;
+      params[i].W[1]=paramIntegration(&SuffExp,(void *)&param);;
       param.suff=-1;
       testdens=paramIntegration(&SuffExp,(void *)&param);;
       if (loglik) {
@@ -219,20 +226,20 @@ testll=0;
       }
 
    //report error E1 if E[W1],E[W2] is not on the tomography line
-  if (fabs(testw1-getW1FromW2(param.X, param.Y,testw2))>0.01)
+  if (fabs(params[i].W[0]-getW1FromW2(param.X, param.Y,params[i].W[1]))>0.01)
     Rprintf("E1 %d %5g %5g %5g %5g %5g %5g %5g %5g \n", i, param.X, param.Y, param.normcT, Wstar[i][0],Wstar[i][1],Wstar[i][2],Wstar[i][3],Wstar[i][4]);
   //report error E2 if Jensen's inequality doesn't hold
   if (Wstar[i][4]<pow(Wstar[i][1],2) || Wstar[i][2]<pow(Wstar[i][0],2))
      Rprintf("E2 %d %5g %5g %5g %5g %5g %5g %5g %5g\n", i, param.X, param.Y, param.normcT, Wstar[i][0],Wstar[i][1],Wstar[i][2],Wstar[i][3],Wstar[i][4]);
   //used for debugging if necessary
   if (verbose>=2 && i<20)
-     Rprintf("%d %4g %4g %4g %4g %4g %4g %4g %4g %4g %4g\n", i, param.X, param.Y, param.normcT, testdens, testw1,testw2,params[i].W[0],params[i].W[1],Wstar[i][2],Wstar[i][3],Wstar[i][4]);
+     Rprintf("%d %4g %4g %4g %4g %4g %4g %4g %4g\n", i, param.X, param.Y, param.normcT, testdens, params[i].W[0],params[i].W[1],Wstar[i][2],Wstar[i][3],Wstar[i][4]);
     }
   }
 
     /* analytically compute E{W2_i|Y_i} given W1_i, mu and Sigma in x1 homeogeneous areas */
     for (i=n_samp; i<n_samp+x1_samp; i++) {
-      temp0=log(params[i].W[0])-log(1-params[i].W[0]);
+      temp0=params[i].Wstar[0];
       temp1=params[i].mu[1]+params[i].Sigma[0][1]/params[i].Sigma[0][0]*(temp0-params[i].mu[0]);
       Wstar[i][0]=temp0;
       Wstar[i][1]=temp1;
@@ -243,7 +250,7 @@ testll=0;
 
   /*analytically compute E{W1_i|Y_i} given W2_i, mu and Sigma in x0 homeogeneous areas */
     for (i=n_samp+x1_samp; i<n_samp+x1_samp+x0_samp; i++) {
-      temp1=log(params[i].W[1])-log(1-params[i].W[1]);
+      temp1=params[i].Wstar[1];
       temp0=params[i].mu[0]+params[i].Sigma[0][1]/params[i].Sigma[1][1]*(temp1-params[i].mu[1]);
       Wstar[i][0]=temp0;
       Wstar[i][1]=temp1;
@@ -254,8 +261,8 @@ testll=0;
 
     /* Use the values given by the survey data */
     for (i=n_samp+x1_samp+x0_samp; i<n_samp+x1_samp+x0_samp+s_samp; i++) {
-      Wstar[i][0]=log(params[i].W[0])-log(1-params[i].W[0]);
-      Wstar[i][1]=log(params[i].W[1])-log(1-params[i].W[1]);
+      Wstar[i][0]=params[i].Wstar[0];
+      Wstar[i][1]=params[i].Wstar[1];
       Wstar[i][2]=Wstar[i][0]*Wstar[i][0];
       Wstar[i][3]=Wstar[i][0]*Wstar[i][1];
       Wstar[i][4]=Wstar[i][1]*Wstar[i][1];
@@ -338,16 +345,10 @@ void ecoMStepNCAR(double* Suff, double* pdTheta,  double** Sigma, double** InvSi
     double lx= logit(params[i].X,ebuffer);
     mu3 += lx;
     mu3sq += lx*lx;
-    if (i>=n_samp) {
-      sprintf(ebuffer, "mstep W1 %i", i);
-      XW1 += logit(params[i].W[0],ebuffer)*lx;
-      sprintf(ebuffer, "mstep W2 %i", i);
-      XW2 += logit(params[i].W[1],ebuffer)*lx;
-    }
-    else {
-      XW1 += params[i].W[0]*lx;
-      XW2 += params[i].W[1]*lx;
-    }
+    XW1 += params[i].Wstar[0]*lx;
+    XW2 += params[i].Wstar[1]*lx;
+    //XW1 += logit(params[i].W[0],"t1")*lx;
+    //XW2 += logit(params[i].W[1],"t2")*lx;
   }
   mu3 = mu3/t_samp; mu3sq = mu3sq/t_samp;
   XW1 = XW1/t_samp; XW2 = XW2/t_samp;
@@ -427,11 +428,15 @@ double dtemp;
       }
 
   /*read homeogenous areas information */
-    for (i=n_samp; i<n_samp+x1_samp; i++)
+    for (i=n_samp; i<n_samp+x1_samp; i++) {
       params[i].W[0]=(x1_W1[i] == 1) ? .9999 : ((x1_W1[i]==0) ? .0001 : x1_W1[i]);
+      params[i].Wstar[0]=logit(params[i].W[0],"X1 read");
+    }
 
-    for (i=0; i<x0_samp; i++)
+    for (i=n_samp+x1_samp; i<n_samp+x1_samp+x0_samp; i++) {
       params[i].W[1]=(x0_W2[i] == 1) ? .9999 : ((x0_W2[i]==0) ? .0001 : x0_W2[i]);
+      params[i].Wstar[1]=logit(params[i].W[1],"X0 read");
+    }
 
 
   /*read the survey data */
@@ -440,6 +445,7 @@ double dtemp;
       for (i=n_samp+x1_samp+x0_samp; i<n_samp+x1_samp+x0_samp+s_samp; i++) {
         dtemp=sur_W[itemp++];
         params[i].W[j]=(dtemp == 1) ? .9999 : ((dtemp==0) ? .0001 : dtemp);
+        params[i].Wstar[j]=logit(params[i].W[j],"Survey read");
       }
  }
 

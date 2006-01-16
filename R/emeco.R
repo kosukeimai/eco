@@ -58,57 +58,26 @@ eco.em <- function(formula, data = parent.frame(),supplement=NULL,
   em.converge<-FALSE
   i<-1
   draw <- 1
+  n<-tmp$n.samp+tmp$survey.samp+tmp$samp.X1+tmp$samp.X0
+  inSample.length<-ndim*n
   
-  while ((!em.converge) && (i<=iteration.max) && i<=1) {
     res <- .C("cEMeco", as.double(tmp$d), as.double(theta.old),
-              as.integer(tmp$n.samp),  as.integer(iteration.max), as.double(convergence),
-              as.integer(tmp$survey.yes), as.integer(tmp$survey.samp), 
-          as.double(tmp$survey.data),
-              as.integer(tmp$X1type), as.integer(tmp$samp.X1), as.double(tmp$X1.W1),
-              as.integer(tmp$X0type), as.integer(tmp$samp.X0), as.double(tmp$X0.W2),
-          as.double(bdd$Wmin[,1,1]), as.double(bdd$Wmax[,1,1]),
-          as.integer(flag),as.integer(verbose),
-              pdTheta=double(n.var), S=double(n.var+1),
-              PACKAGE="eco")
+                as.integer(tmp$n.samp),  as.integer(iteration.max), as.double(convergence),
+                as.integer(tmp$survey.yes), as.integer(tmp$survey.samp), 
+            as.double(tmp$survey.data),
+                as.integer(tmp$X1type), as.integer(tmp$samp.X1), as.double(tmp$X1.W1),
+                as.integer(tmp$X0type), as.integer(tmp$samp.X0), as.double(tmp$X0.W2),
+            as.double(bdd$Wmin[,1,1]), as.double(bdd$Wmax[,1,1]),
+            as.integer(flag),as.integer(verbose),
+                pdTheta=double(n.var), S=double(n.var+1),inSample=double(inSample.length),
+                PACKAGE="eco")
     
-    temp<-res$pdTheta
-    em.converge<-TRUE
-    
-    if (printon) {
-      cat(i, " ")
-      if (Fisher)
-        cat(fisher(temp), "\n")
-      else
-        cat(temp, "\n") 
-    }
-    
-    if (i>1) {
-        if (!Fisher) {
-            for (j in 1:5) {   
-                if (abs(temp[j]-theta.old[j]) > convergence) em.converge<-FALSE
-            }
-        }
-    
-        if (Fisher) {
-            for (j in 1:5) {   
-                if (abs(fisher(temp)[j]-fisher(theta.old)[j])>convergence) em.converge<-FALSE
-            }
-        }
-    }
-    if (i<=1) {
-      em.converge<-FALSE
-    }
-    theta.old<-temp
-    
-    i<-i+1
-    if (em.converge && (draw < draw.max)) {
-      em.converge <- FALSE
-      draw <- draw.max
-      print("hi\n")
-    }
-    #if (draw<=draw.max) draw<-draw+by.draw
-  }
-  
+    inSample.out<-matrix(rep(NA,inSample.length),ncol=ndim)
+    for(i in 1:n)
+        for(j in 1:ndim)
+        inSample.out[i,j]=res$inSample[(i-1)*2+j]
+
+ 
   Ioc<-matrix(NA, n.var, n.var)
   
   if (em.converge && Ioc.yes) {
@@ -138,7 +107,6 @@ eco.em <- function(formula, data = parent.frame(),supplement=NULL,
     v2<-res$pdTheta[4]
     r<-res$pdTheta[5]
     
-    n<-tmp$n.samp+tmp$survey.samp+tmp$samp.X1+tmp$samp.X0
     
     Ioc[1,1]<- -n/((1-r^2)*v1)
     Ioc[1,2]<- Ioc[2,1] <- n*r/((1-r^2)*sqrt(v1*v2))
@@ -200,29 +168,33 @@ eco.em <- function(formula, data = parent.frame(),supplement=NULL,
   cat("\n")
   cat("Estimates based on EM", "\n")
   cat("Mean:", "\n")
-  print(theta.old[1:2])
+  print(res$pdTheta[1:2])
   cat("\n")
   cat("Covarianace Matrix:", "\n")
-  print(thetacov(theta.old))
+  print(thetacov(res$pdTheta))
+#  cat("\n")
+#  cat("W1,W2 at 1:", "\n")
+#  print(inSample.out[1,])
   
   if (Fisher) {
     cat("Fisher transformtion:", "\n")
     print(fisher(theta.old))
   }
 
-  if (!Ioc.yes) {
-    res.out<-list(theta=theta.old)
-  }
-  else if (Ioc.yes) {
-    if (Fisher) cat("Ioc matrix at Fisher transformation scale:", "\n")
-    else cat("Ioc matrix:", "\n")
-    print(Ioc)
-    
-    res.out<-list(theta=theta.old, Ioc=Ioc)
-  }
-  class(res.out) <- "eco"
-  return(res.out)
-  
+#  if (!Ioc.yes) {
+#    res.out<-list(theta=theta.old)
+#  }
+#  else if (Ioc.yes) {
+#    if (Fisher) cat("Ioc matrix at Fisher transformation scale:", "\n")
+#    else cat("Ioc matrix:", "\n")
+#    print(Ioc)
+#    
+#    res.out<-list(theta=theta.old, Ioc=Ioc)
+#  }
+#  class(res.out) <- "eco"
+#  return(res.out)
+res$inSample<-inSample.out
+return(res)
 }
 
 
@@ -335,7 +307,6 @@ eco.sem<-function(formula, data = parent.frame(),supplement=NULL,
   cat("\n")
   cat("Covarianace Matrix:", "\n")
   print(thetacov(theta.em))
-  
 
 
   
