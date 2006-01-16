@@ -24,8 +24,8 @@
 void readData(Param* params, int n_dim, double* pdX, double* sur_W, double* x1_W1, double* x0_W2,
                 int n_samp, int s_samp, int x1_samp, int x0_samp, int verbose);
 void ecoEStep(Param* params, int n_samp, int s_samp, int x1_samp, int x0_samp, double* suff, int verbose);
-void ecoMStep(double* Suff, double* pdTheta, double** Sigma, double** InvSigma, Param* params, int t_samp, int verbose);
-void ecoMStepNCAR(double* Suff, double* pdTheta, double** Sigma, double** InvSigma, Param* params, int t_samp, int verbose);
+void ecoMStep(double* Suff, double* pdTheta, double** Sigma, double** InvSigma, Param* params, int t_samp, int fixedRho, int verbose);
+void ecoMStepNCAR(double* Suff, double* pdTheta, double** Sigma, double** InvSigma, Param* params, int t_samp, int n_samp, int fixedRho, int verbose);
 int closeEnough(double* pdTheta, double* pdTheta_old, double maxerr);
 void gridEStep(Param* params, int n_samp, int s_samp, int x1_samp, int x0_samp, double* suff, int verbose, double minW1, double maxW1);
 
@@ -38,7 +38,7 @@ void cEMeco(
 
 	    /* loop vairables */
 	    int *iteration_max,          /* number of maximum interations */
-	    int *convergence,          /* abs value limit before stopping */
+	    double *convergence,          /* abs value limit before stopping */
 
 	    /*incorporating survey data */
 	    int *survey,         /*1 if survey data available(W_1, W_2)
@@ -60,8 +60,9 @@ void cEMeco(
 	    /* bounds of W1 */
 	    double *minW1, double *maxW1,
 
-	    /* flags */
-	    int *flag,    /*1 if NCAR 0 otherwise */
+	    /* options */
+	    int *flag,    /*0th (rightmost) bit: 1 = NCAR, 0=normal; 1st bit: 1 = fixed rho, 0 = not fixed rho*/
+	    int *verbosiosity,    /*How much to print out, 0=silent, 1=cycle, 2=data*/
 
 	    /* storage */
 	    double *pdTheta,  /*EM result for Theta^(t+1) */
@@ -75,7 +76,7 @@ void cEMeco(
   int x0_samp = *x0 ? *sampx0 : 0;       /* sample size for X=0 */
   int t_samp=n_samp+s_samp+x1_samp+x0_samp;  /* total sample size*/
   int n_dim=2;        /* dimensions */
-  int verbose=1;         /* one to print cycles, two to print the data */
+  int verbose=*verbosiosity;
 
   /* model parameters */
   double **Sigma=doubleMatrix(n_dim,n_dim);/* inverse covariance matrix*/
@@ -84,8 +85,7 @@ void cEMeco(
   double *pdTheta_old=doubleArray(5);
 
   /* misc variables */
-  int i, j,k,main_loop, start;   /* used for various loops */
-  double rho;
+  int i, j,k,main_loop, start, fixedRho, ncar;   /* used for various loops */
 
   /* get random seed */
   GetRNGstate();
@@ -94,9 +94,13 @@ void cEMeco(
   Param* params=(Param*) R_alloc(t_samp,sizeof(Param));
   readData(params, n_dim, pdX, sur_W, x1_W1, x0_W2, n_samp, s_samp, x1_samp, x0_samp, verbose);
 
+  //set options
+  ncar=bit(*flag,0);
+  fixedRho=bit(*flag,1);
+  Rprintf("OPTIONS (flag: %d)   Ncar: %s Fixed Rho: %s\n",*flag,ncar==1 ? "Yes" : "No",fixedRho==1 ? "Yes" : "No");
+
 /***Begin main loop ***/
 main_loop=1;start=1;
-Rprintf("Begin %sNCAR loop:%5g %5g %5g %5g %5g\n",(*flag==0) ? "non-" : "",pdTheta_in[0],pdTheta_in[1],pdTheta_in[2],pdTheta_in[3],pdTheta_in[4]);
 while (main_loop<=*iteration_max && (start==1 || !closeEnough(pdTheta,pdTheta_old,*convergence))) {
 
   if (start) {
@@ -117,18 +121,20 @@ while (main_loop<=*iteration_max && (start==1 || !closeEnough(pdTheta,pdTheta_ol
     }
     start=0;
   }
+
+  if (verbose>=1)
+    Rprintf("cycle %d/%d: %5g %5g %5g %5g rho: %5g %5g\n",main_loop,*iteration_max,pdTheta[0],pdTheta[1],pdTheta[2],pdTheta[3],pdTheta[4],*convergence);
   //keep the old theta around for comaprison
   for(i=0;i<5;i++) pdTheta_old[i]=pdTheta[i];
 
 
-  rho=Sigma[1][0]/sqrt(Sigma[0][0]*Sigma[1][1]);
-  Rprintf("cycle %d/%d: %5g %5g %5g %5g %5g rho: %5g\n",main_loop,*iteration_max,pdTheta[0],pdTheta[1],Sigma[0][0],Sigma[1][1],Sigma[1][0],rho);
+
 
   ecoEStep(params, n_samp, s_samp, x1_samp, x0_samp, Suff,verbose);
-  if (*flag==0)
-    ecoMStep(Suff,pdTheta,Sigma,InvSigma,params,t_samp,verbose);
+  if (!ncar)
+    ecoMStep(Suff,pdTheta,Sigma,InvSigma,params,t_samp,fixedRho,verbose);
   else
-    ecoMStepNCAR(Suff,pdTheta,Sigma,InvSigma,params,t_samp,verbose);
+    ecoMStepNCAR(Suff,pdTheta,Sigma,InvSigma,params,t_samp,n_samp,fixedRho,verbose);
   //char ch;
   //scanf(" %c", &ch );
 
@@ -165,13 +171,13 @@ FreeMatrix(InvSigma,n_dim);
  * suff[2]=E[W1*^2]
  * suff[3]=E[W1*W2*]
  * suff[4]=E[W2*^2]
-
+ * suff[5]=log liklihood
  */
 
 void ecoEStep(Param* params, int n_samp, int s_samp, int x1_samp, int x0_samp, double* suff, int verbose) {
 
 int t_samp,i,j,temp0,temp1, loglik;
-double testw1, testw2,testll;
+double testll,testw1,testw2,testdens;
 Param param;
 
 loglik=1;
@@ -188,8 +194,8 @@ testll=0;
       Wstar[i][2]=Wstar[i][0]*Wstar[i][0];
       Wstar[i][3]=Wstar[i][0]*Wstar[i][1];
       Wstar[i][4]=Wstar[i][1]*Wstar[i][1];
-      params[i].W[0]=invLogit(Wstar[i][0]);
-      params[i].W[1]=invLogit(Wstar[i][1]);
+      params[i].W[0]=Wstar[i][0];
+      params[i].W[1]=Wstar[i][1];
     }
     else {
       setBounds((Param*)&param);
@@ -198,13 +204,15 @@ testll=0;
       for (j=0;j<5;j++) {
         param.suff=j;
         Wstar[i][j]=paramIntegration(&SuffExp,(void *)&param);
-        if (j<2) //store the current W1 and W2
-          params[i].W[j]=invLogit(Wstar[i][j]);
+        if (j<2)
+          params[i].W[j]=Wstar[i][j];
       }
       param.suff=5;
-      testw1=paramIntegration(&SuffExp,(void *)&param);
+      testw1=paramIntegration(&SuffExp,(void *)&param);;
       param.suff=6;
-      testw2=paramIntegration(&SuffExp,(void *)&param);
+      testw2=paramIntegration(&SuffExp,(void *)&param);;
+      param.suff=-1;
+      testdens=paramIntegration(&SuffExp,(void *)&param);;
       if (loglik) {
         param.suff=7;
         testll+=paramIntegration(&SuffExp,(void *)&param);
@@ -218,7 +226,7 @@ testll=0;
      Rprintf("E2 %d %5g %5g %5g %5g %5g %5g %5g %5g\n", i, param.X, param.Y, param.normcT, Wstar[i][0],Wstar[i][1],Wstar[i][2],Wstar[i][3],Wstar[i][4]);
   //used for debugging if necessary
   if (verbose>=2 && i<20)
-     Rprintf("%d %4g %4g %4g %4g %4g %4g %4g %4g %4g %4g\n", i, param.X, param.Y, param.normcT, Wstar[i][0],Wstar[i][1],testw1,testw2,Wstar[i][2],Wstar[i][3],Wstar[i][4]);
+     Rprintf("%d %4g %4g %4g %4g %4g %4g %4g %4g %4g %4g\n", i, param.X, param.Y, param.normcT, testdens, testw1,testw2,params[i].W[0],params[i].W[1],Wstar[i][2],Wstar[i][3],Wstar[i][4]);
     }
   }
 
@@ -272,23 +280,26 @@ testll=0;
 
     if (loglik)
       if(verbose>=1) Rprintf("Log liklihood %15g\n",testll);
+    suff[5]=testll;
 
 FreeMatrix(Wstar,t_samp);
 
 }
 
 //Standard M-Step
-void ecoMStep(double* Suff, double* pdTheta, double** Sigma, double** InvSigma, Param* params, int t_samp, int verbose) {
+void ecoMStep(double* Suff, double* pdTheta, double** Sigma, double** InvSigma, Param* params, int t_samp, int fixedRho, int verbose) {
 
 int i,j,k;
+
 
   pdTheta[0]=Suff[0];  /*mu1*/
   pdTheta[1]=Suff[1];  /*mu2*/
   pdTheta[2]=Suff[2]-2*Suff[0]*pdTheta[0]+pdTheta[0]*pdTheta[0];  /*sigma11*/
   pdTheta[3]=Suff[3]-2*Suff[1]*pdTheta[1]+pdTheta[1]*pdTheta[1];  /*sigma22*/
-  pdTheta[4]=Suff[4]-Suff[0]*pdTheta[1]-Suff[1]*pdTheta[0]+pdTheta[0]*pdTheta[1]; /*sigma12*/
-  pdTheta[4]=pdTheta[4]/sqrt(pdTheta[2]*pdTheta[3]); /*rho*/
-
+  if (!fixedRho) {
+    pdTheta[4]=Suff[4]-Suff[0]*pdTheta[1]-Suff[1]*pdTheta[0]+pdTheta[0]*pdTheta[1]; /*sigma12*/
+    pdTheta[4]=pdTheta[4]/sqrt(pdTheta[2]*pdTheta[3]); /*rho*/
+  }
 
     //set Sigma
   Sigma[0][0] = pdTheta[2];
@@ -314,7 +325,7 @@ int i,j,k;
 
 //M-Step under NCAR
 //NEEDS WORK
-void ecoMStepNCAR(double* Suff, double* pdTheta,  double** Sigma, double** InvSigma, Param* params, int t_samp, int verbose) {
+void ecoMStepNCAR(double* Suff, double* pdTheta,  double** Sigma, double** InvSigma, Param* params, int t_samp, int n_samp, int fixedRho, int verbose) {
 
   double **Sigma3=doubleMatrix(3,3);   /* covariance matrix*/
   int i,j,k;
@@ -327,10 +338,16 @@ void ecoMStepNCAR(double* Suff, double* pdTheta,  double** Sigma, double** InvSi
     double lx= logit(params[i].X,ebuffer);
     mu3 += lx;
     mu3sq += lx*lx;
-    sprintf(ebuffer, "mstep W1 %i", i);
-    XW1 += logit(params[i].W[0],ebuffer)*lx;
-    sprintf(ebuffer, "mstep W2 %i", i);
-    XW2 += logit(params[i].W[1],ebuffer)*lx;
+    if (i>=n_samp) {
+      sprintf(ebuffer, "mstep W1 %i", i);
+      XW1 += logit(params[i].W[0],ebuffer)*lx;
+      sprintf(ebuffer, "mstep W2 %i", i);
+      XW2 += logit(params[i].W[1],ebuffer)*lx;
+    }
+    else {
+      XW1 += params[i].W[0]*lx;
+      XW2 += params[i].W[1]*lx;
+    }
   }
   mu3 = mu3/t_samp; mu3sq = mu3sq/t_samp;
   XW1 = XW1/t_samp; XW2 = XW2/t_samp;
@@ -352,14 +369,19 @@ void ecoMStepNCAR(double* Suff, double* pdTheta,  double** Sigma, double** InvSi
 
   Sigma[0][0]= Sigma3[0][0] - Sigma3[0][2]*Sigma3[0][2]/Sigma3[2][2];
   Sigma[0][1]= Sigma3[0][1] - Sigma3[0][2]*Sigma3[1][2]/Sigma3[2][2];
-  Sigma[1][0]= Sigma3[1][0] - Sigma3[0][2]*Sigma3[1][2]/Sigma3[2][2];
+  Sigma[1][0]= Sigma[0][1];
   Sigma[1][1]= Sigma3[1][1] - Sigma3[1][2]*Sigma3[1][2]/Sigma3[2][2];
-
-  dinv(Sigma, 2, InvSigma);
 
   pdTheta[2]=Sigma[0][0];
   pdTheta[3]=Sigma[1][1];
-  pdTheta[4]=Sigma[1][0]/(sqrt(Sigma[0][0]*Sigma[1][1]));
+  if (!fixedRho)
+    pdTheta[4]=Sigma[1][0]/(sqrt(Sigma[0][0]*Sigma[1][1]));
+  else {
+    Sigma[0][1] = pdTheta[4]*sqrt(pdTheta[2]*pdTheta[3]);
+    Sigma[1][0]= Sigma[0][1];
+  }
+
+  dinv(Sigma, 2, InvSigma);
 
   /* assign each data point the new mu and sigma */
   for(i=0;i<t_samp;i++) {
@@ -400,7 +422,7 @@ double dtemp;
 
   if (verbose>=2) {
     printf("Y X\n");
-    for(i=0;i<n_samp;i++)
+    for(i=0;i<10;i++)
       Rprintf("%5d%14g%14g\n",i,params[i].Y,params[i].X);
       }
 

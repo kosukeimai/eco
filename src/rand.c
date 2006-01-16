@@ -246,3 +246,8 @@ double dBVNtomo(double *Wstar,  /* Wstar values */
       }
       return log(x/(1-x));
     }
+
+    int bit(int t, int n) {
+     t=t>>n;
+     return (t % 2);
+    }
