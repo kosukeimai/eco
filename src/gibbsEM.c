@@ -222,7 +222,7 @@ testll=0;
       testdens=paramIntegration(&SuffExp,(void *)&param);;
       if (loglik) {
         param.suff=7;
-        testll+=paramIntegration(&SuffExp,(void *)&param);
+        testll+=log(paramIntegration(&SuffExp,(void *)&param));
       }
 
    //report error E1 if E[W1],E[W2] is not on the tomography line

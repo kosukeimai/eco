@@ -142,7 +142,7 @@ void SuffExp(double *t, int n, void *param)
           else if (suff==6) t[ii]=invLogit(W2[ii])*t[ii];
           else if (suff==7) {
             //t[ii]=dMVN(vtemp,mu,InvSigma,2,1)*t[ii];
-            t[ii]=dMVN(vtemp,mu,InvSigma,2,1)*pfact;
+            t[ii]=dMVN(vtemp,mu,InvSigma,2,0)*pfact;
           }
           else if (suff!=-1) Rprintf("Error Suff= %d",suff);
         }
