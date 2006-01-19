@@ -146,6 +146,8 @@ while (main_loop<=*iteration_max && (start==1 || !closeEnough(pdTheta,pdTheta_ol
     Rprintf("%10g%10g%10g%10g%10g\n",Suff[0],Suff[1],Suff[2],Suff[3],Suff[4]);
   }
   main_loop++;
+  R_FlushConsole();
+  R_CheckUserInterrupt();
 }
 
 /***End main loop ***/
