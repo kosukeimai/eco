@@ -6,10 +6,13 @@
 /** structrues **/
 /****************/
 /* parameters and observed data */
-struct Param{
+struct Param_old{
   double mu[2];
   double Sigma[2][2];
   double InvSigma[2][2];
+  double Sigma3[3][3];
+  double InvSigma3[3][3];
+  int NCAR;
   double data[2]; //collect the data
   double X; //X,Y here for ease of use
   double Y;
@@ -23,6 +26,38 @@ struct Param{
   int W1_inf; //inf: 0->(lb,ub), -1->(-inf,ub), 1->(lb,inf), 2->(-inf,inf)
   int W2_inf;
   int suff; //the sufficient stat we're calculating: 0->W1, 1->W2,2->W1^2,3->W1W2,4->W2^2,7->Log Lik, 5/6,-1 ->test case
+};
+
+typedef struct Param_old Param_old;
+
+struct caseParam {
+  double mu[2];
+  double data[2]; //collect the data
+  double X; //X,Y here for ease of use
+  double Y;
+  double normcT; //normalized const on tomog line (integrating with parameterization)
+  double W[2]; //if W is known, also handy place to store E[W1] when we calculate it each step
+  double Wstar[2]; //place to store E[W1*] when we calculate it each step
+  double Wbounds[2][2];  //[i][j] is {j:lower,upper}-bound of W{i+1}
+  int suff; //the sufficient stat we're calculating: 0->W1, 1->W2,2->W1^2,3->W1W2,4->W2^2,7->Log Lik, 5/6,-1 ->test case
+};
+
+typedef struct caseParam caseParam;
+
+struct setParam {
+  int n_samp, t_samp, s_samp,x1_samp,x0_samp; //types of data sizes
+  int ncar, fixedRho, sem, verbose; //options
+  double Sigma[2][2];
+  double InvSigma[2][2];
+  double Sigma3[3][3];
+  double InvSigma3[3][3];
+};
+
+typedef struct setParam setParam;
+
+struct Param {
+  setParam* setP; //pointer to the singleton structure
+  caseParam caseP;
 };
 
 typedef struct Param Param;

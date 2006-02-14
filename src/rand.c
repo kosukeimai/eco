@@ -203,12 +203,12 @@ double dBVNtomo(double *Wstar,  /* Wstar values */
   double rho, dtemp;
 
     Param *param=(Param *)pp;
-    MEAN[0]=param->mu[0];
-    MEAN[1]=param->mu[1];
-    SIGMA[0][0]=param->Sigma[0][0];
-    SIGMA[1][1]=param->Sigma[1][1];
-    SIGMA[0][1]=param->Sigma[0][1];
-    SIGMA[1][0]=param->Sigma[1][0];
+    MEAN[0]=param->caseP.mu[0];
+    MEAN[1]=param->caseP.mu[1];
+    SIGMA[0][0]=param->setP->Sigma[0][0];
+    SIGMA[1][1]=param->setP->Sigma[1][1];
+    SIGMA[0][1]=param->setP->Sigma[0][1];
+    SIGMA[1][0]=param->setP->Sigma[1][0];
 
 
     rho=SIGMA[0][1]/sqrt(SIGMA[0][0]*SIGMA[1][1]);

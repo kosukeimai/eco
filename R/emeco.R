@@ -69,7 +69,7 @@ eco.em <- function(formula, data = parent.frame(),supplement=NULL,
                 as.integer(tmp$X0type), as.integer(tmp$samp.X0), as.double(tmp$X0.W2),
             as.double(bdd$Wmin[,1,1]), as.double(bdd$Wmax[,1,1]),
             as.integer(flag),as.integer(verbose),
-                pdTheta=double(n.var), S=double(n.var+1),inSample=double(inSample.length),
+                optTheta=double(n.var), pdTheta=double(n.var), S=double(n.var+1),inSample=double(inSample.length),
                 PACKAGE="eco")
     
     inSample.out<-matrix(rep(NA,inSample.length),ncol=ndim)

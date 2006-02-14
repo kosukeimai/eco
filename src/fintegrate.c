@@ -42,15 +42,15 @@ void NormConstT(double *t, int n, void *param)
   W2p = doubleArray(n);
 
   Param *pp=(Param *)param;
-  mu[0]=pp->mu[0];
-  mu[1]=pp->mu[1];
-  Sigma[0][0]=pp->Sigma[0][0];
-  Sigma[1][1]=pp->Sigma[1][1];
-  Sigma[0][1]=pp->Sigma[0][1];
-  Sigma[1][0]=pp->Sigma[1][0];
+  mu[0]= pp->caseP.mu[0];
+  mu[1]= pp->caseP.mu[1];
+  Sigma[0][0]=pp->setP->Sigma[0][0];
+  Sigma[1][1]=pp->setP->Sigma[1][1];
+  Sigma[0][1]=pp->setP->Sigma[0][1];
+  Sigma[1][0]=pp->setP->Sigma[1][0];
   rho=Sigma[0][1]/sqrt(Sigma[0][0]*Sigma[1][1]);
-  X=pp->X;
-  Y=pp->Y;
+  X=pp->caseP.X;
+  Y=pp->caseP.Y;
   imposs=0;
 
   dtemp=1/(2*M_PI*sqrt(Sigma[0][0]*Sigma[1][1]*(1-rho*rho)));
@@ -90,8 +90,9 @@ void NormConstT(double *t, int n, void *param)
  */
 void SuffExp(double *t, int n, void *param)
 {
-  int ii,imposs,suff;
-  int dim=2;
+  int ii,imposs,suff,i,j;
+  Param *pp=(Param *)param;
+  int dim = (pp->setP->ncar==1) ? 3 : 2;
   double *mu=doubleArray(dim);
   double **Sigma=doubleMatrix(dim,dim);
   double **InvSigma=doubleMatrix(dim,dim);/* inverse covariance matrix*/
@@ -103,19 +104,21 @@ void SuffExp(double *t, int n, void *param)
   W1p = doubleArray(n);
   W2 = doubleArray(n);
   W2p = doubleArray(n);
-  Param *pp=(Param *)param;
-  mu[0]=pp->mu[0];
-  mu[1]=pp->mu[1];
-  Sigma[0][0]=pp->Sigma[0][0];
-  Sigma[1][1]=pp->Sigma[1][1];
-  Sigma[0][1]=pp->Sigma[0][1];
-  Sigma[1][0]=pp->Sigma[1][0];
-  InvSigma[0][0]=pp->InvSigma[0][0];
-  InvSigma[1][1]=pp->InvSigma[1][1];
-  InvSigma[0][1]=pp->InvSigma[0][1];
-  InvSigma[1][0]=pp->InvSigma[1][0];
-  normc=pp->normcT;
-  suff=pp->suff;
+  mu[0]= pp->caseP.mu[0];
+  mu[1]= pp->caseP.mu[1];
+  for(i=0;i<dim;i++)
+    for(j=0;j<dim;j++) {
+      if (dim==3) {
+        Sigma[i][j]=pp->setP->Sigma3[i][j];
+        InvSigma[i][j]=pp->setP->InvSigma3[i][j];
+      }
+      else {
+        Sigma[i][j]=pp->setP->Sigma[i][j];
+        InvSigma[i][j]=pp->setP->InvSigma[i][j];
+      }
+    }
+  normc=pp->caseP.normcT;
+  suff=pp->caseP.suff;
   imposs=0;
 
 
@@ -140,10 +143,7 @@ void SuffExp(double *t, int n, void *param)
           else if (suff==4) t[ii]=W2[ii]*W2[ii]*t[ii];
           else if (suff==5) t[ii]=invLogit(W1[ii])*t[ii];
           else if (suff==6) t[ii]=invLogit(W2[ii])*t[ii];
-          else if (suff==7) {
-            //t[ii]=dMVN(vtemp,mu,InvSigma,2,1)*t[ii];
-            t[ii]=dMVN(vtemp,mu,InvSigma,2,0)*pfact;
-          }
+          else if (suff==7) t[ii]=dMVN(vtemp,mu,InvSigma,dim,0)*pfact;
           else if (suff!=-1) Rprintf("Error Suff= %d",suff);
         }
     }
@@ -151,6 +151,11 @@ void SuffExp(double *t, int n, void *param)
   FreeMatrix(Sigma,dim); FreeMatrix(InvSigma,dim);
 }
 
+//Returns the log likelihood of a particular case
+double getLogLikelihood(Param* param) {
+  param->caseP.suff=7;
+  return log(paramIntegration(&SuffExp,(void*)param));
+}
 
 //Finds W2star, given the equation
 //Y=XW1 + (1-X)W2 and the Wistar=logit(Wi)
@@ -182,7 +187,7 @@ double getW1FromW2(double X, double Y, double W2) {
 //W1star(t)
 //W1(t)=(W1_ub - W1_lb)*t + W1_lb
 double getW1starFromT(double t, Param* param, int* imposs) {
-    double W1=(param->W1_ub - param->W1_lb)*t + param->W1_lb;
+    double W1=(param->caseP.Wbounds[0][1] - param->caseP.Wbounds[0][0])*t + param->caseP.Wbounds[0][0];
     if (W1==1 || W1==0) *imposs=1;
     else W1=log(W1/(1-W1));
     return W1;
@@ -190,22 +195,22 @@ double getW1starFromT(double t, Param* param, int* imposs) {
 //W2star(t)
 //W2(t)=(W2_lb - W2_ub)*t + W2_lb
 double getW2starFromT(double t, Param* param, int* imposs) {
-    double W2=(param->W2_lb - param->W2_ub)*t + param->W2_ub;
+    double W2=(param->caseP.Wbounds[1][0] - param->caseP.Wbounds[1][1])*t + param->caseP.Wbounds[1][1];
     if (W2==1 || W2==0) *imposs=1;
     else W2=log(W2/(1-W2));
     return W2;
 }
 //W1star'(t)
 double getW1starPrimeFromT(double t, Param* param) {
-    double m=(param->W1_ub - param->W1_lb);
-    double W1=m*t + param->W1_lb;
+    double m=(param->caseP.Wbounds[0][1] - param->caseP.Wbounds[0][0]);
+    double W1=m*t + param->caseP.Wbounds[0][0];
     W1=(1/W1)*(m/(1-W1));
     return W1;
 }
 //W2star'(t)
 double getW2starPrimeFromT(double t, Param* param) {
-    double m=(param->W2_lb - param->W2_ub);
-    double W2=m*t + param->W2_ub;
+    double m=(param->caseP.Wbounds[1][0] - param->caseP.Wbounds[1][1]);
+    double W2=m*t + param->caseP.Wbounds[1][1];
     W2=(1/W2)*(m/(1-W2));
     return W2;
 }
@@ -228,7 +233,7 @@ double paramIntegration(integr_fn f, void *ex) {
   if (ier==0) return result;
   else {
     Param* p = (Param*) ex;
-    Rprintf("Integration error %d: X %5g Y %5g [%5g,%5g] -> %5g +- %5g\n",ier,p->X,p->Y,p->W1_lb,p->W1_ub,result,anserr);
+    Rprintf("Integration error %d: X %5g Y %5g [%5g,%5g] -> %5g +- %5g\n",ier,p->caseP.X,p->caseP.Y,p->caseP.Wbounds[0][0],p->caseP.Wbounds[0][1],result,anserr);
     return result;
   }
 
@@ -236,7 +241,7 @@ double paramIntegration(integr_fn f, void *ex) {
 
 /* integrate normalizing constant and set it in param*/
 void setNormConst(Param* param) {
-    param->normcT=paramIntegration(&NormConstT,(void*)param);
+    param->caseP.normcT=paramIntegration(&NormConstT,(void*)param);
 }
 
 
@@ -245,11 +250,11 @@ void setNormConst(Param* param) {
  */
 void setBounds(Param* param) {
   double X,Y,w1_lb,w1_ub,w2_lb,w2_ub;
-  int w1_inf,w2_inf;
+  //int w1_inf,w2_inf;
   double tol0=0.0001;
   double tol1=0.9999;
-  X=param->X;
-  Y=param->Y;
+  X=param->caseP.X;
+  Y=param->caseP.Y;
 
   //find bounds for W1
   w1_ub=(Y-(1-X)*0)/X; //W2=0
@@ -264,6 +269,7 @@ void setBounds(Param* param) {
   if (w2_lb<tol0) w2_lb=0;
 
 
+  /*
   if (w1_lb==0 && w1_ub==1) w1_inf=2;
   else if (w1_lb==0) w1_inf=-1;
   else if (w1_ub==1) w1_inf=1;
@@ -277,12 +283,12 @@ void setBounds(Param* param) {
   else w2_inf=0;
   //w2_lb=log(w2_lb/(1-w2_lb));
   //w2_ub=log(w2_ub/(1-w2_ub));
-
-  param->W1_lb=w1_lb;
-  param->W1_ub=w1_ub;
-  param->W2_lb=w2_lb;
-  param->W2_ub=w2_ub;
-  param->W1_inf=w1_inf;
-  param->W2_inf=w2_inf;
+  */
+  param->caseP.Wbounds[0][0]=w1_lb;
+  param->caseP.Wbounds[0][1]=w1_ub;
+  param->caseP.Wbounds[1][0]=w2_lb;
+  param->caseP.Wbounds[1][1]=w2_ub;
+  //param->W1_inf=w1_inf;
+  //param->W2_inf=w2_inf;
 
 }

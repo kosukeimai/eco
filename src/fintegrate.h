@@ -8,6 +8,7 @@
 
 void NormConstT(double *t, int n, void *param);
 void SuffExp(double *t, int n, void *param);
+double getLogLikelihood(Param* param) ;
 void setNormConst(Param* param);
 double getW2starFromW1star(double X, double Y, double W1, int* imposs);
 double getW1starFromW2star(double X, double Y, double W2, int* imposs);
