@@ -69,8 +69,21 @@ eco.em <- function(formula, data = parent.frame(),supplement=NULL,
                 as.integer(tmp$X0type), as.integer(tmp$samp.X0), as.double(tmp$X0.W2),
             as.double(bdd$Wmin[,1,1]), as.double(bdd$Wmax[,1,1]),
             as.integer(flag),as.integer(verbose),
-                optTheta=double(n.var), pdTheta=double(n.var), S=double(n.var+1),inSample=double(inSample.length),
+                optTheta=c(-1.1,-1.1,-1.1,-1.1,-1.1), pdTheta=double(n.var), S=double(n.var+1),inSample=double(inSample.length),
                 PACKAGE="eco")
+
+    if(flag>=4) {
+        res <- .C("cEMeco", as.double(tmp$d), as.double(theta.old),
+                    as.integer(tmp$n.samp),  as.integer(iteration.max), as.double(convergence),
+                    as.integer(tmp$survey.yes), as.integer(tmp$survey.samp), 
+                as.double(tmp$survey.data),
+                    as.integer(tmp$X1type), as.integer(tmp$samp.X1), as.double(tmp$X1.W1),
+                    as.integer(tmp$X0type), as.integer(tmp$samp.X0), as.double(tmp$X0.W2),
+                as.double(bdd$Wmin[,1,1]), as.double(bdd$Wmax[,1,1]),
+                as.integer(flag),as.integer(verbose),
+                    res$pdTheta, pdTheta=double(n.var), S=double(n.var+1),inSample=double(inSample.length),
+                    PACKAGE="eco")     
+    }
     
     inSample.out<-matrix(rep(NA,inSample.length),ncol=ndim)
     for(i in 1:n)
