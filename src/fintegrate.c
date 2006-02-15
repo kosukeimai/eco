@@ -49,6 +49,7 @@ void NormConstT(double *t, int n, void *param)
   Sigma[0][1]=pp->setP->Sigma[0][1];
   Sigma[1][0]=pp->setP->Sigma[1][0];
   rho=Sigma[0][1]/sqrt(Sigma[0][0]*Sigma[1][1]);
+  //Rprintf("TESTING: %4g %4g %4g %4g", pp->caseP.mu[0], pp->caseP.mu[0], pp->setP->Sigma[0][0],pp->setP->Sigma[0][1]);
   X=pp->caseP.X;
   Y=pp->caseP.Y;
   imposs=0;

@@ -39,10 +39,44 @@ void SWP(
 }
 
 
+/* inverting a matrix */
+void dinv(double **X,
+	  int	size,
+	  double **X_inv)
+{
+  int i,j, k, errorM;
+  double *pdInv = doubleArray(size*size);
+
+  for (i = 0, j = 0; j < size; j++)
+    for (k = 0; k <= j; k++)
+      pdInv[i++] = X[k][j];
+  F77_CALL(dpptrf)("U", &size, pdInv, &errorM);
+  if (!errorM) {
+    F77_CALL(dpptri)("U", &size, pdInv, &errorM);
+    if (errorM) {
+      Rprintf("LAPACK dpptri failed, %d\n", errorM);
+      error("Exiting from dinv().\n");
+    }
+  }
+  else {
+    Rprintf("LAPACK dpptrf failed, %d\n", errorM);
+    error("Exiting from dinv().\n");
+  }
+  for (i = 0, j = 0; j < size; j++) {
+    for (k = 0; k <= j; k++) {
+      X_inv[j][k] = pdInv[i];
+      X_inv[k][j] = pdInv[i++];
+    }
+  }
+
+  Free(pdInv);
+}
+
 /* inverting a matrix
-  Uses special syntax since we don't knwo dimensions of array
+ * Uses special syntax since we don't know dimensions of array
+ * Prevents memory errors
  */
-void dinv(double* X,
+void dinv2D(double* X,
 	  int	size,
 	  double* X_inv)
 {
@@ -72,7 +106,7 @@ void dinv(double* X,
     for (k = 0; k <= j; k++) {
       //X_inv[j][k] = pdInv[i];
       //X_inv[k][j] = pdInv[i++];
-      *(X+size*j+k) = pdInv[i];
+      *(X_inv+size*j+k) = pdInv[i];
       *(X_inv+size*k+j) = pdInv[i++];
     }
   }
