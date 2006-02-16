@@ -10,3 +10,5 @@ void dinv(double **X, int size, double **X_inv);
 void dinv2D(double *X, int size, double *X_inv);
 void dcholdc(double **X, int size, double **L);
 double ddet(double **X, int size, int give_log);
+double ddet2D(double **X, int size, int give_log);
+void dcholdc2D(double *X, int size, double *L);

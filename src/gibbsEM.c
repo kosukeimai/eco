@@ -29,7 +29,7 @@ void ecoSEM(double* optTheta, double* pdTheta, Param* params, double Rmat_old[5]
 void ecoEStep(Param* params, double* suff);
 void ecoMStep(double* Suff, double* pdTheta, Param* params);
 void ecoMStepNCAR(double* Suff, double* pdTheta, Param* params);
-int closeEnough(double* pdTheta, double* pdTheta_old, double maxerr);
+int closeEnough(double* pdTheta, double* pdTheta_old, int len, double maxerr);
 void gridEStep(Param* params, int n_samp, int s_samp, int x1_samp, int x0_samp, double* suff, int verbose, double minW1, double maxW1);
 
 void cEMeco(
@@ -101,6 +101,7 @@ void cEMeco(
   setParam setP;
   for(i=0;i<t_samp;i++) params[i].setP=&setP;
   setP.verbose=*verbosiosity;
+  setP.convergence=*convergence;
   setP.t_samp=t_samp; setP.n_samp=n_samp; setP.s_samp=s_samp; setP.x1_samp=x1_samp; setP.x0_samp=x0_samp;
   readData(params, n_dim, pdX, sur_W, x1_W1, x0_W2, n_samp, s_samp, x1_samp, x0_samp);
 
@@ -108,19 +109,15 @@ void cEMeco(
   setP.ncar=bit(*flag,0);
   setP.fixedRho=bit(*flag,1);
   setP.sem=bit(*flag,2) & (optTheta[2]>0);
-  Rprintf("OPTIONS (flag: %d)   Ncar: %s; Fixed Rho: %s; SEM: %s\n",*flag,params[1].setP->ncar==1 ? "Yes" : "No",
-   params[1].setP->fixedRho==1 ? "Yes" : "No",params[1].setP->sem==1 ? "Second run" : (bit(*flag,2)==1 ? "First run" : "No"));
+  Rprintf("OPTIONS (flag: %d)   Ncar: %s; Fixed Rho: %s; SEM: %s\n",*flag,setP.ncar==1 ? "Yes" : "No",
+   setP.fixedRho==1 ? "Yes" : "No",setP.sem==1 ? "Second run" : (bit(*flag,2)==1 ? "First run" : "No"));
 
 /***Begin main loop ***/
 main_loop=1;start=1;
-while (main_loop<=*iteration_max && (start==1 || !closeEnough(pdTheta,pdTheta_old,*convergence))) {
+while (main_loop<=*iteration_max && (start==1 || !closeEnough(pdTheta,pdTheta_old,5,*convergence))) {
 
   if (start) {
     for(i=0;i<5;i++) pdTheta[i]=pdTheta_in[i];
-
-    start=0;
-  }
-  //kludge: should go in if statement brackets above
     for(i=0;i<t_samp;i++){
       params[i].caseP.mu[0] = pdTheta[0];
       params[i].caseP.mu[1] = pdTheta[1];
@@ -130,10 +127,18 @@ while (main_loop<=*iteration_max && (start==1 || !closeEnough(pdTheta,pdTheta_ol
     setP.Sigma[0][1] = pdTheta[4]*sqrt(pdTheta[2]*pdTheta[3]);
     setP.Sigma[1][0] = setP.Sigma[0][1];
     dinv2D((double*)&setP.Sigma[0][0], 2, (double*)&setP.InvSigma[0][0]);
-  //end kludge
+    //for SEM
+    for(i=0;i<5;i++) setP.semDone[i]=0;
+    if(setP.fixedRho) setP.semDone[4]=1; //no need to worry about last row
+    start=0;
+  }
 
-  if (setP.verbose>=1)
-    Rprintf("cycle %d/%d: %5g %5g %5g %5g rho: %5g LL: %5g\n",main_loop,*iteration_max,pdTheta[0],pdTheta[1],pdTheta[2],pdTheta[3],pdTheta[4], (main_loop==1) ? 0.0 : Suff[5]);
+  if (setP.verbose>=1) {
+    Rprintf("cycle %d/%d: %5g %5g %5g %5g rho: %5g",main_loop,*iteration_max,pdTheta[0],pdTheta[1],pdTheta[2],pdTheta[3],pdTheta[4]);
+    if (setP.verbose>=2 && main_loop>1)
+      Rprintf(" LL: %5g",Suff[5]);
+    Rprintf("\n");
+  }
   //keep the old theta around for comaprison
   for(i=0;i<5;i++) pdTheta_old[i]=pdTheta[i];
 
@@ -147,12 +152,12 @@ while (main_loop<=*iteration_max && (start==1 || !closeEnough(pdTheta,pdTheta_ol
   //scanf(" %c", &ch );
 
   //if we're in the second run through of SEM
-  if (setP.sem==1) {
+  if ((setP.sem==1)) {
     ecoSEM(optTheta, pdTheta, params, Rmat_old, Rmat);
   }
 
 
-  if (setP.verbose>=2) {
+  if (setP.verbose>=3) {
     Rprintf("theta and suff\n");
     Rprintf("%10g%10g%10g%10g%10g (%10g)\n",pdTheta[0],pdTheta[1],pdTheta[2],pdTheta[3],pdTheta[4],pdTheta[4]*sqrt(pdTheta[2]*pdTheta[3]));
     Rprintf("%10g%10g%10g%10g%10g\n",Suff[0],Suff[1],Suff[2],Suff[3],Suff[4]);
@@ -166,9 +171,18 @@ while (main_loop<=*iteration_max && (start==1 || !closeEnough(pdTheta,pdTheta_ol
 
 Rprintf("End loop PDT:%5g %5g %5g %5g %5g\n",pdTheta[0],pdTheta[1],pdTheta[2],pdTheta[3],pdTheta[4]);
 
-for(i=0;i<t_samp;i++)
+//finish up: record results and loglik
+Param param;
+Suff[5]=0.0;
+for(i=0;i<t_samp;i++) {
+ param=params[i];
+ setBounds((Param*)&param); //kludge since param makes a copy; fix later
+ setNormConst((Param*)&param);
  for(j=0;j<2;j++)
-   inSample[i*2+j]=params[i].caseP.W[j];
+   inSample[i*2+j]=param.caseP.W[j];
+  if(i<n_samp)
+    Suff[5]+=getLogLikelihood((Param *)&param);
+}
 
 /* write out the random seed */
 PutRNGstate();
@@ -189,58 +203,69 @@ Free(pdTheta_old);
  void ecoSEM(double* optTheta, double* pdTheta, Param* params, double Rmat_old[5][5], double Rmat[5][5]) {
     //assume we have optTheta, ie \hat{phi}
     //pdTheta is phi^{t+1}
-    int i,j,verbose;
+    int i,j,verbose,len;
     double SuffSem[5]; //sufficient stats
     double phiTI[5]; //phi^t_i
     double phiTp1I[5]; //phi^{t+1}_i
     Param* params_sem=(Param*) Calloc(params->setP->t_samp,Param);
-    verbose=params[0].setP->verbose;
+    setParam setP_sem=*(params[0].setP);
+    verbose=setP_sem.verbose;
+    len=5 - setP_sem.fixedRho; //4 if there is a fixed rho
     //first, save old Rmat
-    for(i=0;i<5;i++)
-      for(j=0;j<5;j++)
+    for(i=0;i<len;i++)
+      for(j=0;j<len;j++)
         Rmat_old[i][j]=Rmat[i][j];
 
-    for(i=0;i<5;i++) {
-      //step 1: set phi^t_i
-      if (verbose>=2) Rprintf("Theta: ");
-      for(j=0;j<5;j++) {
-        if (i==j)
-          phiTI[j]=pdTheta[j]; //current value
-        else phiTI[j]=optTheta[j]; //optimal value
-        if (verbose>=2) Rprintf(" %5g ", phiTI[j]);
+    for(i=0;i<len;i++) {
+      if (!setP_sem.semDone[i]) { //we're not done with this row
+        //step 1: set phi^t_i
+        if (verbose>=3) Rprintf("Theta: ");
+        for(j=0;j<len;j++) {
+          if (i==j)
+            phiTI[j]=pdTheta[j]; //current value
+          else phiTI[j]=optTheta[j]; //optimal value
+          if (verbose>=3) Rprintf(" %5g ", phiTI[j]);
+        }
+        if (verbose>=3) Rprintf("\n");
+
+
+        //step 2: run an E-step and an M-step with phi^t_i
+        //initialize params
+        for(j=0;j<setP_sem.t_samp;j++) {
+          params_sem[j].setP=&setP_sem;
+          params_sem[j].caseP=params[j].caseP;
+          params_sem[j].caseP.mu[0] = phiTI[0];
+          params_sem[j].caseP.mu[1] = phiTI[1];
+        }
+        setP_sem.Sigma[0][0] = phiTI[2];
+        setP_sem.Sigma[1][1] = phiTI[3];
+        setP_sem.Sigma[0][1] = phiTI[4]*sqrt(phiTI[2]*phiTI[3]);
+        setP_sem.Sigma[1][0] = setP_sem.Sigma[0][1];
+        dinv2D((double*)&setP_sem.Sigma[0][0], 2, (double*)&setP_sem.InvSigma[0][0]);
+
+        ecoEStep(params_sem, SuffSem);
+        if (!params[0].setP->ncar)
+          ecoMStep(SuffSem,phiTp1I,params_sem);
+        else
+          ecoMStepNCAR(SuffSem,phiTp1I,params_sem);
+
+        //step 3: create new R matrix row
+        for(j = 0; j<len; j++)
+          Rmat[i][j]=(phiTp1I[j]-optTheta[j])/(phiTI[i]-optTheta[i]);
+
+        //step 4: check for difference
+        params[0].setP->semDone[i]=closeEnough((double*)Rmat[i],(double*)Rmat_old[i],len,sqrt(params[0].setP->convergence));
+
       }
-      if (verbose>=2) Rprintf("\n");
-
-
-
-
-      //step 2: run an E-step and an M-step with phi^t_i
-      //initialize params
-      setParam setP_sem=*(params[0].setP);
-      for(j=0;j<setP_sem.t_samp;j++) {
-        params_sem[j].setP=&setP_sem;
-        params_sem[j].caseP=params[j].caseP;
-        params[j].caseP.mu[0] = phiTI[0];
-        params[j].caseP.mu[1] = phiTI[1];
+      else { //keep row the same
+        for(j = 0; j<len; j++)
+          Rmat[i][j]=Rmat_old[i][j];
       }
-      setP_sem.Sigma[0][0] = phiTI[2];
-      setP_sem.Sigma[1][1] = phiTI[3];
-      setP_sem.Sigma[0][1] = phiTI[4]*sqrt(phiTI[2]*phiTI[3]);
-      setP_sem.Sigma[1][0] = setP_sem.Sigma[0][1];
-      dinv2D((double*)&setP_sem.Sigma[0][0], 2, (double*)&setP_sem.InvSigma[0][0]);
-
-      ecoEStep(params_sem, SuffSem);
-      if (!params[0].setP->ncar)
-        ecoMStep(SuffSem,phiTp1I,params_sem);
-      else
-        ecoMStepNCAR(SuffSem,phiTp1I,params_sem);
-      for(j = 0; j<5; j++)
-        Rmat[i][j]=(phiTp1I[j]-optTheta[j])/(phiTI[i]-optTheta[i]);
     }
     if(verbose>=1) {
-      for(i=0;i<5;i++) {
-        Rprintf("\nR Matrix row %d: ", (i+1));
-        for(j=0;j<5;j++) {
+      for(i=0;i<len;i++) {
+        Rprintf("\nR Matrix row %d (%s): ", (i+1), (params[0].setP->semDone[i]) ? "Done" : "Not done");
+        for(j=0;j<len;j++) {
           Rprintf(" %6.4g ",Rmat[i][j]);
         }
       }
@@ -280,7 +305,7 @@ s_samp=setP->s_samp;
   double **Wstar=doubleMatrix(t_samp,5);     /* pseudo data(transformed)*/
 loglik=0;
   for (i = 0; i<n_samp; i++) {
-    param = params[i];
+    param = params[i]; //should be &params[i]: fix later
     caseP=&param.caseP;
     if (caseP->Y>=.9999 || caseP->Y<=.0001) { //if Y is near the edge, then W1 and W2 are very constrained
       Wstar[i][0]=logit(caseP->Y,"Y maxmin W1");
@@ -309,7 +334,7 @@ loglik=0;
       caseP->W[1]=paramIntegration(&SuffExp,(void *)&param);;
       caseP->suff=-1;
       testdens=paramIntegration(&SuffExp,(void *)&param);;
-      loglik+=getLogLikelihood((Param *)&param);
+      if (verbose>=2) loglik+=getLogLikelihood((Param *)&param);
 
    //report error E1 if E[W1],E[W2] is not on the tomography line
   if (fabs(caseP->W[0]-getW1FromW2(caseP->X, caseP->Y,caseP->W[1]))>0.01)
@@ -318,7 +343,7 @@ loglik=0;
   if (Wstar[i][4]<pow(Wstar[i][1],2) || Wstar[i][2]<pow(Wstar[i][0],2))
      Rprintf("E2 %d %5g %5g %5g %5g %5g %5g %5g %5g\n", i, caseP->X, caseP->Y, caseP->normcT, Wstar[i][0],Wstar[i][1],Wstar[i][2],Wstar[i][3],Wstar[i][4]);
   //used for debugging if necessary
-  if (verbose>=2 && i<20)
+  if (verbose>=3 && i<20)
      Rprintf("%d %4g %4g %4g %4g %4g %4g %4g %4g %4g\n", i, caseP->X, caseP->Y, caseP->mu[0], param.setP->Sigma[0][1], caseP->normcT, caseP->W[0],caseP->W[1],Wstar[i][2],Wstar[i][3]);
     }
   }
@@ -486,7 +511,7 @@ void ecoMStepNCAR(double* Suff, double* pdTheta, Param* params) {
   Sigma[1][1]= Sigma3[1][1] - Sigma3[1][2]*Sigma3[1][2]/Sigma3[2][2];
 
   dinv2D((double*)(&Sigma[0][0]), 2, (double*)(&InvSigma[0][0]));
-  dinv2D((double*)(&Sigma3[0][0]), 2, (double*)(&InvSigma3[0][0]));
+  dinv2D((double*)(&Sigma3[0][0]), 3, (double*)(&InvSigma3[0][0]));
 
   /* assign each data point the new mu (different for each point) */
   for(i=0;i<t_samp;i++) {
@@ -520,7 +545,7 @@ setParam* setP=params[0].setP;
     params[i].caseP.X=(params[i].caseP.X >= 1) ? .9999 : ((params[i].caseP.X <= 0) ? 0.0001 : params[i].caseP.X);
   }
 
-  if (setP->verbose>=2) {
+  if (setP->verbose>=3) {
     printf("Y X\n");
     for(i=0;i<10;i++)
       Rprintf("%5d%14g%14g\n",i,params[i].caseP.Y,params[i].caseP.X);
@@ -554,9 +579,9 @@ setParam* setP=params[0].setP;
  * maxerr is the maximum difference two corresponding values can have before the
  *  function returns false
  */
-int closeEnough(double* pdTheta, double* pdTheta_old, double maxerr) {
+int closeEnough(double* pdTheta, double* pdTheta_old, int len, double maxerr) {
   int j;
-  for(j = 0; j<5; j++)
+  for(j = 0; j<len; j++)
     if (fabs(pdTheta[j]-pdTheta_old[j])>=maxerr) return 0;
   return 1;
 }
