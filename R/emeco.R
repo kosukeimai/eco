@@ -207,6 +207,7 @@ eco.em <- function(formula, data = parent.frame(),supplement=NULL,
 #  class(res.out) <- "eco"
 #  return(res.out)
 res$inSample<-inSample.out
+res<-c(res,list(loglik=res$S[6]))
 return(res)
 }
 
