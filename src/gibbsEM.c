@@ -31,6 +31,8 @@ void ecoMStep(double* Suff, double* pdTheta, Param* params);
 void ecoMStepNCAR(double* Suff, double* pdTheta, Param* params);
 int closeEnough(double* pdTheta, double* pdTheta_old, int len, double maxerr);
 void gridEStep(Param* params, int n_samp, int s_samp, int x1_samp, int x0_samp, double* suff, int verbose, double minW1, double maxW1);
+void transformTheta(double* pdTheta, double* t_pdTheta);
+void untransformTheta(double* t_pdTheta,double* pdTheta);
 
 void cEMeco(
 	    /*data input */
@@ -87,6 +89,8 @@ void cEMeco(
   //double **InvSigma=doubleMatrix(n_dim,n_dim);/* inverse covariance matrix*/
 
   double *pdTheta_old=doubleArray(5);
+  double *t_pdTheta=doubleArray(5); //transformed theta
+  double *t_pdTheta_old=doubleArray(5);
   double Rmat_old[5][5];
   double Rmat[5][5];
 
@@ -114,10 +118,12 @@ void cEMeco(
 
 /***Begin main loop ***/
 main_loop=1;start=1;
-while (main_loop<=*iteration_max && (start==1 || !closeEnough(pdTheta,pdTheta_old,5,*convergence))) {
+while (main_loop<=*iteration_max && (start==1 || !closeEnough(t_pdTheta,t_pdTheta_old,5,*convergence))) {
+//while (main_loop<=*iteration_max && (start==1 || !closeEnough(transformTheta(pdTheta),transformTheta(pdTheta_old),5,*convergence))) {
 
   if (start) {
     for(i=0;i<5;i++) pdTheta[i]=pdTheta_in[i];
+    transformTheta(pdTheta,t_pdTheta);
     for(i=0;i<t_samp;i++){
       params[i].caseP.mu[0] = pdTheta[0];
       params[i].caseP.mu[1] = pdTheta[1];
@@ -141,6 +147,8 @@ while (main_loop<=*iteration_max && (start==1 || !closeEnough(pdTheta,pdTheta_ol
   }
   //keep the old theta around for comaprison
   for(i=0;i<5;i++) pdTheta_old[i]=pdTheta[i];
+  transformTheta(pdTheta_old,t_pdTheta_old);
+
 
 
   ecoEStep(params, Suff);
@@ -148,6 +156,7 @@ while (main_loop<=*iteration_max && (start==1 || !closeEnough(pdTheta,pdTheta_ol
     ecoMStep(Suff,pdTheta,params);
   else
     ecoMStepNCAR(Suff,pdTheta,params);
+  transformTheta(pdTheta,t_pdTheta);
   //char ch;
   //scanf(" %c", &ch );
 
@@ -172,16 +181,16 @@ while (main_loop<=*iteration_max && (start==1 || !closeEnough(pdTheta,pdTheta_ol
 Rprintf("End loop PDT:%5g %5g %5g %5g %5g\n",pdTheta[0],pdTheta[1],pdTheta[2],pdTheta[3],pdTheta[4]);
 
 //finish up: record results and loglik
-Param param;
+Param* param;
 Suff[5]=0.0;
 for(i=0;i<t_samp;i++) {
- param=params[i];
- setBounds((Param*)&param); //kludge since param makes a copy; fix later
- setNormConst((Param*)&param);
+ param=&(params[i]);
+ setBounds(param);
+ setNormConst(param);
  for(j=0;j<2;j++)
-   inSample[i*2+j]=param.caseP.W[j];
+   inSample[i*2+j]=param->caseP.W[j];
   if(i<n_samp)
-    Suff[5]+=getLogLikelihood((Param *)&param);
+    Suff[5]+=getLogLikelihood(param);
 }
 
 /* write out the random seed */
@@ -241,7 +250,7 @@ Free(pdTheta_old);
         setP_sem.Sigma[1][1] = phiTI[3];
         setP_sem.Sigma[0][1] = phiTI[4]*sqrt(phiTI[2]*phiTI[3]);
         setP_sem.Sigma[1][0] = setP_sem.Sigma[0][1];
-        dinv2D((double*)&setP_sem.Sigma[0][0], 2, (double*)&setP_sem.InvSigma[0][0]);
+        dinv2D((double*)(&(setP_sem.Sigma[0][0])), 2, (double*)(&(setP_sem.InvSigma[0][0])));
 
         ecoEStep(params_sem, SuffSem);
         if (!params[0].setP->ncar)
@@ -292,7 +301,7 @@ void ecoEStep(Param* params, double* suff) {
 
 int t_samp,n_samp,s_samp,x1_samp,x0_samp,i,j,temp0,temp1, verbose;
 double loglik,testdens;
-Param param; setParam* setP; caseParam* caseP;
+Param* param; setParam* setP; caseParam* caseP;
 setP=params[0].setP;
 verbose=setP->verbose;
 
@@ -305,8 +314,8 @@ s_samp=setP->s_samp;
   double **Wstar=doubleMatrix(t_samp,5);     /* pseudo data(transformed)*/
 loglik=0;
   for (i = 0; i<n_samp; i++) {
-    param = params[i]; //should be &params[i]: fix later
-    caseP=&param.caseP;
+    param = &(params[i]);
+    caseP=&(param->caseP);
     if (caseP->Y>=.9999 || caseP->Y<=.0001) { //if Y is near the edge, then W1 and W2 are very constrained
       Wstar[i][0]=logit(caseP->Y,"Y maxmin W1");
       Wstar[i][1]=logit(caseP->Y,"Y maxmin W2");
@@ -319,22 +328,22 @@ loglik=0;
       caseP->W[1]=caseP->Y;
     }
     else {
-      setBounds((Param*)&param);
-      setNormConst((Param*)&param);
+      setBounds(param); //I think you only have to do this once...check later
+      setNormConst(param);
 
       for (j=0;j<5;j++) {
         caseP->suff=j;
-        Wstar[i][j]=paramIntegration(&SuffExp,(void *)&param);
+        Wstar[i][j]=paramIntegration(&SuffExp,param);
         if (j<2)
           caseP->Wstar[j]=Wstar[i][j];
       }
       caseP->suff=5;
-      caseP->W[0]=paramIntegration(&SuffExp,(void *)&param);;
+      caseP->W[0]=paramIntegration(&SuffExp,param);;
       caseP->suff=6;
-      caseP->W[1]=paramIntegration(&SuffExp,(void *)&param);;
+      caseP->W[1]=paramIntegration(&SuffExp,param);;
       caseP->suff=-1;
-      testdens=paramIntegration(&SuffExp,(void *)&param);;
-      if (verbose>=2) loglik+=getLogLikelihood((Param *)&param);
+      testdens=paramIntegration(&SuffExp,param);
+      if (verbose>=2) loglik+=getLogLikelihood(param);
 
    //report error E1 if E[W1],E[W2] is not on the tomography line
   if (fabs(caseP->W[0]-getW1FromW2(caseP->X, caseP->Y,caseP->W[1]))>0.01)
@@ -344,7 +353,7 @@ loglik=0;
      Rprintf("E2 %d %5g %5g %5g %5g %5g %5g %5g %5g\n", i, caseP->X, caseP->Y, caseP->normcT, Wstar[i][0],Wstar[i][1],Wstar[i][2],Wstar[i][3],Wstar[i][4]);
   //used for debugging if necessary
   if (verbose>=3 && i<20)
-     Rprintf("%d %4g %4g %4g %4g %4g %4g %4g %4g %4g\n", i, caseP->X, caseP->Y, caseP->mu[0], param.setP->Sigma[0][1], caseP->normcT, caseP->W[0],caseP->W[1],Wstar[i][2],Wstar[i][3]);
+     Rprintf("%d %4g %4g %4g %4g %4g %4g %4g %4g %4g\n", i, caseP->X, caseP->Y, caseP->mu[0], param->setP->Sigma[0][1], caseP->normcT, caseP->W[0],caseP->W[1],Wstar[i][2],Wstar[i][3]);
     }
   }
 
@@ -572,6 +581,27 @@ setParam* setP=params[0].setP;
         params[i].caseP.Wstar[j]=logit(params[i].caseP.W[j],"Survey read");
       }
  }
+
+/*
+ * Parameterizes the elements of theta
+ * Input: pdTheta
+ * Mutates: t_pdTheta
+ */
+void transformTheta(double* pdTheta, double* t_pdTheta) {
+  t_pdTheta[0]=pdTheta[0];
+  t_pdTheta[1]=pdTheta[1];
+  t_pdTheta[2]=log(pdTheta[2]);
+  t_pdTheta[3]=log(pdTheta[3]);
+  t_pdTheta[4]=.5*(log(1+pdTheta[4])/log(1-pdTheta[4]));
+}
+
+void untransformTheta(double* t_pdTheta,double* pdTheta) {
+  pdTheta[0]=t_pdTheta[0];
+  pdTheta[1]=t_pdTheta[1];
+  pdTheta[2]=exp(t_pdTheta[2]);
+  pdTheta[3]=exp(t_pdTheta[3]);
+  pdTheta[4]=(exp(2*t_pdTheta[4])-1)/(exp(2*t_pdTheta[4])+1);
+}
 
 /*
  * Determines whether we have converged
