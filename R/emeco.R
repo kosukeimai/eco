@@ -184,14 +184,20 @@ eco.em <- function(formula, data = parent.frame(),supplement=NULL,
   print(res$pdTheta[1:2])
   cat("\n")
   cat("Covarianace Matrix:", "\n")
-  print(thetacov(res$pdTheta))
+  COV<-thetacov(res$pdTheta)
+  print(COV)
 #  cat("\n")
 #  cat("W1,W2 at 1:", "\n")
 #  print(inSample.out[1,])
   
   if (Fisher) {
     cat("Fisher transformtion:", "\n")
-    print(fisher(theta.old))
+    theta.Fisher<-rep(0,5)
+    theta.Fisher[1:2]<-res$pdTheta[1:2]
+    theta.Fisher[3:4]<-diag(COV)
+    theta.Fisher[5]<-COV[1,2]/sqrt(COV[1,1]*COV[2,2])
+    theta.Fisher<-fisher(theta.Fisher)
+    print(theta.Fisher)
   }
 
 #  if (!Ioc.yes) {
