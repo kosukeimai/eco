@@ -316,7 +316,7 @@ loglik=0;
   for (i = 0; i<n_samp; i++) {
     param = &(params[i]);
     caseP=&(param->caseP);
-    if (caseP->Y>=.9999 || caseP->Y<=.0001) { //if Y is near the edge, then W1 and W2 are very constrained
+    if (caseP->Y>=.99 || caseP->Y<=.01) { //if Y is near the edge, then W1 and W2 are very constrained
       Wstar[i][0]=logit(caseP->Y,"Y maxmin W1");
       Wstar[i][1]=logit(caseP->Y,"Y maxmin W2");
       Wstar[i][2]=Wstar[i][0]*Wstar[i][0];
@@ -458,10 +458,10 @@ setParam* setP=params[0].setP;
 void ecoMStepNCAR(double* Suff, double* pdTheta, Param* params) {
 
   setParam* setP=params[0].setP;
-  double **Sigma=(double**)setP->Sigma;
-  double **InvSigma=(double**)setP->InvSigma;
-  double **Sigma3=(double**)setP->Sigma3;   /* covariance matrix*/
-  double **InvSigma3=(double**)setP->Sigma3;   /* inverse covariance matrix*/
+  //double Sigma[2][2]=setP->Sigma;
+  //double[2][2] InvSigma=setP->InvSigma;
+  //double[3][3] Sigma3=setP->Sigma3;   /* covariance matrix*/
+  //double[3][3] InvSigma3=setP->Sigma3;   /* inverse covariance matrix*/
   int i,verbose,t_samp;
   verbose=setP->verbose;
   t_samp=setP->t_samp;
@@ -469,6 +469,7 @@ void ecoMStepNCAR(double* Suff, double* pdTheta, Param* params) {
   //find mean of X
   double mu3=0; double mu3sq=0; double XW1=0; double XW2=0;
   char ebuffer[30];
+
   for(i=0;i<setP->t_samp;i++) {
     sprintf(ebuffer, "mstep X %i", i);
     double lx= logit(params[i].caseP.X,ebuffer);
@@ -480,52 +481,51 @@ void ecoMStepNCAR(double* Suff, double* pdTheta, Param* params) {
   mu3 = mu3/t_samp; mu3sq = mu3sq/t_samp;
   XW1 = XW1/t_samp; XW2 = XW2/t_samp;
 
-
   pdTheta[0]=Suff[0];  /*mu1*/
   pdTheta[1]=Suff[1];  /*mu2*/
 
   //set Sigma3 (3x3 sigma)
-  Sigma3[0][0] = Suff[2]-2*Suff[0]*pdTheta[0]+pdTheta[0]*pdTheta[0];
-  Sigma3[0][1] = Suff[4]-Suff[0]*pdTheta[1]-Suff[1]*pdTheta[0]+pdTheta[0]*pdTheta[1];
-  Sigma3[0][2] = XW1 - mu3*Suff[0];
-  Sigma3[1][0] = Sigma3[0][1];
-  Sigma3[1][1] = Suff[3]-2*Suff[1]*pdTheta[1]+pdTheta[1]*pdTheta[1];
-  Sigma3[1][2] = XW2 - mu3*Suff[1];
-  Sigma3[2][0] = Sigma3[0][2];
-  Sigma3[2][1] = Sigma3[1][2];
-  Sigma3[2][2] = mu3sq-mu3*mu3;
+  setP->Sigma3[0][0] = Suff[2]-2*Suff[0]*pdTheta[0]+pdTheta[0]*pdTheta[0];
+  setP->Sigma3[0][1] = Suff[4]-Suff[0]*pdTheta[1]-Suff[1]*pdTheta[0]+pdTheta[0]*pdTheta[1];
+  setP->Sigma3[0][2] = XW1 - mu3*Suff[0];
+  setP->Sigma3[1][0] = setP->Sigma3[0][1];
+  setP->Sigma3[1][1] = Suff[3]-2*Suff[1]*pdTheta[1]+pdTheta[1]*pdTheta[1];
+  setP->Sigma3[1][2] = XW2 - mu3*Suff[1];
+  setP->Sigma3[2][0] = setP->Sigma3[0][2];
+  setP->Sigma3[2][1] = setP->Sigma3[1][2];
+  setP->Sigma3[2][2] = mu3sq-mu3*mu3;
 
   if (!setP->fixedRho) { //variable rho
-    pdTheta[2]=Sigma3[0][0];
-    pdTheta[3]=Sigma3[1][1];
-    pdTheta[4]=Sigma3[1][0]/(sqrt(Sigma3[0][0]*Sigma3[1][1])); //rho
+    pdTheta[2]=setP->Sigma3[0][0];
+    pdTheta[3]=setP->Sigma3[1][1];
+    pdTheta[4]=setP->Sigma3[1][0]/(sqrt(setP->Sigma3[0][0]*setP->Sigma3[1][1])); //rho
   }
   else { //fixed rho
     double Imat[2][2];
-    Imat[0][0]=Sigma3[0][0];
-    Imat[1][1]=Sigma3[1][1];
-    Imat[0][1]=Sigma3[0][1];
+    Imat[0][0]=setP->Sigma3[0][0];
+    Imat[1][1]=setP->Sigma3[1][1];
+    Imat[0][1]=setP->Sigma3[0][1];
     pdTheta[2]=(Imat[0][0]-pdTheta[4]*Imat[0][1]*pow(Imat[0][0]/Imat[1][1],0.5))/(1-pdTheta[4]*pdTheta[4]); //sigma11
     pdTheta[3]=(Imat[1][1]-pdTheta[4]*Imat[0][1]*pow(Imat[1][1]/Imat[0][0],0.5))/(1-pdTheta[4]*pdTheta[4]); //sigma22
-    Sigma3[0][0]=pdTheta[2];
-    Sigma3[1][1]=pdTheta[3];
-    Sigma3[1][0] = pdTheta[4]*sqrt(pdTheta[2]*pdTheta[3]);
-    Sigma3[1][0] = Sigma3[0][1];
+    setP->Sigma3[0][0]=pdTheta[2];
+    setP->Sigma3[1][1]=pdTheta[3];
+    setP->Sigma3[1][0] = pdTheta[4]*sqrt(pdTheta[2]*pdTheta[3]);
+    setP->Sigma3[1][0] = setP->Sigma3[0][1];
   }
 
   //Set 2x2 Sigma
-  Sigma[0][0]= Sigma3[0][0] - Sigma3[0][2]*Sigma3[0][2]/Sigma3[2][2];
-  Sigma[0][1]= Sigma3[0][1] - Sigma3[0][2]*Sigma3[1][2]/Sigma3[2][2];
-  Sigma[1][0]= Sigma[0][1];
-  Sigma[1][1]= Sigma3[1][1] - Sigma3[1][2]*Sigma3[1][2]/Sigma3[2][2];
+  setP->Sigma[0][0]= setP->Sigma3[0][0] - setP->Sigma3[0][2]*setP->Sigma3[0][2]/setP->Sigma3[2][2];
+  setP->Sigma[0][1]= setP->Sigma3[0][1] - setP->Sigma3[0][2]*setP->Sigma3[1][2]/setP->Sigma3[2][2];
+  setP->Sigma[1][0]= setP->Sigma[0][1];
+  setP->Sigma[1][1]= setP->Sigma3[1][1] - setP->Sigma3[1][2]*setP->Sigma3[1][2]/setP->Sigma3[2][2];
 
-  dinv2D((double*)(&Sigma[0][0]), 2, (double*)(&InvSigma[0][0]));
-  dinv2D((double*)(&Sigma3[0][0]), 3, (double*)(&InvSigma3[0][0]));
+  dinv2D((double*)(&(setP->Sigma[0][0])), 2, (double*)(&(setP->InvSigma[0][0])));
+  dinv2D((double*)(&(setP->Sigma3[0][0])), 3, (double*)(&(setP->InvSigma3[0][0])));
 
   /* assign each data point the new mu (different for each point) */
   for(i=0;i<t_samp;i++) {
-    params[i].caseP.mu[0]=pdTheta[0] + (Sigma3[0][2]/Sigma3[2][2])*(params[i].caseP.X-mu3);
-    params[i].caseP.mu[1]=pdTheta[1] + (Sigma3[1][2]/Sigma3[2][2])*(params[i].caseP.X-mu3);
+    params[i].caseP.mu[0]=pdTheta[0] + (setP->Sigma3[0][2]/setP->Sigma3[2][2])*(params[i].caseP.X-mu3);
+    params[i].caseP.mu[1]=pdTheta[1] + (setP->Sigma3[1][2]/setP->Sigma3[2][2])*(params[i].caseP.X-mu3);
   }
 
 }
