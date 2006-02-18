@@ -142,8 +142,8 @@ while (main_loop<=*iteration_max && (start==1 || !closeEnough(t_pdTheta,t_pdThet
 
   if (setP.verbose>=1) {
     Rprintf("cycle %d/%d: %5g %5g %5g %5g rho: %5g",main_loop,*iteration_max,pdTheta[0],pdTheta[1],pdTheta[2],pdTheta[3],pdTheta[4]);
-    if (setP.verbose>=2 && main_loop>1)
-      Rprintf(" LL: %5g",Suff[5]);
+    if (setP.verbose>=2 && main_loop>2)
+      Rprintf(" Prev LL: %5g",Suff[5]);
     Rprintf("\n");
   }
   //keep the old theta around for comaprison
