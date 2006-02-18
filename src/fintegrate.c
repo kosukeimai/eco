@@ -97,6 +97,8 @@ void SuffExp(double *t, int n, void *param)
   double *mu=doubleArray(dim);
   double **Sigma=doubleMatrix(dim,dim);
   double **InvSigma=doubleMatrix(dim,dim);/* inverse covariance matrix*/
+  //double Sigma[dim][dim];
+  //double InvSigma[dim][dim];
   double *W1,*W1p,*W2,*W2p,*vtemp;
   double inp,density,pfact,normc;
 
@@ -144,7 +146,11 @@ void SuffExp(double *t, int n, void *param)
           else if (suff==4) t[ii]=W2[ii]*W2[ii]*t[ii];
           else if (suff==5) t[ii]=invLogit(W1[ii])*t[ii];
           else if (suff==6) t[ii]=invLogit(W2[ii])*t[ii];
-          else if (suff==7) t[ii]=dMVN(vtemp,mu,InvSigma,dim,0)*pfact;
+          else if (suff==7) {
+            //if(pp->setP->verbose>=3 && dim==3) Rprintf("InvSigma loglik: %5g %5g %5g %5g %5g %5g\n",InvSigma[0][0],InvSigma[0][1],InvSigma[1][0],InvSigma[1][1],InvSigma[1][2],InvSigma[2][2]);
+            t[ii]=dMVN(vtemp,mu,InvSigma,dim,0)*pfact;
+            //t[ii]=dMVN3(vtemp,mu,(double*)(&(InvSigma[0][0])),dim,0)*pfact;
+          }
           else if (suff!=-1) Rprintf("Error Suff= %d",suff);
         }
     }

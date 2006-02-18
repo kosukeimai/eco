@@ -5,7 +5,7 @@
   Copyright: GPL version 2 or later.
 *******************************************************************/
 
-double dMVN(double *Y, double *MEAN, double **SIGMA, int dim, int give_log);
+double dMVN(double *Y, double *MEAN, double **SIG_INV, int dim, int give_log);
 double dMVT(double *Y, double *MEAN, double **SIG_INV, int nu, int dim, int give_log);
 void rMVN(double *Sample, double *mean, double **inv_Var, int size);
 void rWish(double **Sample, double **S, int df, int size);

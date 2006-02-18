@@ -121,6 +121,7 @@ main_loop=1;start=1;
 while (main_loop<=*iteration_max && (start==1 || !closeEnough(t_pdTheta,t_pdTheta_old,5,*convergence))) {
 //while (main_loop<=*iteration_max && (start==1 || !closeEnough(transformTheta(pdTheta),transformTheta(pdTheta_old),5,*convergence))) {
 
+  setP.iter=main_loop;
   if (start) {
     for(i=0;i<5;i++) pdTheta[i]=pdTheta_in[i];
     transformTheta(pdTheta,t_pdTheta);
@@ -132,7 +133,7 @@ while (main_loop<=*iteration_max && (start==1 || !closeEnough(t_pdTheta,t_pdThet
     setP.Sigma[1][1] = pdTheta[3];
     setP.Sigma[0][1] = pdTheta[4]*sqrt(pdTheta[2]*pdTheta[3]);
     setP.Sigma[1][0] = setP.Sigma[0][1];
-    dinv2D((double*)&setP.Sigma[0][0], 2, (double*)&setP.InvSigma[0][0]);
+    dinv2D((double*)&setP.Sigma[0][0], 2, (double*)&setP.InvSigma[0][0], "Start of main loop");
     //for SEM
     for(i=0;i<5;i++) setP.semDone[i]=0;
     if(setP.fixedRho) setP.semDone[4]=1; //no need to worry about last row
@@ -185,12 +186,13 @@ Param* param;
 Suff[5]=0.0;
 for(i=0;i<t_samp;i++) {
  param=&(params[i]);
- setBounds(param);
- setNormConst(param);
  for(j=0;j<2;j++)
    inSample[i*2+j]=param->caseP.W[j];
-  if(i<n_samp)
+  if(i<n_samp) {
+    setBounds(param);
+    setNormConst(param);
     Suff[5]+=getLogLikelihood(param);
+  }
 }
 
 /* write out the random seed */
@@ -235,6 +237,11 @@ Free(pdTheta_old);
           else phiTI[j]=optTheta[j]; //optimal value
           if (verbose>=3) Rprintf(" %5g ", phiTI[j]);
         }
+        if (setP_sem.fixedRho) {
+          phiTI[4]=pdTheta[4];
+          phiTp1I[4]=pdTheta[4];
+          if (verbose>=3) Rprintf(" %5g ", phiTI[4]);
+        }
         if (verbose>=3) Rprintf("\n");
 
 
@@ -250,7 +257,10 @@ Free(pdTheta_old);
         setP_sem.Sigma[1][1] = phiTI[3];
         setP_sem.Sigma[0][1] = phiTI[4]*sqrt(phiTI[2]*phiTI[3]);
         setP_sem.Sigma[1][0] = setP_sem.Sigma[0][1];
-        dinv2D((double*)(&(setP_sem.Sigma[0][0])), 2, (double*)(&(setP_sem.InvSigma[0][0])));
+        if (verbose>=3) {
+          Rprintf("Sigma: %5g %5g %5g %5g\n",setP_sem.Sigma[0][0],setP_sem.Sigma[0][1],setP_sem.Sigma[1][0],setP_sem.Sigma[1][1]);
+        }
+        dinv2D((double*)(&(setP_sem.Sigma[0][0])), 2, (double*)(&(setP_sem.InvSigma[0][0])), "ecoSem");
 
         ecoEStep(params_sem, SuffSem);
         if (!params[0].setP->ncar)
@@ -313,6 +323,7 @@ s_samp=setP->s_samp;
 
   double **Wstar=doubleMatrix(t_samp,5);     /* pseudo data(transformed)*/
 loglik=0;
+if (verbose>=3) Rprintf("E-step start\n");
   for (i = 0; i<n_samp; i++) {
     param = &(params[i]);
     caseP=&(param->caseP);
@@ -329,8 +340,8 @@ loglik=0;
     }
     else {
       setBounds(param); //I think you only have to do this once...check later
+//if (verbose>=3) Rprintf("past bounds\n");
       setNormConst(param);
-
       for (j=0;j<5;j++) {
         caseP->suff=j;
         Wstar[i][j]=paramIntegration(&SuffExp,param);
@@ -343,7 +354,7 @@ loglik=0;
       caseP->W[1]=paramIntegration(&SuffExp,param);;
       caseP->suff=-1;
       testdens=paramIntegration(&SuffExp,param);
-      if (verbose>=2) loglik+=getLogLikelihood(param);
+      if (verbose>=2 && setP->iter>1) loglik+=getLogLikelihood(param);
 
    //report error E1 if E[W1],E[W2] is not on the tomography line
   if (fabs(caseP->W[0]-getW1FromW2(caseP->X, caseP->Y,caseP->W[1]))>0.01)
@@ -444,7 +455,8 @@ setParam* setP=params[0].setP;
   setP->Sigma[0][1] = pdTheta[4]*sqrt(pdTheta[2]*pdTheta[3]);
   setP->Sigma[1][0] = setP->Sigma[0][1];
 
-  dinv2D((double*)(&setP->Sigma[0][0]), 2, (double*)(&setP->InvSigma[0][0]));
+  //if(setP->verbose>=3) Rprintf("Sigma mstep: %5g %5g %5g %5g\n",setP->Sigma[0][0],setP->Sigma[0][1],setP->Sigma[1][0],setP->Sigma[1][1]);
+  dinv2D((double*)(&(setP->Sigma[0][0])), 2, (double*)(&(setP->InvSigma[0][0])),"regular M-step");
 
   /* assign each data point the new mu (same for all points) */
   for(i=0;i<setP->t_samp;i++) {
@@ -519,8 +531,8 @@ void ecoMStepNCAR(double* Suff, double* pdTheta, Param* params) {
   setP->Sigma[1][0]= setP->Sigma[0][1];
   setP->Sigma[1][1]= setP->Sigma3[1][1] - setP->Sigma3[1][2]*setP->Sigma3[1][2]/setP->Sigma3[2][2];
 
-  dinv2D((double*)(&(setP->Sigma[0][0])), 2, (double*)(&(setP->InvSigma[0][0])));
-  dinv2D((double*)(&(setP->Sigma3[0][0])), 3, (double*)(&(setP->InvSigma3[0][0])));
+  dinv2D((double*)(&(setP->Sigma[0][0])), 2, (double*)(&(setP->InvSigma[0][0])),"NCAR M-step S2");
+  dinv2D((double*)(&(setP->Sigma3[0][0])), 3, (double*)(&(setP->InvSigma3[0][0])),"NCAR M-step S3");
 
   /* assign each data point the new mu (different for each point) */
   for(i=0;i<t_samp;i++) {

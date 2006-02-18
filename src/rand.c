@@ -46,6 +46,7 @@ double dMVN(
 
 }
 
+
 /* the density of Multivariate T-distribution */
 double dMVT(
             double *Y,          /* The data */

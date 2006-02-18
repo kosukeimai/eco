@@ -79,7 +79,7 @@ void dinv(double **X,
  */
 void dinv2D(double* X,
 	  int	size,
-	  double* X_inv)
+	  double* X_inv,char* emsg)
 {
   int i,j, k, errorM;
   double *pdInv = doubleArray(size*size);
@@ -94,12 +94,14 @@ void dinv2D(double* X,
   if (!errorM) {
     F77_CALL(dpptri)("U", &size, pdInv, &errorM);
     if (errorM) {
-      Rprintf("LAPACK dpptri failed, %d\n", errorM);
+      Rprintf(emsg);
+      Rprintf(": LAPACK dpptri failed, %d\n", errorM);
       error("Exiting from dinv2D().\n");
     }
   }
   else {
-    Rprintf("LAPACK dpptrf failed, %d\n", errorM);
+    Rprintf(emsg);
+    Rprintf(": LAPACK dpptrf failed, %d\n", errorM);
     error("Exiting from dinv2D().\n");
   }
 
@@ -181,6 +183,23 @@ double ddet2D(double** X, int size, int give_log)
   else
     return(exp(2.0*logdet));
 }
+
+/*double ddet2Db(double* X, int size, int give_log)
+{
+  int i;
+  double logdet=0.0;
+  double **pdTemp = doubleMatrix(size, size);
+
+  dcholdc2D(X, size, (double*)(&pdTemp[0][0]));
+  for(i = 0; i < size; i++)
+    logdet += log(pdTemp[i][i]);
+
+  FreeMatrix(pdTemp, size);
+  if(give_log)
+    return(2.0*logdet);
+  else
+    return(exp(2.0*logdet));
+}*/
 
 /* Cholesky decomposition */
 /* returns lower triangular matrix; use with double[][] */
