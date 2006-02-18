@@ -7,7 +7,7 @@ export(
        ecoBD,
        ecoNP,
        ecoRC,
-       eco.em,
+       ecoML,
        summary.eco,
        summary.ecoNP,
        print.summary.eco,
@@ -20,9 +20,7 @@ export(
        varcov.eco,
        varcov.ecoNP,
        coef.eco,
-       coef.ecoNP,
-	eco.em,
-	eco.sem)
+       coef.ecoNP)
 
 S3method(varcov, eco)
 S3method(varcov, ecoNP)

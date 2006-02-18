@@ -32,12 +32,11 @@ thetacov<-function(Z) {
 }
 
 
-eco.em <- function(formula, data = parent.frame(),supplement=NULL, 
-                   theta.old=c(0,0,1,1,0), convergence=0.0001,
-                   iteration.max=1000, Ioc.yes=TRUE, Fisher=TRUE,
-                   draw.max=10000000, printon=TRUE, flag=0, verbose=1) { 
+ecoML <- function(formula, data = parent.frame(), supplement = NULL, 
+                  theta.start=c(0,0,1,1,0), epsilon=0.000001,
+                  maxit=1000, flag=0, verbose=1) { 
 
-  # getting X and Y
+  ## getting X and Y
   mf <- match.call()
   tt <- terms(formula)
   attr(tt, "intercept") <- 0
@@ -46,68 +45,52 @@ eco.em <- function(formula, data = parent.frame(),supplement=NULL,
   X <- model.matrix(tt, data)
   Y <- model.response(model.frame(tt, data=data))
 
-  ndim <- 2
-  
+  ## checking the data
+  ndim <- 2  
   tmp <- checkdata(X,Y, supplement, ndim)
   bdd <- ecoBD(formula=formula, data=data)
-
-  # Fitting the model 
-  n.var<-5
-  n.Imat<-n.var
-  cdiff<-1
-  em.converge<-FALSE
-  i<-1
-  draw <- 1
-  n<-tmp$n.samp+tmp$survey.samp+tmp$samp.X1+tmp$samp.X0
-  inSample.length<-ndim*n
+  n.var <- 5
+  n <- tmp$n.samp+tmp$survey.samp+tmp$samp.X1+tmp$samp.X0
+  inSample.length <- ndim*n
   
-    res <- .C("cEMeco", as.double(tmp$d), as.double(theta.old),
-                as.integer(tmp$n.samp),  as.integer(iteration.max), as.double(convergence),
-                as.integer(tmp$survey.yes), as.integer(tmp$survey.samp), 
+  ## Fitting the model via EM  
+  res <- .C("cEMeco", as.double(tmp$d), as.double(theta.start),
+            as.integer(tmp$n.samp),  as.integer(maxit), as.double(epsilon),
+            as.integer(tmp$survey.yes), as.integer(tmp$survey.samp), 
             as.double(tmp$survey.data),
-                as.integer(tmp$X1type), as.integer(tmp$samp.X1), as.double(tmp$X1.W1),
-                as.integer(tmp$X0type), as.integer(tmp$samp.X0), as.double(tmp$X0.W2),
+            as.integer(tmp$X1type), as.integer(tmp$samp.X1), as.double(tmp$X1.W1),
+            as.integer(tmp$X0type), as.integer(tmp$samp.X0), as.double(tmp$X0.W2),
             as.double(bdd$Wmin[,1,1]), as.double(bdd$Wmax[,1,1]),
             as.integer(flag),as.integer(verbose),
-                optTheta=c(-1.1,-1.1,-1.1,-1.1,-1.1), pdTheta=double(n.var), S=double(n.var+1),inSample=double(inSample.length),
-                PACKAGE="eco")
+            optTheta=c(-1.1,-1.1,-1.1,-1.1,-1.1), pdTheta=double(n.var),
+            S=double(n.var+1),inSample=double(inSample.length),
+            PACKAGE="eco")
 
-    if(flag>=4) {
-        res <- .C("cEMeco", as.double(tmp$d), as.double(theta.old),
-                    as.integer(tmp$n.samp),  as.integer(iteration.max), as.double(convergence),
-                    as.integer(tmp$survey.yes), as.integer(tmp$survey.samp), 
-                as.double(tmp$survey.data),
-                    as.integer(tmp$X1type), as.integer(tmp$samp.X1), as.double(tmp$X1.W1),
-                    as.integer(tmp$X0type), as.integer(tmp$samp.X0), as.double(tmp$X0.W2),
-                as.double(bdd$Wmin[,1,1]), as.double(bdd$Wmax[,1,1]),
-                as.integer(flag),as.integer(verbose),
-                    res$pdTheta, pdTheta=double(n.var), S=double(n.var+1),inSample=double(inSample.length),
-                    PACKAGE="eco")     
-    }
-    
-    inSample.out<-matrix(rep(NA,inSample.length),ncol=ndim)
-    for(i in 1:n)
-        for(j in 1:ndim)
-        inSample.out[i,j]=res$inSample[(i-1)*2+j]
-
- 
-  Ioc<-matrix(NA, n.var, n.var)
-  
-  if (em.converge && Ioc.yes) {
-    ##output Ioc 
-    res <- .C("cEMeco", as.double(tmp$d), as.double(theta.old),
-              as.integer(tmp$n.samp),  as.integer(n.draws), 
+  ## SEM step
+  if(flag>=4) {
+    res <- .C("cEMeco", as.double(tmp$d), as.double(theta.start),
+              as.integer(tmp$n.samp),  as.integer(maxit), as.double(epsilon),
               as.integer(tmp$survey.yes), as.integer(tmp$survey.samp), 
-          as.double(tmp$survey.data),
+              as.double(tmp$survey.data),
               as.integer(tmp$X1type), as.integer(tmp$samp.X1), as.double(tmp$X1.W1),
               as.integer(tmp$X0type), as.integer(tmp$samp.X0), as.double(tmp$X0.W2),
-          as.double(bdd$Wmin[,1,1]), as.double(bdd$Wmax[,1,1]),
-          as.integer(grid), 
-              pdTheta=double(n.var), S=double(n.var),
-              PACKAGE="eco")
+              as.double(bdd$Wmin[,1,1]), as.double(bdd$Wmax[,1,1]),
+              as.integer(flag),as.integer(verbose),
+              res$pdTheta, pdTheta=double(n.var), S=double(n.var+1),
+              inSample=double(inSample.length),
+              PACKAGE="eco")     
+  }
+  
+  inSample.out <- matrix(rep(NA,inSample.length),ncol=ndim)
+  for(i in 1:n)
+    for(j in 1:ndim)
+      inSample.out[i,j]=res$inSample[(i-1)*2+j]
+  
+  ##output Ioc
+  Fisher <- TRUE
+  if (FALSE) {
+    Ioc<-matrix(NA, n.var, n.var)    
 
-    ##based on pdTheta and S compute Ioc
-    
     S1<-res$S[1]
     S2<-res$S[2]
     S11<-res$S[3]
@@ -119,7 +102,6 @@ eco.em <- function(formula, data = parent.frame(),supplement=NULL,
     v1<-res$pdTheta[3]
     v2<-res$pdTheta[4]
     r<-res$pdTheta[5]
-    
     
     Ioc[1,1]<- -n/((1-r^2)*v1)
     Ioc[1,2]<- Ioc[2,1] <- n*r/((1-r^2)*sqrt(v1*v2))
@@ -186,9 +168,6 @@ eco.em <- function(formula, data = parent.frame(),supplement=NULL,
   cat("Covarianace Matrix:", "\n")
   COV<-thetacov(res$pdTheta)
   print(COV)
-#  cat("\n")
-#  cat("W1,W2 at 1:", "\n")
-#  print(inSample.out[1,])
   
   if (Fisher) {
     cat("Fisher transformtion:", "\n")
@@ -201,26 +180,26 @@ eco.em <- function(formula, data = parent.frame(),supplement=NULL,
   }
 
 #  if (!Ioc.yes) {
-#    res.out<-list(theta=theta.old)
+#    res.out<-list(theta=theta.start)
 #  }
 #  else if (Ioc.yes) {
 #    if (Fisher) cat("Ioc matrix at Fisher transformation scale:", "\n")
 #    else cat("Ioc matrix:", "\n")
 #    print(Ioc)
 #    
-#    res.out<-list(theta=theta.old, Ioc=Ioc)
+#    res.out<-list(theta=theta.start, Ioc=Ioc)
 #  }
 #  class(res.out) <- "eco"
 #  return(res.out)
-res$inSample<-inSample.out
-res<-c(res,list(loglik=res$S[6]))
-return(res)
+  res$inSample<-inSample.out
+  res<-c(res,list(loglik=res$S[6]))
+  return(res)
 }
 
 
 eco.sem<-function(formula, data = parent.frame(),supplement=NULL, 
-                  theta.old=c(0,0,1,1,0), theta.em=NULL, Ioc.em=NULL,
-                  R.convergence=0.001, iteration.max=50, Fisher=TRUE,
+                  theta.start=c(0,0,1,1,0), theta.em=NULL, Ioc.em=NULL,
+                  R.epsilon=0.001, maxit=50, Fisher=TRUE,
                   n.draws = 10, by.draw=10, draw.max=200, printon=TRUE, grid=TRUE) {
   
   # getting X and Y
@@ -249,8 +228,8 @@ eco.sem<-function(formula, data = parent.frame(),supplement=NULL,
   draw <- 1
   Rconverge<-FALSE
 
-  while (!Rconverge && (k<iteration.max)) {
-    res <- .C("cEMeco", as.double(tmp$d), as.double(theta.old),
+  while (!Rconverge && (k<maxit)) {
+    res <- .C("cEMeco", as.double(tmp$d), as.double(theta.start),
               as.integer(tmp$n.samp),  as.integer(n.draws), 
               as.integer(tmp$survey.yes), as.integer(tmp$survey.samp), 
           as.double(tmp$survey.data),
@@ -267,7 +246,7 @@ eco.sem<-function(formula, data = parent.frame(),supplement=NULL,
     
     for (i in 1:n.var) {
       rowdiff.temp<-0
-      if (rowdiff[i]>R.convergence) {
+      if (rowdiff[i]>R.epsilon) {
         Rconverge<-FALSE
         theta.t.i<-theta.em
         theta.t.i[i]<-theta.t[i]
@@ -297,7 +276,7 @@ eco.sem<-function(formula, data = parent.frame(),supplement=NULL,
       }
     }
     
-    theta.old<-theta.t
+    theta.start<-theta.t
     if (printon) {
       cat("k=", k, "\n")
       print(rowdiff)
@@ -306,12 +285,12 @@ eco.sem<-function(formula, data = parent.frame(),supplement=NULL,
       cat("\n R")
       print(R.t2)
       cat("\n")
-      print(theta.old)
+      print(theta.start)
     }
     k<-k+1
 
-    if (draw < draw.max & min(rowdiff)< R.convergence) {
-      Rconvergence <- FALSE
+    if (draw < draw.max & min(rowdiff)< R.epsilon) {
+      Repsilon <- FALSE
       draw <- draw.max
       rowdiff[rowdiff==min(rowdiff)] <- 1
       print("hi")
