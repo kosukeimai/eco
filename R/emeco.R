@@ -1,36 +1,119 @@
 ##fisher transformation of BVN(mu1, mu2, sigma1, sigma2, rho) into
 ## (mu1, mu2, log(sigma1), log(sigma12), Zp)
 fisher<-function(X) {
-  Y<-rep(0,5)
+  p<-length(X) 
+ Y<-rep(0,p)
+ if (p==5) {
   Y[1]<-X[1]
   Y[2]<-X[2]
   Y[3]<-log(X[3])
   Y[4]<-log(X[4])
   Y[5]<-0.5*log((1+X[5])/(1-X[5]))
+}
   return(Y)
 }  
 
 ##backward Fisher transformation
 fisher.back<-function(Y) {
-  X<-rep(0,5)
+ p<-length(Y) 
+ X<-rep(0,p)
+ if (p==5) {
   X[1]<-Y[1]
   X[2]<-Y[2]
   X[3]<-exp(Y[3])
   X[4]<-exp(Y[4])
   X[5]<-(exp(2*Y[5])-1)/(exp(2*Y[5])+1)
+}
   return(X)
 }
   
 ##tranform from  theta into covariance matrix
 thetacov<-function(Z) {
+  p<-length(Z)
+ if (p==5) {
   mat<-matrix(NA,2,2)
   mat[1,1]<-Z[3]
   mat[2,2]<-Z[4]
   mat[1,2]<-Z[5]*sqrt(Z[3]*Z[4])
   mat[2,1]<-mat[1,2]
+}
   return(mat)
 }
 
+Ioc.CAR<-function(theta, suff.stat, n,fisher=TRUE) {
+    n.var<-length(theta)
+    Ioc<-matrix(NA, n.var, n.var)    
+
+    S1<-n*suff.stat[1]
+    S2<-n*suff.stat[2]
+    S11<-n*suff.stat[3]
+    S22<-n*suff.stat[4]
+    S12<-n*suff.stat[5]
+    
+    u1<-theta[1]
+    u2<-theta[2]
+    v1<-theta[3]
+    v2<-theta[4]
+    r<-theta[5]
+    
+    Ioc[1,1]<- -n/((1-r^2)*v1)
+    Ioc[1,2]<- Ioc[2,1] <- n*r/((1-r^2)*sqrt(v1*v2))
+    Ioc[1,3]<- Ioc[3,1] <- 1/((1-r^2)*v1^2)*(-S1+n*u1) -
+      r/(2*(1-r^2)*v1^(3/2)*v2^(1/2))*(-S2+n*u2)
+    Ioc[1,4]<- Ioc[4,1] <- -r/(2*(1-r^2)*v1^(1/2)*v2^(3/2))*(-S2+n*u2)
+    Ioc[1,5]<- Ioc[5,1] <- -2*r/((1-r^2)^2*v1)*(-S1+n*u1) +
+      (1+r^2)/((1-r^2)^2*v1^(1/2)*v2^(1/2))*(-S2+n*u2) 
+    
+    Ioc[2,2]<- -n/((1-r^2)*v2)  
+    Ioc[2,3]<- Ioc[3,2] <- -r/(2*(1-r^2)*v1^(3/2)*v2^(1/2))*(-S1+n*u1)
+    Ioc[2,4]<- Ioc[4,2] <- 1/((1-r^2)*v2^2)*(-S2+n*u2) -
+      r/(2*(1-r^2)*v1^(1/2)*v2^(3/2))*(-S1+n*u1) 
+    Ioc[2,5]<- Ioc[5,2] <- -2*r/((1-r^2)^2*v2)*(-S2+n*u2) +
+      (1+r^2)/((1-r^2)^2*v1^(1/2)*v2^(1/2))*(-S1+n*u1) 
+    
+    Ioc[3,3]<- n/(2*v1^2) - 1/((1-r^2)*v1^3)*(S11-2*u1*S1+n*u1^2) +
+      3*r/(4*(1-r^2)*v1^(5/2)*v2^(1/2))*(S12-u1*S2-u2*S1+n*u1*u2) 
+    Ioc[3,4]<- Ioc[4,3] <- r/(4*(1-r^2)*v1^(3/2)*v2^(3/2))*(S12-u1*S2-u2*S1+n*u1*u2)
+    Ioc[3,5]<- Ioc[5,3] <- r/((1-r^2)^2*v1^2)*(S11-2*u1*S1+n*u1^2) -
+     (1+r^2)/(2*(1-r^2)^2*v1^(3/2)*v2^(1/2))*(S12-u1*S2-u2*S1+n*u1*u2) 
+
+    Ioc[4,4]<- n/(2*v2^2) - 1/((1-r^2)*v2^3)*(S22-2*u2*S2+n*u2^2) +
+      3*r/(4*(1-r^2)*v1^(1/2)*v2^(5/2))*(S12-u1*S2-u2*S1+n*u1*u2) 
+    Ioc[4,5]<- Ioc[5,4] <- r/((1-r^2)^2*v2^2)*(S22-2*u2*S2+n*u2^2) -
+      (1+r^2)/(2*(1-r^2)^2*v1^(1/2)*v2^(3/2))*(S12-u1*S2-u2*S1+n*u1*u2) 
+    
+    Ioc[5,5]<- n*(1+r^2)/(1-r^2)^2 -
+      (1+3*r^2)/((1-r^2)^3*v1)*(S11-2*u1*S1+n*u1^2) -
+      (1+3*r^2)/((1-r^2)^3*v2)*(S22-2*u2*S2+n*u2^2) +
+      (2*r^3+6*r)/((1-r^2)^3*v1^(1/2)*v2^(1/2))*(S12-u1*S2-u2*S1+n*u1*u2) 
+
+   if (fisher) {
+       Ioc.fisher<-matrix(NA, n.var,n.var)
+       dv1<- -n/(2*v1) + 1/(2*(1-r^2)*v1^2)*(S11-2*u1*S1+n*u1^2) - r/(2*(1-r^2)*v1^(3/2)*v2^(1/2))*(S12-u1*S2-u2*S1+n*u1*u2)
+       dv2<- -n/(2*v2) + 1/(2*(1-r^2)*v2^2)*(S22-2*u2*S2+n*u2^2) - r/(2*(1-r^2)*v1^(1/2)*v2^(3/2))*(S12-u1*S2-u2*S1+n*u1*u2)
+       dr<- n*r/(1-r^2) - r/((1-r^2)^2*v1)*(S11-2*u1*S1+n*u1^2) + (1+r^2)/((1-r^2)^2*v1^(1/2)*v2^(1/2))*(S12-u1*S2-u2*S1+n*u1*u2) - r/((1-r^2)^2*v2)*(S22-2*u2*S2+n*u2^2)
+
+       Ioc.fisher[1:2,1:2]<-Ioc[1:2,1:2]
+       Ioc.fisher[1,3]<- Ioc.fisher[3,1] <- Ioc[1,3]*v1
+       Ioc.fisher[1,4]<- Ioc.fisher[4,1] <- Ioc[1,4]*v2
+       Ioc.fisher[1,5]<- Ioc.fisher[5,1] <- Ioc[1,5]*(1-r^2)
+     
+       Ioc.fisher[2,3]<- Ioc.fisher[3,2] <- Ioc[2,3]*v1
+       Ioc.fisher[2,4]<- Ioc.fisher[4,2] <- Ioc[2,4]*v2
+       Ioc.fisher[2,5]<- Ioc.fisher[5,2] <- Ioc[2,5]*(1-r^2)
+     
+       Ioc.fisher[3,3]<- Ioc[3,3]*v1^2 + dv1*v1
+       Ioc.fisher[3,4]<- Ioc.fisher[4,3] <- Ioc[3,4]*v1*v2
+       Ioc.fisher[3,5]<- Ioc.fisher[5,3] <- Ioc[3,5]*v1*(1-r^2)
+     
+       Ioc.fisher[4,4]<- Ioc[4,4]*v2^2 + dv2*v2
+       Ioc.fisher[4,5]<- Ioc.fisher[5,4] <- Ioc[4,5]*v2*(1-r^2)
+     
+       Ioc.fisher[5,5]<- Ioc[5,5]*(1-r^2)^2 - dr*2*r*(1-r^2)
+  }   
+    return(list(Ioc=-Ioc, Ioc.fisher=-Ioc.fisher))
+
+}
 
 ecoML <- function(formula, data = parent.frame(), supplement = NULL, 
                   theta.start=c(0,0,1,1,0), epsilon=0.000001,
@@ -87,97 +170,79 @@ ecoML <- function(formula, data = parent.frame(), supplement = NULL,
       inSample.out[i,j]=res$inSample[(i-1)*2+j]
   
   ##output Ioc
-  Fisher <- TRUE
-  if (FALSE) {
-    Ioc<-matrix(NA, n.var, n.var)    
+   infomat<-Ioc.CAR(theta=res$pdTheta, suff.stat=res$S, n=n)
+   Ioc<-infomat$Ioc
+   Ioc.fisher<-infomat$Ioc.fisher
+   
+   cat("\n")
+   cat("Estimates based on EM", "\n")
+   cat("Mean:", "\n")
+   print(res$pdTheta[1:2])
+   cat("\n")
+   cat("Covarianace Matrix:", "\n")
+   COV<-thetacov(res$pdTheta)
+   print(COV)
+   cat("(expected) complete information matrix: Ioc.fisher \n")
+   print(Ioc)
 
-    S1<-res$S[1]
-    S2<-res$S[2]
-    S11<-res$S[3]
-    S22<-res$S[4]
-    S12<-res$S[5]
-    
-    u1<-res$pdTheta[1]
-    u2<-res$pdTheta[2]
-    v1<-res$pdTheta[3]
-    v2<-res$pdTheta[4]
-    r<-res$pdTheta[5]
-    
-    Ioc[1,1]<- -n/((1-r^2)*v1)
-    Ioc[1,2]<- Ioc[2,1] <- n*r/((1-r^2)*sqrt(v1*v2))
-    Ioc[1,3]<- Ioc[3,1] <- 1/((1-r^2)*v1^2)*(-S1+n*u1) -
-      r/(2*(1-r^2)*v1^(3/2)*v2^(1/2))*(-S2+n*u2)
-    Ioc[1,4]<- Ioc[4,1] <- -r/(2*(1-r^2)*v1^(1/2)*v2^(3/2))*(-S2+n*u2)
-    Ioc[1,5]<- Ioc[5,1] <- -2*r/((1-r^2)^2*v1)*(-S1+n*u1) +
-      (1+r^2)/((1-r^2)^2*v1^(1/2)*v2^(1/2))*(-S2+n*u2) 
-    
-    Ioc[2,2]<- -n/((1-r^2)*v2)  
-    Ioc[2,3]<- Ioc[3,2] <- -r/(2*(1-r^2)*v1^(3/2)*v2^(1/2))*(-S1+n*u1)
-    Ioc[2,4]<- Ioc[4,2] <- 1/((1-r^2)*v2^2)*(-S2+n*u2) -
-      r/(2*(1-r^2)*v1^(1/2)*v2^(3/2))*(-S1+n*u1) 
-    Ioc[2,5]<- Ioc[5,2] <- -2*r/((1-r^2)^2*v2)*(-S2+n*u2) +
-      (1+r^2)/((1-r^2)^2*v1^(1/2)*v2^(1/2))*(-S1+n*u1) 
-    
-    Ioc[3,3]<- n/(2*v1^2) - 1/((1-r^2)*v1^3)*(S11-2*u1*S1+n*u1^2) +
-      3*r/(4*(1-r^2)*v1^(5/2)*v2^(1/2))*(S12-u1*S2-u2*S1+n*u1*u2) 
-    Ioc[3,4]<- Ioc[4,3] <- r/(4*(1-r^2)*v1^(3/2)*v2^(3/2))*(S12-u1*S2-u2*S1+n*u1*u2)
-    Ioc[3,5]<- Ioc[5,3] <- r/((1-r^2)^2*v1^2)*(S11-2*u1*S1+n*u1^2) -
-     (1+r^2)/(2*(1-r^2)^2*v1^(3/2)*v2^(1/2))*(S12-u1*S2-u2*S1+n*u1*u2) 
+   cat("Fisher transformtion:", "\n")
+   theta.Fisher<-rep(0,5)
+   theta.Fisher[1:2]<-res$pdTheta[1:2]
+   theta.Fisher[3:4]<-diag(COV)
+   theta.Fisher[5]<-COV[1,2]/sqrt(COV[1,1]*COV[2,2])
+   theta.Fisher<-fisher(theta.Fisher)
+   cat("mu1   mu2   ln(sigma1)  ln(sigma2) 0.5ln((1-rho)/(1+rho)) \n")
+   print(theta.Fisher)
+   cat("(expected) complete information matrix: Ioc \n")
+   print(Ioc.fisher)
 
-    Ioc[4,4]<- n/(2*v2^2) - 1/((1-r^2)*v2^3)*(S22-2*u2*S2+n*u2^2) +
-      3*r/(4*(1-r^2)*v1^(1/2)*v2^(5/2))*(S12-u1*S2-u2*S1+n*u1*u2) 
-    Ioc[4,5]<- Ioc[5,4] <- r/((1-r^2)^2*v2^2)*(S22-2*u2*S2+n*u2^2) -
-      (1+r^2)/(2*(1-r^2)^2*v1^(1/2)*v2^(3/2))*(S12-u1*S2-u2*S1+n*u1*u2) 
-    
-    Ioc[5,5]<- n*(1+r^2)/(1-r^2)^2 -
-      (1+3*r^2)/((1-r^2)^3*v1)*(S11-2*u1*S1+n*u1^2) -
-      (1+3*r^2)/((1-r^2)^3*v2)*(S22-2*u2*S2+n*u2^2) +
-      (2*r^3+6*r)/((1-r^2)^3*v1^(1/2)*v2^(1/2))*(S12-u1*S2-u2*S1+n*u1*u2) 
-    
-
-   if (Fisher) {
-     dv1<- -n/(2*v1) + 1/(2*(1-r^2)*v1^2)*(S11-2*u1*S1+n*u1^2) - r/(2*(1-r^2)*v1^(3/2)*v2^(1/2))*(S12-u1*S2-u2*S1+n*u1*u2)
-     dv2<- -n/(2*v2) + 1/(2*(1-r^2)*v2^2)*(S22-2*u2*S2+n*u2^2) - r/(2*(1-r^2)*v1^(1/2)*v2^(3/2))*(S12-u1*S2-u2*S1+n*u1*u2)
-     dr<- n*r/(1-r^2) - r/((1-r^2)^2*v1)*(S11-2*u1*S1+n*u1^2) + (1+r^2)/((1-r^2)^2*v1^(1/2)*v2^(1/2))*(S12-u1*S2-u2*S1+n*u1*u2) - r/((1-r^2)^2*v2)*(S22-2*u2*S2+n*u2^2)
-
-     Ioc[1,3]<- Ioc[3,1] <- Ioc[1,3]*v1
-     Ioc[1,4]<- Ioc[4,1] <- Ioc[1,4]*v2
-     Ioc[1,5]<- Ioc[5,1] <- Ioc[1,5]*(1-r^2)
-     
-     Ioc[2,3]<- Ioc[3,2] <- Ioc[2,3]*v1
-     Ioc[2,4]<- Ioc[4,2] <- Ioc[2,4]*v2
-     Ioc[2,5]<- Ioc[5,2] <- Ioc[2,5]*(1-r^2)
-     
-     Ioc[3,3]<- Ioc[3,3]*v1^2 + dv1*v1
-     Ioc[3,4]<- Ioc[4,3] <- Ioc[3,4]*v1*v2
-     Ioc[3,5]<- Ioc[5,3] <- Ioc[3,5]*v1*(1-r^2)
-     
-     Ioc[4,4]<- Ioc[4,4]*v2^2 + dv2*v2
-     Ioc[4,5]<- Ioc[5,4] <- Ioc[4,5]*v2*(1-r^2)
-     
-     Ioc[5,5]<- Ioc[5,5]*(1-r^2)^2 - dr*2*r*(1-r^2)
-   }
-    Ioc <- -Ioc
-  }
+   if (flag>=5) {
+    SECM.yes<-FALSE  
+     if(!SECM.yes) {	
+     R<-diag(1,5)
+     DM<-R
   
-  cat("\n")
-  cat("Estimates based on EM", "\n")
-  cat("Mean:", "\n")
-  print(res$pdTheta[1:2])
-  cat("\n")
-  cat("Covarianace Matrix:", "\n")
-  COV<-thetacov(res$pdTheta)
-  print(COV)
-  
-  if (Fisher) {
-    cat("Fisher transformtion:", "\n")
-    theta.Fisher<-rep(0,5)
-    theta.Fisher[1:2]<-res$pdTheta[1:2]
-    theta.Fisher[3:4]<-diag(COV)
-    theta.Fisher[5]<-COV[1,2]/sqrt(COV[1,1]*COV[2,2])
-    theta.Fisher<-fisher(theta.Fisher)
-    print(theta.Fisher)
+     Gamma<-matrix(0,5,5)
+     Gamma[1:2, 1:2]<-Ioc.fisher[1:2,1:2]
+     Gamma[3:5,3:5]<-Ioc.fisher[3:5,3:5]
+     Lamda<-matrix(0,5,5)
+     Lamda[3:5, 1:2]<-Ioc.fisher[3:5, 1:2]
+    
+     Vcom.fisher<-solve(Ioc.fisher)
+     dV<-Vcom.fisher%*%DM%*%solve(diag(1,5)-DM)
   }
+ 
+
+
+  Vobs.fisher<-Vcom.fisher+dV
+  Iobs.fisher<-solve(Vobs.fisher)
+
+  ##transform Iobs.fisher to Iobs
+  ##delta method
+  ##V(theta)=d(fisher^{-1})V(fisher(theta)))d(fisher^{-1})'
+  grad.invfisher<-c(1,1, theta.fisher[3:4], 
+                      -4*exp(2*theta.fisher[5])/(exp(2*theta.fisher[5])-1)^2)
+
+  Vobs<-diag(grad.invfisher)%*%Vobs.fisher%*%diag(grad.invfisher)
+  Iobs<-solve(Vobs)
+  cat("Iobs\n")
+  print(Iobs)
+  cat("Vobs \n")
+  print(Vobs)
+  
+  cat("Iobs_fisher\n")
+  print(Iobs.fisher)
+  cat("Vobs_fisher\n")
+  print(Vobs.fisher)
+
+}
+
+  res$inSample<-inSample.out
+  res<-c(res,list(loglik=res$S[6],Ioc=Ioc, Ioc.fisher=Ioc.fisher))
+
+  return(res)
+}
+
 
 #  if (!Ioc.yes) {
 #    res.out<-list(theta=theta.start)
@@ -191,11 +256,6 @@ ecoML <- function(formula, data = parent.frame(), supplement = NULL,
 #  }
 #  class(res.out) <- "eco"
 #  return(res.out)
-  res$inSample<-inSample.out
-  res<-c(res,list(loglik=res$S[6]))
-  return(res)
-}
-
 
 eco.sem<-function(formula, data = parent.frame(),supplement=NULL, 
                   theta.start=c(0,0,1,1,0), theta.em=NULL, Ioc.em=NULL,
