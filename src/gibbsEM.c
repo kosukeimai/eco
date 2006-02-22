@@ -30,6 +30,7 @@ void ecoEStep(Param* params, double* suff);
 void ecoMStep(double* Suff, double* pdTheta, Param* params);
 void ecoMStepNCAR(double* Suff, double* pdTheta, Param* params);
 int closeEnough(double* pdTheta, double* pdTheta_old, int len, double maxerr);
+int semDoneCheck(setParam* setP);
 void gridEStep(Param* params, int n_samp, int s_samp, int x1_samp, int x0_samp, double* suff, int verbose, double minW1, double maxW1);
 void transformTheta(double* pdTheta, double* t_pdTheta);
 void untransformTheta(double* t_pdTheta,double* pdTheta);
@@ -74,7 +75,8 @@ void cEMeco(
 	    double *pdTheta,  /*EM result for Theta^(t+1) */
 	    double *Suff,      /*out put suffucient statistics (E(W_1i|Y_i),
 				E(E_1i*W_1i|Y_i..) when  conveges */
-      double *inSample /* In Sample info */
+      double *inSample, /* In Sample info */
+      double *DMmatrix
 	    ){
 
   int n_samp  = *pin_samp;    /* sample size */
@@ -118,7 +120,9 @@ void cEMeco(
 
 /***Begin main loop ***/
 main_loop=1;start=1;
-while (main_loop<=*iteration_max && (start==1 || !closeEnough(t_pdTheta,t_pdTheta_old,5,*convergence))) {
+while (main_loop<=*iteration_max && (start==1 ||
+        (setP.sem==0 && !closeEnough(t_pdTheta,t_pdTheta_old,5,*convergence)) ||
+        (setP.sem==1 && !semDoneCheck((setParam*)&setP)))) {
 //while (main_loop<=*iteration_max && (start==1 || !closeEnough(transformTheta(pdTheta),transformTheta(pdTheta_old),5,*convergence))) {
 
   setP.iter=main_loop;
@@ -192,6 +196,16 @@ for(i=0;i<t_samp;i++) {
     setBounds(param);
     setNormConst(param);
     Suff[5]+=getLogLikelihood(param);
+  }
+}
+//set the DM matrix (only matters for SEM)
+if (setP.sem==1) {
+  for(i=0;i<5;i++)
+    for(j=0;j<5;j++)
+      DMmatrix[i*5+j]=Rmat[i][j];
+  if (setP.fixedRho) {
+    for(i=0;i<5;i++) DMmatrix[i*5+4]=0;
+    for(i=0;i<5;i++) DMmatrix[20+i]=0;
   }
 }
 
@@ -625,6 +639,14 @@ int closeEnough(double* pdTheta, double* pdTheta_old, int len, double maxerr) {
   int j;
   for(j = 0; j<len; j++)
     if (fabs(pdTheta[j]-pdTheta_old[j])>=maxerr) return 0;
+  return 1;
+}
+
+int semDoneCheck(setParam* setP) {
+  int j,len;
+  len=5 - setP->fixedRho; //4 if there is a fixed rho
+  for(j=0;j<len;j++)
+    if(setP->semDone[j]==0) return 0;
   return 1;
 }
 
