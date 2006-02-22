@@ -196,7 +196,7 @@ ecoML <- function(formula, data = parent.frame(), supplement = NULL,
    theta.Fisher[3:4]<-diag(COV)
    theta.Fisher[5]<-COV[1,2]/sqrt(COV[1,1]*COV[2,2])
    theta.Fisher<-fisher(theta.Fisher)
-   cat("mu1   mu2   ln(sigma1)  ln(sigma2) 0.5ln((1-rho)/(1+rho)) \n")
+   cat("mu1   mu2   ln(sigma1)  ln(sigma2) 0.5ln((1+rho)/(1-rho)) \n")
    print(theta.Fisher)
    cat("(expected) complete information matrix: Ioc \n")
    print(Ioc.fisher)
