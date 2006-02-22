@@ -146,7 +146,7 @@ ecoML <- function(formula, data = parent.frame(), supplement = NULL,
             as.double(bdd$Wmin[,1,1]), as.double(bdd$Wmax[,1,1]),
             as.integer(flag),as.integer(verbose),
             optTheta=c(-1.1,-1.1,-1.1,-1.1,-1.1), pdTheta=double(n.var),
-            S=double(n.var+1),inSample=double(inSample.length),
+            S=double(n.var+1),inSample=double(inSample.length),DMmatrix=double(n.var*n.var),
             PACKAGE="eco")
 
   ## SEM step
@@ -160,7 +160,7 @@ ecoML <- function(formula, data = parent.frame(), supplement = NULL,
               as.double(bdd$Wmin[,1,1]), as.double(bdd$Wmax[,1,1]),
               as.integer(flag),as.integer(verbose),
               res$pdTheta, pdTheta=double(n.var), S=double(n.var+1),
-              inSample=double(inSample.length),
+              inSample=double(inSample.length),DMmatrix=double(n.var*n.var),
               PACKAGE="eco")     
   }
   
@@ -168,7 +168,12 @@ ecoML <- function(formula, data = parent.frame(), supplement = NULL,
   for(i in 1:n)
     for(j in 1:ndim)
       inSample.out[i,j]=res$inSample[(i-1)*2+j]
-  
+
+  DM <- matrix(rep(NA,n.var*n.var),ncol=n.var)
+  for(i in 1:n.var)
+    for(j in 1:n.var)
+      DM[i,j]=res$DMmatrix[(i-1)*n.var+j]
+
   ##output Ioc
    infomat<-Ioc.CAR(theta=res$pdTheta, suff.stat=res$S, n=n)
    Ioc<-infomat$Ioc
@@ -196,11 +201,13 @@ ecoML <- function(formula, data = parent.frame(), supplement = NULL,
    cat("(expected) complete information matrix: Ioc \n")
    print(Ioc.fisher)
 
-   if (flag>=5) {
+   if (flag>=4) {
     SECM.yes<-FALSE  
-     if(!SECM.yes) {	
-     R<-diag(1,5)
-     DM<-R
+     if(!SECM.yes) {
+     cat("DM matrix")
+     print(DM)
+     #R<-diag(1,5)
+     #DM<-R
   
      Gamma<-matrix(0,5,5)
      Gamma[1:2, 1:2]<-Ioc.fisher[1:2,1:2]
@@ -236,7 +243,7 @@ ecoML <- function(formula, data = parent.frame(), supplement = NULL,
   print(Vobs.fisher)
 
 }
-
+  res$DMmatrix<-DM
   res$inSample<-inSample.out
   res<-c(res,list(loglik=res$S[6],Ioc=Ioc, Ioc.fisher=Ioc.fisher))
 
