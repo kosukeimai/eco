@@ -227,8 +227,8 @@ ecoML <- function(formula, data = parent.frame(), supplement = NULL,
   ##transform Iobs.fisher to Iobs
   ##delta method
   ##V(theta)=d(fisher^{-1})V(fisher(theta)))d(fisher^{-1})'
-  grad.invfisher<-c(1,1, theta.fisher[3:4], 
-                      -4*exp(2*theta.fisher[5])/(exp(2*theta.fisher[5])-1)^2)
+  grad.invfisher<-c(1,1, exp(theta.Fisher[3:4]), 
+                      4*exp(2*theta.Fisher[5])/(exp(2*theta.Fisher[5])+1)^2)
 
   Vobs<-diag(grad.invfisher)%*%Vobs.fisher%*%diag(grad.invfisher)
   Iobs<-solve(Vobs)
