@@ -238,10 +238,10 @@ ecoML <- function(formula, data = parent.frame(), supplement = NULL,
    res$inSample<-inSample.out  
    res.out<-list(mu=res$pdTheta[1:2], sigma=res$pdTheta[3:4], sigma.rho=theta.fisher[3:4])
    if (flag!=2 & flag!=6) 
-   res.out<-c(res.out, rho=res$pdTheta[5], rho.fisher=theta.fisher[5])
+   res.out<-list(par1=res.out, par2=list(rho=res$pdTheta[5], rho.fisher=theta.fisher[5]))
    
    if (flag>=4)   
-   res.out<-c(res.out, Vobs=Vobs, Fmis=Fmis, Icom=Icom, Iobs=Iobs, suff=res$S[1:n.par], loglike=res$S[n.par+1], res)
+   res.out<-list(EM.est=res.out, VARCOV=list(obs=Vobs, Fmis=Fmis, Icom=Icom, Iobs=Iobs, suff=res$S[1:n.par], loglike=res$S[n.par+1]), C.out=res)
  
   return(res.out)
 }
