@@ -225,6 +225,11 @@ ecoML <- function(formula, data = parent.frame(), supplement = NULL,
     Iobs<-solve(Vobs)
   }
 
+   Vobs.sym<-0.5*(Vobs+t(Vobs))
+   
+   #if (max(abs(Vobs-Vobs.sym)/Vobs)>0.05) 
+   # warnings("the covariance matrix estimated based on SEM is not symmetric enough. \n")
+
    n.col<-n.par
    n.row<-1
    if (flag>=4) n.row<-3
@@ -259,6 +264,8 @@ ecoML <- function(formula, data = parent.frame(), supplement = NULL,
    res.out$Icom<-Icom
    res.out$Iobs<-Iobs
    res.out$Fmis<-Fmis
+   res.out$Vobs<-Vobs
+   res.out$Vobs.sym<-Vobs.sym
    }
    
    res.out$suff<-res$S[1:n.var]
