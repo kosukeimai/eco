@@ -141,10 +141,40 @@ ecoML <- function(formula, data = parent.frame(), supplement = NULL,
             as.double(bdd$Wmin[,1,1]), as.double(bdd$Wmax[,1,1]),
             as.integer(flag),as.integer(verbose),
             optTheta=c(-1.1,-1.1,-1.1,-1.1,-1.1), pdTheta=double(n.var),
-            S=double(n.var+1),inSample=double(inSample.length),DMmatrix=double(n.var*n.var),
+            S=double(n.var+1),inSample=double(inSample.length),DMmatrix=double(n.par*n.par),
+            itersUsed=as.integer(0),history=double((maxit+1)*(n.var+1)),
             PACKAGE="eco")
 
+ ###Record results
+  iters.em <-res$itersUsed
+  mu.em <- matrix(rep(NA,iters.em*ndim),ncol=ndim)
+  sigma.log.em <- matrix(rep(NA,iters.em*ndim),ncol=ndim)
+  rho.fisher.em <- as.double(rep(NA,iters.em))
+  loglike.em <- as.double(rep(NA,iters.em))
+
+  for(i in 1:iters.em) {
+    mu.em[i,1]=res$history[(i-1)*(n.var+1)+1]
+    mu.em[i,2]=res$history[(i-1)*(n.var+1)+2]
+    sigma.log.em[i,1]=res$history[(i-1)*(n.var+1)+3]
+    sigma.log.em[i,2]=res$history[(i-1)*(n.var+1)+4]
+    rho.fisher.em[i]=res$history[(i-1)*(n.var+1)+5]
+    loglike.em[i]=res$history[(i-1)*(n.var+1)+6]
+  }
+  #print(iters.em)
+  #print(mu.em)
+  #print(sigma.log.em)
+  #print(rho.fisher.em)
+  #print(loglike.em)
+
+  W <- matrix(rep(NA,inSample.length),ncol=ndim)
+
+  for(i in 1:n)
+    for(j in 1:ndim)
+      W[i,j]=res$inSample[(i-1)*2+j]
+
+  theta.fisher<-fisher(res$pdTheta)
   ## SEM step
+  DM <- matrix(rep(NA,n.par*n.par),ncol=n.par)
   if(flag>=4) {
     res <- .C("cEMeco", as.double(tmp$d), as.double(theta.start),
               as.integer(tmp$n.samp),  as.integer(maxit), as.double(epsilon),
@@ -155,21 +185,17 @@ ecoML <- function(formula, data = parent.frame(), supplement = NULL,
               as.double(bdd$Wmin[,1,1]), as.double(bdd$Wmax[,1,1]),
               as.integer(flag),as.integer(verbose),
               res$pdTheta, pdTheta=double(n.var), S=double(n.var+1),
-              inSample=double(inSample.length),DMmatrix=double(n.var*n.var),
+              inSample=double(inSample.length),DMmatrix=double(n.par*n.par),
+              itersUsed=as.integer(0),history=double((maxit+1)*(n.var+1)),
               PACKAGE="eco")     
-  }
   
-  inSample.out <- matrix(rep(NA,inSample.length),ncol=ndim)
-  for(i in 1:n)
-    for(j in 1:ndim)
-      inSample.out[i,j]=res$inSample[(i-1)*2+j]
 
-  DM <- matrix(rep(NA,n.par*n.par),ncol=n.par)
+  
   for(i in 1:n.par)
     for(j in 1:n.par)
       DM[i,j]=res$DMmatrix[(i-1)*n.par+j]
   print(DM)
-  theta.fisher<-fisher(res$pdTheta)
+  }
 
   ## calculate varcov of theta based on SEM results
 
@@ -229,7 +255,7 @@ ecoML <- function(formula, data = parent.frame(), supplement = NULL,
    print(res.table)
 
    res$DMmatrix<-DM
-   res$inSample<-inSample.out  
+   #res$inSample<-W
    res.out<-list(mu=res$pdTheta[1:2], sigma=res$pdTheta[3:4], sigma.rho=theta.fisher[3:4])
    if (flag!=2 & flag!=6) 
    res.out<-list(par1=res.out, par2=list(rho=res$pdTheta[5], rho.fisher=theta.fisher[5]))

@@ -29,6 +29,7 @@ void ecoSEM(double* optTheta, double* pdTheta, Param* params, double Rmat_old[5]
 void ecoEStep(Param* params, double* suff);
 void ecoMStep(double* Suff, double* pdTheta, Param* params);
 void ecoMStepNCAR(double* Suff, double* pdTheta, Param* params);
+void setHistory(double* t_pdTheta, double loglik, int iter ,double history_full[][6]);
 int closeEnough(double* pdTheta, double* pdTheta_old, int len, double maxerr);
 int semDoneCheck(setParam* setP);
 void gridEStep(Param* params, int n_samp, int s_samp, int x1_samp, int x0_samp, double* suff, int verbose, double minW1, double maxW1);
@@ -76,7 +77,9 @@ void cEMeco(
 	    double *Suff,      /*out put suffucient statistics (E(W_1i|Y_i),
 				E(E_1i*W_1i|Y_i..) when  conveges */
       double *inSample, /* In Sample info */
-      double *DMmatrix
+      double *DMmatrix,  /* DM matrix for SEM*/
+      int *itersUsed, /* number of iterations used */
+      double *history /* history of mu1,mu2,sigma11,sigma22, and rho, transformed as well as logliklihood*/
 	    ){
 
   int n_samp  = *pin_samp;    /* sample size */
@@ -95,6 +98,7 @@ void cEMeco(
   double *t_pdTheta_old=doubleArray(5);
   double Rmat_old[5][5];
   double Rmat[5][5];
+  double history_full[*iteration_max+1][6];
 
   /* misc variables */
   int i, j,main_loop, start;   /* used for various loops */
@@ -129,6 +133,7 @@ while (main_loop<=*iteration_max && (start==1 ||
   if (start) {
     for(i=0;i<5;i++) pdTheta[i]=pdTheta_in[i];
     transformTheta(pdTheta,t_pdTheta);
+    setHistory(t_pdTheta,0,0,history_full);
     for(i=0;i<t_samp;i++){
       params[i].caseP.mu[0] = pdTheta[0];
       params[i].caseP.mu[1] = pdTheta[1];
@@ -143,6 +148,7 @@ while (main_loop<=*iteration_max && (start==1 ||
     if(setP.fixedRho) setP.semDone[4]=1; //no need to worry about last row
     start=0;
   }
+
 
   if (setP.verbose>=1) {
     Rprintf("cycle %d/%d: %5g %5g %5g %5g rho: %5g",main_loop,*iteration_max,pdTheta[0],pdTheta[1],pdTheta[2],pdTheta[3],pdTheta[4]);
@@ -166,8 +172,12 @@ while (main_loop<=*iteration_max && (start==1 ||
   //scanf(" %c", &ch );
 
   //if we're in the second run through of SEM
-  if ((setP.sem==1)) {
+  if (setP.sem==1) {
     ecoSEM(optTheta, pdTheta, params, Rmat_old, Rmat);
+  }
+  else {
+    setHistory(t_pdTheta,(main_loop<=1) ? 0 : Suff[5],main_loop,history_full);
+//    Rprintf("hist %d/%d: %5g %5g %5g %5g rho: %5g ll: %5g",main_loop,*iteration_max,history_full[main_loop][0],history_full[main_loop][1],history_full[main_loop][2],history_full[main_loop][3],history_full[main_loop][4],history_full[main_loop][5]);
   }
 
 
@@ -204,6 +214,12 @@ if (setP.sem==1) {
   for(i=0;i<npar;i++)
     for(j=0;j<npar;j++)
       DMmatrix[i*npar+j]=Rmat[i][j];
+}
+
+*itersUsed=main_loop;
+for(i=0;i<(*itersUsed);i++) {
+  for(j=0;j<6;j++)
+    history[i*6+j]=history_full[i][j];
 }
 
 /* write out the random seed */
@@ -624,6 +640,17 @@ void untransformTheta(double* t_pdTheta,double* pdTheta) {
   pdTheta[2]=exp(t_pdTheta[2]);
   pdTheta[3]=exp(t_pdTheta[3]);
   pdTheta[4]=(exp(2*t_pdTheta[4])-1)/(exp(2*t_pdTheta[4])+1);
+}
+
+/*
+ * Input transformed theta, loglikelihood, iteration
+ * Mutates: history_full
+ */
+void setHistory(double* t_pdTheta, double loglik, int iter ,double history_full[][6]) {
+  int j;
+  for(j=0;j<5;j++)
+    history_full[iter][j]=t_pdTheta[j];
+  history_full[iter][5]=loglik;
 }
 
 /*
