@@ -167,8 +167,8 @@ ecoML <- function(formula, data = parent.frame(), supplement = NULL,
   DM <- matrix(rep(NA,n.par*n.par),ncol=n.par)
   for(i in 1:n.par)
     for(j in 1:n.par)
-      DM[i,j]=res$DMmatrix[(i-1)*n.par+j]
-
+      DM[i,j]=res$DMmatrix[(i-1)*5+j]
+  print(DM)
   theta.fisher<-fisher(res$pdTheta)
 
   ## calculate varcov of theta based on SEM results
@@ -183,7 +183,8 @@ ecoML <- function(formula, data = parent.frame(), supplement = NULL,
 
     Icom<-infomat$Icom
     Icom.fisher<-infomat$Icom.fisher
-     
+    print(Icom)
+    print(Icom.fisher)
     Gamma<-matrix(0,n.par,n.par)
     Gamma[1:2, 1:2]<-Icom.fisher[1:2,1:2]
     Gamma[3:n.par,3:n.par]<-Icom.fisher[3:n.par,3:n.par]
@@ -193,7 +194,7 @@ ecoML <- function(formula, data = parent.frame(), supplement = NULL,
     
     Vcom.fisher<-solve(Icom.fisher)
     dV<-Vcom.fisher%*%DM%*%solve(diag(1,n.par)-DM)
-
+    print(dV)
     Vobs.fisher<-Vcom.fisher+dV
     Iobs.fisher<-solve(Vobs.fisher)
 
