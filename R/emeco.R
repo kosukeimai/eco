@@ -145,32 +145,7 @@ ecoML <- function(formula, data = parent.frame(), supplement = NULL,
             itersUsed=as.integer(0),history=double((maxit+1)*(n.var+1)),
             PACKAGE="eco")
 
- ###Record results
-  iters.em <-res$itersUsed
-  mu.em <- matrix(rep(NA,iters.em*ndim),ncol=ndim)
-  sigma.log.em <- matrix(rep(NA,iters.em*ndim),ncol=ndim)
-  rho.fisher.em <- as.double(rep(NA,iters.em))
-  loglike.em <- as.double(rep(NA,iters.em))
 
-  for(i in 1:iters.em) {
-    mu.em[i,1]=res$history[(i-1)*(n.var+1)+1]
-    mu.em[i,2]=res$history[(i-1)*(n.var+1)+2]
-    sigma.log.em[i,1]=res$history[(i-1)*(n.var+1)+3]
-    sigma.log.em[i,2]=res$history[(i-1)*(n.var+1)+4]
-    rho.fisher.em[i]=res$history[(i-1)*(n.var+1)+5]
-    loglike.em[i]=res$history[(i-1)*(n.var+1)+6]
-  }
-  #print(iters.em)
-  #print(mu.em)
-  #print(sigma.log.em)
-  #print(rho.fisher.em)
-  #print(loglike.em)
-
-  W <- matrix(rep(NA,inSample.length),ncol=ndim)
-
-  for(i in 1:n)
-    for(j in 1:ndim)
-      W[i,j]=res$inSample[(i-1)*2+j]
 
   theta.fisher<-fisher(res$pdTheta)
   ## SEM step
@@ -197,8 +172,6 @@ ecoML <- function(formula, data = parent.frame(), supplement = NULL,
   print(DM)
   }
 
-  ## calculate varcov of theta based on SEM results
-
   if (flag>=4) {
     ##output Icom
     if (flag==4) 
@@ -211,12 +184,6 @@ ecoML <- function(formula, data = parent.frame(), supplement = NULL,
     Icom.fisher<-infomat$Icom.fisher
     print(Icom)
     print(Icom.fisher)
-    Gamma<-matrix(0,n.par,n.par)
-    Gamma[1:2, 1:2]<-Icom.fisher[1:2,1:2]
-    Gamma[3:n.par,3:n.par]<-Icom.fisher[3:n.par,3:n.par]
-     
-    Lamda<-matrix(0,n.par,n.par)
-    Lamda[3:n.par, 1:2]<-Icom.fisher[3:n.par, 1:2]
     
     Vcom.fisher<-solve(Icom.fisher)
     dV<-Vcom.fisher%*%DM%*%solve(diag(1,n.par)-DM)
@@ -240,7 +207,7 @@ ecoML <- function(formula, data = parent.frame(), supplement = NULL,
    res.table[1,]<-res$pdTheta[1:n.par]
    if (n.row>1) {
    res.table[2,]<-sqrt(diag(Vobs))
-   res.table[3,]<-Fmis<-diag(Iobs)/diag(Icom)
+   res.table[3,]<-Fmis<-1-diag(Iobs)/diag(Icom)
    }
 
    cname<-c("mu1", "mu2", "sigma1", "sigma2", "rho")
@@ -256,12 +223,44 @@ ecoML <- function(formula, data = parent.frame(), supplement = NULL,
 
    res$DMmatrix<-DM
    #res$inSample<-W
-   res.out<-list(mu=res$pdTheta[1:2], sigma=res$pdTheta[3:4], sigma.rho=theta.fisher[3:4])
-   if (flag!=2 & flag!=6) 
-   res.out<-list(par1=res.out, par2=list(rho=res$pdTheta[5], rho.fisher=theta.fisher[5]))
+
+
+   res.out<-list(mu=res$pdTheta[1:2], sigma=res$pdTheta[3:4], sigma.log=theta.fisher[3:4])
+   if (flag==0 | flag==4) {
+   res.out$rho<-res$pdTheta[5]
+   res.out$rho.fisher<-theta.fisher[5]
+   }
+   if (flag==4 | flag==6) {
+   res.out$Icom<-Icom
+   res.out$Iobs<-Iobs
+   res.out$Fmis<-Fmis
+   }
    
-   if (flag>=4)   
-   res.out<-list(EM.est=res.out, VARCOV=list(obs=Vobs, Fmis=Fmis, Icom=Icom, Iobs=Iobs, suff=res$S[1:n.var], loglike=res$S[n.var+1]), C.out=res)
+   res.out$suff<-res$S[1:n.var]
+   res.out$loglike<-res$S[n.var+1]
+
+   res.out$iters.em <-iters.em<-res$itersUsed
+   res.out$mu.em <- matrix(rep(NA,iters.em*ndim),ncol=ndim)
+   res.out$sigma.log.em <- matrix(rep(NA,iters.em*ndim),ncol=ndim)
+   res.out$rho.fisher.em <- as.double(rep(NA,iters.em))
+   res.out$loglike.em <- as.double(rep(NA,iters.em))
+
+  for(i in 1:iters.em) {
+    res.out$mu.em[i,1]=res$history[(i-1)*(n.var+1)+1]
+    res.out$mu.em[i,2]=res$history[(i-1)*(n.var+1)+2]
+    res.out$sigma.log.em[i,1]=res$history[(i-1)*(n.var+1)+3]
+    res.out$sigma.log.em[i,2]=res$history[(i-1)*(n.var+1)+4]
+    res.out$rho.fisher.em[i]=res$history[(i-1)*(n.var+1)+5]
+    res.out$loglike.em[i]=res$history[(i-1)*(n.var+1)+6]
+  }
+
+  W <- matrix(rep(NA,inSample.length),ncol=ndim)
+
+  for(i in 1:n)
+    for(j in 1:ndim)
+      W[i,j]=res$inSample[(i-1)*2+j]
+
+  res.out$W<-W
  
   return(res.out)
 }
@@ -409,6 +408,13 @@ eco.sem<-function(formula, data = parent.frame(),supplement=NULL,
   ##missing information decomposition
   
   SECM.yes<-FALSE
+    Gamma<-matrix(0,n.par,n.par)
+    Gamma[1:2, 1:2]<-Icom.fisher[1:2,1:2]
+    Gamma[3:n.par,3:n.par]<-Icom.fisher[3:n.par,3:n.par]
+     
+    Lamda<-matrix(0,n.par,n.par)
+    Lamda[3:n.par, 1:2]<-Icom.fisher[3:n.par, 1:2]
+
 
   if (SECM.yes) {
   DM.ECM<-R.t2
