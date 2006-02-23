@@ -223,15 +223,18 @@ ecoML <- function(formula, data = parent.frame(), supplement = NULL,
    res.table[1,]<-res$pdTheta[1:n.par]
    if (n.row>1) {
    res.table[2,]<-sqrt(diag(Vobs))
-   res.table[3,]<-Fmis<-diag(Iobs)/diag(Icom)
+   res.table[3,]<-Fmis<-diag(Iobs)/diag(Icom)*100
    }
 
    cname<-c("mu1", "mu2", "sigma1", "sigma2", "rho")
-   rname<-c("EM est", "std err", "frac. missing")
+   rname<-c("EM est.", "std. err.", "frac. missing")
    rownames(res.table)<-rname[1:n.row]
    colnames(res.table)<-cname[1:n.col]
+   cat("\n")
+
 
    cat("EM estimates:  ", "\n")
+   cat("\n")
    print(res.table)
 
    res$DMmatrix<-DM
