@@ -200,13 +200,10 @@ for(i=0;i<t_samp;i++) {
 }
 //set the DM matrix (only matters for SEM)
 if (setP.sem==1) {
-  for(i=0;i<5;i++)
-    for(j=0;j<5;j++)
-      DMmatrix[i*5+j]=Rmat[i][j];
-  if (setP.fixedRho) {
-    for(i=0;i<5;i++) DMmatrix[i*5+4]=0;
-    for(i=0;i<5;i++) DMmatrix[20+i]=0;
-  }
+  int npar=5 - setP.fixedRho;
+  for(i=0;i<npar;i++)
+    for(j=0;j<npar;j++)
+      DMmatrix[i*npar+j]=Rmat[i][j];
 }
 
 /* write out the random seed */

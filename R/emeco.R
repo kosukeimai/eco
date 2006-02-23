@@ -167,7 +167,7 @@ ecoML <- function(formula, data = parent.frame(), supplement = NULL,
   DM <- matrix(rep(NA,n.par*n.par),ncol=n.par)
   for(i in 1:n.par)
     for(j in 1:n.par)
-      DM[i,j]=res$DMmatrix[(i-1)*5+j]
+      DM[i,j]=res$DMmatrix[(i-1)*n.par+j]
   print(DM)
   theta.fisher<-fisher(res$pdTheta)
 
