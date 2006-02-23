@@ -3,13 +3,13 @@
 fisher<-function(X) {
   p<-length(X) 
  Y<-rep(0,p)
- if (p==5) {
   Y[1]<-X[1]
   Y[2]<-X[2]
   Y[3]<-log(X[3])
   Y[4]<-log(X[4])
-  Y[5]<-0.5*log((1+X[5])/(1-X[5]))
-}
+  if (p==5) 
+   Y[5]<-0.5*log((1+X[5])/(1-X[5]))
+
   return(Y)
 }  
 
@@ -17,13 +17,12 @@ fisher<-function(X) {
 fisher.back<-function(Y) {
  p<-length(Y) 
  X<-rep(0,p)
- if (p==5) {
   X[1]<-Y[1]
   X[2]<-Y[2]
   X[3]<-exp(Y[3])
   X[4]<-exp(Y[4])
-  X[5]<-(exp(2*Y[5])-1)/(exp(2*Y[5])+1)
-}
+  if (p==5) 
+    X[5]<-(exp(2*Y[5])-1)/(exp(2*Y[5])+1)
   return(X)
 }
   
@@ -40,80 +39,83 @@ thetacov<-function(Z) {
   return(mat)
 }
 
-Ioc.CAR<-function(theta, suff.stat, n,fisher=TRUE) {
-    n.var<-length(theta)
-    Ioc<-matrix(NA, n.var, n.var)    
-
+Icom.CAR<-function(theta, suff.stat, n,fisher=TRUE, n.par) {
+    Icom<-matrix(NA, n.par, n.par)    
+ 
     S1<-n*suff.stat[1]
     S2<-n*suff.stat[2]
     S11<-n*suff.stat[3]
     S22<-n*suff.stat[4]
     S12<-n*suff.stat[5]
-    
+
     u1<-theta[1]
     u2<-theta[2]
     v1<-theta[3]
     v2<-theta[4]
     r<-theta[5]
     
-    Ioc[1,1]<- -n/((1-r^2)*v1)
-    Ioc[1,2]<- Ioc[2,1] <- n*r/((1-r^2)*sqrt(v1*v2))
-    Ioc[1,3]<- Ioc[3,1] <- 1/((1-r^2)*v1^2)*(-S1+n*u1) -
+    Icom[1,1]<- -n/((1-r^2)*v1)
+    Icom[1,2]<- Icom[2,1] <- n*r/((1-r^2)*sqrt(v1*v2))
+    Icom[1,3]<- Icom[3,1] <- 1/((1-r^2)*v1^2)*(-S1+n*u1) -
       r/(2*(1-r^2)*v1^(3/2)*v2^(1/2))*(-S2+n*u2)
-    Ioc[1,4]<- Ioc[4,1] <- -r/(2*(1-r^2)*v1^(1/2)*v2^(3/2))*(-S2+n*u2)
-    Ioc[1,5]<- Ioc[5,1] <- -2*r/((1-r^2)^2*v1)*(-S1+n*u1) +
-      (1+r^2)/((1-r^2)^2*v1^(1/2)*v2^(1/2))*(-S2+n*u2) 
+    Icom[1,4]<- Icom[4,1] <- -r/(2*(1-r^2)*v1^(1/2)*v2^(3/2))*(-S2+n*u2)
     
-    Ioc[2,2]<- -n/((1-r^2)*v2)  
-    Ioc[2,3]<- Ioc[3,2] <- -r/(2*(1-r^2)*v1^(3/2)*v2^(1/2))*(-S1+n*u1)
-    Ioc[2,4]<- Ioc[4,2] <- 1/((1-r^2)*v2^2)*(-S2+n*u2) -
+    Icom[2,2]<- -n/((1-r^2)*v2)  
+    Icom[2,3]<- Icom[3,2] <- -r/(2*(1-r^2)*v1^(3/2)*v2^(1/2))*(-S1+n*u1)
+    Icom[2,4]<- Icom[4,2] <- 1/((1-r^2)*v2^2)*(-S2+n*u2) -
       r/(2*(1-r^2)*v1^(1/2)*v2^(3/2))*(-S1+n*u1) 
-    Ioc[2,5]<- Ioc[5,2] <- -2*r/((1-r^2)^2*v2)*(-S2+n*u2) +
-      (1+r^2)/((1-r^2)^2*v1^(1/2)*v2^(1/2))*(-S1+n*u1) 
-    
-    Ioc[3,3]<- n/(2*v1^2) - 1/((1-r^2)*v1^3)*(S11-2*u1*S1+n*u1^2) +
-      3*r/(4*(1-r^2)*v1^(5/2)*v2^(1/2))*(S12-u1*S2-u2*S1+n*u1*u2) 
-    Ioc[3,4]<- Ioc[4,3] <- r/(4*(1-r^2)*v1^(3/2)*v2^(3/2))*(S12-u1*S2-u2*S1+n*u1*u2)
-    Ioc[3,5]<- Ioc[5,3] <- r/((1-r^2)^2*v1^2)*(S11-2*u1*S1+n*u1^2) -
-     (1+r^2)/(2*(1-r^2)^2*v1^(3/2)*v2^(1/2))*(S12-u1*S2-u2*S1+n*u1*u2) 
 
-    Ioc[4,4]<- n/(2*v2^2) - 1/((1-r^2)*v2^3)*(S22-2*u2*S2+n*u2^2) +
+    Icom[3,3]<- n/(2*v1^2) - 1/((1-r^2)*v1^3)*(S11-2*u1*S1+n*u1^2) +
+      3*r/(4*(1-r^2)*v1^(5/2)*v2^(1/2))*(S12-u1*S2-u2*S1+n*u1*u2) 
+    Icom[3,4]<- Icom[4,3] <- r/(4*(1-r^2)*v1^(3/2)*v2^(3/2))*(S12-u1*S2-u2*S1+n*u1*u2)
+
+    Icom[4,4]<- n/(2*v2^2) - 1/((1-r^2)*v2^3)*(S22-2*u2*S2+n*u2^2) +
       3*r/(4*(1-r^2)*v1^(1/2)*v2^(5/2))*(S12-u1*S2-u2*S1+n*u1*u2) 
-    Ioc[4,5]<- Ioc[5,4] <- r/((1-r^2)^2*v2^2)*(S22-2*u2*S2+n*u2^2) -
-      (1+r^2)/(2*(1-r^2)^2*v1^(1/2)*v2^(3/2))*(S12-u1*S2-u2*S1+n*u1*u2) 
-    
-    Ioc[5,5]<- n*(1+r^2)/(1-r^2)^2 -
+
+   if (n.par>=5) {
+   
+    Icom[1,5]<- Icom[5,1] <- -2*r/((1-r^2)^2*v1)*(-S1+n*u1) +
+      (1+r^2)/((1-r^2)^2*v1^(1/2)*v2^(1/2))*(-S2+n*u2) 
+    Icom[2,5]<- Icom[5,2] <- -2*r/((1-r^2)^2*v2)*(-S2+n*u2) +
+      (1+r^2)/((1-r^2)^2*v1^(1/2)*v2^(1/2))*(-S1+n*u1) 
+    Icom[3,5]<- Icom[5,3] <- r/((1-r^2)^2*v1^2)*(S11-2*u1*S1+n*u1^2) -
+     (1+r^2)/(2*(1-r^2)^2*v1^(3/2)*v2^(1/2))*(S12-u1*S2-u2*S1+n*u1*u2) 
+    Icom[4,5]<- Icom[5,4] <- r/((1-r^2)^2*v2^2)*(S22-2*u2*S2+n*u2^2) -
+      (1+r^2)/(2*(1-r^2)^2*v1^(1/2)*v2^(3/2))*(S12-u1*S2-u2*S1+n*u1*u2)     
+    Icom[5,5]<- n*(1+r^2)/(1-r^2)^2 -
       (1+3*r^2)/((1-r^2)^3*v1)*(S11-2*u1*S1+n*u1^2) -
       (1+3*r^2)/((1-r^2)^3*v2)*(S22-2*u2*S2+n*u2^2) +
       (2*r^3+6*r)/((1-r^2)^3*v1^(1/2)*v2^(1/2))*(S12-u1*S2-u2*S1+n*u1*u2) 
+    }
 
    if (fisher) {
-       Ioc.fisher<-matrix(NA, n.var,n.var)
+       Icom.fisher<-matrix(NA, n.par,n.par)
        dv1<- -n/(2*v1) + 1/(2*(1-r^2)*v1^2)*(S11-2*u1*S1+n*u1^2) - r/(2*(1-r^2)*v1^(3/2)*v2^(1/2))*(S12-u1*S2-u2*S1+n*u1*u2)
        dv2<- -n/(2*v2) + 1/(2*(1-r^2)*v2^2)*(S22-2*u2*S2+n*u2^2) - r/(2*(1-r^2)*v1^(1/2)*v2^(3/2))*(S12-u1*S2-u2*S1+n*u1*u2)
+
+       Icom.fisher[1:2,1:2]<-Icom[1:2,1:2]
+       Icom.fisher[1,3]<- Icom.fisher[3,1] <- Icom[1,3]*v1
+       Icom.fisher[1,4]<- Icom.fisher[4,1] <- Icom[1,4]*v2
+     
+       Icom.fisher[2,3]<- Icom.fisher[3,2] <- Icom[2,3]*v1
+       Icom.fisher[2,4]<- Icom.fisher[4,2] <- Icom[2,4]*v2
+     
+       Icom.fisher[3,3]<- Icom[3,3]*v1^2 + dv1*v1
+       Icom.fisher[3,4]<- Icom.fisher[4,3] <- Icom[3,4]*v1*v2
+     
+       Icom.fisher[4,4]<- Icom[4,4]*v2^2 + dv2*v2
+
+       if (n.par>=5) {
        dr<- n*r/(1-r^2) - r/((1-r^2)^2*v1)*(S11-2*u1*S1+n*u1^2) + (1+r^2)/((1-r^2)^2*v1^(1/2)*v2^(1/2))*(S12-u1*S2-u2*S1+n*u1*u2) - r/((1-r^2)^2*v2)*(S22-2*u2*S2+n*u2^2)
-
-       Ioc.fisher[1:2,1:2]<-Ioc[1:2,1:2]
-       Ioc.fisher[1,3]<- Ioc.fisher[3,1] <- Ioc[1,3]*v1
-       Ioc.fisher[1,4]<- Ioc.fisher[4,1] <- Ioc[1,4]*v2
-       Ioc.fisher[1,5]<- Ioc.fisher[5,1] <- Ioc[1,5]*(1-r^2)
-     
-       Ioc.fisher[2,3]<- Ioc.fisher[3,2] <- Ioc[2,3]*v1
-       Ioc.fisher[2,4]<- Ioc.fisher[4,2] <- Ioc[2,4]*v2
-       Ioc.fisher[2,5]<- Ioc.fisher[5,2] <- Ioc[2,5]*(1-r^2)
-     
-       Ioc.fisher[3,3]<- Ioc[3,3]*v1^2 + dv1*v1
-       Ioc.fisher[3,4]<- Ioc.fisher[4,3] <- Ioc[3,4]*v1*v2
-       Ioc.fisher[3,5]<- Ioc.fisher[5,3] <- Ioc[3,5]*v1*(1-r^2)
-     
-       Ioc.fisher[4,4]<- Ioc[4,4]*v2^2 + dv2*v2
-       Ioc.fisher[4,5]<- Ioc.fisher[5,4] <- Ioc[4,5]*v2*(1-r^2)
-     
-       Ioc.fisher[5,5]<- Ioc[5,5]*(1-r^2)^2 - dr*2*r*(1-r^2)
+       Icom.fisher[1,5]<- Icom.fisher[5,1] <- Icom[1,5]*(1-r^2)
+       Icom.fisher[2,5]<- Icom.fisher[5,2] <- Icom[2,5]*(1-r^2)
+       Icom.fisher[3,5]<- Icom.fisher[5,3] <- Icom[3,5]*v1*(1-r^2)
+       Icom.fisher[4,5]<- Icom.fisher[5,4] <- Icom[4,5]*v2*(1-r^2)     
+       Icom.fisher[5,5]<- Icom[5,5]*(1-r^2)^2 - dr*2*r*(1-r^2)
+       }
   }   
-    return(list(Ioc=-Ioc, Ioc.fisher=-Ioc.fisher))
-
-}
+     return(list(Icom=-Icom, Icom.fisher=-Icom.fisher))
+ }
 
 ecoML <- function(formula, data = parent.frame(), supplement = NULL, 
                   theta.start=c(0,0,1,1,0), epsilon=0.000001,
@@ -135,6 +137,9 @@ ecoML <- function(formula, data = parent.frame(), supplement = NULL,
   n.var <- 5
   n <- tmp$n.samp+tmp$survey.samp+tmp$samp.X1+tmp$samp.X0
   inSample.length <- ndim*n
+
+  n.par<-5
+  if (flag==2 | flag==6) n.par<-4
   
   ## Fitting the model via EM  
   res <- .C("cEMeco", as.double(tmp$d), as.double(theta.start),
@@ -169,103 +174,94 @@ ecoML <- function(formula, data = parent.frame(), supplement = NULL,
     for(j in 1:ndim)
       inSample.out[i,j]=res$inSample[(i-1)*2+j]
 
-  DM <- matrix(rep(NA,n.var*n.var),ncol=n.var)
-  for(i in 1:n.var)
-    for(j in 1:n.var)
-      DM[i,j]=res$DMmatrix[(i-1)*n.var+j]
+  DM <- matrix(rep(NA,n.par*n.par),ncol=n.par)
+  for(i in 1:n.par)
+    for(j in 1:n.par)
+      DM[i,j]=res$DMmatrix[(i-1)*n.par+j]
 
-  ##output Ioc
-   infomat<-Ioc.CAR(theta=res$pdTheta, suff.stat=res$S, n=n)
-   Ioc<-infomat$Ioc
-   Ioc.fisher<-infomat$Ioc.fisher
-   
-   cat("\n")
-   cat("Estimates based on EM", "\n")
-   cat("Mean:", "\n")
-   print(res$pdTheta[1:2])
-   cat("\n")
-   cat("Covarianace Matrix:", "\n")
-   COV<-thetacov(res$pdTheta)
-   print(COV)
-   cat("(expected) complete information matrix: Ioc.fisher \n")
-   print(Ioc)
+  theta.fisher<-fisher(res$pdTheta)
 
-   cat("Fisher transformtion:", "\n")
-   theta.Fisher<-rep(0,5)
-   theta.Fisher[1:2]<-res$pdTheta[1:2]
-   theta.Fisher[3:4]<-diag(COV)
-   theta.Fisher[5]<-COV[1,2]/sqrt(COV[1,1]*COV[2,2])
-   theta.Fisher<-fisher(theta.Fisher)
-   cat("mu1   mu2   ln(sigma1)  ln(sigma2) 0.5ln((1+rho)/(1-rho)) \n")
-   print(theta.Fisher)
-   cat("(expected) complete information matrix: Ioc \n")
-   print(Ioc.fisher)
+  ## calculate varcov of theta based on SEM results
 
-   if (flag>=4) {
-    SECM.yes<-FALSE  
-     if(!SECM.yes) {
-     cat("DM matrix")
-     print(DM)
-     #R<-diag(1,5)
-     #DM<-R
-  
-     Gamma<-matrix(0,5,5)
-     Gamma[1:2, 1:2]<-Ioc.fisher[1:2,1:2]
-     Gamma[3:5,3:5]<-Ioc.fisher[3:5,3:5]
-     Lamda<-matrix(0,5,5)
-     Lamda[3:5, 1:2]<-Ioc.fisher[3:5, 1:2]
+  if (flag>=4) {
+    ##output Icom
+    if (flag==4) 
+    infomat<-Icom.CAR(theta=res$pdTheta, suff.stat=res$S, n=n, n.par=n.par)
+    if (flag==6) 
+    infomat<-Icom.CAR(theta=c(res$pdTheta[1:4],theta.start[5]), suff.stat=c(res$S[1:4],theta.start[5]), n=n, n.par=n.par)
+
+
+    Icom<-infomat$Icom
+    Icom.fisher<-infomat$Icom.fisher
+     
+    Gamma<-matrix(0,n.par,n.par)
+    Gamma[1:2, 1:2]<-Icom.fisher[1:2,1:2]
+    Gamma[3:n.par,3:n.par]<-Icom.fisher[3:n.par,3:n.par]
+     
+    Lamda<-matrix(0,n.par,n.par)
+    Lamda[3:n.par, 1:2]<-Icom.fisher[3:n.par, 1:2]
     
-     Vcom.fisher<-solve(Ioc.fisher)
-     dV<-Vcom.fisher%*%DM%*%solve(diag(1,5)-DM)
+    Vcom.fisher<-solve(Icom.fisher)
+    dV<-Vcom.fisher%*%DM%*%solve(diag(1,n.par)-DM)
+
+    Vobs.fisher<-Vcom.fisher+dV
+    Iobs.fisher<-solve(Vobs.fisher)
+
+    ##transform Iobs.fisher to Iobs via delta method
+    ##V(theta)=d(fisher^{-1})V(fisher(theta)))d(fisher^{-1})'
+    grad.invfisher<-c(1,1, exp(theta.fisher[3:4]))
+    if (flag==4) 
+       grad.invfisher<-c(grad.invfisher,4*exp(2*theta.fisher[5])/(exp(2*theta.fisher[5])+1)^2)
+    Vobs<-diag(grad.invfisher)%*%Vobs.fisher%*%diag(grad.invfisher)
+    Iobs<-solve(Vobs)
   }
+
+   n.col<-n.par
+   n.row<-1
+   if (flag>=4) n.row<-3
+   res.table<-matrix(NA, n.row, n.col)
+   res.table[1,]<-res$pdTheta[1:n.par]
+   if (n.row>1) {
+   res.table[2,]<-sqrt(diag(Vobs))
+   res.table[3,]<-Fmis<-diag(Iobs)/diag(Icom)
+   }
+
+   cname<-c("mu1", "mu2", "sigma1", "sigma2", "rho")
+   rname<-c("EM est", "std err", "frac. missing")
+   rownames(res.table)<-rname[1:n.row]
+   colnames(res.table)<-cname[1:n.col]
+
+   cat("EM estimates:  ", "\n")
+   print(res.table)
+
+   res$DMmatrix<-DM
+   res$inSample<-inSample.out  
+   res.out<-list(mu=res$pdTheta[1:2], sigma=res$pdTheta[3:4], sigma.rho=theta.fisher[3:4])
+   if (flag!=2 & flag!=6) 
+   res.out<-c(res.out, rho=res$pdTheta[5], rho.fisher=thets.fisher[5])
+   
+   if (flag>=4)   
+   res.out<-c(res.out, Vobs=Vobs, Fmis=Fmis, Icom=Icom, Iobs=Iobs, suff=res$S[1:n.par], loglike=res$S[n.par+1], res)
  
-
-
-  Vobs.fisher<-Vcom.fisher+dV
-  Iobs.fisher<-solve(Vobs.fisher)
-
-  ##transform Iobs.fisher to Iobs
-  ##delta method
-  ##V(theta)=d(fisher^{-1})V(fisher(theta)))d(fisher^{-1})'
-  grad.invfisher<-c(1,1, exp(theta.Fisher[3:4]), 
-                      4*exp(2*theta.Fisher[5])/(exp(2*theta.Fisher[5])+1)^2)
-
-  Vobs<-diag(grad.invfisher)%*%Vobs.fisher%*%diag(grad.invfisher)
-  Iobs<-solve(Vobs)
-  cat("Iobs\n")
-  print(Iobs)
-  cat("Vobs \n")
-  print(Vobs)
-  
-  cat("Iobs_fisher\n")
-  print(Iobs.fisher)
-  cat("Vobs_fisher\n")
-  print(Vobs.fisher)
-
-}
-  res$DMmatrix<-DM
-  res$inSample<-inSample.out
-  res<-c(res,list(loglik=res$S[6],Ioc=Ioc, Ioc.fisher=Ioc.fisher))
-
-  return(res)
+  return(res.out)
 }
 
 
-#  if (!Ioc.yes) {
+#  if (!Icom.yes) {
 #    res.out<-list(theta=theta.start)
 #  }
-#  else if (Ioc.yes) {
-#    if (Fisher) cat("Ioc matrix at Fisher transformation scale:", "\n")
-#    else cat("Ioc matrix:", "\n")
-#    print(Ioc)
+#  else if (Icom.yes) {
+#    if (Fisher) cat("Icom matrix at Fisher transformation scale:", "\n")
+#    else cat("Icom matrix:", "\n")
+#    print(Icom)
 #    
-#    res.out<-list(theta=theta.start, Ioc=Ioc)
+#    res.out<-list(theta=theta.start, Icom=Icom)
 #  }
 #  class(res.out) <- "eco"
 #  return(res.out)
 
 eco.sem<-function(formula, data = parent.frame(),supplement=NULL, 
-                  theta.start=c(0,0,1,1,0), theta.em=NULL, Ioc.em=NULL,
+                  theta.start=c(0,0,1,1,0), theta.em=NULL, Icom.em=NULL,
                   R.epsilon=0.001, maxit=50, Fisher=TRUE,
                   n.draws = 10, by.draw=10, draw.max=200, printon=TRUE, grid=TRUE) {
   
@@ -384,25 +380,25 @@ eco.sem<-function(formula, data = parent.frame(),supplement=NULL,
   DM.ECM<-R.t2
   
   Gamma<-matrix(0,5,5)
-  Gamma[1:2, 1:2]<-Ioc.em[1:2,1:2]
-  Gamma[3:5,3:5]<-Ioc.em[3:5,3:5]
+  Gamma[1:2, 1:2]<-Icom.em[1:2,1:2]
+  Gamma[3:5,3:5]<-Icom.em[3:5,3:5]
   Lamda<-matrix(0,5,5)
-  Lamda[3:5, 1:2]<-Ioc.em[3:5, 1:2]
+  Lamda[3:5, 1:2]<-Icom.em[3:5, 1:2]
   DM.CM<--Lamda%*%solve(Gamma+t(Lamda))
   
-  Vcom<-solve(Ioc.em)
+  Vcom<-solve(Icom.em)
   dV<-Vcom%*%(DM.ECM-DM.CM)%*%solve((diag(1,5)-DM.ECM))
 }
   if(!SECM.yes) {
   DM<-R.t2
   
   Gamma<-matrix(0,5,5)
-  Gamma[1:2, 1:2]<-Ioc.em[1:2,1:2]
-  Gamma[3:5,3:5]<-Ioc.em[3:5,3:5]
+  Gamma[1:2, 1:2]<-Icom.em[1:2,1:2]
+  Gamma[3:5,3:5]<-Icom.em[3:5,3:5]
   Lamda<-matrix(0,5,5)
-  Lamda[3:5, 1:2]<-Ioc.em[3:5, 1:2]
+  Lamda[3:5, 1:2]<-Icom.em[3:5, 1:2]
     
-  Vcom<-solve(Ioc.em)
+  Vcom<-solve(Icom.em)
   dV<-Vcom%*%DM%*%solve(diag(1,5)-DM)
 }
 
