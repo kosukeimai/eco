@@ -145,9 +145,33 @@ ecoML <- function(formula, data = parent.frame(), supplement = NULL,
             itersUsed=as.integer(0),history=double((maxit+1)*(n.var+1)),
             PACKAGE="eco")
 
+  ##record results from EM
+  theta.em<-res$pdTheta
+  theta.fisher<-fisher(theta.em)
+  iters.em<-res$itersUsed
+  mu.em <- matrix(rep(NA,iters.em*ndim),ncol=ndim)
+  sigma.log.em <- matrix(rep(NA,iters.em*ndim),ncol=ndim)
+  rho.fisher.em <- as.double(rep(NA,iters.em))
+  loglike.em <- as.double(rep(NA,iters.em))
+
+  for(i in 1:iters.em) {
+    mu.em[i,1]=res$history[(i-1)*(n.var+1)+1]
+    mu.em[i,2]=res$history[(i-1)*(n.var+1)+2]
+    sigma.log.em[i,1]=res$history[(i-1)*(n.var+1)+3]
+    sigma.log.em[i,2]=res$history[(i-1)*(n.var+1)+4]
+    rho.fisher.em[i]=res$history[(i-1)*(n.var+1)+5]
+    loglike.em[i]=res$history[(i-1)*(n.var+1)+6]
+  }
+
+  #In sample prediction of W
+
+  W <- matrix(rep(NA,inSample.length),ncol=ndim)
+
+  for(i in 1:n)
+    for(j in 1:ndim)
+      W[i,j]=res$inSample[(i-1)*2+j]
 
 
-  theta.fisher<-fisher(res$pdTheta)
   ## SEM step
   DM <- matrix(rep(NA,n.par*n.par),ncol=n.par)
   if(flag>=4) {
@@ -164,7 +188,7 @@ ecoML <- function(formula, data = parent.frame(), supplement = NULL,
               itersUsed=as.integer(0),history=double((maxit+1)*(n.var+1)),
               PACKAGE="eco")     
   
-
+  iters.sem<-res$itersUsed
   
   for(i in 1:n.par)
     for(j in 1:n.par)
@@ -175,9 +199,9 @@ ecoML <- function(formula, data = parent.frame(), supplement = NULL,
   if (flag>=4) {
     ##output Icom
     if (flag==4) 
-    infomat<-Icom.CAR(theta=res$pdTheta, suff.stat=res$S, n=n, n.par=n.par)
+    infomat<-Icom.CAR(theta=theta.em, suff.stat=res$S, n=n, n.par=n.par)
     if (flag==6) 
-    infomat<-Icom.CAR(theta=c(res$pdTheta[1:4],theta.start[5]), suff.stat=res$S, n=n, n.par=n.par)
+    infomat<-Icom.CAR(theta=c(theta.em[1:4],theta.start[5]), suff.stat=res$S, n=n, n.par=n.par)
 
 
     Icom<-infomat$Icom
@@ -193,6 +217,7 @@ ecoML <- function(formula, data = parent.frame(), supplement = NULL,
 
     ##transform Iobs.fisher to Iobs via delta method
     ##V(theta)=d(fisher^{-1})V(fisher(theta)))d(fisher^{-1})'
+
     grad.invfisher<-c(1,1, exp(theta.fisher[3:4]))
     if (flag==4) 
        grad.invfisher<-c(grad.invfisher,4*exp(2*theta.fisher[5])/(exp(2*theta.fisher[5])+1)^2)
@@ -204,7 +229,7 @@ ecoML <- function(formula, data = parent.frame(), supplement = NULL,
    n.row<-1
    if (flag>=4) n.row<-3
    res.table<-matrix(NA, n.row, n.col)
-   res.table[1,]<-res$pdTheta[1:n.par]
+   res.table[1,]<-theta.em[1:n.par]
    if (n.row>1) {
    res.table[2,]<-sqrt(diag(Vobs))
    res.table[3,]<-Fmis<-1-diag(Iobs)/diag(Icom)
@@ -221,13 +246,13 @@ ecoML <- function(formula, data = parent.frame(), supplement = NULL,
    cat("\n")
    print(res.table)
 
-   res$DMmatrix<-DM
+   #res$DMmatrix<-DM
    #res$inSample<-W
 
 
-   res.out<-list(mu=res$pdTheta[1:2], sigma=res$pdTheta[3:4], sigma.log=theta.fisher[3:4])
+   res.out<-list(mu=theta.em[1:2], sigma=theta.em[3:4], sigma.log=theta.fisher[3:4])
    if (flag==0 | flag==4) {
-   res.out$rho<-res$pdTheta[5]
+   res.out$rho<-theta.em[5]
    res.out$rho.fisher<-theta.fisher[5]
    }
    if (flag==4 | flag==6) {
@@ -239,28 +264,14 @@ ecoML <- function(formula, data = parent.frame(), supplement = NULL,
    res.out$suff<-res$S[1:n.var]
    res.out$loglike<-res$S[n.var+1]
 
-   res.out$iters.em <-iters.em<-res$itersUsed
-   res.out$mu.em <- matrix(rep(NA,iters.em*ndim),ncol=ndim)
-   res.out$sigma.log.em <- matrix(rep(NA,iters.em*ndim),ncol=ndim)
-   res.out$rho.fisher.em <- as.double(rep(NA,iters.em))
-   res.out$loglike.em <- as.double(rep(NA,iters.em))
-
-  for(i in 1:iters.em) {
-    res.out$mu.em[i,1]=res$history[(i-1)*(n.var+1)+1]
-    res.out$mu.em[i,2]=res$history[(i-1)*(n.var+1)+2]
-    res.out$sigma.log.em[i,1]=res$history[(i-1)*(n.var+1)+3]
-    res.out$sigma.log.em[i,2]=res$history[(i-1)*(n.var+1)+4]
-    res.out$rho.fisher.em[i]=res$history[(i-1)*(n.var+1)+5]
-    res.out$loglike.em[i]=res$history[(i-1)*(n.var+1)+6]
-  }
-
-  W <- matrix(rep(NA,inSample.length),ncol=ndim)
-
-  for(i in 1:n)
-    for(j in 1:ndim)
-      W[i,j]=res$inSample[(i-1)*2+j]
-
-  res.out$W<-W
+   res.out$iters.em <-iters.em
+   res.out$iters.sem <-iters.sem
+   res.out$mu.em <- mu.em
+   res.out$sigma.log.em <- sigma.log.em
+   res.out$rho.fisher.em <- rho.fisher.em
+   res.out$loglike.em <- loglike.em
+ 
+   res.out$W<-W
  
   return(res.out)
 }
