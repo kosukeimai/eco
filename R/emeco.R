@@ -26,18 +26,6 @@ fisher.back<-function(Y) {
   return(X)
 }
   
-##tranform from  theta into covariance matrix
-thetacov<-function(Z) {
-  p<-length(Z)
- if (p==5) {
-  mat<-matrix(NA,2,2)
-  mat[1,1]<-Z[3]
-  mat[2,2]<-Z[4]
-  mat[1,2]<-Z[5]*sqrt(Z[3]*Z[4])
-  mat[2,1]<-mat[1,2]
-}
-  return(mat)
-}
 
 Icom.CAR<-function(theta, suff.stat, n,fisher=TRUE, n.par) {
     Icom<-matrix(NA, n.par, n.par)    
@@ -46,6 +34,8 @@ Icom.CAR<-function(theta, suff.stat, n,fisher=TRUE, n.par) {
     S2<-n*suff.stat[2]
     S11<-n*suff.stat[3]
     S22<-n*suff.stat[4]
+    S12<-n*suff.stat[5]
+    if (n.par==4) 
     S12<-n*suff.stat[5]
 
     u1<-theta[1]
@@ -188,7 +178,7 @@ ecoML <- function(formula, data = parent.frame(), supplement = NULL,
     if (flag==4) 
     infomat<-Icom.CAR(theta=res$pdTheta, suff.stat=res$S, n=n, n.par=n.par)
     if (flag==6) 
-    infomat<-Icom.CAR(theta=c(res$pdTheta[1:4],theta.start[5]), suff.stat=c(res$S[1:4],theta.start[5]), n=n, n.par=n.par)
+    infomat<-Icom.CAR(theta=c(res$pdTheta[1:4],theta.start[5]), suff.stat=res$S, n=n, n.par=n.par)
 
 
     Icom<-infomat$Icom
@@ -223,7 +213,7 @@ ecoML <- function(formula, data = parent.frame(), supplement = NULL,
    res.table[1,]<-res$pdTheta[1:n.par]
    if (n.row>1) {
    res.table[2,]<-sqrt(diag(Vobs))
-   res.table[3,]<-Fmis<-diag(Iobs)/diag(Icom)*100
+   res.table[3,]<-Fmis<-diag(Iobs)/diag(Icom)
    }
 
    cname<-c("mu1", "mu2", "sigma1", "sigma2", "rho")
@@ -244,7 +234,7 @@ ecoML <- function(formula, data = parent.frame(), supplement = NULL,
    res.out<-list(par1=res.out, par2=list(rho=res$pdTheta[5], rho.fisher=theta.fisher[5]))
    
    if (flag>=4)   
-   res.out<-list(EM.est=res.out, VARCOV=list(obs=Vobs, Fmis=Fmis, Icom=Icom, Iobs=Iobs, suff=res$S[1:n.par], loglike=res$S[n.par+1]), C.out=res)
+   res.out<-list(EM.est=res.out, VARCOV=list(obs=Vobs, Fmis=Fmis, Icom=Icom, Iobs=Iobs, suff=res$S[1:n.var], loglike=res$S[n.var+1]), C.out=res)
  
   return(res.out)
 }
@@ -262,6 +252,20 @@ ecoML <- function(formula, data = parent.frame(), supplement = NULL,
 #  }
 #  class(res.out) <- "eco"
 #  return(res.out)
+
+
+##tranform from  theta into covariance matrix
+thetacov<-function(Z) {
+  p<-length(Z)
+ if (p==5) {
+  mat<-matrix(NA,2,2)
+  mat[1,1]<-Z[3]
+  mat[2,2]<-Z[4]
+  mat[1,2]<-Z[5]*sqrt(Z[3]*Z[4])
+  mat[2,1]<-mat[1,2]
+}
+  return(mat)
+}
 
 eco.sem<-function(formula, data = parent.frame(),supplement=NULL, 
                   theta.start=c(0,0,1,1,0), theta.em=NULL, Icom.em=NULL,
