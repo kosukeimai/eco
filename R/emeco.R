@@ -250,24 +250,7 @@ ecoML <- function(formula, data = parent.frame(), N=NULL, supplement = NULL,
 
 
   ## Ying, put this stuff in summary.ecoML()
-  n.col<-n.par
-  n.row<-1
-  if (sem) n.row<-3
-  res.table<-matrix(NA, n.row, n.col)
-  res.table[1,]<-theta.em[1:n.par]
-  if (n.row>1) {
-    res.table[2,]<-sqrt(diag(Vobs))
-    res.table[3,]<-Fmis<-1-diag(Iobs)/diag(Icom)
-  }
-  cname<-c("mu1", "mu2", "sigma1", "sigma2", "rho")
-  rname<-c("EM est.", "std. err.", "frac. missing")
-  rownames(res.table)<-rname[1:n.row]
-  colnames(res.table)<-cname[1:n.col]
-  cat("\n")
-  cat("EM estimates:  ", "\n")
-  cat("\n")
-  print(res.table)
-  
+ 
   ## output
   res.out<-list(call=mf, Y=Y, X=X,N=N, 
 		fix.rho=fix.rho, context=context, sem=sem, epsilon=epsilon,
