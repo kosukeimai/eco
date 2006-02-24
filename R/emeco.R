@@ -104,12 +104,16 @@ ecoML <- function(formula, data = parent.frame(), supplement = NULL,
   ## Aaron, we need separate options for verbose and loglik:
   ## verbose = TRUE (print out each iteration on screen
   ## loglike = TRUE (calculate the loglik at each iteration)
-  if (verbose & loglik)
-    verbose <- 2
-  else if (verbose & !loglik)
+  if (verbose)
     verbose <- 1
   else
     verbose <- 0
+
+  if (loglik)
+    loglik <- 1
+  else
+    loglik <- 0
+
   
   ## translating into flag
   if (context)
@@ -163,7 +167,7 @@ ecoML <- function(formula, data = parent.frame(), supplement = NULL,
             as.integer(tmp$X1type), as.integer(tmp$samp.X1), as.double(tmp$X1.W1),
             as.integer(tmp$X0type), as.integer(tmp$samp.X0), as.double(tmp$X0.W2),
             as.double(bdd$Wmin[,1,1]), as.double(bdd$Wmax[,1,1]),
-            as.integer(flag),as.integer(verbose),
+            as.integer(flag),as.integer(verbose),as.integer(loglik),
             optTheta=c(-1.1,-1.1,-1.1,-1.1,-1.1), pdTheta=double(n.var),
             S=double(n.var+1),inSample=double(inSample.length),DMmatrix=double(n.par*n.par),
             itersUsed=as.integer(0),history=double((maxit+1)*(n.var+1)),
@@ -203,7 +207,7 @@ ecoML <- function(formula, data = parent.frame(), supplement = NULL,
               as.integer(tmp$X1type), as.integer(tmp$samp.X1), as.double(tmp$X1.W1),
               as.integer(tmp$X0type), as.integer(tmp$samp.X0), as.double(tmp$X0.W2),
               as.double(bdd$Wmin[,1,1]), as.double(bdd$Wmax[,1,1]),
-              as.integer(flag),as.integer(verbose),
+              as.integer(flag),as.integer(verbose),as.integer(loglik),
               res$pdTheta, pdTheta=double(n.var), S=double(n.var+1),
               inSample=double(inSample.length),DMmatrix=double(n.par*n.par),
               itersUsed=as.integer(0),history=double((maxit+1)*(n.var+1)),

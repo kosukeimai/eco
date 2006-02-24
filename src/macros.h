@@ -46,7 +46,7 @@ typedef struct caseParam caseParam;
 
 struct setParam {
   int n_samp, t_samp, s_samp,x1_samp,x0_samp; //types of data sizes
-  int iter, ncar, fixedRho, sem, verbose; //options
+  int iter, ncar, fixedRho, sem, verbose, calcLoglik; //options
   int semDone[5]; //whether that row of the R matrix is done
   double convergence;
   double Sigma[2][2];
