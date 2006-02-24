@@ -154,7 +154,7 @@ ecoML <- function(formula, data = parent.frame(), N=NULL, supplement = NULL,
   bdd <- ecoBD(formula=formula, data=data)
   n.var <- 5
   n <- tmp$n.samp+tmp$survey.samp+tmp$samp.X1+tmp$samp.X0
-  inSample.length <- ndim*n
+  inSample.length <- ndim*tmp$n.samp
 
   n.par<-5
   if (fix.rho) n.par<-4
@@ -193,7 +193,7 @@ ecoML <- function(formula, data = parent.frame(), N=NULL, supplement = NULL,
 
   ## In sample prediction of W
   W <- matrix(rep(NA,inSample.length),ncol=ndim)
-  for(i in 1:n)
+  for(i in 1:tmp$n.samp)
     for(j in 1:ndim)
       W[i,j]=res$inSample[(i-1)*2+j]
 
@@ -253,7 +253,7 @@ ecoML <- function(formula, data = parent.frame(), N=NULL, supplement = NULL,
  
   ## output
   res.out<-list(call=mf, Y=Y, X=X,N=N, 
-		fix.rho=fix.rho, context=context, sem=sem, epsilon=epsilon,
+        fix.rho=fix.rho, context=context, sem=sem, epsilon=epsilon,
                 mu = theta.em[1:2], sigma = theta.em[3:4],
                 sigma.log = theta.fisher[3:4], suff = res$S[1:n.var],
                 loglike = res$S[n.var+1], iters.em = iters.em, 

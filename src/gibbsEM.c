@@ -201,10 +201,10 @@ if (setP.verbose>=1) printf("End loop PDT:%5g %5g %5g %5g %5g\n",pdTheta[0],pdTh
 Param* param;
 Suff[5]=0.0;
 for(i=0;i<t_samp;i++) {
- param=&(params[i]);
- for(j=0;j<2;j++)
-   inSample[i*2+j]=param->caseP.W[j];
   if(i<n_samp) {
+   param=&(params[i]);
+   for(j=0;j<2;j++)
+     inSample[i*2+j]=param->caseP.W[j];
     setBounds(param);
     setNormConst(param);
     Suff[5]+=getLogLikelihood(param);
