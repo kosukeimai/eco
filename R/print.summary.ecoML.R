@@ -4,10 +4,11 @@ print.summary.ecoML <- function(x, digits=max(3, getOption("digits")-3), ...) {
         cat("\nNumber of Units:", x$n.obs)
         cat("\nepsilon for convergence:", x$epsilon)
         cat("\nNumber of EM iterations:", x$iters.em)
+        print(x$iters.em)
         if (x$sem)
          cat("\nNumber of SEM iterations:", x$iters.sem)
 
-        if (x$fix.rho) cat("\n rho is fixed at ", x$rho0)   
+        if (x$fix.rho) cat("\n rho is fixed at ", x$rho)   
         cat("\n")
 	if (!is.null(x$param.table)) {
            cat("\nParameter Estimates:\n")
@@ -21,7 +22,7 @@ print.summary.ecoML <- function(x, digits=max(3, getOption("digits")-3), ...) {
         cat("Weighted by Row Margins \n")
         printCoefmat(x$agg.wtable, digits=digits, na.print="NA",...)
   
-        if (!is.null(x$W1.table)) {
+        if (!is.null(x$W.table)) {
            cat("\n\nUnit-level Estimates of W:\n")
            printCoefmat(x$W.table, digits=digits, na.print="NA",...)
         }

@@ -270,7 +270,7 @@ ecoML <- function(formula, data = parent.frame(), N=NULL, supplement = NULL,
   if (sem) {
     res.out$Icom<-Icom
     res.out$Iobs<-Iobs
-    res.out$Fmis<-Fmis
+    res.out$Fmis<-1-diag(Iobs)/diag(Icom)
     res.out$Vobs.original<-Vobs
     res.out$Vobs<-Vobs.sym
   }

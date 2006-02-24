@@ -65,7 +65,7 @@ summary.ecoML <- function(object, CI = c(2.5, 97.5), subset=NULL, units=FALSE,..
   else
      W.table <-  NULL
   
-  ans <- list(call = object$call,epsilon=object$epsilon,sem=object$sem, fix.rho=object$fix.rho, rho=NULL, param.table = param.table, W.table = W.table,
+  ans <- list(call = object$call,epsilon=object$epsilon,iters.em=object$iters.em, iters.sem=object$iters.sem, sem=object$sem, fix.rho=object$fix.rho, rho=NULL, param.table = param.table, W.table = W.table,
               agg.wtable = agg.wtable, agg.table=agg.table, n.obs = n.obs) 
   if (object$fix.rho) ans$rho<-object$rho0
   
