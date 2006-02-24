@@ -10,8 +10,10 @@ export(
        ecoML,
        summary.eco,
        summary.ecoNP,
+       summary.ecoML,
        print.summary.eco,
        print.summary.ecoNP,
+       print.summary.ecoML,
        predict.eco,
        predict.ecoX,
        predict.ecoNP,
@@ -32,10 +34,13 @@ S3method(predict, ecoNP)
 S3method(predict, ecoNPX)
 S3method(summary, eco)
 S3method(summary, ecoNP)
+S3method(summary, ecoML)
 S3method(summary, predict.eco)
 S3method(print, eco)
+S3method(print, ecoML)
 S3method(print, ecoBD)
 S3method(print, summary.eco)
 S3method(print, summary.ecoNP)
+S3method(print, summary.ecoML)
 S3method(print, summary.predict.eco)
 
