@@ -96,7 +96,7 @@ Icom.CAR <- function(theta, suff.stat, n, fisher=TRUE, n.par) {
 ###
 ### main function
 ###
-ecoML <- function(formula, data = parent.frame(), supplement = NULL, 
+ecoML <- function(formula, data = parent.frame(), N=NULL, supplement = NULL, 
                   theta.start = c(0,0,1,1,0), fix.rho = TRUE,
                   context = FALSE, sem = TRUE, epsilon=10^(-10),
                   maxit = 1000, loglik = TRUE, verbose= TRUE) { 
@@ -268,20 +268,22 @@ ecoML <- function(formula, data = parent.frame(), supplement = NULL,
   print(res.table)
   
   ## output
-  res.out<-list(mu = theta.em[1:2], sigma = theta.em[3:4],
+  res.out<-list(call=mf, Y=Y, X=X,N=N, 
+		fix.rho=fix.rho, context=context, sem=sem, epsilon=epsilon,
+                mu = theta.em[1:2], sigma = theta.em[3:4],
                 sigma.log = theta.fisher[3:4], suff = res$S[1:n.var],
                 loglike = res$S[n.var+1], iters.em = iters.em, 
                 iters.sem = iters.sem, mu.em = mu.em,
                 sigma.log.em = sigma.log.em,
                 rho.fisher.em = rho.fisher.em, loglike.em = loglike.em,
                 W = W, DM = DM)
- 
-  if (flag==0 | flag==4) {
+  if (fix.rho) res.out$rho0<-theta.start[5]
+  if (!fix.rho) {
     res.out$rho <- theta.em[5]
     res.out$rho.fisher <- theta.fisher[5]
   }
   
-  if (flag==4 | flag==6) {
+  if (sem) {
     res.out$Icom<-Icom
     res.out$Iobs<-Iobs
     res.out$Fmis<-Fmis
