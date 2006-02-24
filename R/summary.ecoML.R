@@ -7,11 +7,11 @@ summary.ecoML <- function(object, CI = c(2.5, 97.5), subset=NULL, units=FALSE,..
   param.table<-matrix(NA, n.row, n.col)
   param.table[1,1:2]<-object$mu
   param.table[1,3:4]<-object$sigma
-  if (!fix.rho) res.table[1,5]<-object$rho
+  if (!object$fix.rho) param.table[1,5]<-object$rho
 
   if (n.row>1) {
-    param.table[2,]<-sqrt(diag(Vobs))
-    param.table[3,]<-Fmis<-1-diag(Iobs)/diag(Icom)
+    param.table[2,]<-sqrt(diag(object$Vobs))
+    param.table[3,]<-Fmis<-1-diag(object$Iobs)/diag(object$Icom)
   }
   cname<-c("mu1", "mu2", "sigma1", "sigma2", "rho")
   rname<-c("EM est.", "std. err.", "frac. missing")
@@ -20,7 +20,7 @@ summary.ecoML <- function(object, CI = c(2.5, 97.5), subset=NULL, units=FALSE,..
 
 
   
-  n.obs <- nrow(object$W[,1])
+  n.obs <- nrow(object$W)
   if (is.null(subset)) subset <- 1:n.obs 
   else if (!is.numeric(subset))
     stop("Subset should be a numeric vector.")
@@ -31,22 +31,33 @@ summary.ecoML <- function(object, CI = c(2.5, 97.5), subset=NULL, units=FALSE,..
   table.names<-c("mean", "std.dev", paste(min(CI), "%", sep=" "),
                  paste(max(CI), "%", sep=" ")) 
 
+  W1.mean <- mean(object$W[,1])
+  W2.mean <- mean(object$W[,2])
+  W1.sd <- sd(object$W[,1])
+  W2.sd <- sd(object$W[,2])
+  W1.q1<-  W1.mean-1.96*W1.sd
+  W1.q2<-  W1.mean+1.96*W1.sd
+  W2.q1<-  W2.mean-1.96*W2.sd
+  W2.q2<-  W2.mean+1.96*W2.sd
+  agg.table <- rbind(cbind(W1.mean, W1.sd, W1.q1, W1.q2),cbind(W2.mean, W2.sd, W2.q1, W2.q2))
+  colnames(agg.table) <- table.names
+  rownames(agg.table) <- c("W1", "W2")
+
   if (is.null(object$N))
     N <- rep(1, nrow(object$X))
   else N <- object$N
 
-  W1.mean <- object$W[,1] %*% (object$X*N/sum(object$X*N))
-  W2.mean <- object$W[,2] %*% ((1-object$X)*N/sum((1-object$X)*N))
-  W1.sd <- sd(object$W[,1] %*% (object$X*N/sum(object$X*N)))
-  W2.sd <- sd(object$W[,2] %*% ((1-object$X)*N/sum((1-object$X)*N)))
-  W1.q1<-  quantile(object$W[,1] %*% (object$X*N/sum(object$X*N)),min(CI)/100)
-  W1.q2<-  quantile(object$W[,1] %*% (object$X*N/sum(object$X*N)),max(CI)/100)
-  W2.q1<-  quantile(object$W[,2] %*% ((1-object$X)*N/sum((1-object$X)*N)),min(CI)/100)
-  W2.q2<-  quantile(object$W[,2] %*% ((1-object$X)*N/sum((1-object$X)*N)),max(CI)/100)
-
-  agg.table <- rbind(cbind(W1.mean, W1.sd, W1.q1, W1.q2),cbind(W1.mean, W1.sd, W1.q1, W1.q2))
-  colnames(agg.table) <- table.names
-  rownames(agg.table) <- c("W1", "W2")
+  W1.mean <- mean(object$W[,1] * object$X*N)
+  W2.mean <- mean(object$W[,2] *(1-object$X)*N)
+  W1.sd <- sd(object$W[,1]* object$X*N)
+  W2.sd <- sd(object$W[,2]*(1-object$X)*N)
+  W1.q1<-  W1.mean-1.96*W1.sd
+  W1.q2<-  W1.mean+1.96*W1.sd
+  W2.q1<-  W2.mean-1.96*W2.sd
+  W2.q2<-  W2.mean+1.96*W2.sd
+  agg.wtable <- rbind(cbind(W1.mean, W1.sd, W1.q1, W1.q2),cbind(W2.mean, W2.sd, W2.q1, W2.q2))
+  colnames(agg.wtable) <- table.names
+  rownames(agg.wtable) <- c("W1", "W2")
   
   if (units) {
      W.table <- object$W[subset,] 
@@ -54,8 +65,8 @@ summary.ecoML <- function(object, CI = c(2.5, 97.5), subset=NULL, units=FALSE,..
   else
      W.table <-  NULL
   
-  ans <- list(call = object$call,epsilon=epsilon,sem=sem, rho=NULL, param.table = param.table, W.table = W.table,
-              agg.table = agg.table, n.obs = n.obs) 
+  ans <- list(call = object$call,epsilon=object$epsilon,sem=object$sem, fix.rho=object$fix.rho, rho=NULL, param.table = param.table, W.table = W.table,
+              agg.wtable = agg.wtable, agg.table=agg.table, n.obs = n.obs) 
   if (object$fix.rho) ans$rho<-object$rho0
   
   class(ans) <-"summary.ecoML"

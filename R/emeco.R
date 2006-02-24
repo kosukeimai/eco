@@ -157,7 +157,7 @@ ecoML <- function(formula, data = parent.frame(), N=NULL, supplement = NULL,
   inSample.length <- ndim*n
 
   n.par<-5
-  if (flag==2 | flag==6) n.par<-4
+  if (fix.rho) n.par<-4
   
   ## Fitting the model via EM  
   res <- .C("cEMeco", as.double(tmp$d), as.double(theta.start),
@@ -199,7 +199,7 @@ ecoML <- function(formula, data = parent.frame(), N=NULL, supplement = NULL,
 
   ## SEM step
   DM <- matrix(rep(NA,n.par*n.par),ncol=n.par)
-  if(flag>=4) {
+  if (sem) {
     res <- .C("cEMeco", as.double(tmp$d), as.double(theta.start),
               as.integer(tmp$n.samp),  as.integer(maxit), as.double(epsilon),
               as.integer(tmp$survey.yes), as.integer(tmp$survey.samp), 
@@ -219,11 +219,11 @@ ecoML <- function(formula, data = parent.frame(), N=NULL, supplement = NULL,
         DM[i,j]=res$DMmatrix[(i-1)*n.par+j]
   }
 
-  if (flag>=4) {
+  if (sem) {
     ##output Icom
-    if (flag==4) 
+    if (!fix.rho) 
       infomat<-Icom.CAR(theta=theta.em, suff.stat=res$S, n=n, n.par=n.par)
-    if (flag==6) 
+    if (fix.rho) 
       infomat<-Icom.CAR(theta=c(theta.em[1:4],theta.start[5]), suff.stat=res$S, n=n, n.par=n.par)
 
     Icom<-infomat$Icom
@@ -237,21 +237,22 @@ ecoML <- function(formula, data = parent.frame(), N=NULL, supplement = NULL,
     ##transform Iobs.fisher to Iobs via delta method
     ##V(theta)=d(fisher^{-1})V(bvn.trans(theta)))d(fisher^{-1})'
     grad.invfisher <- c(1,1, exp(theta.fisher[3:4]))
-    if (flag==4) 
+    if (! fix.rho) 
        grad.invfisher <- c(grad.invfisher,4*exp(2*theta.fisher[5])/(exp(2*theta.fisher[5])+1)^2)
     Vobs<-diag(grad.invfisher)%*%Vobs.fisher%*%diag(grad.invfisher)
     Iobs<-solve(Vobs)
+    ## obtain a symmetric Cov matrix
+    Vobs.sym <- 0.5*(Vobs+t(Vobs))
+ 
+    ##if (max(abs(Vobs-Vobs.sym)/Vobs)>0.05) 
+    ## warnings("the covariance matrix estimated based on SEM is not symmetric enough. \n")
   }
-  ## make it symmetric
-  Vobs.sym <- 0.5*(Vobs+t(Vobs))
-  
-  ##if (max(abs(Vobs-Vobs.sym)/Vobs)>0.05) 
-  ## warnings("the covariance matrix estimated based on SEM is not symmetric enough. \n")
+
 
   ## Ying, put this stuff in summary.ecoML()
   n.col<-n.par
   n.row<-1
-  if (flag>=4) n.row<-3
+  if (sem) n.row<-3
   res.table<-matrix(NA, n.row, n.col)
   res.table[1,]<-theta.em[1:n.par]
   if (n.row>1) {

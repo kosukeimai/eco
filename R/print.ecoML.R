@@ -10,11 +10,11 @@ print.ecoML <- function(x, digits = max(3, getOption("digits") -3),
   param.table<-matrix(NA, n.row, n.col)
   param.table[1,1:2]<-x$mu
   param.table[1,3:4]<-x$sigma
-  if (!fix.rho) res.table[1,5]<-x$rho
+  if (!x$fix.rho) res.table[1,5]<-x$rho
 
   if (n.row>1) {
-    param.table[2,]<-sqrt(diag(Vobs))
-    param.table[3,]<-Fmis<-1-diag(Iobs)/diag(Icom)
+    param.table[2,]<-sqrt(diag(x$Vobs))
+    param.table[3,]<-Fmis<-1-diag(x$Iobs)/diag(x$Icom)
   }
   cname<-c("mu1", "mu2", "sigma1", "sigma2", "rho")
   rname<-c("EM est.", "std. err.", "frac. missing")
