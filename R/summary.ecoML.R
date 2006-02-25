@@ -14,11 +14,9 @@ summary.ecoML <- function(object, CI = c(2.5, 97.5), subset=NULL, units=FALSE,..
     param.table[3,]<-Fmis<-1-diag(object$Iobs)/diag(object$Icom)
   }
   cname<-c("mu1", "mu2", "sigma1", "sigma2", "rho")
-  rname<-c("EM est.", "std. err.", "frac. missing")
+  rname<-c("ML est.", "std. err.", "frac. missing")
   rownames(param.table)<-rname[1:n.row]
   colnames(param.table)<-cname[1:n.col]
-
-
   
   n.obs <- nrow(object$W)
   if (is.null(subset)) subset <- 1:n.obs 
@@ -26,7 +24,6 @@ summary.ecoML <- function(object, CI = c(2.5, 97.5), subset=NULL, units=FALSE,..
     stop("Subset should be a numeric vector.")
   else if (!all(subset %in% c(1:n.obs)))
     stop("Subset should be any numbers in 1:obs.")
- 
       
   table.names<-c("mean", "std.dev", paste(min(CI), "%", sep=" "),
                  paste(max(CI), "%", sep=" ")) 
@@ -35,39 +32,45 @@ summary.ecoML <- function(object, CI = c(2.5, 97.5), subset=NULL, units=FALSE,..
   W2.mean <- mean(object$W[,2])
   W1.sd <- sd(object$W[,1])
   W2.sd <- sd(object$W[,2])
-  W1.q1<-  W1.mean-1.96*W1.sd
-  W1.q2<-  W1.mean+1.96*W1.sd
-  W2.q1<-  W2.mean-1.96*W2.sd
-  W2.q2<-  W2.mean+1.96*W2.sd
-  agg.table <- rbind(cbind(W1.mean, W1.sd, W1.q1, W1.q2),cbind(W2.mean, W2.sd, W2.q1, W2.q2))
+  W1.q1 <-  W1.mean-1.96*W1.sd
+  W1.q2 <-  W1.mean+1.96*W1.sd
+  W2.q1 <-  W2.mean-1.96*W2.sd
+  W2.q2 <-  W2.mean+1.96*W2.sd
+  agg.table <- rbind(cbind(W1.mean, W1.sd, W1.q1, W1.q2),
+                     cbind(W2.mean, W2.sd, W2.q1, W2.q2)) 
   colnames(agg.table) <- table.names
   rownames(agg.table) <- c("W1", "W2")
 
   if (is.null(object$N))
     N <- rep(1, nrow(object$X))
-  else N <- object$N
+  else
+    N <- object$N
 
   W1.mean <- mean(object$W[,1] * object$X*N)
   W2.mean <- mean(object$W[,2] *(1-object$X)*N)
   W1.sd <- sd(object$W[,1]* object$X*N)
   W2.sd <- sd(object$W[,2]*(1-object$X)*N)
-  W1.q1<-  W1.mean-1.96*W1.sd
-  W1.q2<-  W1.mean+1.96*W1.sd
-  W2.q1<-  W2.mean-1.96*W2.sd
-  W2.q2<-  W2.mean+1.96*W2.sd
-  agg.wtable <- rbind(cbind(W1.mean, W1.sd, W1.q1, W1.q2),cbind(W2.mean, W2.sd, W2.q1, W2.q2))
+  W1.q1 <-  W1.mean-1.96*W1.sd
+  W1.q2 <-  W1.mean+1.96*W1.sd
+  W2.q1 <-  W2.mean-1.96*W2.sd
+  W2.q2 <-  W2.mean+1.96*W2.sd
+  agg.wtable <- rbind(cbind(W1.mean, W1.sd, W1.q1, W1.q2),
+                      cbind(W2.mean, W2.sd, W2.q1, W2.q2))
   colnames(agg.wtable) <- table.names
   rownames(agg.wtable) <- c("W1", "W2")
   
-  if (units) {
-     W.table <- object$W[subset,] 
-   }
+  if (units) 
+    W.table <- object$W[subset,] 
   else
-     W.table <-  NULL
+    W.table <-  NULL
   
-  ans <- list(call = object$call,epsilon=object$epsilon,iters.em=object$iters.em, iters.sem=object$iters.sem, sem=object$sem, fix.rho=object$fix.rho, rho=NULL, param.table = param.table, W.table = W.table,
+  ans <- list(call = object$call, iters.sem = object$iters.sem,
+              iters.em = object$iters.em, epsilon = object$epsilon,
+              sem = object$sem, fix.rho = object$fix.rho, loglik = object$loglik,
+              rho=NULL, param.table = param.table, W.table = W.table, 
               agg.wtable = agg.wtable, agg.table=agg.table, n.obs = n.obs) 
-  if (object$fix.rho) ans$rho<-object$rho0
+  if (object$fix.rho)
+    ans$rho<-object$rho0
   
   class(ans) <-"summary.ecoML"
   return(ans)

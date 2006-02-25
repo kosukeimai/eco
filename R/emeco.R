@@ -101,9 +101,6 @@ ecoML <- function(formula, data = parent.frame(), N=NULL, supplement = NULL,
                   context = FALSE, sem = TRUE, epsilon=10^(-10),
                   maxit = 1000, loglik = TRUE, verbose= TRUE) { 
 
-  ## Aaron, we need separate options for verbose and loglik:
-  ## verbose = TRUE (print out each iteration on screen
-  ## loglike = TRUE (calculate the loglik at each iteration)
   if (verbose)
     verbose <- 1
   else
@@ -113,7 +110,6 @@ ecoML <- function(formula, data = parent.frame(), N=NULL, supplement = NULL,
     loglik <- 1
   else
     loglik <- 0
-
   
   ## translating into flag
   if (context)
@@ -248,15 +244,12 @@ ecoML <- function(formula, data = parent.frame(), N=NULL, supplement = NULL,
     ## warnings("the covariance matrix estimated based on SEM is not symmetric enough. \n")
   }
 
-
-  ## Ying, put this stuff in summary.ecoML()
- 
   ## output
-  res.out<-list(call=mf, Y=Y, X=X,N=N, 
-        fix.rho=fix.rho, context=context, sem=sem, epsilon=epsilon,
+  res.out<-list(call = mf, Y = Y, X = X, N = N, 
+                fix.rho = fix.rho, context = context, sem=sem, epsilon=epsilon,
                 mu = theta.em[1:2], sigma = theta.em[3:4],
                 sigma.log = theta.fisher[3:4], suff = res$S[1:n.var],
-                loglike = res$S[n.var+1], iters.em = iters.em, 
+                loglik = res$S[n.var+1], iters.em = iters.em, 
                 iters.sem = iters.sem, mu.em = mu.em,
                 sigma.log.em = sigma.log.em,
                 rho.fisher.em = rho.fisher.em, loglike.em = loglike.em,
