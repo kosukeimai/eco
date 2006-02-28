@@ -14,6 +14,7 @@ bvn.trans <-function(X) {
 
 ## compute I_{com} for CAR
 Icom.CAR <- function(theta, suff.stat, n, fisher=TRUE, n.par) {
+   print(n)
   Icom <- matrix(NA, n.par, n.par)    
   
   S1<-n*suff.stat[1]
@@ -266,6 +267,9 @@ ecoML <- function(formula, data = parent.frame(), N=NULL, supplement = NULL,
     res.out$Fmis<-1-diag(Iobs)/diag(Icom)
     res.out$Vobs.original<-Vobs
     res.out$Vobs<-Vobs.sym
+    res.out$Icom.fisher<-Icom.fisher
+    res.out$Iobs.fisher<-Iobs.fisher
+    res.out$Fmis.fisher<-1-diag(Iobs.fisher)/diag(Icom.fisher)
   }
 
   class(res.out) <- "ecoML"
