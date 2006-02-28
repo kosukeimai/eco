@@ -639,7 +639,7 @@ void transformTheta(double* pdTheta, double* t_pdTheta) {
   t_pdTheta[1]=pdTheta[1];
   t_pdTheta[2]=log(pdTheta[2]);
   t_pdTheta[3]=log(pdTheta[3]);
-  t_pdTheta[4]=.5*(log(1+pdTheta[4])/log(1-pdTheta[4]));
+  t_pdTheta[4]=.5*(log(1+pdTheta[4])-log(1-pdTheta[4]));
 }
 
 void untransformTheta(double* t_pdTheta,double* pdTheta) {
