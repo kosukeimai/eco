@@ -247,6 +247,9 @@ Free(pdTheta_old);
     double SuffSem[5]; //sufficient stats
     double phiTI[5]; //phi^t_i
     double phiTp1I[5]; //phi^{t+1}_i
+    double t_optTheta[5]; //transformed optimal
+    double t_phiTI[5]; //transformed phi^t_i
+    double t_phiTp1I[5]; //transformed phi^{t+1}_i
     Param* params_sem=(Param*) Calloc(params->setP->t_samp,Param);
     setParam setP_sem=*(params[0].setP);
     verbose=setP_sem.verbose;
@@ -298,8 +301,11 @@ Free(pdTheta_old);
           ecoMStepNCAR(SuffSem,phiTp1I,params_sem);
 
         //step 3: create new R matrix row
+        transformTheta(phiTp1I,t_phiTp1I);
+        transformTheta(optTheta,t_optTheta);
+        transformTheta(phiTI,t_phiTI);
         for(j = 0; j<len; j++)
-          Rmat[i][j]=(phiTp1I[j]-optTheta[j])/(phiTI[i]-optTheta[i]);
+          Rmat[i][j]=(t_phiTp1I[j]-t_optTheta[j])/(t_phiTI[i]-t_optTheta[i]);
 
         //step 4: check for difference
         params[0].setP->semDone[i]=closeEnough((double*)Rmat[i],(double*)Rmat_old[i],len,sqrt(params[0].setP->convergence));
