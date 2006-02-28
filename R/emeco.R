@@ -14,7 +14,6 @@ bvn.trans <-function(X) {
 
 ## compute I_{com} for CAR
 Icom.CAR <- function(theta, suff.stat, n, fisher=TRUE, n.par) {
-   print(n)
   Icom <- matrix(NA, n.par, n.par)    
   
   S1<-n*suff.stat[1]
@@ -63,35 +62,47 @@ Icom.CAR <- function(theta, suff.stat, n, fisher=TRUE, n.par) {
         (1+3*r^2)/((1-r^2)^3*v2)*(S22-2*u2*S2+n*u2^2) +
           (2*r^3+6*r)/((1-r^2)^3*v1^(1/2)*v2^(1/2))*(S12-u1*S2-u2*S1+n*u1*u2) 
   }
-  
-  if (fisher) {
-    Icom.fisher<-matrix(NA, n.par,n.par)
+
+    du1<- ((S1-n*u1)/v1-r*(S2-n*u2)/v2)/(1-r^2)
+    du2<- ((S2-n*u2)/v2-r*(S1-n*u1)/v1)/(1-r^2)
     dv1<- -n/(2*v1) + 1/(2*(1-r^2)*v1^2)*(S11-2*u1*S1+n*u1^2) - r/(2*(1-r^2)*v1^(3/2)*v2^(1/2))*(S12-u1*S2-u2*S1+n*u1*u2)
     dv2<- -n/(2*v2) + 1/(2*(1-r^2)*v2^2)*(S22-2*u2*S2+n*u2^2) - r/(2*(1-r^2)*v1^(1/2)*v2^(3/2))*(S12-u1*S2-u2*S1+n*u1*u2)
-    
-    Icom.fisher[1:2,1:2]<-Icom[1:2,1:2]
-    Icom.fisher[1,3]<- Icom.fisher[3,1] <- Icom[1,3]*v1
-    Icom.fisher[1,4]<- Icom.fisher[4,1] <- Icom[1,4]*v2
-    
-    Icom.fisher[2,3]<- Icom.fisher[3,2] <- Icom[2,3]*v1
-    Icom.fisher[2,4]<- Icom.fisher[4,2] <- Icom[2,4]*v2
-    
-    Icom.fisher[3,3]<- Icom[3,3]*v1^2 + dv1*v1
-    Icom.fisher[3,4]<- Icom.fisher[4,3] <- Icom[3,4]*v1*v2
-    
-    Icom.fisher[4,4]<- Icom[4,4]*v2^2 + dv2*v2
-    
-    if (n.par>=5) {
+   if (n.par>=5) {
       dr<- n*r/(1-r^2) - r/((1-r^2)^2*v1)*(S11-2*u1*S1+n*u1^2) + (1+r^2)/((1-r^2)^2*v1^(1/2)*v2^(1/2))*(S12-u1*S2-u2*S1+n*u1*u2) - r/((1-r^2)^2*v2)*(S22-2*u2*S2+n*u2^2)
-      Icom.fisher[1,5]<- Icom.fisher[5,1] <- Icom[1,5]*(1-r^2)
-      Icom.fisher[2,5]<- Icom.fisher[5,2] <- Icom[2,5]*(1-r^2)
-      Icom.fisher[3,5]<- Icom.fisher[5,3] <- Icom[3,5]*v1*(1-r^2)
-      Icom.fisher[4,5]<- Icom.fisher[5,4] <- Icom[4,5]*v2*(1-r^2)     
-      Icom.fisher[5,5]<- Icom[5,5]*(1-r^2)^2 - dr*2*r*(1-r^2)
-    }
-  }   
-  return(list(Icom=-Icom, Icom.fisher=-Icom.fisher))
+  }
+  return(list(Icom=-Icom, Dvec=c(du1, du2, dv1, dv2, dr)))
 }
+  
+
+Icom.transform<-function(Imat, Dvec, theta, transformation="Fisher")
+  {
+    n.par<-dim(Imat)[1]
+    if (transformation=="Fisher") {
+     T1<-c(1,1,theta[3], theta[4])
+
+    T2<-matrix(0, n.par^2, n.par)
+    T2[(2*n.par+3), 3]<-theta[3]     
+    T2[(2*n.par+4), 4]<-theta[4]     
+
+    if (n.par==5) {
+      T1<-c(T1, 1-(theta[5]^2))
+      T2[(2*n.par+5),5]<- -2*theta[5]*(1-theta[5]^2)
+     }
+
+    }
+    T1<-diag(T1)
+    Icom.tran<-matrix(NA, n.par, n.par)
+    Icom.tran<-T1%*%Imat%*%t(T1)
+    
+    temp1<-matrix(0,n.par,n.par)
+    for (i in 1:n.par)
+      for (j in 1:n.par) 
+       temp1[i,j]<- Dvec%*%T2[((i-1)*n.par+(1:n.par)),j] 
+
+      Icom.tran<-Icom.tran+temp1     
+    return(-Icom.tran)
+}
+
 
 
 ###
@@ -224,8 +235,9 @@ ecoML <- function(formula, data = parent.frame(), N=NULL, supplement = NULL,
       infomat<-Icom.CAR(theta=c(theta.em[1:4],theta.start[5]), suff.stat=res$S, n=n, n.par=n.par)
 
     Icom<-infomat$Icom
-    Icom.fisher<-infomat$Icom.fisher
-    
+
+    Icom.fisher<-Icom.transform(Imat=-Icom, Dvec=infomat$Dvec, theta=theta.em, transformation="Fisher")
+   
     Vcom.fisher <- solve(Icom.fisher)
     dV <- Vcom.fisher%*%DM%*%solve(diag(1,n.par)-DM)
     Vobs.fisher <- Vcom.fisher+dV
@@ -270,6 +282,7 @@ ecoML <- function(formula, data = parent.frame(), N=NULL, supplement = NULL,
     res.out$Icom.fisher<-Icom.fisher
     res.out$Iobs.fisher<-Iobs.fisher
     res.out$Fmis.fisher<-1-diag(Iobs.fisher)/diag(Icom.fisher)
+    res.out$Dvec<-infomat$Dvec
   }
 
   class(res.out) <- "ecoML"
