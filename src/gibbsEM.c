@@ -567,8 +567,8 @@ void ecoMStepNCAR(double* Suff, double* pdTheta, Param* params) {
 
     //covariances
     setP->Sigma3[0][1] = pdTheta[4]*sqrt(pdTheta[2]*pdTheta[3]);
-    setP->Sigma3[0][2] = pdTheta[5]*sqrt(pdTheta[2]*mu3);
-    setP->Sigma3[1][2] = pdTheta[6]*sqrt(pdTheta[3]*mu3);
+    setP->Sigma3[0][2] = pdTheta[5]*sqrt(pdTheta[2]*setP->Sigma3[2][2]);
+    setP->Sigma3[1][2] = pdTheta[6]*sqrt(pdTheta[3]*setP->Sigma3[2][2]);
 
     //symmetry
     setP->Sigma3[1][0] = setP->Sigma3[0][1];
