@@ -161,11 +161,12 @@ ecoML <- function(formula, data = parent.frame(), N=NULL, supplement = NULL,
   tmp <- checkdata(X,Y, supplement, ndim)
   bdd <- ecoBD(formula=formula, data=data)
   n.var <- 5
+  if (context) n.var <- 7
   n <- tmp$n.samp+tmp$survey.samp+tmp$samp.X1+tmp$samp.X0
   inSample.length <- ndim*tmp$n.samp
 
-  n.par<-5
-  if (fix.rho) n.par<-4
+  n.par<- n.var
+  if (fix.rho) n.par<- n.var - 1
   
   ## Fitting the model via EM  
   res <- .C("cEMeco", as.double(tmp$d), as.double(theta.start),
@@ -195,8 +196,8 @@ ecoML <- function(formula, data = parent.frame(), N=NULL, supplement = NULL,
     mu.em[i,2]=res$history[(i-1)*(n.var+1)+2]
     sigma.log.em[i,1]=res$history[(i-1)*(n.var+1)+3]
     sigma.log.em[i,2]=res$history[(i-1)*(n.var+1)+4]
-    rho.fisher.em[i]=res$history[(i-1)*(n.var+1)+5]
-    loglike.em[i]=res$history[(i-1)*(n.var+1)+6]
+    rho.fisher.em[i]=res$history[(i-1)*(n.var+1)+n.var]
+    loglike.em[i]=res$history[(i-1)*(n.var+1)+(n.var+1)]
   }
 
   ## In sample prediction of W
