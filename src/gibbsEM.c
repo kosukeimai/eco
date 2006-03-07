@@ -550,24 +550,31 @@ void ecoMStepNCAR(double* Suff, double* pdTheta, Param* params) {
   pdTheta[0]=Suff[0];  /*mu1*/
   pdTheta[1]=Suff[1];  /*mu2*/
 
-  //set Sigma3 (3x3 sigma) PLEASE CHECK
-  setP->Sigma3[2][2] = mu3sq-mu3*mu3;
-  setP->Sigma3[0][0] = Suff[2]-2*Suff[0]*pdTheta[0]+pdTheta[0]*pdTheta[0];
-  setP->Sigma3[0][1] = Suff[4]-Suff[0]*pdTheta[1]-Suff[1]*pdTheta[0]+pdTheta[0]*pdTheta[1];
-  setP->Sigma3[0][2] = (XW1 - mu3*Suff[0])/pow((Suff[2] - Suff[0]*Suff[0])*(setP->Sigma3[2][2] - mu3*mu3),0.5);
-  setP->Sigma3[1][0] = setP->Sigma3[0][1];
-  setP->Sigma3[1][1] = Suff[3]-2*Suff[1]*pdTheta[1]+pdTheta[1]*pdTheta[1];
-  setP->Sigma3[1][2] = (XW2 - mu3*Suff[1])/pow((Suff[4] - Suff[1]*Suff[1])*(setP->Sigma3[2][2] - mu3*mu3),0.5);
-  setP->Sigma3[2][0] = setP->Sigma3[0][2];
-  setP->Sigma3[2][1] = setP->Sigma3[1][2];
+  //set variances and correlations
+  pdTheta[2]=Suff[2]-2*Suff[0]*pdTheta[0]+pdTheta[0]*pdTheta[0]; //s11
+  pdTheta[3]=Suff[3]-2*Suff[1]*pdTheta[1]+pdTheta[1]*pdTheta[1]; //s22
+  pdTheta[4]=Suff[4]-Suff[0]*pdTheta[1]-Suff[1]*pdTheta[0]+pdTheta[0]*pdTheta[1]; //sigma12
+  pdTheta[4]=pdTheta[4]/sqrt(pdTheta[2]*pdTheta[3]); //rho_12
+  pdTheta[5]=(XW1 - mu3*Suff[0])/sqrt((Suff[2] - Suff[0]*Suff[0])*(setP->Sigma3[2][2] - mu3*mu3)); //rho_13
+  pdTheta[6]=(XW2 - mu3*Suff[1])/sqrt((Suff[4] - Suff[1]*Suff[1])*(setP->Sigma3[2][2] - mu3*mu3)); //rho_23
 
 
   if (!setP->fixedRho) { //variable rho
-    pdTheta[2]=setP->Sigma3[0][0];
-    pdTheta[3]=setP->Sigma3[1][1];
-    pdTheta[4]=setP->Sigma3[0][1];
-    pdTheta[5]=setP->Sigma3[0][2];
-    pdTheta[6]=setP->Sigma3[1][2];
+    //variances
+    setP->Sigma3[0][0] = pdTheta[2];
+    setP->Sigma3[1][1] = pdTheta[3];
+    setP->Sigma3[2][2] = mu3sq-mu3*mu3;
+
+    //covariances
+    setP->Sigma3[0][1] = pdTheta[4]*sqrt(pdTheta[2]*pdTheta[3]);
+    setP->Sigma3[0][2] = pdTheta[5]*sqrt(pdTheta[2]*mu3);
+    setP->Sigma3[1][2] = pdTheta[6]*sqrt(pdTheta[3]*mu3);
+
+    //symmetry
+    setP->Sigma3[1][0] = setP->Sigma3[0][1];
+    setP->Sigma3[2][0] = setP->Sigma3[0][2];
+    setP->Sigma3[2][1] = setP->Sigma3[1][2];
+
   }
   else { //fixed rho NEEDS WORK
     double Imat[2][2];
@@ -619,8 +626,8 @@ void initNCAR(Param* params,double mu0, double mu1) {
   //assign each data point the new mu (different for each point)
   int i;
   for(i=0;i<setP->t_samp;i++) {
-    params[i].caseP.mu[0]=mu0 + setP->Sigma3[0][2]*pow(setP->Sigma3[0][0]/setP->Sigma3[2][2],0.5)*(params[i].caseP.X-setP->mu3);
-    params[i].caseP.mu[1]=mu1 + setP->Sigma3[1][2]*pow(setP->Sigma3[1][1]/setP->Sigma3[2][2],0.5)*(params[i].caseP.X-setP->mu3);
+    params[i].caseP.mu[0]=mu0 + setP->Sigma3[0][2]*pow(setP->Sigma3[0][0]/setP->Sigma3[2][2],0.5)*(logit(params[i].caseP.X,"initNCAR mu0")-setP->mu3);
+    params[i].caseP.mu[1]=mu1 + setP->Sigma3[1][2]*pow(setP->Sigma3[1][1]/setP->Sigma3[2][2],0.5)*(logit(params[i].caseP.X,"initNCAR mu1")-setP->mu3);
   }
 }
 
