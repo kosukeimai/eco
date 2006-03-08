@@ -66,7 +66,7 @@ print(r12)
         dSig.theta[2,3,d+3]<-dSig.theta[3,2,d+3]<-1/2*s3^(-1/2)*s2^(1/2)*r12
       }
     
-	if (!fix.rho) {
+    if (!fix.rho) {
         dSig.theta[1,2,2*d+1]<-dSig.theta[2,1,2*d+1]<-sqrt(s1*s2)
         if (d==3) {
           dSig.theta[1,3,2*d+2]<-dSig.theta[3,1,2*d+2]<-sqrt(s1*s3)
@@ -94,7 +94,7 @@ print(r12)
         dSig.theta[2,3,d+3]<-dSig.theta[3,2,d+3]<-1/2*s3^(1/2)*s2^(1/2)*r23
       }
     
-	if (!fix.rho) {
+    if (!fix.rho) {
         dSig.theta[1,2,2*d+1]<-dSig.theta[2,1,2*d+1]<-sqrt(s1*s2)*(1-r12^2)
         if (d==3) {
           dSig.theta[1,3,2*d+2]<-dSig.theta[3,1,2*d+2]<-sqrt(s1*s3)*(1-r13^2)
@@ -163,14 +163,14 @@ d2nd.mvn<-function(mu,Sigma, Fisher=FALSE, fix.rho=FALSE) {
     if (fix.rho) {
        if (d==3) {
 
-	   ddSig.theta[1,2,d+1,2*d+1]<-ddSig.theta[2,1,d+1,2*d+1]<- 1/2*s1^(-1/2)*s3^(1/2)
-	   ddSig.theta[2,3,d+2,2*d+2]<-ddSig.theta[3,2,d+2,2*d+2]<- 1/2*s2^(-1/2)*s3^(1/2)
+       ddSig.theta[1,2,d+1,2*d+1]<-ddSig.theta[2,1,d+1,2*d+1]<- 1/2*s1^(-1/2)*s3^(1/2)
+       ddSig.theta[2,3,d+2,2*d+2]<-ddSig.theta[3,2,d+2,2*d+2]<- 1/2*s2^(-1/2)*s3^(1/2)
          ddSig.theta[1,3,d+3,2*d+1]<-ddSig.theta[3,1,d+3,2*d+1]<- 1/2*s1^(1/2)*s3^(-1/2)
          ddSig.theta[2,3,d+3,2*d+2]<-ddSig.theta[3,2,d+3,2*d+2]<- 1/2*s2^(1/2)*s3^(-1/2)
      }
    }
   }
-	if (Fisher) {
+    if (Fisher) {
 
         ddSig.theta[1,1,d+1,d+1]<- s1 
         ddSig.theta[1,2,d+1,d+1]<-ddSig.theta[2,1,d+1,d+1]<- 1/4*s1^(1/2)*s2^(1/2)*r12
@@ -191,7 +191,7 @@ d2nd.mvn<-function(mu,Sigma, Fisher=FALSE, fix.rho=FALSE) {
            ddSig.theta[2,3,d+3,d+3]<-ddSig.theta[3,2,d+3,d+3]<- 1/4*s2^(1/2)*s3^(1/2)*r23
         }
 
-	  if (!fix.rho) {
+      if (!fix.rho) {
            ddSig.theta[1,2,d+1,2*d+1]<-ddSig.theta[2,1,d+1,2*d+1]<- 1/2*s1^(1/2)*s2^(1/2)*(1-r12^2)
            ddSig.theta[1,2,d+2,2*d+1]<-ddSig.theta[2,1,d+2,2*d+1]<- 1/2*s1^(1/2)*s2^(1/2)*(1-r12^2)
 
@@ -207,7 +207,7 @@ d2nd.mvn<-function(mu,Sigma, Fisher=FALSE, fix.rho=FALSE) {
             ddSig.theta[2,3,2*d+3,2*d+3]<-ddSig.theta[3,2,2*d+3,2*d+3]<- -2*s2^(1/2)*s3^(1/2)*r23*(1-r23^2)
 
           }
-	  }  
+      }  
    
        if (fix.rho) {
           if (d==3) {
@@ -337,7 +337,7 @@ Icom.mvn<-function(mu, Sigma, suff.stat,n, fix.rho=FALSE, Fisher=FALSE) {
                     
        a2<- t(du.theta[,j])%*%dinvSig.theta.i%*%Vv - 0.5*tr(ddinvSig.theta.ij%*%Ss)
 
-	 a3<- t(ddu.theta[,i,j])%*%invSigma%*%Vv + t(du.theta[,i])%*%dinvSig.theta.j%*%Vv - n*t(du.theta[,i])%*%invSigma%*%du.theta[,j]
+     a3<- t(ddu.theta[,i,j])%*%invSigma%*%Vv + t(du.theta[,i])%*%dinvSig.theta.j%*%Vv - n*t(du.theta[,i])%*%invSigma%*%du.theta[,j]
 
        Icom[i,j]<-a1+a2+a3
     
@@ -491,11 +491,12 @@ ecoML <- function(formula, data = parent.frame(), N=NULL, supplement = NULL,
   tmp <- checkdata(X,Y, supplement, ndim)
   bdd <- ecoBD(formula=formula, data=data)
   n.var <- 5
+  if (context) n.var<-7
   n <- tmp$n.samp+tmp$survey.samp+tmp$samp.X1+tmp$samp.X0
   inSample.length <- ndim*tmp$n.samp
 
-  n.par<-5
-  if (fix.rho) n.par<-4
+  n.par<-n.var
+  if (fix.rho) n.par<-n.par-1
   
   ## Fitting the model via EM  
   res <- .C("cEMeco", as.double(tmp$d), as.double(theta.start),
@@ -506,7 +507,7 @@ ecoML <- function(formula, data = parent.frame(), N=NULL, supplement = NULL,
             as.integer(tmp$X0type), as.integer(tmp$samp.X0), as.double(tmp$X0.W2),
             as.double(bdd$Wmin[,1,1]), as.double(bdd$Wmax[,1,1]),
             as.integer(flag),as.integer(verbose),as.integer(loglik),
-            optTheta=c(-1.1,-1.1,-1.1,-1.1,-1.1), pdTheta=double(n.var),
+            optTheta=rep(-1.1,n.var), pdTheta=double(n.var),
             S=double(n.var+1),inSample=double(inSample.length),DMmatrix=double(n.par*n.par),
             itersUsed=as.integer(0),history=double((maxit+1)*(n.var+1)),
             PACKAGE="eco")

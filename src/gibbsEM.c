@@ -190,8 +190,15 @@ while (main_loop<=*iteration_max && (start==1 ||
 
   if (setP.verbose>=2) {
     Rprintf("theta and suff\n");
-    Rprintf("%10g%10g%10g%10g%10g (%10g)\n",pdTheta[0],pdTheta[1],pdTheta[2],pdTheta[3],pdTheta[4],pdTheta[4]*sqrt(pdTheta[2]*pdTheta[3]));
+    if (param_len>5) {
+      Rprintf("%10g%10g%10g%10g%10g%10g%10g (%10g)\n",pdTheta[0],pdTheta[1],pdTheta[2],pdTheta[3],pdTheta[4],pdTheta[5],pdTheta[6],pdTheta[4]*sqrt(pdTheta[2]*pdTheta[3]));
+    }
+    else {
+      Rprintf("%10g%10g%10g%10g%10g (%10g)\n",pdTheta[0],pdTheta[1],pdTheta[2],pdTheta[3],pdTheta[4],pdTheta[4]*sqrt(pdTheta[2]*pdTheta[3]));
+    }
     Rprintf("%10g%10g%10g%10g%10g\n",Suff[0],Suff[1],Suff[2],Suff[3],Suff[4]);
+    Rprintf("Sig: %10g%10g%10g\n",setP.Sigma[0][0],setP.Sigma[1][1],setP.Sigma[0][1]);
+    Rprintf("Sig3: %10g%10g%10g%10g\n",setP.Sigma3[0][0],setP.Sigma3[1][1],setP.Sigma3[2][2],setP.mu3);
   }
   main_loop++;
   R_FlushConsole();
@@ -238,117 +245,6 @@ Free(pdTheta_old);
 //FreeMatrix(Rmat,5);
 }
 
-/*
- * input: optTheta,pdTheta,params,Rmat
- * output: param_lenxparam_len matrices Rmat and Rmat_old
- * optTheta is optimal theta
- * pdTheta is current theta
- * Rmat_old contains the input Rmat
- */
- void ecoSEM(double* optTheta, double* pdTheta, Param* params, double Rmat_old[7][7], double Rmat[7][7]) {
-    //assume we have optTheta, ie \hat{phi}
-    //pdTheta is phi^{t+1}
-    int i,j,verbose,len;
-    double SuffSem[5]; //sufficient stats
-    double phiTI[7]; //phi^t_i
-    double phiTp1I[7]; //phi^{t+1}_i
-    double t_optTheta[7]; //transformed optimal
-    double t_phiTI[7]; //transformed phi^t_i
-    double t_phiTp1I[7]; //transformed phi^{t+1}_i
-    Param* params_sem=(Param*) Calloc(params->setP->t_samp,Param);
-    setParam setP_sem=*(params[0].setP);
-    verbose=setP_sem.verbose;
-    len=setP_sem.param_len-setP_sem.fixedRho;
-    //first, save old Rmat
-    for(i=0;i<len;i++)
-      for(j=0;j<len;j++)
-        Rmat_old[i][j]=Rmat[i][j];
-
-    for(i=0;i<len;i++) {
-      if (!setP_sem.semDone[i]) { //we're not done with this row
-        //step 1: set phi^t_i
-        if (verbose>=2) Rprintf("Theta: ");
-        for(j=0;j<len;j++) {
-          if (i==j)
-            phiTI[j]=pdTheta[j]; //current value
-          else phiTI[j]=optTheta[j]; //optimal value
-          if (verbose>=2) Rprintf(" %5g ", phiTI[j]);
-        }
-        if (setP_sem.fixedRho) {
-          phiTI[len-1]=pdTheta[len-1];
-          phiTp1I[len-1]=pdTheta[len-1];
-          if (verbose>=2) Rprintf(" %5g ", phiTI[4]);
-        }
-        if (verbose>=2) Rprintf("\n");
-
-
-        //step 2: run an E-step and an M-step with phi^t_i
-        //initialize params
-        for(j=0;j<setP_sem.t_samp;j++) {
-          params_sem[j].setP=&setP_sem;
-          params_sem[j].caseP=params[j].caseP;
-          params_sem[j].caseP.mu[0] = phiTI[0];
-          params_sem[j].caseP.mu[1] = phiTI[1];
-        }
-        setP_sem.Sigma[0][0] = phiTI[2];
-        setP_sem.Sigma[1][1] = phiTI[3];
-        setP_sem.Sigma[0][1] = phiTI[4]*sqrt(phiTI[2]*phiTI[3]);
-        setP_sem.Sigma[1][0] = setP_sem.Sigma[0][1];
-        if (setP_sem.ncar) {
-          //variances
-          setP_sem.Sigma3[0][0] = phiTI[2];
-          setP_sem.Sigma3[1][1] = phiTI[3];
-          setP_sem.Sigma3[2][2] = params[0].setP->Sigma3[2][2]; //constant
-          //covariances
-          setP_sem.Sigma3[0][1] = phiTI[4]*sqrt(phiTI[2]*phiTI[3]);
-          setP_sem.Sigma3[0][2] = phiTI[5]*sqrt(phiTI[2]*setP_sem.Sigma3[2][2]);
-          setP_sem.Sigma3[1][2] = phiTI[6]*sqrt(phiTI[3]*setP_sem.Sigma3[2][2]);
-          //symmetry
-          setP_sem.Sigma3[1][0] = setP_sem.Sigma3[0][1];
-          setP_sem.Sigma3[2][0] = setP_sem.Sigma3[0][2];
-          setP_sem.Sigma3[2][1] = setP_sem.Sigma3[1][2];
-          initNCAR(params_sem,phiTI);
-        }
-
-        if (verbose>=2) {
-          Rprintf("Sigma: %5g %5g %5g %5g\n",setP_sem.Sigma[0][0],setP_sem.Sigma[0][1],setP_sem.Sigma[1][0],setP_sem.Sigma[1][1]);
-        }
-        dinv2D((double*)(&(setP_sem.Sigma[0][0])), 2, (double*)(&(setP_sem.InvSigma[0][0])), "ecoSem");
-
-        ecoEStep(params_sem, SuffSem);
-        if (!params[0].setP->ncar)
-          ecoMStep(SuffSem,phiTp1I,params_sem);
-        else
-          ecoMStepNCAR(SuffSem,phiTp1I,params_sem);
-
-        //step 3: create new R matrix row
-        transformTheta(phiTp1I,t_phiTp1I,setP_sem.param_len);
-        transformTheta(optTheta,t_optTheta,setP_sem.param_len);
-        transformTheta(phiTI,t_phiTI,setP_sem.param_len);
-        for(j = 0; j<len; j++)
-          Rmat[i][j]=(t_phiTp1I[j]-t_optTheta[j])/(t_phiTI[i]-t_optTheta[i]);
-
-        //step 4: check for difference
-        params[0].setP->semDone[i]=closeEnough((double*)Rmat[i],(double*)Rmat_old[i],len,sqrt(params[0].setP->convergence));
-
-      }
-      else { //keep row the same
-        for(j = 0; j<len; j++)
-          Rmat[i][j]=Rmat_old[i][j];
-      }
-    }
-    if(verbose>=1) {
-      for(i=0;i<len;i++) {
-        Rprintf("\nR Matrix row %d (%s): ", (i+1), (params[0].setP->semDone[i]) ? "Done" : "Not done");
-        for(j=0;j<len;j++) {
-          Rprintf(" %6.4g ",Rmat[i][j]);
-        }
-      }
-      Rprintf("\n");
-    }
-    Free(params_sem);
- }
-
 
 /*
  * The E-step for parametric ecological inference
@@ -358,10 +254,12 @@ Free(pdTheta_old);
  * suff[0]=E[W1*]
  * suff[1]=E[W2*]
  * suff[2]=E[W1*^2]
- * suff[3]=E[W1*W2*]
- * suff[4]=E[W2*^2]
+ * suff[3]=E[W2*^2] **note the different order from Wstar matrix
+ * suff[4]=E[W1*W2*]
  * suff[5]=log liklihood
  */
+
+
 
 void ecoEStep(Param* params, double* suff) {
 
@@ -414,13 +312,13 @@ if (verbose>=2) Rprintf("E-step start\n");
 
    //report error E1 if E[W1],E[W2] is not on the tomography line
   if (fabs(caseP->W[0]-getW1FromW2(caseP->X, caseP->Y,caseP->W[1]))>0.01)
-    Rprintf("E1 %d %5g %5g %5g %5g %5g %5g %5g %5g \n", i, caseP->X, caseP->Y, caseP->normcT, Wstar[i][0],Wstar[i][1],Wstar[i][2],Wstar[i][3],Wstar[i][4]);
+    Rprintf("E1 %d %5g %5g %5g %5g %5g %5g %5g %5g \n", i, caseP->X, caseP->Y, caseP->normcT, caseP->mu[1],Wstar[i][0],Wstar[i][1],Wstar[i][2],Wstar[i][4]);
   //report error E2 if Jensen's inequality doesn't hold
   if (Wstar[i][4]<pow(Wstar[i][1],2) || Wstar[i][2]<pow(Wstar[i][0],2))
-     Rprintf("E2 %d %5g %5g %5g %5g %5g %5g %5g %5g\n", i, caseP->X, caseP->Y, caseP->normcT, Wstar[i][0],Wstar[i][1],Wstar[i][2],Wstar[i][3],Wstar[i][4]);
+     Rprintf("E2 %d %5g %5g %5g %5g %5g %5g %5g %5g\n", i, caseP->X, caseP->Y, caseP->normcT, caseP->mu[1],Wstar[i][0],Wstar[i][1],Wstar[i][2],Wstar[i][4]);
   //used for debugging if necessary
   if (verbose>=2 && i<20)
-     Rprintf("%d %4g %4g %4g %4g %4g %4g %4g %4g %4g\n", i, caseP->X, caseP->Y, caseP->mu[0], param->setP->Sigma[0][1], caseP->normcT, caseP->W[0],caseP->W[1],Wstar[i][2],Wstar[i][3]);
+     Rprintf("%d %4g %4g %4g %4g %4g %4g %4g %4g %4g\n", i, caseP->X, caseP->Y, caseP->mu[0], caseP->mu[1], param->setP->Sigma[0][1], caseP->normcT, caseP->W[0],caseP->W[1],Wstar[i][2]);
     }
   }
 
@@ -554,12 +452,16 @@ void ecoMStepNCAR(double* Suff, double* pdTheta, Param* params) {
   pdTheta[1]=Suff[1];  /*mu2*/
 
   //set variances and correlations
+  setP->Sigma3[2][2] = mu3sq-mu3*mu3; //initialize
   pdTheta[2]=Suff[2]-2*Suff[0]*pdTheta[0]+pdTheta[0]*pdTheta[0]; //s11
   pdTheta[3]=Suff[3]-2*Suff[1]*pdTheta[1]+pdTheta[1]*pdTheta[1]; //s22
   pdTheta[4]=Suff[4]-Suff[0]*pdTheta[1]-Suff[1]*pdTheta[0]+pdTheta[0]*pdTheta[1]; //sigma12
   pdTheta[4]=pdTheta[4]/sqrt(pdTheta[2]*pdTheta[3]); //rho_12
-  pdTheta[5]=(XW1 - mu3*Suff[0])/sqrt((Suff[2] - Suff[0]*Suff[0])*(setP->Sigma3[2][2] - mu3*mu3)); //rho_13
-  pdTheta[6]=(XW2 - mu3*Suff[1])/sqrt((Suff[4] - Suff[1]*Suff[1])*(setP->Sigma3[2][2] - mu3*mu3)); //rho_23
+  pdTheta[5]=(XW1 - mu3*Suff[0])/sqrt((Suff[2] - Suff[0]*Suff[0])*setP->Sigma3[2][2]); //rho_13
+  //pdTheta[5]=pdTheta[5]/sqrt(pdTheta[2]*setP->Sigma3[2][2]);
+  pdTheta[6]=(XW2 - mu3*Suff[1])/sqrt((Suff[3] - Suff[1]*Suff[1])*setP->Sigma3[2][2]); //rho_23
+  //pdTheta[6]=pdTheta[6]/sqrt(pdTheta[3]*setP->Sigma3[2][2]);
+  //printf(": %5g %5g %5g %5g\n\n",(XW1 - mu3*Suff[0]),(Suff[2] - Suff[0]*Suff[0]),(setP->Sigma3[2][2] - mu3*mu3), pdTheta[5]);
 
 
   if (!setP->fixedRho) { //variable rho
@@ -580,18 +482,20 @@ void ecoMStepNCAR(double* Suff, double* pdTheta, Param* params) {
 
   }
   else { //fixed rho NEEDS WORK
-    double Imat[2][2];
-    Imat[0][0]=setP->Sigma3[0][0];
-    Imat[1][1]=setP->Sigma3[1][1];
-    Imat[0][1]=setP->Sigma3[0][1];
-    pdTheta[2]=(Imat[0][0]-pdTheta[6]*Imat[0][1]*pow(Imat[0][0]/Imat[1][1],0.5))/(1-pdTheta[6]*pdTheta[6]); //sigma11
-    pdTheta[3]=(Imat[1][1]-pdTheta[6]*Imat[0][1]*pow(Imat[1][1]/Imat[0][0],0.5))/(1-pdTheta[6]*pdTheta[6]); //sigma22
-    pdTheta[4]=setP->Sigma3[0][1];
-    pdTheta[5]=setP->Sigma3[0][2];
-    setP->Sigma3[0][0]=pdTheta[2];
-    setP->Sigma3[1][1]=pdTheta[3];
-    setP->Sigma3[1][0] = pdTheta[6]*sqrt(pdTheta[2]*pdTheta[3]);
+    //variances
+    setP->Sigma3[0][0] = pdTheta[2];
+    setP->Sigma3[1][1] = pdTheta[3];
+    setP->Sigma3[2][2] = mu3sq-mu3*mu3;
+
+    //covariances
+    setP->Sigma3[0][1] = pdTheta[4]*sqrt(pdTheta[2]*pdTheta[3]);
+    setP->Sigma3[0][2] = pdTheta[5]*sqrt(pdTheta[2]*setP->Sigma3[2][2]);
+    setP->Sigma3[1][2] = pdTheta[6]*sqrt(pdTheta[3]*setP->Sigma3[2][2]);
+
+    //symmetry
     setP->Sigma3[1][0] = setP->Sigma3[0][1];
+    setP->Sigma3[2][0] = setP->Sigma3[0][2];
+    setP->Sigma3[2][1] = setP->Sigma3[1][2];
   }
 
   initNCAR(params,pdTheta);
@@ -624,7 +528,7 @@ void initNCAR(Param* params, double* pdTheta) {
   //rho_23: pdTheta[6]
 
   setP->Sigma[0][0]= setP->Sigma3[0][0]*(1 - pdTheta[5]*pdTheta[5]);
-  setP->Sigma[0][1]= pdTheta[4]*(1 - pdTheta[6])*sqrt((1 - pdTheta[5]*pdTheta[5])*(1 - pdTheta[6]*pdTheta[6]));
+  setP->Sigma[0][1]= (pdTheta[4] - pdTheta[5]*pdTheta[6])*sqrt((1 - pdTheta[5]*pdTheta[5])*(1 - pdTheta[6]*pdTheta[6]));
   setP->Sigma[1][0]= setP->Sigma[0][1];
   setP->Sigma[1][1]= setP->Sigma3[1][1]*(1 - pdTheta[6]*pdTheta[6]);
 
@@ -638,6 +542,119 @@ void initNCAR(Param* params, double* pdTheta) {
     params[i].caseP.mu[1]=pdTheta[1] + pdTheta[6]*sqrt(setP->Sigma3[1][1]/setP->Sigma3[2][2])*(logit(params[i].caseP.X,"initNCAR mu1")-setP->mu3);
   }
 }
+
+/*
+ * input: optTheta,pdTheta,params,Rmat
+ * output: param_lenxparam_len matrices Rmat and Rmat_old
+ * optTheta is optimal theta
+ * pdTheta is current theta
+ * Rmat_old contains the input Rmat
+ */
+ void ecoSEM(double* optTheta, double* pdTheta, Param* params, double Rmat_old[7][7], double Rmat[7][7]) {
+    //assume we have optTheta, ie \hat{phi}
+    //pdTheta is phi^{t+1}
+    int i,j,verbose,len;
+    double SuffSem[5]; //sufficient stats
+    double phiTI[7]; //phi^t_i
+    double phiTp1I[7]; //phi^{t+1}_i
+    double t_optTheta[7]; //transformed optimal
+    double t_phiTI[7]; //transformed phi^t_i
+    double t_phiTp1I[7]; //transformed phi^{t+1}_i
+    Param* params_sem=(Param*) Calloc(params->setP->t_samp,Param);
+    setParam setP_sem=*(params[0].setP);
+    verbose=setP_sem.verbose;
+    len=setP_sem.param_len-setP_sem.fixedRho;
+    //first, save old Rmat
+    for(i=0;i<len;i++)
+      for(j=0;j<len;j++)
+        Rmat_old[i][j]=Rmat[i][j];
+
+    for(i=0;i<len;i++) {
+      if (!setP_sem.semDone[i]) { //we're not done with this row
+        //step 1: set phi^t_i
+        if (verbose>=2) Rprintf("Theta: ");
+        for(j=0;j<len;j++) {
+          if (i==j)
+            phiTI[j]=pdTheta[j]; //current value
+          else phiTI[j]=optTheta[j]; //optimal value
+          if (verbose>=2) Rprintf(" %5g ", phiTI[j]);
+        }
+        if (setP_sem.fixedRho) {
+          phiTI[len-1]=pdTheta[len-1];
+          phiTp1I[len-1]=pdTheta[len-1];
+          if (verbose>=2) Rprintf(" %5g ", phiTI[4]);
+        }
+        if (verbose>=2) Rprintf("\n");
+
+
+        //step 2: run an E-step and an M-step with phi^t_i
+        //initialize params
+        for(j=0;j<setP_sem.t_samp;j++) {
+          params_sem[j].setP=&setP_sem;
+          params_sem[j].caseP=params[j].caseP;
+          params_sem[j].caseP.mu[0] = phiTI[0];
+          params_sem[j].caseP.mu[1] = phiTI[1];
+        }
+        setP_sem.Sigma[0][0] = phiTI[2];
+        setP_sem.Sigma[1][1] = phiTI[3];
+        setP_sem.Sigma[0][1] = phiTI[4]*sqrt(phiTI[2]*phiTI[3]);
+        setP_sem.Sigma[1][0] = setP_sem.Sigma[0][1];
+        if (setP_sem.ncar) {
+          //variances
+          setP_sem.Sigma3[0][0] = phiTI[2];
+          setP_sem.Sigma3[1][1] = phiTI[3];
+          setP_sem.Sigma3[2][2] = params[0].setP->Sigma3[2][2]; //constant
+          //covariances
+          setP_sem.Sigma3[0][1] = phiTI[4]*sqrt(phiTI[2]*phiTI[3]);
+          setP_sem.Sigma3[0][2] = phiTI[5]*sqrt(phiTI[2]*setP_sem.Sigma3[2][2]);
+          setP_sem.Sigma3[1][2] = phiTI[6]*sqrt(phiTI[3]*setP_sem.Sigma3[2][2]);
+          //symmetry
+          setP_sem.Sigma3[1][0] = setP_sem.Sigma3[0][1];
+          setP_sem.Sigma3[2][0] = setP_sem.Sigma3[0][2];
+          setP_sem.Sigma3[2][1] = setP_sem.Sigma3[1][2];
+          initNCAR(params_sem,phiTI);
+        }
+
+        if (verbose>=2) {
+          Rprintf("Sigma: %5g %5g %5g %5g\n",setP_sem.Sigma[0][0],setP_sem.Sigma[0][1],setP_sem.Sigma[1][0],setP_sem.Sigma[1][1]);
+        }
+        dinv2D((double*)(&(setP_sem.Sigma[0][0])), 2, (double*)(&(setP_sem.InvSigma[0][0])), "ecoSem");
+
+        ecoEStep(params_sem, SuffSem);
+        if (!params[0].setP->ncar)
+          ecoMStep(SuffSem,phiTp1I,params_sem);
+        else
+          ecoMStepNCAR(SuffSem,phiTp1I,params_sem);
+
+        //step 3: create new R matrix row
+        transformTheta(phiTp1I,t_phiTp1I,setP_sem.param_len);
+        transformTheta(optTheta,t_optTheta,setP_sem.param_len);
+        transformTheta(phiTI,t_phiTI,setP_sem.param_len);
+        for(j = 0; j<len; j++)
+          Rmat[i][j]=(t_phiTp1I[j]-t_optTheta[j])/(t_phiTI[i]-t_optTheta[i]);
+
+        //step 4: check for difference
+        params[0].setP->semDone[i]=closeEnough((double*)Rmat[i],(double*)Rmat_old[i],len,sqrt(params[0].setP->convergence));
+
+      }
+      else { //keep row the same
+        for(j = 0; j<len; j++)
+          Rmat[i][j]=Rmat_old[i][j];
+      }
+    }
+    if(verbose>=1) {
+      for(i=0;i<len;i++) {
+        Rprintf("\nR Matrix row %d (%s): ", (i+1), (params[0].setP->semDone[i]) ? "Done" : "Not done");
+        for(j=0;j<len;j++) {
+          Rprintf(" %6.4g ",Rmat[i][j]);
+        }
+      }
+      Rprintf("\n");
+    }
+    Free(params_sem);
+ }
+
+
 
 /*
  * Read in the data set and population params
