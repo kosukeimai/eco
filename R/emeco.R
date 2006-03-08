@@ -629,12 +629,12 @@ ecoML <- function(formula, data = parent.frame(), N=NULL, supplement = NULL,
     res.out$Fmis<-1-diag(Iobs)/diag(Icom)
     res.out$Vobs.original<-Vobs
     res.out$Vobs<-Vobs.sym
-    res.out$Icom.fisher<-Icom.fisher
-    res.out$Iobs.fisher<-Iobs.fisher
-    res.out$Fmis.fisher<-1-diag(Iobs.fisher)/diag(Icom.fisher)
+    res.out$Icom.trans<-Icom.fisher
+    res.out$Iobs.trans<-Iobs.fisher
+    res.out$Fmis.trans<-1-diag(Iobs.fisher)/diag(Icom.fisher)
     res.out$Dvec<-infomat$Dvec
     res.out$Icom.new<-Icom.new
-    res.out$Icom.new.fisher<-Icom.new.fisher
+    res.out$Icom.new.trans<-Icom.new.fisher
 
   }
 
