@@ -29,7 +29,7 @@ void ecoSEM(double* optTheta, double* pdTheta, Param* params, double Rmat_old[7]
 void ecoEStep(Param* params, double* suff);
 void ecoMStep(double* Suff, double* pdTheta, Param* params);
 void ecoMStepNCAR(double* Suff, double* pdTheta, Param* params);
-void initNCAR(Param* params,double mu0, double mu1);
+void initNCAR(Param* params, double* pdTheta);
 void setHistory(double* t_pdTheta, double loglik, int iter,int len,double history_full[][8]);
 int closeEnough(double* pdTheta, double* pdTheta_old, int len, double maxerr);
 int semDoneCheck(setParam* setP);
@@ -295,16 +295,19 @@ Free(pdTheta_old);
         setP_sem.Sigma[0][1] = phiTI[4]*sqrt(phiTI[2]*phiTI[3]);
         setP_sem.Sigma[1][0] = setP_sem.Sigma[0][1];
         if (setP_sem.ncar) {
+          //variances
           setP_sem.Sigma3[0][0] = phiTI[2];
           setP_sem.Sigma3[1][1] = phiTI[3];
-          setP_sem.Sigma3[0][1] = phiTI[4];
-          setP_sem.Sigma3[0][2] = phiTI[5];
-          setP_sem.Sigma3[1][2] = phiTI[6];
+          setP_sem.Sigma3[2][2] = params[0].setP->Sigma3[2][2]; //constant
+          //covariances
+          setP_sem.Sigma3[0][1] = phiTI[4]*sqrt(phiTI[2]*phiTI[3]);
+          setP_sem.Sigma3[0][2] = phiTI[5]*sqrt(phiTI[2]*setP_sem.Sigma3[2][2]);
+          setP_sem.Sigma3[1][2] = phiTI[6]*sqrt(phiTI[3]*setP_sem.Sigma3[2][2]);
+          //symmetry
           setP_sem.Sigma3[1][0] = setP_sem.Sigma3[0][1];
           setP_sem.Sigma3[2][0] = setP_sem.Sigma3[0][2];
           setP_sem.Sigma3[2][1] = setP_sem.Sigma3[1][2];
-          setP_sem.Sigma3[2][2] = setP_sem.Sigma3[2][2]; //constant
-          initNCAR(params,phiTI[0],phiTI[1]);
+          initNCAR(params_sem,phiTI);
         }
 
         if (verbose>=2) {
@@ -591,12 +594,12 @@ void ecoMStepNCAR(double* Suff, double* pdTheta, Param* params) {
     setP->Sigma3[1][0] = setP->Sigma3[0][1];
   }
 
-  initNCAR(params,pdTheta[0],pdTheta[1]);
+  initNCAR(params,pdTheta);
 
 }
 
 //NCAR initialize
-void initNCAR(Param* params,double mu0, double mu1) {
+void initNCAR(Param* params, double* pdTheta) {
   setParam* setP=params[0].setP;
   /* OLD CODE
   //Set 2x2 Sigma
@@ -615,10 +618,15 @@ void initNCAR(Param* params,double mu0, double mu1) {
   }*/
 
   //NEW CODE, PLEASE CHECK
-  setP->Sigma[0][0]= setP->Sigma3[0][0]*(1 - setP->Sigma3[0][2]*setP->Sigma3[0][2]);
-  setP->Sigma[0][1]= setP->Sigma3[0][1]*(1 - setP->Sigma3[1][2]*setP->Sigma3[1][2])*pow((1 - setP->Sigma3[0][2])*(1 - setP->Sigma3[1][2]),0.5);
+  //reference
+  //rho_12: pdTheta[4]
+  //rho_13: pdTheta[5]
+  //rho_23: pdTheta[6]
+
+  setP->Sigma[0][0]= setP->Sigma3[0][0]*(1 - pdTheta[5]*pdTheta[5]);
+  setP->Sigma[0][1]= pdTheta[4]*(1 - pdTheta[6])*sqrt((1 - pdTheta[5]*pdTheta[5])*(1 - pdTheta[6]*pdTheta[6]));
   setP->Sigma[1][0]= setP->Sigma[0][1];
-  setP->Sigma[1][1]= setP->Sigma3[1][1]*(1 - setP->Sigma3[1][2]*setP->Sigma3[1][2]);
+  setP->Sigma[1][1]= setP->Sigma3[1][1]*(1 - pdTheta[6]*pdTheta[6]);
 
   dinv2D((double*)(&(setP->Sigma[0][0])), 2, (double*)(&(setP->InvSigma[0][0])),"NCAR M-step S2");
   dinv2D((double*)(&(setP->Sigma3[0][0])), 3, (double*)(&(setP->InvSigma3[0][0])),"NCAR M-step S3");
@@ -626,8 +634,8 @@ void initNCAR(Param* params,double mu0, double mu1) {
   //assign each data point the new mu (different for each point)
   int i;
   for(i=0;i<setP->t_samp;i++) {
-    params[i].caseP.mu[0]=mu0 + setP->Sigma3[0][2]*pow(setP->Sigma3[0][0]/setP->Sigma3[2][2],0.5)*(logit(params[i].caseP.X,"initNCAR mu0")-setP->mu3);
-    params[i].caseP.mu[1]=mu1 + setP->Sigma3[1][2]*pow(setP->Sigma3[1][1]/setP->Sigma3[2][2],0.5)*(logit(params[i].caseP.X,"initNCAR mu1")-setP->mu3);
+    params[i].caseP.mu[0]=pdTheta[0] + pdTheta[5]*sqrt(setP->Sigma3[0][0]/setP->Sigma3[2][2])*(logit(params[i].caseP.X,"initNCAR mu0")-setP->mu3);
+    params[i].caseP.mu[1]=pdTheta[1] + pdTheta[6]*sqrt(setP->Sigma3[1][1]/setP->Sigma3[2][2])*(logit(params[i].caseP.X,"initNCAR mu1")-setP->mu3);
   }
 }
 
