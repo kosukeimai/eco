@@ -635,7 +635,6 @@ ecoML <- function(formula, data = parent.frame(), N=NULL, supplement = NULL,
     res.out$Dvec<-infomat$Dvec
     res.out$Icom.new<-Icom.new
     res.out$Icom.new.trans<-Icom.new.fisher
-
   }
 
   class(res.out) <- "ecoML"
