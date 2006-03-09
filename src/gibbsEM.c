@@ -204,6 +204,8 @@ while (main_loop<=*iteration_max && (start==1 ||
     Rprintf("%10g%10g%10g%10g%10g\n",Suff[0],Suff[1],Suff[2],Suff[3],Suff[4]);
     Rprintf("Sig: %10g%10g%10g\n",setP.Sigma[0][0],setP.Sigma[1][1],setP.Sigma[0][1]);
     if (setP.ncar) Rprintf("Sig3: %10g%10g%10g%10g\n",setP.Sigma3[0][0],setP.Sigma3[1][1],setP.Sigma3[2][2],setP.mu3);
+    //char x;
+    //R_ReadConsole("hit enter\n",(char*)&x,4,0);
   }
   main_loop++;
   R_FlushConsole();
@@ -551,6 +553,8 @@ void initNCAR(Param* params, double* pdTheta) {
   for(i=0;i<setP->t_samp;i++) {
     params[i].caseP.mu[0]=pdTheta[0] + pdTheta[5]*sqrt(setP->Sigma3[0][0]/setP->Sigma3[2][2])*(logit(params[i].caseP.X,"initNCAR mu0")-setP->mu3);
     params[i].caseP.mu[1]=pdTheta[1] + pdTheta[6]*sqrt(setP->Sigma3[1][1]/setP->Sigma3[2][2])*(logit(params[i].caseP.X,"initNCAR mu1")-setP->mu3);
+    if(setP->verbose>=2 && !setP->sem & i<3)
+      Rprintf("mu primes for %d: %5g %5g\n",i,params[i].caseP.mu[0],params[i].caseP.mu[1]);
   }
 }
 
@@ -673,7 +677,7 @@ void initNCAR(Param* params, double* pdTheta) {
  void readData(Param* params, int n_dim, double* pdX, double* sur_W, double* x1_W1, double* x0_W2,
                 int n_samp, int s_samp, int x1_samp, int x0_samp) {
      /* read the data set */
-int itemp,i,j;
+int itemp,i,j,surv_dim;
 double dtemp;
 setParam* setP=params[0].setP;
 
@@ -691,12 +695,6 @@ setParam* setP=params[0].setP;
     params[i].caseP.X=(params[i].caseP.X >= 1) ? .9999 : ((params[i].caseP.X <= 0) ? 0.0001 : params[i].caseP.X);
   }
 
-  if (setP->verbose>=2) {
-    printf("Y X\n");
-    for(i=0;i<10;i++)
-      Rprintf("%5d%14g%14g\n",i,params[i].caseP.Y,params[i].caseP.X);
-      }
-
   /*read homeogenous areas information */
     for (i=n_samp; i<n_samp+x1_samp; i++) {
       params[i].caseP.W[0]=(x1_W1[i] == 1) ? .9999 : ((x1_W1[i]==0) ? .0001 : x1_W1[i]);
@@ -710,13 +708,32 @@ setParam* setP=params[0].setP;
 
 
   /*read the survey data */
-     itemp=0;
-    for (j=0; j<n_dim; j++)
+    itemp=0;
+    surv_dim=n_dim + (setP->ncar ? (n_dim-1) : 0); //if NCAR, the survey data will include X's
+    for (j=0; j<surv_dim; j++) {
       for (i=n_samp+x1_samp+x0_samp; i<n_samp+x1_samp+x0_samp+s_samp; i++) {
         dtemp=sur_W[itemp++];
-        params[i].caseP.W[j]=(dtemp == 1) ? .9999 : ((dtemp==0) ? .0001 : dtemp);
-        params[i].caseP.Wstar[j]=logit(params[i].caseP.W[j],"Survey read");
+        if (j<n_dim) {
+          params[i].caseP.W[j]=(dtemp == 1) ? .9999 : ((dtemp==0) ? .0001 : dtemp);
+          params[i].caseP.Wstar[j]=logit(params[i].caseP.W[j],"Survey read");
+        }
+        else {
+          params[i].caseP.X=(dtemp == 1) ? .9999 : ((dtemp==0) ? .0001 : dtemp);
+          params[i].caseP.Y=params[i].caseP.X*params[i].caseP.W[0]+(1-params[i].caseP.X);
+        }
       }
+    }
+
+    if (setP->verbose>=2) {
+      printf("Y X\n");
+      for(i=0;i<5;i++) Rprintf("%5d%14g%14g\n",i,params[i].caseP.Y,params[i].caseP.X);
+      if (s_samp>0) {
+        printf("SURVEY data\nY X\n");
+        int s_max=fmin2(n_samp+x1_samp+x0_samp+s_samp,n_samp+x1_samp+x0_samp+5);
+        for(i=n_samp+x1_samp+x0_samp; i<s_max; i++) Rprintf("%5d%14g%14g\n",i,params[i].caseP.Y,params[i].caseP.X);
+      }
+    }
+
  }
 
 /*

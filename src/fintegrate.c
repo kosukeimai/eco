@@ -49,7 +49,7 @@ void NormConstT(double *t, int n, void *param)
   Sigma[0][1]=pp->setP->Sigma[0][1];
   Sigma[1][0]=pp->setP->Sigma[1][0];
   rho=Sigma[0][1]/sqrt(Sigma[0][0]*Sigma[1][1]);
-  //Rprintf("TESTING: %4g %4g %4g %4g", pp->caseP.mu[0], pp->caseP.mu[0], pp->setP->Sigma[0][0],pp->setP->Sigma[0][1]);
+  //Rprintf("TESTING: %4g %4g %4g %4g", pp->caseP.mu[0], pp->caseP.mu[1], pp->setP->Sigma[0][0],pp->setP->Sigma[0][1]);
   X=pp->caseP.X;
   Y=pp->caseP.Y;
   imposs=0;
@@ -240,7 +240,7 @@ double paramIntegration(integr_fn f, void *ex) {
   if (ier==0) return result;
   else {
     Param* p = (Param*) ex;
-    Rprintf("Integration error %d: X %5g Y %5g [%5g,%5g] -> %5g +- %5g\n",ier,p->caseP.X,p->caseP.Y,p->caseP.Wbounds[0][0],p->caseP.Wbounds[0][1],result,anserr);
+    Rprintf("Integration error %d: Sf %d X %5g Y %5g [%5g,%5g] -> %5g +- %5g\n",ier,p->caseP.suff,p->caseP.X,p->caseP.Y,p->caseP.Wbounds[0][0],p->caseP.Wbounds[0][1],result,anserr);
     return result;
   }
 
