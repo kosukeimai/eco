@@ -103,6 +103,7 @@ void cEMeco(
   setP.convergence=*convergence;
   setP.t_samp=t_samp; setP.n_samp=n_samp; setP.s_samp=s_samp; setP.x1_samp=x1_samp; setP.x0_samp=x0_samp;
   int param_len=(setP.ncar ? 7 : 5) - setP.fixedRho;
+  setP.param_len=param_len;
 
   /* model parameters */
   //double **Sigma=doubleMatrix(n_dim,n_dim);/* inverse covariance matrix*/
@@ -138,7 +139,10 @@ while (main_loop<=*iteration_max && (start==1 ||
 
   setP.iter=main_loop;
   if (start) {
-    for(i=0;i<param_len;i++) pdTheta[i]=pdTheta_in[i];
+    for(i=0;i<param_len;i++) {
+      pdTheta[i]=pdTheta_in[i];
+      if (i>=5) pdTheta[i]=0;
+    }
     transformTheta(pdTheta,t_pdTheta,param_len);
     setHistory(t_pdTheta,0,0,param_len,history_full);
     for(i=0;i<t_samp;i++){
@@ -152,13 +156,14 @@ while (main_loop<=*iteration_max && (start==1 ||
     dinv2D((double*)&setP.Sigma[0][0], 2, (double*)&setP.InvSigma[0][0], "Start of main loop");
     //for SEM
     for(i=0;i<param_len;i++) setP.semDone[i]=0;
-    if(setP.fixedRho) setP.semDone[4]=1; //no need to worry about last row
+    if(setP.fixedRho) setP.semDone[param_len-1]=1; //no need to worry about last row
     start=0;
   }
 
 
   if (setP.verbose>=1) {
-    Rprintf("cycle %d/%d: %5g %5g %5g %5g rho: %5g",main_loop,*iteration_max,pdTheta[0],pdTheta[1],pdTheta[2],pdTheta[3],pdTheta[4]);
+    Rprintf("cycle %d/%d:",main_loop,*iteration_max);
+    for(i=0;i<param_len;i++) Rprintf(" %.3f",pdTheta[i]);
     if (setP.calcLoglik==1 && main_loop>2)
       Rprintf(" Prev LL: %5g",Suff[5]);
     Rprintf("\n");
@@ -198,7 +203,7 @@ while (main_loop<=*iteration_max && (start==1 ||
     }
     Rprintf("%10g%10g%10g%10g%10g\n",Suff[0],Suff[1],Suff[2],Suff[3],Suff[4]);
     Rprintf("Sig: %10g%10g%10g\n",setP.Sigma[0][0],setP.Sigma[1][1],setP.Sigma[0][1]);
-    Rprintf("Sig3: %10g%10g%10g%10g\n",setP.Sigma3[0][0],setP.Sigma3[1][1],setP.Sigma3[2][2],setP.mu3);
+    if (setP.ncar) Rprintf("Sig3: %10g%10g%10g%10g\n",setP.Sigma3[0][0],setP.Sigma3[1][1],setP.Sigma3[2][2],setP.mu3);
   }
   main_loop++;
   R_FlushConsole();
@@ -207,7 +212,13 @@ while (main_loop<=*iteration_max && (start==1 ||
 
 /***End main loop ***/
 
-if (setP.verbose>=1) printf("End loop PDT:%5g %5g %5g %5g %5g\n",pdTheta[0],pdTheta[1],pdTheta[2],pdTheta[3],pdTheta[4]);
+if (setP.verbose>=1) {
+  printf("Final Theta:");
+    for(i=0;i<param_len;i++) Rprintf(" %.3f",pdTheta[i]);
+    if (setP.calcLoglik==1 && main_loop>2)
+      Rprintf(" Final LL: %5g",Suff[5]);
+    Rprintf("\n");
+  }
 
 //finish up: record results and loglik
 Param* param;
@@ -277,7 +288,7 @@ s_samp=setP->s_samp;
 
   double **Wstar=doubleMatrix(t_samp,5);     /* pseudo data(transformed)*/
 loglik=0;
-if (verbose>=2) Rprintf("E-step start\n");
+if (verbose>=2 && !setP->sem) Rprintf("E-step start\n");
   for (i = 0; i<n_samp; i++) {
     param = &(params[i]);
     caseP=&(param->caseP);
@@ -317,7 +328,7 @@ if (verbose>=2) Rprintf("E-step start\n");
   if (Wstar[i][4]<pow(Wstar[i][1],2) || Wstar[i][2]<pow(Wstar[i][0],2))
      Rprintf("E2 %d %5g %5g %5g %5g %5g %5g %5g %5g\n", i, caseP->X, caseP->Y, caseP->normcT, caseP->mu[1],Wstar[i][0],Wstar[i][1],Wstar[i][2],Wstar[i][4]);
   //used for debugging if necessary
-  if (verbose>=2 && i<20)
+  if (verbose>=2 && !setP->sem && i<20)
      Rprintf("%d %4g %4g %4g %4g %4g %4g %4g %4g %4g\n", i, caseP->X, caseP->Y, caseP->mu[0], caseP->mu[1], param->setP->Sigma[0][1], caseP->normcT, caseP->W[0],caseP->W[1],Wstar[i][2]);
     }
   }
@@ -528,7 +539,7 @@ void initNCAR(Param* params, double* pdTheta) {
   //rho_23: pdTheta[6]
 
   setP->Sigma[0][0]= setP->Sigma3[0][0]*(1 - pdTheta[5]*pdTheta[5]);
-  setP->Sigma[0][1]= (pdTheta[4] - pdTheta[5]*pdTheta[6])/sqrt((1 - pdTheta[5]*pdTheta[5])*(1 - pdTheta[6]*pdTheta[6]));
+  setP->Sigma[0][1]= (pdTheta[4] - pdTheta[5]*pdTheta[6])*sqrt((1 - pdTheta[5]*pdTheta[5])*(1 - pdTheta[6]*pdTheta[6]));
   setP->Sigma[1][0]= setP->Sigma[0][1];
   setP->Sigma[1][1]= setP->Sigma3[1][1]*(1 - pdTheta[6]*pdTheta[6]);
 
@@ -572,7 +583,7 @@ void initNCAR(Param* params, double* pdTheta) {
     for(i=0;i<len;i++) {
       if (!setP_sem.semDone[i]) { //we're not done with this row
         //step 1: set phi^t_i
-        if (verbose>=2) Rprintf("Theta: ");
+        if (verbose>=2) Rprintf("Theta(%d):",(i+1));
         for(j=0;j<len;j++) {
           if (i==j)
             phiTI[j]=pdTheta[j]; //current value
@@ -582,7 +593,7 @@ void initNCAR(Param* params, double* pdTheta) {
         if (setP_sem.fixedRho) {
           phiTI[len-1]=pdTheta[len-1];
           phiTp1I[len-1]=pdTheta[len-1];
-          if (verbose>=2) Rprintf(" %5g ", phiTI[4]);
+          if (verbose>=2) Rprintf(" %5g ", phiTI[len-1]);
         }
         if (verbose>=2) Rprintf("\n");
 
@@ -615,9 +626,9 @@ void initNCAR(Param* params, double* pdTheta) {
           initNCAR(params_sem,phiTI);
         }
 
-        if (verbose>=2) {
-          Rprintf("Sigma: %5g %5g %5g %5g\n",setP_sem.Sigma[0][0],setP_sem.Sigma[0][1],setP_sem.Sigma[1][0],setP_sem.Sigma[1][1]);
-        }
+        //if (verbose>=2) {
+        //  Rprintf("Sigma: %5g %5g %5g %5g\n",setP_sem.Sigma[0][0],setP_sem.Sigma[0][1],setP_sem.Sigma[1][0],setP_sem.Sigma[1][1]);
+        //}
         dinv2D((double*)(&(setP_sem.Sigma[0][0])), 2, (double*)(&(setP_sem.InvSigma[0][0])), "ecoSem");
 
         ecoEStep(params_sem, SuffSem);
@@ -644,12 +655,12 @@ void initNCAR(Param* params, double* pdTheta) {
     }
     if(verbose>=1) {
       for(i=0;i<len;i++) {
-        Rprintf("\nR Matrix row %d (%s): ", (i+1), (params[0].setP->semDone[i]) ? "Done" : "Not done");
+        Rprintf("\nR Matrix row %d (%s): ", (i+1), (params[0].setP->semDone[i]) ? "    Done" : "Not done");
         for(j=0;j<len;j++) {
-          Rprintf(" %6.4g ",Rmat[i][j]);
+          Rprintf(" %5.2f ",Rmat[i][j]);
         }
       }
-      Rprintf("\n");
+      Rprintf("\n\n");
     }
     Free(params_sem);
  }
