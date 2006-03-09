@@ -487,11 +487,16 @@ ecoML <- function(formula, data = parent.frame(), N=NULL, supplement = NULL,
   Y <- model.response(model.frame(tt, data=data))
 
   ## checking the data
-  ndim <- 2  
-  tmp <- checkdata(X,Y, supplement, ndim)
+  if (context) {
+    ndim <- 3
+    n.var<-7
+  }
+  else {
+    ndim <- 2
+    n.var <- 5
+  }
+  tmp <- checkdata(X, Y, supplement, ndim)
   bdd <- ecoBD(formula=formula, data=data)
-  n.var <- 5
-  if (context) n.var<-7
   n <- tmp$n.samp+tmp$survey.samp+tmp$samp.X1+tmp$samp.X0
   inSample.length <- ndim*tmp$n.samp
 

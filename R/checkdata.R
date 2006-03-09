@@ -32,19 +32,18 @@ checkdata <- function(X,Y, supplement, ndim) {
    res$d <- cbind(res$X.use, res$Y.use)
 
    ## check survey data
-  
    if (any(supplement <0) || any(supplement >1)) 
-      stop("survey data have to be between 0 and 1.")  
-   if ((dim(supplement)[2] != ndim) && (length(supplement)>0))
-      stop("when context=TRUE, use n by 3 otherwise use n by 2 matrix\ 
-           for survey data, when context=TRUE")
-   if (is.null(supplement)) 
-      res$survey.samp <- res$survey.data <- res$survey.yes <- 0
-   else {
-      res$survey.samp <- length(supplement[,1])
-      res$survey.data <- as.matrix(supplement)
-      res$survey.yes <- 1
-   }
+      stop("survey data have to be between 0 and 1.")
+   if(is.null(supplement))
+     res$survey.samp <- res$survey.data <- res$survey.yes <- 0
+   else
+     if (dim(supplement)[2] != ndim)
+       stop("when context=TRUE, use n by 3. Otherwise use n by 2 matrix for survey data")
+     else {
+       res$survey.samp <- length(supplement[,1])
+       res$survey.data <- as.matrix(supplement)
+       res$survey.yes <- 1
+     }
 
    return(res)
 
