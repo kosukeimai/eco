@@ -331,7 +331,7 @@ if (verbose>=2 && !setP->sem) Rprintf("E-step start\n");
      Rprintf("E2 %d %5g %5g %5g %5g %5g %5g %5g %5g\n", i, caseP->X, caseP->Y, caseP->normcT, caseP->mu[1],Wstar[i][0],Wstar[i][1],Wstar[i][2],Wstar[i][4]);
   //used for debugging if necessary
   if (verbose>=2 && !setP->sem && i<20)
-     Rprintf("%d %4g %4g %4g %4g %4g %4g %4g %4g %4g\n", i, caseP->X, caseP->Y, caseP->mu[0], caseP->mu[1], param->setP->Sigma[0][1], caseP->normcT, caseP->W[0],caseP->W[1],Wstar[i][2]);
+     Rprintf("%d %5.2f %5.2f %5.2f %5.2f %5.2f %5.2f %5.2f %5.2f %5.2f\n", i, caseP->X, caseP->Y, caseP->mu[0], caseP->mu[1], param->setP->Sigma[0][1], caseP->normcT, caseP->W[0],caseP->W[1],Wstar[i][2]);
     }
   }
 
