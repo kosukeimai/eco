@@ -541,7 +541,7 @@ void initNCAR(Param* params, double* pdTheta) {
   //rho_23: pdTheta[6]
 
   setP->Sigma[0][0]= setP->Sigma3[0][0]*(1 - pdTheta[5]*pdTheta[5]);
-  setP->Sigma[0][1]= (pdTheta[4] - pdTheta[5]*pdTheta[6])*sqrt((1 - pdTheta[5]*pdTheta[5])*(1 - pdTheta[6]*pdTheta[6]));
+  setP->Sigma[0][1]= (pdTheta[4] - pdTheta[5]*pdTheta[6])/sqrt((1 - pdTheta[5]*pdTheta[5])*(1 - pdTheta[6]*pdTheta[6]));
   setP->Sigma[1][0]= setP->Sigma[0][1];
   setP->Sigma[1][1]= setP->Sigma3[1][1]*(1 - pdTheta[6]*pdTheta[6]);
 
