@@ -249,6 +249,20 @@ for(i=0;i<(*itersUsed);i++) {
     history[i*6+j]=history_full[i][j];
 }
 
+//fix  reutrned theta
+//mu_3, mu_1, mu_2, sig_3, sig_1, sig_2, r_13, r_23, r_12
+for(i=0;i<param_len;i++) pdTheta_old[i]=pdTheta[i];
+pdTheta[0]=setP.mu3;
+pdTheta[1]=pdTheta_old[0];
+pdTheta[2]=pdTheta_old[1];
+pdTheta[3]=setP.Sigma3[2][2];
+pdTheta[4]=pdTheta_old[2];
+pdTheta[5]=pdTheta_old[3];
+pdTheta[6]=pdTheta_old[5];
+pdTheta[6]=pdTheta_old[6];
+pdTheta[6]=pdTheta_old[4];
+
+
 /* write out the random seed */
 PutRNGstate();
 
