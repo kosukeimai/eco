@@ -1,14 +1,19 @@
 ## transformation of BVN(mu1, mu2, sigma1, sigma2, rho) into
 ## (mu1, mu2, log(sigma1), log(sigma12), Zp)
-bvn.trans <-function(X) {
+mvn.trans <-function(X) {
   p<-length(X) 
   Y<-rep(0,p)
-  Y[1]<-X[1]
-  Y[2]<-X[2]
-  Y[3]<-log(X[3])
-  Y[4]<-log(X[4])
+  if (p<=5) {
+  Y[1:2]<-X[1:2]
+  Y[3:4]<-log(X[3:4])
   if (p==5) 
-   Y[5]<-0.5*log((1+X[5])/(1-X[5]))
+   Y[5]<-0.5*log((1+X[5])/(1-X[5]))}
+
+  if (p>5) {
+  Y[1:3]<-X[1:3]
+  Y[4:6]<-log(X[4:6])
+  Y[7:8]<-0.5*log((1+X[7:8])/(1-X[7:8]))}
+
   return(Y)
 }  
 
@@ -489,7 +494,7 @@ ecoML <- function(formula, data = parent.frame(), N=NULL, supplement = NULL,
   ## checking the data
   if (context) {
     ndim <- 3
-    n.var<-7
+    n.var<-9
   }
   else {
     ndim <- 2
@@ -502,7 +507,9 @@ ecoML <- function(formula, data = parent.frame(), N=NULL, supplement = NULL,
 
   n.par<-n.var
   if (fix.rho) n.par<-n.par-1
-  
+  if (ndim==3)
+    theta.start<-c(0,0,1,1,0,0,0)
+
   ## Fitting the model via EM  
   res <- .C("cEMeco", as.double(tmp$d), as.double(theta.start),
             as.integer(tmp$n.samp),  as.integer(maxit), as.double(epsilon),
@@ -519,20 +526,19 @@ ecoML <- function(formula, data = parent.frame(), N=NULL, supplement = NULL,
 
   ##record results from EM
   theta.em<-res$pdTheta
-  theta.fisher<-bvn.trans(theta.em)
+  theta.fisher<-mvn.trans(theta.em)
   iters.em<-res$itersUsed
   mu.em <- matrix(rep(NA,iters.em*ndim),ncol=ndim)
   sigma.log.em <- matrix(rep(NA,iters.em*ndim),ncol=ndim)
   rho.fisher.em <- as.double(rep(NA,iters.em))
   loglike.em <- as.double(rep(NA,iters.em))
-
+  nrho<-length(theta.em)-2*ndim
   for(i in 1:iters.em) {
-    mu.em[i,1]=res$history[(i-1)*(n.var+1)+1]
-    mu.em[i,2]=res$history[(i-1)*(n.var+1)+2]
-    sigma.log.em[i,1]=res$history[(i-1)*(n.var+1)+3]
-    sigma.log.em[i,2]=res$history[(i-1)*(n.var+1)+4]
-    rho.fisher.em[i]=res$history[(i-1)*(n.var+1)+5]
-    loglike.em[i]=res$history[(i-1)*(n.var+1)+6]
+    mu.em[i,1:ndim]=res$history[(i-1)*(n.var+1)+(1:ndim)]
+    sigma.log.em[i,1:ndim]=res$history[(i-1)*(n.var+1)+ndim+(1:ndim)]
+     if (nrho!=0)
+    rho.fisher.em[i, 1:nrho]=res$history[(i-1)*(n.var+1)+2*ndim+(1:nrho)]
+    loglike.em[i]=res$history[(i-1)*(n.var+1)+2*ndim+nrho+1]
   }
 
   ## In sample prediction of W
@@ -571,42 +577,85 @@ ecoML <- function(formula, data = parent.frame(), N=NULL, supplement = NULL,
 
 ##call Icom.mvn and Dcom.mvn
 
-    if (!fix.rho) 
-      infomat<-Icom.CAR(theta=theta.em, suff.stat=res$S, n=n, n.par=n.par)
-    if (fix.rho) 
-      infomat<-Icom.CAR(theta=c(theta.em[1:4],theta.start[5]), suff.stat=res$S, n=n, n.par=n.par)
+#    if (!fix.rho) 
+ #     infomat<-Icom.CAR(theta=theta.em, suff.stat=res$S, n=n, n.par=n.par)
+  #  if (fix.rho) 
+   #   infomat<-Icom.CAR(theta=c(theta.em[1:4],theta.start[5]), suff.stat=res$S, n=n, n.par=n.par)
 
-    Icom<-infomat$Icom
+    #Icom<-infomat$Icom
+
     Sig<-matrix(0,ndim, ndim)
-    Sig[1,1]<-theta.em[3]
-    Sig[2,2]<-theta.em[4]
-    if (!fix.rho) Sig[1,2]<-Sig[2,1]<-theta.em[5]*sqrt(Sig[1,1]*Sig[2,2])
+
+    for (i in 1:ndim) 
+      Sig[i,i]<-theta.em[ndim+i]
+##need to fill in the rest of Sigma
+    if (!fix.rho) {
+     
+      Sig[1,2]<-Sig[2,1]<-theta.em[2*ndim+1]*sqrt(Sig[1,1]*Sig[2,2])
+      if (ndim==3) {
+        Sig[1,3]<-Sig[3,1]<-theta.em[2*ndim+2]*sqrt(Sig[1,1]*Sig[3,3])
+        Sig[2,3]<-Sig[3,2]<-theta.em[2*ndim+3]*sqrt(Sig[2,2]*Sig[3,3])
+      }
+}
     if (fix.rho) Sig[1,2]<-Sig[2,1]<-theta.start[5]*sqrt(Sig[1,1]*Sig[2,2])
 
 
-    Icom.new<-Icom.mvn(mu=theta.em[1:2], Sigma=Sig, fix.rho=fix.rho, suff.stat=res$S, n=n)
-    Dvec.new<-Dcom.mvn(mu=theta.em[1:2], Sigma=Sig, fix.rho=fix.rho, suff.stat=res$S, n=n)
+    Icom<-Icom.mvn(mu=theta.em[1:ndim], Sigma=Sig, fix.rho=fix.rho, suff.stat=res$S, n=n)
+    Dvec<-Dcom.mvn(mu=theta.em[1:ndim], Sigma=Sig, fix.rho=fix.rho, suff.stat=res$S, n=n)
 
     if (!fix.rho) {
-    Icom.fisher<-Icom.transform(Imat=-Icom, Dvec=infomat$Dvec, theta=theta.em, transformation="Fisher")
-    Icom.new.fisher<-Icom.transform(Imat=-Icom.new, Dvec=Dvec.new, theta=theta.em, transformation="Fisher")   
+#    Icom.fisher<-Icom.transform(Imat=-Icom, Dvec=infomat$Dvec, theta=theta.em, transformation="Fisher")
+    Icom.fisher<-Icom.transform(Imat=-Icom.new, Dvec=Dvec.new, theta=theta.em, transformation="Fisher")   
     }
     
    if (fix.rho) {
-    Icom.fisher<-Icom.transform(Imat=-Icom, Dvec=infomat$Dvec[1:4], theta=c(theta.em[1:4], theta.start[5]), transformation="Fisher")
-    Icom.new.fisher<-Icom.transform(Imat=-Icom.new, Dvec=Dvec.new, theta=c(theta.em[1:4], theta.start[5]), transformation="Fisher")   
+ #   Icom.fisher<-Icom.transform(Imat=-Icom, Dvec=infomat$Dvec[1:4], theta=c(theta.em[1:4], theta.start[5]), transformation="Fisher")
+    Icom.fisher<-Icom.transform(Imat=-Icom.new, Dvec=Dvec.new, theta=c(theta.em[1:4], theta.start[5]), transformation="Fisher")   
   }
 
     Vcom.fisher <- solve(Icom.fisher)
+    ###need to be modified...repartition Icom accoding to page 903
+
+    if (ndim==2)  {
     dV <- Vcom.fisher%*%DM%*%solve(diag(1,n.par)-DM)
-    Vobs.fisher <- Vcom.fisher+dV
+    Vobs.fisher <- Vcom.fisher+dV }
+    if (ndim==3) {
+    index<-c(1,4,2,3,5,6,7,8,9)
+    Itemp<-Icom.fisher[index,index]
+    invItemp<-solve(Itemp)
+    I1<-invItemp[1:2,1:2]
+    I2<-invItemp[1:2,3:9]
+    I3<-invItemp[3:9, 1:2]
+    I4<-invItemp[3:9, 3:9]
+    dV1<-(I3-t(I2)%*%solve(I1)%*%I2)%*%DM%*%solve(I-DM)
+    dV<-matrix(0,9,9)
+    dV[3:9,3:9]<-dV1
+    Vobs.fisher<-invItemp+dV
+
+    index2<-c(1,3,4,2,5,6,7,8,9)
+    Vobs.fisher[index2,index2]
+   }
+ 
+
+
     Iobs.fisher <- solve(Vobs.fisher)
 
     ##transform Iobs.fisher to Iobs via delta method
     ##V(theta)=d(fisher^{-1})V(bvn.trans(theta)))d(fisher^{-1})'
+     if (ndim==2) {
     grad.invfisher <- c(1,1, exp(theta.fisher[3:4]))
     if (! fix.rho) 
        grad.invfisher <- c(grad.invfisher,4*exp(2*theta.fisher[5])/(exp(2*theta.fisher[5])+1)^2)
+
+}
+
+     if (ndim==3) {
+    grad.invfisher <- c(1,1, 1, exp(theta.fisher[4:6]))
+    if (! fix.rho) 
+       grad.invfisher <- c(grad.invfisher,4*exp(2*theta.fisher[7:9])/(exp(2*theta.fisher[7:9])+1)^2)
+
+}
+
     Vobs<-diag(grad.invfisher)%*%Vobs.fisher%*%diag(grad.invfisher)
     Iobs<-solve(Vobs)
     ## obtain a symmetric Cov matrix
@@ -642,8 +691,7 @@ ecoML <- function(formula, data = parent.frame(), N=NULL, supplement = NULL,
     res.out$Iobs.trans<-Iobs.fisher
     res.out$Fmis.trans<-1-diag(Iobs.fisher)/diag(Icom.fisher)
     res.out$Dvec<-infomat$Dvec
-    res.out$Icom.new<-Icom.new
-    res.out$Icom.new.trans<-Icom.new.fisher
+
   }
 
   class(res.out) <- "ecoML"
