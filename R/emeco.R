@@ -507,7 +507,8 @@ ecoML <- function(formula, data = parent.frame(), N=NULL, supplement = NULL,
 
   n.par<-n.var
   if (fix.rho) n.par<-n.par-1
-  if (ndim==3)
+  #if NCAR and the user did not provide a theta.start
+  if (ndim==3 && length(theta.start)==5) 
     theta.start<-c(0,0,1,1,0,0,0)
 
   ## Fitting the model via EM  
