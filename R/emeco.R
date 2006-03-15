@@ -531,9 +531,9 @@ ecoML <- function(formula, data = parent.frame(), N=NULL, supplement = NULL,
   iters.em<-res$itersUsed
   mu.em <- matrix(rep(NA,iters.em*ndim),ncol=ndim)
   sigma.log.em <- matrix(rep(NA,iters.em*ndim),ncol=ndim)
-  rho.fisher.em <- as.double(rep(NA,iters.em))
   loglike.em <- as.double(rep(NA,iters.em))
   nrho<-length(theta.em)-2*ndim
+  rho.fisher.em <- matrix(rep(NA,iters.em*nrho),ncol=nrho)
   for(i in 1:iters.em) {
     mu.em[i,1:ndim]=res$history[(i-1)*(n.var+1)+(1:ndim)]
     sigma.log.em[i,1:ndim]=res$history[(i-1)*(n.var+1)+ndim+(1:ndim)]
