@@ -32,7 +32,7 @@ void ecoMStepNCAR(double* Suff, double* pdTheta, Param* params);
 void initTheta(double* pdTheta_in,Param* params, double* pdTheta);
 void initNCAR(Param* params, double* pdTheta);
 void initNCAR(Param* params, double* pdTheta);
-void setHistory(double* t_pdTheta, double loglik, int iter,setParam* setP,double history_full[][8]);
+void setHistory(double* t_pdTheta, double loglik, int iter,setParam* setP,double history_full[][10]);
 int closeEnough(double* pdTheta, double* pdTheta_old, int len, double maxerr);
 int semDoneCheck(setParam* setP);
 void gridEStep(Param* params, int n_samp, int s_samp, int x1_samp, int x0_samp, double* suff, int verbose, double minW1, double maxW1);
@@ -119,7 +119,7 @@ void cEMeco(
   double *t_pdTheta_old=doubleArray(param_len);
   double Rmat_old[7][7];
   double Rmat[7][7];
-  double history_full[*iteration_max+1][8];
+  double history_full[*iteration_max+1][10];
 
   /* misc variables */
   int i, j,main_loop, start;   /* used for various loops */
@@ -540,6 +540,9 @@ void ecoMStepNCAR(double* Suff, double* pdTheta, Param* params) {
     setP->Sigma3[1][0] = setP->Sigma3[0][1];
     setP->Sigma3[2][0] = setP->Sigma3[0][2];
     setP->Sigma3[2][1] = setP->Sigma3[1][2];
+              //if (verbose>=2) {
+            //Rprintf("Sigma3: %5g %5g %5g %5g %5g\n",setP->Sigma3[0][0],setP->Sigma3[0][1],setP->Sigma3[1][1],setP->Sigma3[1][2],setP->Sigma3[2][2]);
+          //}
 
   }
   else { //fixed rho NEEDS WORK
@@ -592,15 +595,14 @@ void initNCAR(Param* params, double* pdTheta) {
   setP->Sigma[0][1]= (pdTheta[8] - pdTheta[6]*pdTheta[7])/sqrt((1 - pdTheta[6]*pdTheta[6])*(1 - pdTheta[7]*pdTheta[7])); //correlation
   setP->Sigma[0][1]= setP->Sigma[0][1]*sqrt(setP->Sigma[0][0]*setP->Sigma[1][1]); //covar
   setP->Sigma[1][0]= setP->Sigma[0][1]; //symmetry
-
   dinv2D((double*)(&(setP->Sigma[0][0])), 2, (double*)(&(setP->InvSigma[0][0])),"NCAR M-step S2");
-
   //assign each data point the new mu (different for each point)
   int i;
   for(i=0;i<setP->t_samp;i++) {
     params[i].caseP.mu[0]=pdTheta[1] + pdTheta[6]*sqrt(pdTheta[4]/pdTheta[3])*(logit(params[i].caseP.X,"initNCAR mu0")-pdTheta[0]);
     params[i].caseP.mu[1]=pdTheta[2] + pdTheta[7]*sqrt(pdTheta[5]/pdTheta[3])*(logit(params[i].caseP.X,"initNCAR mu1")-pdTheta[0]);
     if(setP->verbose>=2 && !setP->sem && i<3)
+    //if(setP->verbose>=2  && i<3)
       Rprintf("mu primes for %d: %5g %5g\n",i,params[i].caseP.mu[0],params[i].caseP.mu[1]);
   }
 }
@@ -640,15 +642,17 @@ void initNCAR(Param* params, double* pdTheta) {
       if (!setP_sem.semDone[i]) { //we're not done with this row
         //step 1: set phi^t_i
         if (verbose>=2) Rprintf("Theta(%d):",(i+1));
-        int switch_index=0;
+        int switch_index_ir=0; int switch_index_it;
         for(j=0;j<param_len;j++) {
           if (!setP_sem.varParam[j]) //const
             phiTI[j]=optTheta[j];
           else {
-            if (i==switch_index)
+            if (i==switch_index_ir) {
               phiTI[j]=pdTheta[j]; //current value
+              switch_index_it=j;
+            }
             else phiTI[j]=optTheta[j]; //optimal value
-            switch_index++;
+            switch_index_ir++;
           }
           if (verbose>=2) Rprintf(" %5g ", phiTI[j]);
         }
@@ -658,22 +662,28 @@ void initNCAR(Param* params, double* pdTheta) {
         // if (verbose>=2) Rprintf(" %5g ", phiTI[len-1]);
         //}
         if (verbose>=2) Rprintf("\n");
-
+        for(j=0;j<param_len;j++) phiTp1I[j]=phiTI[j]; //init next iteration
 
         //step 2: run an E-step and an M-step with phi^t_i
         //initialize params
-        for(j=0;j<setP_sem.t_samp;j++) {
-          params_sem[j].setP=&setP_sem;
-          params_sem[j].caseP=params[j].caseP;
-          params_sem[j].caseP.mu[0] = phiTI[0];
-          params_sem[j].caseP.mu[1] = phiTI[1];
+        if (!setP_sem.ncar) {
+          for(j=0;j<setP_sem.t_samp;j++) {
+            params_sem[j].setP=&setP_sem;
+            params_sem[j].caseP=params[j].caseP;
+            params_sem[j].caseP.mu[0] = phiTI[0];
+            params_sem[j].caseP.mu[1] = phiTI[1];
+          }
+          setP_sem.Sigma[0][0] = phiTI[2];
+          setP_sem.Sigma[1][1] = phiTI[3];
+          setP_sem.Sigma[0][1] = phiTI[4]*sqrt(phiTI[2]*phiTI[3]);
+          setP_sem.Sigma[1][0] = setP_sem.Sigma[0][1];
+          dinv2D((double*)(&(setP_sem.Sigma[0][0])), 2, (double*)(&(setP_sem.InvSigma[0][0])), "SEM: CAR init ");
         }
-        setP_sem.Sigma[0][0] = phiTI[2];
-        setP_sem.Sigma[1][1] = phiTI[3];
-        setP_sem.Sigma[0][1] = phiTI[4]*sqrt(phiTI[2]*phiTI[3]);
-        setP_sem.Sigma[1][0] = setP_sem.Sigma[0][1];
-          dinv2D((double*)(&(setP_sem.Sigma[0][0])), 2, (double*)(&(setP_sem.InvSigma[0][0])), "ecoSem");
-        if (setP_sem.ncar) {
+        else {
+          for(j=0;j<setP_sem.t_samp;j++) {
+            params_sem[j].setP=&setP_sem;
+            params_sem[j].caseP=params[j].caseP;
+          }
           setP_sem.Sigma3[0][0] = phiTI[4];
           setP_sem.Sigma3[1][1] = phiTI[5];
           setP_sem.Sigma3[2][2] = phiTI[3];
@@ -687,7 +697,10 @@ void initNCAR(Param* params, double* pdTheta) {
           setP_sem.Sigma3[1][0] = setP_sem.Sigma3[0][1];
           setP_sem.Sigma3[2][0] = setP_sem.Sigma3[0][2];
           setP_sem.Sigma3[2][1] = setP_sem.Sigma3[1][2];
-          dinv2D((double*)(&(setP_sem.Sigma3[0][0])), 3, (double*)(&(setP_sem.InvSigma3[0][0])),"NCAR M-step S3");
+          //if (verbose>=2) {
+          //  Rprintf("Sigma3: %5g %5g %5g %5g %5g\n",setP_sem.Sigma3[0][0],setP_sem.Sigma3[0][1],setP_sem.Sigma3[1][1],setP_sem.Sigma3[1][2],setP_sem.Sigma3[2][2]);
+          //}
+          dinv2D((double*)(&(setP_sem.Sigma3[0][0])), 3, (double*)(&(setP_sem.InvSigma3[0][0])),"SEM: NCAR Sig3 init");
           initNCAR(params_sem,phiTI);
         }
 
@@ -705,8 +718,20 @@ void initNCAR(Param* params, double* pdTheta) {
         transformTheta(phiTp1I,t_phiTp1I,setP_sem.param_len);
         transformTheta(optTheta,t_optTheta,setP_sem.param_len);
         transformTheta(phiTI,t_phiTI,setP_sem.param_len);
-        for(j = 0; j<len; j++)
-          Rmat[i][j]=(t_phiTp1I[j]-t_optTheta[j])/(t_phiTI[i]-t_optTheta[i]);
+        /*if (verbose>=2) {
+          Rprintf("T+1:");
+          for (j=0;j<param_len;j++) Rprintf(" %5g ", phiTp1I[j]);
+          Rprintf("\nOpt:");
+          for (j=0;j<param_len;j++) Rprintf(" %5g ", optTheta[j]);
+          Rprintf("\n 2nd item: %5g %5g %5g %5g", t_phiTp1I[2], t_optTheta[2], t_phiTI[switch_index_it], t_optTheta[switch_index_it]);
+        }*/
+        int index_jr=0;
+        for(j = 0; j<param_len; j++) {
+          if (setP_sem.varParam[j]) {
+            Rmat[i][index_jr]=(t_phiTp1I[j]-t_optTheta[j])/(t_phiTI[switch_index_it]-t_optTheta[switch_index_it]);
+            index_jr++;
+          }
+        }
 
         //step 4: check for difference
         params[0].setP->semDone[i]=closeEnough((double*)Rmat[i],(double*)Rmat_old[i],len,sqrt(params[0].setP->convergence));
@@ -847,9 +872,10 @@ void untransformTheta(double* t_pdTheta,double* pdTheta, int len) {
  * Input transformed theta, loglikelihood, iteration
  * Mutates: history_full
  */
-void setHistory(double* t_pdTheta, double loglik, int iter,setParam* setP,double history_full[][8]) {
+void setHistory(double* t_pdTheta, double loglik, int iter,setParam* setP,double history_full[][10]) {
   //calc len
-  int i,j;
+  /*if you don't want to record the contant m3 and s3 in ncar use the code commented out*/
+  /*int i,j;
   int len=0;
   for(j=0; j<setP->param_len;j++)
     if(setP->varParam[j]) len++;
@@ -858,7 +884,11 @@ void setHistory(double* t_pdTheta, double loglik, int iter,setParam* setP,double
     if(setP->varParam[j]) {
       history_full[iter][i]=t_pdTheta[j];
       i++;
-    }
+    }*/
+  int len=setP->param_len;
+  int j;
+  for(j=0;j<len;j++)
+      history_full[iter][j]=t_pdTheta[j];
   history_full[iter][len]=loglik;
 }
 
