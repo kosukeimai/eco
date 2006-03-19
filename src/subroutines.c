@@ -89,7 +89,7 @@ void dinv2D(double* X,
       //pdInv[i++] = X[k][j];
       pdInv[i++] = *(X+k*size+j);
 
-
+//Rprintf("test: %5g %5g %d",pdInv[0],pdInv[(size == 3) ? 5 : 2],i);
   F77_CALL(dpptrf)("U", &size, pdInv, &errorM);
   if (!errorM) {
     F77_CALL(dpptri)("U", &size, pdInv, &errorM);
@@ -101,6 +101,7 @@ void dinv2D(double* X,
   }
   else {
     Rprintf(emsg);
+    //Rprintf(": LAPACK dpptrf failed, %d with corners elements %5g %5g ; %5g %5g\n", errorM,pdInv[0],pdInv[(size == 3) ? 5 : 2],*(X+0),*(X+size*size-1));
     Rprintf(": LAPACK dpptrf failed, %d\n", errorM);
     error("Exiting from dinv2D().\n");
   }

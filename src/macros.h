@@ -54,6 +54,7 @@ struct setParam {
   double InvSigma[2][2];
   double Sigma3[3][3];
   double InvSigma3[3][3];
+  //int weirdness;
 };
 
 typedef struct setParam setParam;

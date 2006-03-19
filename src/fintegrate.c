@@ -71,8 +71,8 @@ void NormConstT(double *t, int n, void *param)
                  (W2[ii]-mu[1])*(W2[ii]-mu[1])/Sigma[1][1]-
                   2*rho*(W1[ii]-mu[0])*(W2[ii]-mu[1])
                 /sqrt(Sigma[0][0]*Sigma[1][1])))*dtemp*pfact;
-
-        //Rprintf("Normc... %d %d %5g -> %5g with %5g imposs %d\n", ii, n, inp, W1[ii],dtemp,imposs);
+    //if (pp->setP->weirdness)
+     //   Rprintf("Normc... %d %d %5g -> %5g %5g => %5g with %5g imposs %d\n", ii, n, inp, W1[ii], W2[ii],t[ii],pfact,imposs);
         //char ch;
         //scanf(" %c", &ch );
       }
@@ -241,6 +241,8 @@ double paramIntegration(integr_fn f, void *ex) {
   else {
     Param* p = (Param*) ex;
     Rprintf("Integration error %d: Sf %d X %5g Y %5g [%5g,%5g] -> %5g +- %5g\n",ier,p->caseP.suff,p->caseP.X,p->caseP.Y,p->caseP.Wbounds[0][0],p->caseP.Wbounds[0][1],result,anserr);
+    char ch;
+    scanf("Hit enter to continue %c", &ch );
     return result;
   }
 

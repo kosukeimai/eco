@@ -202,7 +202,7 @@ while (main_loop<=*iteration_max && (start==1 ||
   if (setP.verbose>=2) {
     Rprintf("theta and suff\n");
     if (param_len>5) {
-      Rprintf("%10g%10g%10g%10g%10g%10g%10g (%10g)\n",pdTheta[0],pdTheta[1],pdTheta[2],pdTheta[3],pdTheta[4],pdTheta[5],pdTheta[6],pdTheta[4]*sqrt(pdTheta[2]*pdTheta[3]));
+      Rprintf("%10g%10g%10g%10g%10g%10g%10g%10g%10g\n",pdTheta[0],pdTheta[1],pdTheta[2],pdTheta[3],pdTheta[4],pdTheta[5],pdTheta[6],pdTheta[7],pdTheta[8]);
     }
     else {
       Rprintf("%10g%10g%10g%10g%10g (%10g)\n",pdTheta[0],pdTheta[1],pdTheta[2],pdTheta[3],pdTheta[4],pdTheta[4]*sqrt(pdTheta[2]*pdTheta[3]));
@@ -359,7 +359,13 @@ if (verbose>=2 && !setP->sem) Rprintf("E-step start\n");
     }
     else {
       setBounds(param); //I think you only have to do this once...check later
-//if (verbose>=3) Rprintf("past bounds\n");
+
+      /*if (verbose>=2 && setP->iter==12 && i==422) {
+        Rprintf("Bounds: %5g %5g %5g %5g\n",caseP->Wbounds[0][0],caseP->Wbounds[0][1],caseP->Wbounds[1][0],caseP->Wbounds[1][1]);
+        setP->weirdness=1;
+      }
+      else setP->weirdness=0;*/
+
       setNormConst(param);
       for (j=0;j<5;j++) {
         caseP->suff=j;
@@ -375,14 +381,24 @@ if (verbose>=2 && !setP->sem) Rprintf("E-step start\n");
       testdens=paramIntegration(&SuffExp,param);
       if (setP->calcLoglik==1 && setP->iter>1) loglik+=getLogLikelihood(param);
 
+  //report E0 if norm const is extremely high or low
+  //if((caseP->mu[1] > 1.57685) && (caseP->mu[2]<-1.973)) {
+//Rprintf("HIT! %d %5g %5g %5g %5g %5g %5g %5g %5g err:%5g\n", i, caseP->X, caseP->Y, caseP->mu[0], caseP->mu[1], caseP->normcT,Wstar[i][0],Wstar[i][1],Wstar[i][2],fabs(caseP->W[0]-getW1FromW2(caseP->X, caseP->Y,caseP->W[1])));
+  //}
+  //if (fabs(caseP->normcT)<pow(10,-7) || fabs(caseP->normcT)>pow(10,10)) {
+   // Rprintf("E0 %d %5g %5g %5g %5g %5g %5g %5g %5g err:%5g\n", i, caseP->X, caseP->Y, caseP->mu[0], caseP->mu[1], caseP->normcT,Wstar[i][0],Wstar[i][1],Wstar[i][2],fabs(caseP->W[0]-getW1FromW2(caseP->X, caseP->Y,caseP->W[1])));
+  //}
    //report error E1 if E[W1],E[W2] is not on the tomography line
-  if (fabs(caseP->W[0]-getW1FromW2(caseP->X, caseP->Y,caseP->W[1]))>0.01)
-    Rprintf("E1 %d %5g %5g %5g %5g %5g %5g %5g %5g \n", i, caseP->X, caseP->Y, caseP->normcT, caseP->mu[1],Wstar[i][0],Wstar[i][1],Wstar[i][2],Wstar[i][4]);
+  if (fabs(caseP->W[0]-getW1FromW2(caseP->X, caseP->Y,caseP->W[1]))>0.01) {
+    Rprintf("E1 %d %5g %5g %5g %5g %5g %5g %5g %5g err:%5g\n", i, caseP->X, caseP->Y, caseP->mu[0], caseP->mu[1], caseP->normcT,Wstar[i][0],Wstar[i][1],Wstar[i][2],fabs(caseP->W[0]-getW1FromW2(caseP->X, caseP->Y,caseP->W[1])));
+    char ch;
+    scanf("Hit enter to continue %c\n", &ch );
+  }
   //report error E2 if Jensen's inequality doesn't hold
   if (Wstar[i][4]<pow(Wstar[i][1],2) || Wstar[i][2]<pow(Wstar[i][0],2))
      Rprintf("E2 %d %5g %5g %5g %5g %5g %5g %5g %5g\n", i, caseP->X, caseP->Y, caseP->normcT, caseP->mu[1],Wstar[i][0],Wstar[i][1],Wstar[i][2],Wstar[i][4]);
   //used for debugging if necessary
-  if (verbose>=2 && !setP->sem && i<20)
+  if (verbose>=2 && !setP->sem && (i<10 || (caseP->mu[1] < -1.7 && caseP->mu[0] > 1.4)))
      Rprintf("%d %5.2f %5.2f %5.2f %5.2f %5.2f %5.2f %5.2f %5.2f %5.2f\n", i, caseP->X, caseP->Y, caseP->mu[0], caseP->mu[1], param->setP->Sigma[0][1], caseP->normcT, caseP->W[0],caseP->W[1],Wstar[i][2]);
     }
   }
@@ -601,9 +617,9 @@ void initNCAR(Param* params, double* pdTheta) {
   for(i=0;i<setP->t_samp;i++) {
     params[i].caseP.mu[0]=pdTheta[1] + pdTheta[6]*sqrt(pdTheta[4]/pdTheta[3])*(logit(params[i].caseP.X,"initNCAR mu0")-pdTheta[0]);
     params[i].caseP.mu[1]=pdTheta[2] + pdTheta[7]*sqrt(pdTheta[5]/pdTheta[3])*(logit(params[i].caseP.X,"initNCAR mu1")-pdTheta[0]);
-    if(setP->verbose>=2 && !setP->sem && i<3)
+    if(setP->verbose>=2 && !setP->sem && (i<3 || i==422))
     //if(setP->verbose>=2  && i<3)
-      Rprintf("mu primes for %d: %5g %5g\n",i,params[i].caseP.mu[0],params[i].caseP.mu[1]);
+      Rprintf("mu primes for %d: %5g %5g (mu2: %5g p7: %5g p5: %5g X-T: %5g)\n",i,params[i].caseP.mu[0],params[i].caseP.mu[1],pdTheta[2],pdTheta[7],pdTheta[5],logit(params[i].caseP.X,"initNCAR mu0")-pdTheta[0]);
   }
 }
 
@@ -697,11 +713,17 @@ void initNCAR(Param* params, double* pdTheta) {
           setP_sem.Sigma3[1][0] = setP_sem.Sigma3[0][1];
           setP_sem.Sigma3[2][0] = setP_sem.Sigma3[0][2];
           setP_sem.Sigma3[2][1] = setP_sem.Sigma3[1][2];
-          //if (verbose>=2) {
-          //  Rprintf("Sigma3: %5g %5g %5g %5g %5g\n",setP_sem.Sigma3[0][0],setP_sem.Sigma3[0][1],setP_sem.Sigma3[1][1],setP_sem.Sigma3[1][2],setP_sem.Sigma3[2][2]);
-          //}
+          if (verbose>=2) {
+            Rprintf("Sigma3: %5g %5g %5g %5g %5g %5g; %5g %5g\n",setP_sem.Sigma3[0][0],setP_sem.Sigma3[0][1],setP_sem.Sigma3[1][1],setP_sem.Sigma3[0][2],setP_sem.Sigma3[1][2],setP_sem.Sigma3[2][2],*(&(setP_sem.Sigma3[0][0])+0),*(&(setP_sem.Sigma3[0][0])+8));
+          }
           dinv2D((double*)(&(setP_sem.Sigma3[0][0])), 3, (double*)(&(setP_sem.InvSigma3[0][0])),"SEM: NCAR Sig3 init");
+          if (verbose>=2) {
+            Rprintf("Check 1");
+          }
           initNCAR(params_sem,phiTI);
+          if (verbose>=2) {
+            Rprintf("Check 2");
+          }
         }
 
         //if (verbose>=2) {
