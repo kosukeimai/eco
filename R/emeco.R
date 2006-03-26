@@ -1,21 +1,93 @@
-## transformation of BVN(mu1, mu2, sigma1, sigma2, rho) into
-## (mu1, mu2, log(sigma1), log(sigma12), Zp)
-mvn.trans <-function(X) {
+##logit and invlogit transformation
+logit <- function(X) 
+  { 
+    Y<-log(X/(1-X))
+    Y
+   }
+
+invlogit <-function(Y) 
+   {
+     X<-exp(Y)/(1+exp(Y))
+     X
+   }
+
+####assuming theta.em
+##2 d: mu1, mu2, sig1, sig2, r12
+##3 d: mu3, mu1, mu2, sig3, sig1, sig2, r13, r23, r12
+param.pack<-function(theta.em, fix.rho=FALSE,r12=0, dim=ndim) 
+  {
+    mu<-rep(0, dim)
+    Sig<-matrix(0,dim, dim)
+
+    mu<-theta.em[1:dim]
+        
+    for (i in 1:dim) 
+      Sig[i,i]<-theta.em[dim+i]
+
+   if (!fix.rho) {
+      Sig[1,2]<-Sig[2,1]<-theta.em[2*dim+1]*sqrt(Sig[1,1]*Sig[2,2])
+      if (dim==3) {
+        Sig[1,3]<-Sig[3,1]<-theta.em[2*dim+2]*sqrt(Sig[1,1]*Sig[3,3])
+        Sig[2,3]<-Sig[3,2]<-theta.em[2*dim+3]*sqrt(Sig[2,2]*Sig[3,3])
+      }
+   }
+  if (fix.rho) {
+    if (dim==2)
+       Sig[1,2]<-Sig[2,1]<-r12*sqrt(Sig[1,1]*Sig[2,2])
+    if (dim==3) {
+      Sig[1,2]<-Sig[2,1]<-theta.em[2*dim+1]*sqrt(Sig[1,1]*Sig[2,2])
+      Sig[1,3]<-Sig[3,1]<-theta.em[2*dim+2]*sqrt(Sig[1,1]*Sig[3,3])
+      Sig[2,3]<-Sig[3,2]<-r12*sqrt(Sig[2,2]*Sig[3,3])
+   }
+  }
+print(mu)
+print(Sig)
+  return(list(mu=mu, Sigma=Sig))
+}
+
+## transformation of BVN parameter into
+## Fisher scale or unit scale 
+## in 2 D, mu1, mu2, sigma1, sigma2, r12
+## in 3 D, mu3, mu1, mu2, sigma3, sigma1, sigma2, sigma31, sigma32, sigma12
+param.trans <-function(X, transformation="Fisher") {
   p<-length(X) 
   Y<-rep(0,p)
-  if (p<=5) {
-  Y[1:2]<-X[1:2]
-  Y[3:4]<-log(X[3:4])
-  if (p==5) 
-   Y[5]<-0.5*log((1+X[5])/(1-X[5]))}
 
-  if (p>5) {
-  Y[1:3]<-X[1:3]
-  Y[4:6]<-log(X[4:6])
-  Y[7:8]<-0.5*log((1+X[7:8])/(1-X[7:8]))}
+  if (transformation=="Fisher") {
+    if (p<=5) {
+      Y[1:2]<-X[1:2]
+      Y[3:4]<-log(X[3:4])
+      if (p==5) 
+        Y[5]<-0.5*log((1+X[5])/(1-X[5]))
+     }
 
+     if (p>5) {
+       Y[1:3]<-X[1:3]
+       Y[4:6]<-log(X[4:6])
+       Y[7:8]<-0.5*log((1+X[7:8])/(1-X[7:8]))
+       i (p==9)
+         Y[9]<-0.5*log((1+X[9])/(1-X[9]))
+      }
+   }
+
+   if (transformation=="unitscale") {
+     if (p<=5) {
+	Y[1:2] <- invlogit(X[1:2])
+        Y[3:4] <- X[3:4]*exp(2*X[1:2])/(1+exp(X[1:2]))^4
+        if (p==5) 
+          Y[5] <- X[5]
+    }
+
+    if (p>5) {
+	Y[1:3]<-invlogit(X[1:3])
+        Y[4:6]<-X[4:6]*exp(2*X[4:6])/(1+exp(X[4:6]))^4
+        Y[7:8]<-X[7:8]
+        if (p==9)
+           Y[9]<-X[9]
+      }
+  }
   return(Y)
-}  
+}
 
 vec<-function(mat) {
   v<-as.vector(mat, mode="any")
@@ -35,7 +107,7 @@ tr<-function(mat) {
 #du.theta[n.u, n.theta]
 #dSig.theta[n.u, n.u, n.theta]
 
-d1st.mvn<-function(mu,Sigma, Fisher=FALSE, fix.rho=FALSE) {
+d1st.mvn<-function(mu,Sigma, fix.rho=FALSE) {
    d<-length(mu)
    p<-d+d+d*(d-1)/2
    u1<-mu[1]
@@ -43,7 +115,7 @@ d1st.mvn<-function(mu,Sigma, Fisher=FALSE, fix.rho=FALSE) {
    s1<-Sigma[1,1]
    s2<-Sigma[2,2]
    r12<-Sigma[1,2]/sqrt(s1*s2)
-print(r12)
+
    if (d==3) {
    u3<-mu[3]
    s3<-Sigma[3,3]
@@ -58,7 +130,7 @@ print(r12)
       du.theta[j,j]<-1
 
     dSig.theta<-array(0,c(d,d,p))
-    if (!Fisher) {
+ 
       for (i in 1:d) 
         dSig.theta[i,i,d+i]<-1
 
@@ -84,39 +156,11 @@ print(r12)
           dSig.theta[2,3,2*d+2]<-dSig.theta[3,2,2*d+2]<-sqrt(s2*s3)
         }
      }
-   } 
-
-    if (Fisher) {
-      for (i in 1:d) 
-        dSig.theta[i,i,d+i]<-Sigma[i,i]
-
-      dSig.theta[1,2,d+1]<-dSig.theta[2,1,d+1]<-1/2*s1^(1/2)*s2^(1/2)*r12
-      dSig.theta[1,2,d+2]<-dSig.theta[2,1,d+2]<-1/2*s2^(1/2)*s1^(1/2)*r12
-      if (d==3) {
-        dSig.theta[1,3,d+1]<-dSig.theta[3,1,d+1]<-1/2*s1^(1/2)*s3^(1/2)*r13
-        dSig.theta[2,3,d+2]<-dSig.theta[3,2,d+2]<-1/2*s2^(1/2)*s3^(1/2)*r23
-        dSig.theta[1,3,d+3]<-dSig.theta[3,1,d+3]<-1/2*s3^(1/2)*s1^(1/2)*r13 
-        dSig.theta[2,3,d+3]<-dSig.theta[3,2,d+3]<-1/2*s3^(1/2)*s2^(1/2)*r23
-      }
     
-    if (!fix.rho) {
-        dSig.theta[1,2,2*d+1]<-dSig.theta[2,1,2*d+1]<-sqrt(s1*s2)*(1-r12^2)
-        if (d==3) {
-          dSig.theta[1,3,2*d+2]<-dSig.theta[3,1,2*d+2]<-sqrt(s1*s3)*(1-r13^2)
-          dSig.theta[2,3,2*d+3]<-dSig.theta[3,2,2*d+3]<-sqrt(s2*s3)*(1-r23^2)
-        }
-      }
-      if (fix.rho) {
-         if (d==3) {
-          dSig.theta[1,3,2*d+1]<-dSig.theta[3,1,2*d+1]<-sqrt(s1*s3)*(1-r13^2)
-          dSig.theta[2,3,2*d+2]<-dSig.theta[3,2,2*d+2]<-sqrt(s2*s3)*(1-r23^2)
-       }
-      }
-  }
    return(list(du.theta=du.theta, dSig.theta=dSig.theta))
 }
 
-d2nd.mvn<-function(mu,Sigma, Fisher=FALSE, fix.rho=FALSE) {
+d2nd.mvn<-function(mu,Sigma,  fix.rho=FALSE) {
 
    d<-length(mu)
    p<-d+d+d*(d-1)/2
@@ -137,7 +181,7 @@ d2nd.mvn<-function(mu,Sigma, Fisher=FALSE, fix.rho=FALSE) {
    ddu.theta<-array(0,c(d,p,p))
 
    ddSig.theta<-array(0,c(d,d,p,p))
-   if (!Fisher) {
+
      ddSig.theta[1,2,d+1,d+1]<-ddSig.theta[2,1,d+1,d+1]<- -1/4*s1^(-3/2)*s2^(1/2)*r12
      ddSig.theta[1,2,d+1,d+2]<-ddSig.theta[2,1,d+1,d+2]<- 1/4*s1^(-1/2)*s2^(-1/2)*r12
      ddSig.theta[1,2,d+2,d+2]<-ddSig.theta[2,1,d+2,d+2]<- -1/4*s1^(1/2)*s2^(-3/2)*r12
@@ -174,60 +218,7 @@ d2nd.mvn<-function(mu,Sigma, Fisher=FALSE, fix.rho=FALSE) {
          ddSig.theta[2,3,d+3,2*d+2]<-ddSig.theta[3,2,d+3,2*d+2]<- 1/2*s2^(1/2)*s3^(-1/2)
      }
    }
-  }
-    if (Fisher) {
 
-        ddSig.theta[1,1,d+1,d+1]<- s1 
-        ddSig.theta[1,2,d+1,d+1]<-ddSig.theta[2,1,d+1,d+1]<- 1/4*s1^(1/2)*s2^(1/2)*r12
-
-        ddSig.theta[2,2,d+2,d+2]<- s2 
-        ddSig.theta[1,2,d+2,d+2]<-ddSig.theta[2,1,d+2,d+2]<- 1/4*s1^(1/2)*s2^(1/2)*r12
-
-        ddSig.theta[1,2,d+1,d+2]<-ddSig.theta[2,1,d+1,d+2]<- 1/4*s1^(1/2)*s2^(1/2)*r12
-
-        if (d==3) {
-           ddSig.theta[1,3,d+1,d+1]<-ddSig.theta[3,1,d+1,d+1]<- 1/4*s1^(1/2)*s3^(1/2)*r13
-           ddSig.theta[1,3,d+2,d+2]<-ddSig.theta[3,1,d+2,d+2]<- 1/4*s2^(1/2)*s3^(1/2)*r23
-
-           ddSig.theta[1,3,d+1,d+3]<-ddSig.theta[3,1,d+1,d+3]<- 1/4*s1^(1/2)*s3^(1/2)*r13
-           ddSig.theta[2,3,d+2,d+3]<-ddSig.theta[3,2,d+2,d+3]<- 1/4*s2^(1/2)*s3^(1/2)*r23
-
-           ddSig.theta[1,3,d+3,d+3]<-ddSig.theta[3,1,d+3,d+3]<- 1/4*s1^(1/2)*s3^(1/2)*r13
-           ddSig.theta[2,3,d+3,d+3]<-ddSig.theta[3,2,d+3,d+3]<- 1/4*s2^(1/2)*s3^(1/2)*r23
-        }
-
-      if (!fix.rho) {
-           ddSig.theta[1,2,d+1,2*d+1]<-ddSig.theta[2,1,d+1,2*d+1]<- 1/2*s1^(1/2)*s2^(1/2)*(1-r12^2)
-           ddSig.theta[1,2,d+2,2*d+1]<-ddSig.theta[2,1,d+2,2*d+1]<- 1/2*s1^(1/2)*s2^(1/2)*(1-r12^2)
-
-           ddSig.theta[1,2,2*d+1,2*d+1]<-ddSig.theta[2,1,2*d+1,2*d+1]<- -2*s1^(1/2)*s2^(1/2)*r12*(1-r12^2)
-
-           if (d==3) {
-            ddSig.theta[1,3,d+1,2*d+2]<-ddSig.theta[3,1,d+1,2*d+2]<- 1/2*s1^(1/2)*s3^(1/2)*(1-r13^2)
-            ddSig.theta[2,3,d+2,2*d+3]<-ddSig.theta[3,2,d+2,2*d+3]<- 1/2*s2^(1/2)*s3^(1/2)*(1-r23^2)
-            ddSig.theta[1,3,d+3,2*d+2]<-ddSig.theta[3,1,d+3,2*d+2]<- 1/2*s1^(1/2)*s3^(1/2)*(1-r13^2)
-            ddSig.theta[2,3,d+3,2*d+3]<-ddSig.theta[3,2,d+3,2*d+3]<- 1/2*s2^(1/2)*s3^(1/2)*(1-r23^2)
-
-            ddSig.theta[1,3,2*d+2,2*d+2]<-ddSig.theta[3,1,2*d+2,2*d+2]<- -2*s1^(1/2)*s3^(1/2)*r13*(1-r13^2)
-            ddSig.theta[2,3,2*d+3,2*d+3]<-ddSig.theta[3,2,2*d+3,2*d+3]<- -2*s2^(1/2)*s3^(1/2)*r23*(1-r23^2)
-
-          }
-      }  
-   
-       if (fix.rho) {
-          if (d==3) {
-           ddSig.theta[1,3,d+1,2*d+1]<-ddSig.theta[3,1,d+1,2*d+1]<- 1/2*s1^(1/2)*s3^(1/2)*(1-r13^2)
-           ddSig.theta[2,3,d+2,2*d+2]<-ddSig.theta[3,2,d+2,2*d+2]<- 1/2*s2^(1/2)*s3^(1/2)*(1-r23^2)
-           ddSig.theta[1,3,d+3,2*d+1]<-ddSig.theta[3,1,d+3,2*d+1]<- 1/2*s1^(1/2)*s3^(1/2)*(1-r13^2)
-           ddSig.theta[2,3,d+3,2*d+2]<-ddSig.theta[3,2,d+3,2*d+2]<- 1/2*s2^(1/2)*s3^(1/2)*(1-r23^2)
-
-           ddSig.theta[1,3,2*d+1,2*d+1]<-ddSig.theta[3,1,2*d+1,2*d+1]<- -2*s1^(1/2)*s3^(1/2)*r13*(1-r13^2)
-           ddSig.theta[2,3,2*d+2,2*d+2]<-ddSig.theta[3,2,2*d+2,2*d+2]<- -2*s2^(1/2)*s3^(1/2)*r23*(1-r23^2)
-       
-          }
-        }
-
-    }
       for (i in 1:(p-1)) 
         for (j in (i+1):p) {
          ddSig.theta[,,j,i]<-ddSig.theta[,,i,j]
@@ -236,6 +227,11 @@ d2nd.mvn<-function(mu,Sigma, Fisher=FALSE, fix.rho=FALSE) {
 
       return(list(ddu.theta=ddu.theta, ddSig.theta=ddSig.theta))
 }
+
+##assuming the order of sufficient statistics
+## 2d, mean(W1), mean(W2), mean(W1^2) mean(W2^2), mean(W1W2)
+## 2d, mean(X), mean(W1), mean(W2), mean(X^2),mean(W1^2) mean(W2^2),
+##     mean(XW1), mean(XW2), mean(W1W2)
 
 suff<-function(mu, suff.stat,n) {
 
@@ -274,7 +270,15 @@ suff<-function(mu, suff.stat,n) {
   return(list(Ss=Ss, Vv=Vv))
 }
 
-Dcom.mvn<-function(mu, Sigma, suff.stat,n, fix.rho=FALSE, Fisher=FALSE) {
+#du.theta and dSig.theta are the second derivative of mu and Sigma 
+#with respect to theta
+#ddu.theta[n.u, n.theta, n.theta]
+#ddSig.theta[n.u, n.u, n.theta, n.theta]
+
+##comput the gradient vector (expected first derivatives) for MVN
+##not actually used here. 
+
+Dcom.mvn<-function(mu, Sigma, suff.stat,n, fix.rho=FALSE) {
   d<-dim(Sigma)[1]
   p<-d*2+0.5*d*(d-1)
 
@@ -290,11 +294,9 @@ Dcom.mvn<-function(mu, Sigma, suff.stat,n, fix.rho=FALSE, Fisher=FALSE) {
   Ss<-temp$Ss
   Vv<-temp$Vv
 
-  temp<-d1st.mvn(mu=mu, Sigma=Sigma, fix.rho=fix.rho, Fisher=FALSE)
-  print(temp)
+  temp<-d1st.mvn(mu=mu, Sigma=Sigma, fix.rho=fix.rho)
   du.theta<-temp$du.theta
   dSig.theta<-temp$dSig.theta
-print(p)
 
   for (i in 1:p)  
    Dcom[i]<- -n/2*t(vec(invSigma))%*%vec(dSig.theta[,,i])+ 0.5*tr(invSigma%*%dSig.theta[,,i]%*%invSigma%*%Ss)+ t(du.theta[,i])%*%invSigma%*%Vv
@@ -302,19 +304,18 @@ print(p)
    Dcom
 }
 
-#du.theta and dSig.theta are the second derivative of mu and Sigma 
-#with respect to theta
-#ddu.theta[n.u, n.theta, n.theta]
-#ddSig.theta[n.u, n.u, n.theta, n.theta]
 
-Icom.mvn<-function(mu, Sigma, suff.stat,n, fix.rho=FALSE, Fisher=FALSE) {
+#compute the information matrix of MVN
+# -1*second derivatives
+
+Icom.mvn<-function(mu, Sigma, suff.stat,n, fix.rho=FALSE) {
    d<-dim(Sigma)[1]
-  p<-d*2+1/2*d*(d-1)
+   p<-d*2+1/2*d*(d-1)
 
-  if (fix.rho) 
-    { 
-      p<-p-1 
-    }
+   if (fix.rho) 
+     { 
+       p<-p-1 
+     }
 
    Icom<-matrix(0,p,p)
 
@@ -324,11 +325,11 @@ Icom.mvn<-function(mu, Sigma, suff.stat,n, fix.rho=FALSE, Fisher=FALSE) {
    Ss<-temp$Ss
    Vv<-temp$Vv
 
-   temp<-d1st.mvn(mu, Sigma, fix.rho, Fisher=FALSE)
+   temp<-d1st.mvn(mu, Sigma, fix.rho)
    du.theta<-temp$du.theta
    dSig.theta<-temp$dSig.theta
 
-   temp<-d2nd.mvn(mu, Sigma, fix.rho, Fisher=FALSE)
+   temp<-d2nd.mvn(mu, Sigma, fix.rho)
    ddu.theta<-temp$ddu.theta
    ddSig.theta<-temp$ddSig.theta
 
@@ -352,80 +353,78 @@ Icom.mvn<-function(mu, Sigma, suff.stat,n, fix.rho=FALSE, Fisher=FALSE) {
    -Icom
 }
 
-## compute I_{com} for CAR
-Icom.CAR <- function(theta, suff.stat, n, fisher=TRUE, n.par) {
-  Icom <- matrix(NA, n.par, n.par)    
-  
-  S1<-n*suff.stat[1]
-  S2<-n*suff.stat[2]
-  S11<-n*suff.stat[3]
-  S22<-n*suff.stat[4]
-  S12<-n*suff.stat[5]
-  if (n.par==4) 
-    S12<-n*suff.stat[5]
-  
-  u1<-theta[1]
-  u2<-theta[2]
-  v1<-theta[3]
-  v2<-theta[4]
-  r<-theta[5]
+ 
+###compute the information matrix for various parameter transformation
+### "Fisher" transformation (variance stablization?)
+### unit scale transformation: first order approximation of mean and var, rho
+
+##express T1 and T2 in more general form
+
+Icom.transform<-function(Icom, Dvec, theta, transformation="Fisher")
+  {  
+
+      if (length(theta)<=5) {
+	ndim<-2
+        mu<-theta[1:2]
+        sigma<-theta[3:4]
+        rho<-theta[5]
+      }
+      if (length(theta)>5) {
+	ndim<-3
+        mu<-theta[1:3]
+        sigma<-theta[4:6]
+        rho<-theta[7:9]
+      }
     
-  Icom[1,1]<- -n/((1-r^2)*v1)
-  Icom[1,2]<- Icom[2,1] <- n*r/((1-r^2)*sqrt(v1*v2))
-  Icom[1,3]<- Icom[3,1] <- 1/((1-r^2)*v1^2)*(-S1+n*u1) - r/(2*(1-r^2)*v1^(3/2)*v2^(1/2))*(-S2+n*u2)
-  Icom[1,4]<- Icom[4,1] <- -r/(2*(1-r^2)*v1^(1/2)*v2^(3/2))*(-S2+n*u2)
-  
-  Icom[2,2]<- -n/((1-r^2)*v2)  
-  Icom[2,3]<- Icom[3,2] <- -r/(2*(1-r^2)*v1^(3/2)*v2^(1/2))*(-S1+n*u1)
-  Icom[2,4]<- Icom[4,2] <- 1/((1-r^2)*v2^2)*(-S2+n*u2) - r/(2*(1-r^2)*v1^(1/2)*v2^(3/2))*(-S1+n*u1) 
-  
-  Icom[3,3]<- n/(2*v1^2) - 1/((1-r^2)*v1^3)*(S11-2*u1*S1+n*u1^2) + 3*r/(4*(1-r^2)*v1^(5/2)*v2^(1/2))*(S12-u1*S2-u2*S1+n*u1*u2) 
-  print( n/(2*v1^2))
-  print(- 1/((1-r^2)*v1^3)*(S11-2*u1*S1+n*u1^2))
-  print(3*r/(4*(1-r^2)*v1^(5/2)*v2^(1/2))*(S12-u1*S2-u2*S1+n*u1*u2))
+###only 2d...
+    ##T1: d(theta)/d(f(theta)), theta is the MVN parameterization
+    ##T2, d2(theta)/d(f(theta))(d(f(theta))')
 
- Icom[3,4]<- Icom[4,3] <- r/(4*(1-r^2)*v1^(3/2)*v2^(3/2))*(S12-u1*S2-u2*S1+n*u1*u2)
-  
-  Icom[4,4]<- n/(2*v2^2) - 1/((1-r^2)*v2^3)*(S22-2*u2*S2+n*u2^2) + 3*r/(4*(1-r^2)*v1^(1/2)*v2^(5/2))*(S12-u1*S2-u2*S1+n*u1*u2) 
-  dr<-0
-  if (n.par>=5) {
-    Icom[1,5]<- Icom[5,1] <- -2*r/((1-r^2)^2*v1)*(-S1+n*u1) + (1+r^2)/((1-r^2)^2*v1^(1/2)*v2^(1/2))*(-S2+n*u2) 
-    Icom[2,5]<- Icom[5,2] <- -2*r/((1-r^2)^2*v2)*(-S2+n*u2) + (1+r^2)/((1-r^2)^2*v1^(1/2)*v2^(1/2))*(-S1+n*u1) 
-    Icom[3,5]<- Icom[5,3] <- r/((1-r^2)^2*v1^2)*(S11-2*u1*S1+n*u1^2) - (1+r^2)/(2*(1-r^2)^2*v1^(3/2)*v2^(1/2))*(S12-u1*S2-u2*S1+n*u1*u2) 
-    Icom[4,5]<- Icom[5,4] <- r/((1-r^2)^2*v2^2)*(S22-2*u2*S2+n*u2^2) - (1+r^2)/(2*(1-r^2)^2*v1^(1/2)*v2^(3/2))*(S12-u1*S2-u2*S1+n*u1*u2)     
-    Icom[5,5]<- n*(1+r^2)/(1-r^2)^2 - (1+3*r^2)/((1-r^2)^3*v1)*(S11-2*u1*S1+n*u1^2) -(1+3*r^2)/((1-r^2)^3*v2)*(S22-2*u2*S2+n*u2^2) +(2*r^3+6*r)/((1-r^2)^3*v1^(1/2)*v2^(1/2))*(S12-u1*S2-u2*S1+n*u1*u2) 
-  }
+    ### transformation=Fisher, Icom_normal==>Icom_fisher
 
-    du1<- ((S1-n*u1)/v1-r*(S2-n*u2)/v2)/(1-r^2)
-    du2<- ((S2-n*u2)/v2-r*(S1-n*u1)/v1)/(1-r^2)
-    dv1<- -n/(2*v1) + 1/(2*(1-r^2)*v1^2)*(S11-2*u1*S1+n*u1^2) - r/(2*(1-r^2)*v1^(3/2)*v2^(1/2))*(S12-u1*S2-u2*S1+n*u1*u2)
-    dv2<- -n/(2*v2) + 1/(2*(1-r^2)*v2^2)*(S22-2*u2*S2+n*u2^2) - r/(2*(1-r^2)*v1^(1/2)*v2^(3/2))*(S12-u1*S2-u2*S1+n*u1*u2)
-   if (n.par>=5) {
-      dr<- n*r/(1-r^2) - r/((1-r^2)^2*v1)*(S11-2*u1*S1+n*u1^2) + (1+r^2)/((1-r^2)^2*v1^(1/2)*v2^(1/2))*(S12-u1*S2-u2*S1+n*u1*u2) - r/((1-r^2)^2*v2)*(S22-2*u2*S2+n*u2^2)
-  }
-  return(list(Icom=-Icom, Dvec=c(du1, du2, dv1, dv2, dr)))
-}
-  
-
-Icom.transform<-function(Imat, Dvec, theta, transformation="Fisher")
-  {
+    Imat<- -Icom
     n.par<-dim(Imat)[1]
     if (transformation=="Fisher") {
-     T1<-c(1,1,theta[3], theta[4])
+     if (ndim==2) {
+     T1<-c(1,1,sigma[1], sigma[2])
 
     T2<-matrix(0, n.par^2, n.par)
-    T2[(2*n.par+3), 3]<-theta[3]     
-    T2[(3*n.par+4), 4]<-theta[4]     
+    T2[(2*n.par+3), 3]<-sigma[1]    
+    T2[(3*n.par+4), 4]<-sigma[2]     
 
     if (n.par==5) {
-      T1<-c(T1, (1-(theta[5]^2)))
-      T2[(4*n.par+5),5]<- -2*theta[5]*(1-theta[5]^2)
+      T1<-c(T1, (1-(rho[1]^2)))
+      T2[(4*n.par+5),5]<- -2*rho[1]*(1-rho[1]^2)
      }
-
+    
+     T1<-diag(T1)
+   }
     }
+    ### transformation=unitscale, Icom_normal==>Icom_unitscale
+   if (transformation=="unitscale") {
 
-   
-    T1<-diag(T1)
+      T1<-matrix(0,n.par,n.par)
+      T1[1,1]<-exp(-mu[1])*(1+exp(mu[1]))^2
+      T1[1,3]<-1/(sigma[1]*2*exp(2*mu[1])*(1+exp(mu[1]))^(-4)*(1-2*(1+exp(mu[1]))^(-1)))
+ 
+      T1[2,2]<-exp(-mu[2])*(1+exp(mu[2]))^2
+      T1[2,4]<-1/(sigma[2]*2*exp(2*mu[2])*(1+exp(mu[2]))^(-4)*(1-2*(1+exp(mu[2]))^(-1)))
+      
+      T1[3,3]<-2*sigma[1]^0.5*(1+exp(mu[1]))^4*exp(-2*mu[1])
+      T1[4,4]<-2*sigma[2]^0.5*(1+exp(mu[2]))^4*exp(-2*mu[2])
+
+
+   #   T2<-matrix(0, n.par^2, n.par)
+   #   T2[1,1]<-
+   #   T2[(1*n.par+2), (1*n.par+2)]<-
+
+
+   ##compute T1 and T2 
+
+   }   
+ 
+
+
     Icom.tran<-matrix(NA, n.par, n.par)
     Icom.tran<-T1%*%Imat%*%t(T1)
     
@@ -527,7 +526,7 @@ ecoML <- function(formula, data = parent.frame(), N=NULL, supplement = NULL,
 
   ##record results from EM
   theta.em<-res$pdTheta
-  theta.fisher<-mvn.trans(theta.em)
+  theta.fisher<-param.trans(theta.em, transformation="Fisher")
   iters.em<-res$itersUsed
   mu.em <- matrix(rep(NA,iters.em*ndim),ncol=ndim)
   sigma.log.em <- matrix(rep(NA,iters.em*ndim),ncol=ndim)
@@ -544,13 +543,17 @@ ecoML <- function(formula, data = parent.frame(), N=NULL, supplement = NULL,
 
   ## In sample prediction of W
   W <- matrix(rep(NA,inSample.length),ncol=ndim)
-  for(i in 1:tmp$n.samp)
-    for(j in 1:ndim)
+  for (i in 1:tmp$n.samp)
+    for (j in 1:ndim)
       W[i,j]=res$inSample[(i-1)*2+j]
 
   ## SEM step
-  DM <- matrix(rep(NA,n.par*n.par),ncol=n.par)
-  if (sem) {
+  iters.sem<-0
+
+  if (sem) 
+  {
+    DM <- matrix(rep(NA,n.par*n.par),ncol=n.par)
+
     res <- .C("cEMeco", as.double(tmp$d), as.double(theta.start),
               as.integer(tmp$n.samp),  as.integer(maxit), as.double(epsilon),
               as.integer(tmp$survey.yes), as.integer(tmp$survey.samp), 
@@ -568,103 +571,80 @@ ecoML <- function(formula, data = parent.frame(), N=NULL, supplement = NULL,
     for(i in 1:n.par)
       for(j in 1:n.par)
         DM[i,j]=res$DMmatrix[(i-1)*n.par+j]
-  }
-  else {
-    iters.sem<-0
-  }
-
-  if (sem) {
-    ##output Icom
-
-##call Icom.mvn and Dcom.mvn
-
-#    if (!fix.rho) 
- #     infomat<-Icom.CAR(theta=theta.em, suff.stat=res$S, n=n, n.par=n.par)
-  #  if (fix.rho) 
-   #   infomat<-Icom.CAR(theta=c(theta.em[1:4],theta.start[5]), suff.stat=res$S, n=n, n.par=n.par)
-
-    #Icom<-infomat$Icom
-
-    Sig<-matrix(0,ndim, ndim)
-
-    for (i in 1:ndim) 
-      Sig[i,i]<-theta.em[ndim+i]
-##need to fill in the rest of Sigma
-    if (!fix.rho) {
-     
-      Sig[1,2]<-Sig[2,1]<-theta.em[2*ndim+1]*sqrt(Sig[1,1]*Sig[2,2])
-      if (ndim==3) {
-        Sig[1,3]<-Sig[3,1]<-theta.em[2*ndim+2]*sqrt(Sig[1,1]*Sig[3,3])
-        Sig[2,3]<-Sig[3,2]<-theta.em[2*ndim+3]*sqrt(Sig[2,2]*Sig[3,3])
-      }
-}
-    if (fix.rho) Sig[1,2]<-Sig[2,1]<-theta.start[5]*sqrt(Sig[1,1]*Sig[2,2])
 
 
-    Icom<-Icom.mvn(mu=theta.em[1:ndim], Sigma=Sig, fix.rho=fix.rho, suff.stat=res$S, n=n)
-    Dvec<-Dcom.mvn(mu=theta.em[1:ndim], Sigma=Sig, fix.rho=fix.rho, suff.stat=res$S, n=n)
+    mu<-param.pack(theta.em, fix.rho=fix.rho,  dim=ndim)$mu
+    Sigma<-param.pack(theta.em, fix.rho=fix.rho,  dim=ndim)$Sigma
+
+    Icom<-Icom.mvn(mu=mu, Sigma=Sigma, fix.rho=fix.rho, suff.stat=res$S, n=n)
+    Dvec<-Dcom.mvn(mu=mu, Sigma=Sigma, fix.rho=fix.rho, suff.stat=res$S, n=n)
 
     if (!fix.rho) {
-#    Icom.fisher<-Icom.transform(Imat=-Icom, Dvec=infomat$Dvec, theta=theta.em, transformation="Fisher")
-    Icom.fisher<-Icom.transform(Imat=-Icom.new, Dvec=Dvec.new, theta=theta.em, transformation="Fisher")   
+    Icom.fisher<-Icom.transform(Icom=Icom, Dvec=Dvec, theta=theta.em, transformation="Fisher")   
     }
-    
+    ##let r12 be the value of fixed rho
+
+r12<-0
    if (fix.rho) {
- #   Icom.fisher<-Icom.transform(Imat=-Icom, Dvec=infomat$Dvec[1:4], theta=c(theta.em[1:4], theta.start[5]), transformation="Fisher")
-    Icom.fisher<-Icom.transform(Imat=-Icom.new, Dvec=Dvec.new, theta=c(theta.em[1:4], theta.start[5]), transformation="Fisher")   
+    Icom.fisher<-Icom.transform(Imat=Icom,Dvec=Dvec,theta=c(theta.em[1:4],r12), transformation="Fisher")   
   }
 
     Vcom.fisher <- solve(Icom.fisher)
-    ###need to be modified...repartition Icom accoding to page 903
 
     if (ndim==2)  {
-    dV <- Vcom.fisher%*%DM%*%solve(diag(1,n.par)-DM)
-    Vobs.fisher <- Vcom.fisher+dV }
-    if (ndim==3) {
-    index<-c(1,4,2,3,5,6,7,8,9)
-    Itemp<-Icom.fisher[index,index]
-    invItemp<-solve(Itemp)
-    I1<-invItemp[1:2,1:2]
-    I2<-invItemp[1:2,3:9]
-    I3<-invItemp[3:9, 1:2]
-    I4<-invItemp[3:9, 3:9]
-    dV1<-(I3-t(I2)%*%solve(I1)%*%I2)%*%DM%*%solve(I-DM)
-    dV<-matrix(0,9,9)
-    dV[3:9,3:9]<-dV1
-    Vobs.fisher<-invItemp+dV
+      dV <- Vcom.fisher%*%DM%*%solve(diag(1,n.par)-DM)
+      Vobs.fisher <- Vcom.fisher+dV }
 
-    index2<-c(1,3,4,2,5,6,7,8,9)
-    Vobs.fisher[index2,index2]
+   ###verify with the parameters.
+   ###repartition Icom 
+    if (ndim==3) {
+       index<-c(1,4,2,3,5,6,7,8,9)
+       Itemp<-Icom.fisher[index,index]
+       invItemp<-solve(Itemp)
+       I1<-invItemp[1:2,1:2]
+       I2<-invItemp[1:2,3:9]
+       I3<-invItemp[3:9, 1:2]
+       I4<-invItemp[3:9, 3:9]
+       dV1<-(I3-t(I2)%*%solve(I1)%*%I2)%*%DM%*%solve(I-DM)
+       dV<-matrix(0,9,9)
+       dV[3:9,3:9]<-dV1
+       Vobs.fisher<-invItemp+dV
+
+       index2<-c(1,3,4,2,5,6,7,8,9)
+       Vobs.fisher[index2,index2]
    }
  
-
-
     Iobs.fisher <- solve(Vobs.fisher)
 
+
     ##transform Iobs.fisher to Iobs via delta method
-    ##V(theta)=d(fisher^{-1})V(bvn.trans(theta)))d(fisher^{-1})'
+    ##V(theta)=d(fisher^(-1))V(bvn.trans(theta))d(fisher^(-1))'
+
      if (ndim==2) {
-    grad.invfisher <- c(1,1, exp(theta.fisher[3:4]))
-    if (! fix.rho) 
-       grad.invfisher <- c(grad.invfisher,4*exp(2*theta.fisher[5])/(exp(2*theta.fisher[5])+1)^2)
+        grad.invfisher <- c(1,1, exp(theta.fisher[3:4]))
+        if (! fix.rho)
+      grad.invfisher <- c(grad.invfisher,4*exp(2*theta.fisher[5])/(exp(2*theta.fisher[5])+1)^2)
+    }
 
-}
+    if (ndim==3) {
+         grad.invfisher <- c(1,1, 1, exp(theta.fisher[4:6]))
+         if (! fix.rho) 
+           grad.invfisher <- c(grad.invfisher,4*exp(2*theta.fisher[7:9])/(exp(2*theta.fisher[7:9])+1)^2)
+    }
 
-     if (ndim==3) {
-    grad.invfisher <- c(1,1, 1, exp(theta.fisher[4:6]))
-    if (! fix.rho) 
-       grad.invfisher <- c(grad.invfisher,4*exp(2*theta.fisher[7:9])/(exp(2*theta.fisher[7:9])+1)^2)
-
-}
 
     Vobs<-diag(grad.invfisher)%*%Vobs.fisher%*%diag(grad.invfisher)
     Iobs<-solve(Vobs)
     ## obtain a symmetric Cov matrix
     Vobs.sym <- 0.5*(Vobs+t(Vobs))
  
-    ##if (max(abs(Vobs-Vobs.sym)/Vobs)>0.05) 
-    ## warnings("the covariance matrix estimated based on SEM is not symmetric enough. \n")
-  }
+}
+
+###unitscale transformation
+
+#theta.unit<-param.trans(theta.em, transformation="unitscale")
+#Icom.unit<-Icom.transform(Icom, Dvec,theta.em, transformation="unitscale")
+#Vobs.unit<-delta method
 
   ## output
   res.out<-list(call = mf, Y = Y, X = X, N = N, 
@@ -691,7 +671,6 @@ ecoML <- function(formula, data = parent.frame(), N=NULL, supplement = NULL,
     res.out$Icom.trans<-Icom.fisher
     res.out$Iobs.trans<-Iobs.fisher
     res.out$Fmis.trans<-1-diag(Iobs.fisher)/diag(Icom.fisher)
-    res.out$Dvec<-infomat$Dvec
 
   }
 
