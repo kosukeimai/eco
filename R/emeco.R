@@ -65,21 +65,21 @@ param.trans <-function(X, transformation="Fisher") {
        Y[1:3]<-X[1:3]
        Y[4:6]<-log(X[4:6])
        Y[7:8]<-0.5*log((1+X[7:8])/(1-X[7:8]))
-       i (p==9)
+       if (p==9)
          Y[9]<-0.5*log((1+X[9])/(1-X[9]))
       }
    }
 
    if (transformation=="unitscale") {
      if (p<=5) {
-	Y[1:2] <- invlogit(X[1:2])
+    Y[1:2] <- invlogit(X[1:2])
         Y[3:4] <- X[3:4]*exp(2*X[1:2])/(1+exp(X[1:2]))^4
         if (p==5) 
           Y[5] <- X[5]
     }
 
     if (p>5) {
-	Y[1:3]<-invlogit(X[1:3])
+    Y[1:3]<-invlogit(X[1:3])
         Y[4:6]<-X[4:6]*exp(2*X[4:6])/(1+exp(X[4:6]))^4
         Y[7:8]<-X[7:8]
         if (p==9)
@@ -364,13 +364,13 @@ Icom.transform<-function(Icom, Dvec, theta, transformation="Fisher")
   {  
 
       if (length(theta)<=5) {
-	ndim<-2
+    ndim<-2
         mu<-theta[1:2]
         sigma<-theta[3:4]
         rho<-theta[5]
       }
       if (length(theta)>5) {
-	ndim<-3
+    ndim<-3
         mu<-theta[1:3]
         sigma<-theta[4:6]
         rho<-theta[7:9]
