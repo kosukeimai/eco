@@ -109,6 +109,7 @@ void cEMeco(
   setP.t_samp=t_samp; setP.n_samp=n_samp; setP.s_samp=s_samp; setP.x1_samp=x1_samp; setP.x0_samp=x0_samp;
   int param_len=(setP.ncar ? 9 : 5);
   setP.param_len=param_len;
+  setP.suffstat_len=(setP.ncar ? 7 : 5);
 
   /* model parameters */
   //double **Sigma=doubleMatrix(n_dim,n_dim);/* inverse covariance matrix*/
@@ -171,7 +172,7 @@ while (main_loop<=*iteration_max && (start==1 ||
       if (setP.varParam[i])
         Rprintf(" %.3f",pdTheta[i]);
     if (setP.calcLoglik==1 && main_loop>2)
-      Rprintf(" Prev LL: %5g",Suff[5]);
+      Rprintf(" Prev LL: %5g",Suff[setP.suffstat_len]);
     Rprintf("\n");
   }
   //keep the old theta around for comaprison
@@ -194,8 +195,7 @@ while (main_loop<=*iteration_max && (start==1 ||
     ecoSEM(optTheta, pdTheta, params, Rmat_old, Rmat);
   }
   else {
-    setHistory(t_pdTheta,(main_loop<=1) ? 0 : Suff[5],main_loop,(setParam*)&setP,history_full);
-//    Rprintf("hist %d/%d: %5g %5g %5g %5g rho: %5g ll: %5g",main_loop,*iteration_max,history_full[main_loop][0],history_full[main_loop][1],history_full[main_loop][2],history_full[main_loop][3],history_full[main_loop][4],history_full[main_loop][5]);
+    setHistory(t_pdTheta,(main_loop<=1) ? 0 : Suff[setP.suffstat_len],main_loop,(setParam*)&setP,history_full);
   }
 
 
@@ -224,13 +224,13 @@ if (setP.verbose>=1) {
   printf("Final Theta:");
     for(i=0;i<param_len;i++) Rprintf(" %.3f",pdTheta[i]);
     if (setP.calcLoglik==1 && main_loop>2)
-      Rprintf(" Final LL: %5g",Suff[5]);
+      Rprintf(" Final LL: %5g",Suff[setP.suffstat_len]);
     Rprintf("\n");
   }
 
 //finish up: record results and loglik
 Param* param;
-Suff[5]=0.0;
+Suff[setP.suffstat_len]=0.0;
 for(i=0;i<t_samp;i++) {
   if(i<n_samp) {
    param=&(params[i]);
@@ -238,7 +238,7 @@ for(i=0;i<t_samp;i++) {
      inSample[i*2+j]=param->caseP.W[j];
     setBounds(param);
     setNormConst(param);
-    Suff[5]+=getLogLikelihood(param);
+    Suff[setP.suffstat_len]+=getLogLikelihood(param);
   }
 }
 //set the DM matrix (only matters for SEM)
@@ -436,7 +436,7 @@ if (verbose>=2 && !setP->sem) Rprintf("E-step start\n");
 
 
   /*Calculate sufficient statistics */
-  for (j=0; j<5; j++)
+  for (j=0; j<setP->suffstat_len; j++)
     suff[j]=0;
 
   /* compute sufficient statistics */
@@ -445,14 +445,21 @@ if (verbose>=2 && !setP->sem) Rprintf("E-step start\n");
     suff[1]+=Wstar[i][1];  /* sumE(W_i2|Y_i) */
     suff[2]+=Wstar[i][2];  /* sumE(W_i1^2|Y_i) */
     suff[3]+=Wstar[i][4];  /* sumE(W_i2^2|Y_i) */
-    suff[4]+=Wstar[i][3];  /* sumE(W_i1^W_i2|Y_i) */
+    suff[4]+=Wstar[i][3];  /* sumE(W_i1*W_i2|Y_i) */
+    if (setP->ncar) {
+      char ebuffer[30];
+      sprintf(ebuffer, "mstep X %i", i);
+      double lx= logit(params[i].caseP.X,ebuffer);
+      suff[5] += params[i].caseP.Wstar[0]*lx; /* sumE(W_i1*X|Y_i) */
+      suff[6] += params[i].caseP.Wstar[1]*lx; /* sumE(W_i2*X|Y_i) */
+    }
   }
 
-  for(j=0; j<5; j++)
+  for(j=0; j<setP->suffstat_len; j++)
     suff[j]=suff[j]/t_samp;
 
   //if(verbose>=1) Rprintf("Log liklihood %15g\n",loglik);
-  suff[5]=loglik;
+  suff[setP->suffstat_len]=loglik;
 
 FreeMatrix(Wstar,t_samp);
 
@@ -514,17 +521,10 @@ void ecoMStepNCAR(double* Suff, double* pdTheta, Param* params) {
   t_samp=setP->t_samp;
 
 
-  //find E[XW*]
-  double XW1=0; double XW2=0;
-  char ebuffer[30];
+  //set E[XW*]
+  double XW1=Suff[5];
+  double XW2=Suff[6];
 
-  for(i=0;i<setP->t_samp;i++) {
-    sprintf(ebuffer, "mstep X %i", i);
-    double lx= logit(params[i].caseP.X,ebuffer);
-    XW1 += params[i].caseP.Wstar[0]*lx;
-    XW2 += params[i].caseP.Wstar[1]*lx;
-  }
-  XW1 = XW1/t_samp; XW2 = XW2/t_samp;
 
   //pdTheta[0] is const
   pdTheta[1]=Suff[0];  /*mu1*/
@@ -636,7 +636,7 @@ void initNCAR(Param* params, double* pdTheta) {
     int i,j,verbose,len,param_len;
     setParam setP_sem=*(params[0].setP);
     param_len=setP_sem.param_len;
-    double SuffSem[5]; //sufficient stats
+    double SuffSem[setP_sem.suffstat_len]; //sufficient stats
     double phiTI[param_len]; //phi^t_i
     double phiTp1I[param_len]; //phi^{t+1}_i
     double t_optTheta[param_len]; //transformed optimal
