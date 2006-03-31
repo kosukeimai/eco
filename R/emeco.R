@@ -360,23 +360,22 @@ Icom.mvn<-function(mu, Sigma, suff.stat,n, fix.rho=FALSE) {
 
 ##express T1 and T2 in more general form
 
-Icom.transform<-function(Icom, Dvec, theta, transformation="Fisher")
+Icom.transform<-function(Icom, Dvec, theta, transformation="Fisher", context, fix.rho)
   {  
 
-      if (length(theta)<=5) {
-    ndim<-2
+      if (!context) {
+
         mu<-theta[1:2]
         sigma<-theta[3:4]
         rho<-theta[5]
       }
-      if (length(theta)>5) {
-    ndim<-3
-        mu<-theta[1:3]
-        sigma<-theta[4:6]
-        rho<-theta[7:9]
+      if (context) {
+
+        mu<-theta[1:3]   # x,w1,w2
+        sigma<-theta[4:6] #x, w1, w2
+        rho<-theta[7:9]   #r_xw1, r_xw2, r_w1w2
       }
     
-###only 2d...
     ##T1: d(theta)/d(f(theta)), theta is the MVN parameterization
     ##T2, d2(theta)/d(f(theta))(d(f(theta))')
 
@@ -384,22 +383,41 @@ Icom.transform<-function(Icom, Dvec, theta, transformation="Fisher")
 
     Imat<- -Icom
     n.par<-dim(Imat)[1]
+
     if (transformation=="Fisher") {
-     if (ndim==2) {
-     T1<-c(1,1,sigma[1], sigma[2])
+     if (!context) {
+         T1<-c(1,1,sigma[1], sigma[2])
 
-    T2<-matrix(0, n.par^2, n.par)
-    T2[(2*n.par+3), 3]<-sigma[1]    
-    T2[(3*n.par+4), 4]<-sigma[2]     
+         T2<-matrix(0, n.par^2, n.par)
+         T2[(2*n.par+3), 3]<-sigma[1]    
+         T2[(3*n.par+4), 4]<-sigma[2]     
 
-    if (n.par==5) {
-      T1<-c(T1, (1-(rho[1]^2)))
-      T2[(4*n.par+5),5]<- -2*rho[1]*(1-rho[1]^2)
-     }
+         if (!fix.rho) {
+           T1<-c(T1, (1-(rho[1]^2)))
+           T2[(4*n.par+5),5]<- -2*rho[1]*(1-rho[1]^2)
+         }
     
-     T1<-diag(T1)
-   }
+        T1<-diag(T1)
+     }
+
+     if (context) {
+         T1<-c(1,1,1,sigma[1:3],(1-(rho[1:2]^2)))
+
+         T2<-matrix(0, n.par^2, n.par)
+         T2[(3*n.par+4), 4]<-sigma[1]    
+         T2[(4*n.par+5), 5]<-sigma[2]     
+         T2[(5*n.par+6), 6]<-sigma[3]     
+         T2[(6*n.par+7),7]<- -2*rho[1]*(1-rho[1]^2)
+         T2[(7*n.par+8),8]<- -2*rho[2]*(1-rho[2]^2)
+
+         if (!fix.rho) {
+           T1<-c(T1, (1-(rho[3]^2)))
+           T2[(8*n.par+9),9]<- -2*rho[3]*(1-rho[3]^2)
+         }
+    
+        T1<-diag(T1)
     }
+}
     ### transformation=unitscale, Icom_normal==>Icom_unitscale
    if (transformation=="unitscale") {
 
@@ -423,8 +441,6 @@ Icom.transform<-function(Icom, Dvec, theta, transformation="Fisher")
 
    }   
  
-
-
     Icom.tran<-matrix(NA, n.par, n.par)
     Icom.tran<-T1%*%Imat%*%t(T1)
     
@@ -447,39 +463,6 @@ ecoML <- function(formula, data = parent.frame(), N=NULL, supplement = NULL,
                   context = FALSE, sem = TRUE, epsilon=10^(-10),
                   maxit = 1000, loglik = TRUE, verbose= TRUE) { 
 
-  if (verbose)
-    verbose <- 1
-  else
-    verbose <- 0
-
-  if (loglik)
-    loglik <- 1
-  else
-    loglik <- 0
-  
-  ## translating into flag
-  if (context)
-    if (sem)
-      if (fix.rho)
-        flag <- 7
-      else
-        flag <- 5
-    else
-      if (fix.rho)
-        flag <- 3
-      else
-        flag <- 1
-  else
-    if (sem)
-      if (fix.rho)
-        flag <- 6
-      else
-        flag <- 4
-    else
-      if (fix.rho)
-        flag <- 2
-      else
-        flag <- 0
   
   ## getting X and Y
   mf <- match.call()
@@ -489,23 +472,34 @@ ecoML <- function(formula, data = parent.frame(), N=NULL, supplement = NULL,
     data <- as.data.frame(data)
   X <- model.matrix(tt, data)
   Y <- model.response(model.frame(tt, data=data))
+  
+  #n.var: total number of parameters involved in the estimation
+  #n.par: number of nonstatic paramters need to estimate through EM 
+  #       also need SEM
+  #ndim: dimension of the multivariate normal distribution
 
-  ## checking the data
-  if (context) {
-    ndim <- 3
-    n.var<-9
-  }
-  else {
-    ndim <- 2
-    n.var <- 5
-  }
+  ndim<-2
+  if (context) ndim<-3
+
+  n.var<-2*ndim+ ndim*(ndim-1)/2
+ 
+  n.par<-n.var 
+  if (context) n.par<-n.var-2
+  if (fix.rho) n.par<-n.par-1
+
+  r12<-NULL
+  if (fix.rho) 
+     r12<-theta.start[n.par+1]
+
+  flag<-as.integer(context)+2*as.integer(fix.rho)+2^2*as.integer(sem)
+
+  ##checking data
   tmp <- checkdata(X, Y, supplement, ndim)
   bdd <- ecoBD(formula=formula, data=data)
   n <- tmp$n.samp+tmp$survey.samp+tmp$samp.X1+tmp$samp.X0
   inSample.length <- ndim*tmp$n.samp
 
-  n.par<-n.var
-  if (fix.rho) n.par<-n.par-1
+
   #if NCAR and the user did not provide a theta.start
   if (ndim==3 && length(theta.start)==5) 
     theta.start<-c(0,0,1,1,0,0,0)
@@ -520,7 +514,7 @@ ecoML <- function(formula, data = parent.frame(), N=NULL, supplement = NULL,
             as.double(bdd$Wmin[,1,1]), as.double(bdd$Wmax[,1,1]),
             as.integer(flag),as.integer(verbose),as.integer(loglik),
             optTheta=rep(-1.1,n.var), pdTheta=double(n.var),
-            S=double(n.var+1),inSample=double(inSample.length),DMmatrix=double(n.par*n.par),
+            S=double(7+1),inSample=double(inSample.length),DMmatrix=double(n.par*n.par),
             itersUsed=as.integer(0),history=double((maxit+1)*(n.var+1)),
             PACKAGE="eco")
 
@@ -562,7 +556,7 @@ ecoML <- function(formula, data = parent.frame(), N=NULL, supplement = NULL,
               as.integer(tmp$X0type), as.integer(tmp$samp.X0), as.double(tmp$X0.W2),
               as.double(bdd$Wmin[,1,1]), as.double(bdd$Wmax[,1,1]),
               as.integer(flag),as.integer(verbose),as.integer(loglik),
-              res$pdTheta, pdTheta=double(n.var), S=double(n.var+1),
+              res$pdTheta, pdTheta=double(n.var), S=double(7+1),
               inSample=double(inSample.length),DMmatrix=double(n.par*n.par),
               itersUsed=as.integer(0),history=double((maxit+1)*(n.var+1)),
               PACKAGE="eco")     
@@ -573,31 +567,48 @@ ecoML <- function(formula, data = parent.frame(), N=NULL, supplement = NULL,
         DM[i,j]=res$DMmatrix[(i-1)*n.par+j]
 
 
-    mu<-param.pack(theta.em, fix.rho=fix.rho,  dim=ndim)$mu
-    Sigma<-param.pack(theta.em, fix.rho=fix.rho,  dim=ndim)$Sigma
+    mu<-param.pack(theta.em, fix.rho=fix.rho, r12=r12,  dim=ndim)$mu
+    Sigma<-param.pack(theta.em, fix.rho=fix.rho, r12=r12, dim=ndim)$Sigma
 
-    Icom<-Icom.mvn(mu=mu, Sigma=Sigma, fix.rho=fix.rho, suff.stat=res$S, n=n)
-    Dvec<-Dcom.mvn(mu=mu, Sigma=Sigma, fix.rho=fix.rho, suff.stat=res$S, n=n)
+    suff<-res$S
 
-    if (!fix.rho) {
-    Icom.fisher<-Icom.transform(Icom=Icom, Dvec=Dvec, theta=theta.em, transformation="Fisher")   
-    }
-    ##let r12 be the value of fixed rho
+    # the current sufficient statistics from context model 
+    # E(W1), E(W2), E(W1^2), E(W2^2), E(W1W2), E(W1X), E(W2X)
+    #Aaron 03/31 email
+   print("ok")
+    if (context & !fix.rho) 
+      {
+	 suff<-rep(0,n.var+1)
+         suff[1]<-mean(X)
+         suff[2:3]<-res$S[1:2]
+         suff[4]<-mean(X^2)
+         suff[5:6]<-res$S[3:4]
+         suff[7:8]<-res$S[6:7]
+         suff[9]<-res$S[5]
+         suff[10]<-res$S[8]
+      }
 
-r12<-0
-   if (fix.rho) {
-    Icom.fisher<-Icom.transform(Imat=Icom,Dvec=Dvec,theta=c(theta.em[1:4],r12), transformation="Fisher")   
-  }
+    print(suff)
+
+    Icom<-Icom.mvn(mu=mu, Sigma=Sigma, fix.rho=fix.rho, suff.stat=suff, n=n)
+    Dvec<-Dcom.mvn(mu=mu, Sigma=Sigma, fix.rho=fix.rho, suff.stat=suff, n=n)
+
+    theta.icom<-theta.em
+    if (fix.rho) theta.icom<-c(theta.em[-n.var], r12)
+
+    Icom.fisher<-Icom.transform(Icom=Icom, Dvec=Dvec, theta=theta.icom, transformation="Fisher", context=context, fix.rho=fix.rho)   
+
+print(Icom.fisher)
 
     Vcom.fisher <- solve(Icom.fisher)
-
-    if (ndim==2)  {
+print("bad")
+      if (!context)  {
       dV <- Vcom.fisher%*%DM%*%solve(diag(1,n.par)-DM)
       Vobs.fisher <- Vcom.fisher+dV }
 
-   ###verify with the parameters.
-   ###repartition Icom 
-    if (ndim==3) {
+      ###verify with the parameters.
+      ###repartition Icom 
+      if (context & !fix.rho) {
        index<-c(1,4,2,3,5,6,7,8,9)
        Itemp<-Icom.fisher[index,index]
        invItemp<-solve(Itemp)
@@ -612,7 +623,7 @@ r12<-0
 
        index2<-c(1,3,4,2,5,6,7,8,9)
        Vobs.fisher[index2,index2]
-   }
+     }
  
     Iobs.fisher <- solve(Vobs.fisher)
 
@@ -620,16 +631,17 @@ r12<-0
     ##transform Iobs.fisher to Iobs via delta method
     ##V(theta)=d(fisher^(-1))V(bvn.trans(theta))d(fisher^(-1))'
 
-     if (ndim==2) {
+     if (!context) {
         grad.invfisher <- c(1,1, exp(theta.fisher[3:4]))
         if (! fix.rho)
       grad.invfisher <- c(grad.invfisher,4*exp(2*theta.fisher[5])/(exp(2*theta.fisher[5])+1)^2)
     }
 
-    if (ndim==3) {
+    if (context) {
          grad.invfisher <- c(1,1, 1, exp(theta.fisher[4:6]))
-         if (! fix.rho) 
-           grad.invfisher <- c(grad.invfisher,4*exp(2*theta.fisher[7:9])/(exp(2*theta.fisher[7:9])+1)^2)
+         grad.invfisher <- c(grad.invfisher,4*exp(2*theta.fisher[7:8])/(exp(2*theta.fisher[7:8])+1)^2)
+         if (!fix.rho) 
+           grad.invfisher <- c(grad.invfisher,4*exp(2*theta.fisher[9])/(exp(2*theta.fisher[9])+1)^2)
     }
 
 
