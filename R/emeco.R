@@ -570,7 +570,7 @@ ecoML <- function(formula, data = parent.frame(), N=NULL, supplement = NULL,
     mu<-param.pack(theta.em, fix.rho=fix.rho, r12=r12,  dim=ndim)$mu
     Sigma<-param.pack(theta.em, fix.rho=fix.rho, r12=r12, dim=ndim)$Sigma
 
-    suff<-res$S
+    suff.stat<-res$S
 
     # the current sufficient statistics from context model 
     # E(W1), E(W2), E(W1^2), E(W2^2), E(W1W2), E(W1X), E(W2X)
@@ -578,20 +578,22 @@ ecoML <- function(formula, data = parent.frame(), N=NULL, supplement = NULL,
    print("ok")
     if (context & !fix.rho) 
       {
-	 suff<-rep(0,n.var+1)
-         suff[1]<-mean(X)
-         suff[2:3]<-res$S[1:2]
-         suff[4]<-mean(X^2)
-         suff[5:6]<-res$S[3:4]
-         suff[7:8]<-res$S[6:7]
-         suff[9]<-res$S[5]
-         suff[10]<-res$S[8]
+	 suff.stat<-rep(0,(n.var+1))
+         suff.stat[1]<-mean(logit(c(X,supplement[,3])))
+         suff.stat[2:3]<-res$S[1:2]
+         suff.stat[4]<-mean((logit(c(X, supplement[,3])))^2)
+         suff.stat[5:6]<-res$S[3:4]
+         suff.stat[7:8]<-res$S[6:7]
+         suff.stat[9]<-res$S[5]
+         suff.stat[10]<-res$S[8]
       }
 
-    print(suff)
 
-    Icom<-Icom.mvn(mu=mu, Sigma=Sigma, fix.rho=fix.rho, suff.stat=suff, n=n)
-    Dvec<-Dcom.mvn(mu=mu, Sigma=Sigma, fix.rho=fix.rho, suff.stat=suff, n=n)
+    Icom<-Icom.mvn(mu=mu, Sigma=Sigma, fix.rho=fix.rho, suff.stat=suff.stat, n=n)
+    Dvec<-Dcom.mvn(mu=mu, Sigma=Sigma, fix.rho=fix.rho, suff.stat=suff.stat, n=n)
+
+    print(Icom)
+    print(Dvec)
 
     theta.icom<-theta.em
     if (fix.rho) theta.icom<-c(theta.em[-n.var], r12)
@@ -662,19 +664,15 @@ print("bad")
   res.out<-list(call = mf, Y = Y, X = X, N = N, 
                 fix.rho = fix.rho, context = context, sem=sem, epsilon=epsilon,
                 mu = theta.em[1:2], sigma = theta.em[3:4],
-                sigma.log = theta.fisher[3:4], suff = res$S[1:n.var],
-                loglik = res$S[n.var+1], iters.em = iters.em, 
+                sigma.log = theta.fisher[3:4], suff = res$S[1:n.par],
+                loglik = res$S[n.par+1], iters.em = iters.em, 
                 iters.sem = iters.sem, mu.em = mu.em,
                 sigma.log.em = sigma.log.em,
                 rho.fisher.em = rho.fisher.em, loglike.em = loglike.em,
-                W = W, DM = DM)
-  if (fix.rho) res.out$rho0<-theta.start[5]
-  if (!fix.rho) {
-    res.out$rho <- theta.em[5]
-    res.out$rho.fisher <- theta.fisher[5]
-  }
+                W = W)
   
   if (sem) {
+    res.out$DM<-DM
     res.out$Icom<-Icom
     res.out$Iobs<-Iobs
     res.out$Fmis<-1-diag(Iobs)/diag(Icom)
