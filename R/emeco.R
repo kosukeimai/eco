@@ -606,7 +606,7 @@ ecoML <- function(formula, data = parent.frame(), N=NULL, supplement = NULL,
 print(Icom.fisher)
 
     Vcom.fisher <- solve(Icom.fisher)
-print("bad")
+
       if (!context)  {
       dV <- Vcom.fisher%*%DM%*%solve(diag(1,n.par)-DM)
       Vobs.fisher <- Vcom.fisher+dV }
@@ -617,11 +617,11 @@ print("bad")
        index<-c(1,4,2,3,5,6,7,8,9)
        Itemp<-Icom.fisher[index,index]
        invItemp<-solve(Itemp)
-       I1<-invItemp[1:2,1:2]
-       I2<-invItemp[1:2,3:9]
-       I3<-invItemp[3:9, 1:2]
-       I4<-invItemp[3:9, 3:9]
-       dV1<-(I4-t(I2)%*%solve(I1)%*%I2)%*%DM%*%solve(diag(rep(1,7))-DM)
+       A1<-invItemp[1:2,1:2]
+       A2<-invItemp[1:2,3:9]
+       A3<-invItemp[3:9, 1:2]
+       A4<-invItemp[3:9, 3:9]
+       dV1<-(A4-t(A2)%*%solve(A1)%*%A2)%*%DM%*%solve(diag(rep(1,7))-DM)
        dV<-matrix(0,9,9)
        dV[3:9,3:9]<-dV1
        Vobs.fisher<-invItemp+dV
