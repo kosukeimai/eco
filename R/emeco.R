@@ -483,8 +483,11 @@ ecoML <- function(formula, data = parent.frame(), N=NULL, supplement = NULL,
 
   n.var<-2*ndim+ ndim*(ndim-1)/2
  
-  n.par<-n.var 
-  if (context) n.par<-n.var-2
+  n.par<-n.S<-n.var 
+  if (context) {
+      n.par<-n.S<-n.var-2
+   }
+
   if (fix.rho) n.par<-n.par-1
 
   r12<-NULL
@@ -501,7 +504,7 @@ ecoML <- function(formula, data = parent.frame(), N=NULL, supplement = NULL,
 
 
   #if NCAR and the user did not provide a theta.start
-  if (ndim==3 && length(theta.start)==5) 
+  if (context && (length(theta.start)==5) ) 
     theta.start<-c(0,0,1,1,0,0,0)
 
   ## Fitting the model via EM  
@@ -514,7 +517,7 @@ ecoML <- function(formula, data = parent.frame(), N=NULL, supplement = NULL,
             as.double(bdd$Wmin[,1,1]), as.double(bdd$Wmax[,1,1]),
             as.integer(flag),as.integer(verbose),as.integer(loglik),
             optTheta=rep(-1.1,n.var), pdTheta=double(n.var),
-            S=double(7+1),inSample=double(inSample.length),DMmatrix=double(n.par*n.par),
+            S=double(n.S+1),inSample=double(inSample.length),DMmatrix=double(n.par*n.par),
             itersUsed=as.integer(0),history=double((maxit+1)*(n.var+1)),
             PACKAGE="eco")
 
@@ -556,7 +559,7 @@ ecoML <- function(formula, data = parent.frame(), N=NULL, supplement = NULL,
               as.integer(tmp$X0type), as.integer(tmp$samp.X0), as.double(tmp$X0.W2),
               as.double(bdd$Wmin[,1,1]), as.double(bdd$Wmax[,1,1]),
               as.integer(flag),as.integer(verbose),as.integer(loglik),
-              res$pdTheta, pdTheta=double(n.var), S=double(7+1),
+              res$pdTheta, pdTheta=double(n.var), S=double(n.S+1),
               inSample=double(inSample.length),DMmatrix=double(n.par*n.par),
               itersUsed=as.integer(0),history=double((maxit+1)*(n.var+1)),
               PACKAGE="eco")     
@@ -576,7 +579,7 @@ ecoML <- function(formula, data = parent.frame(), N=NULL, supplement = NULL,
     # E(W1), E(W2), E(W1^2), E(W2^2), E(W1W2), E(W1X), E(W2X)
     #Aaron 03/31 email
    print("ok")
-    if (context & !fix.rho) 
+    if (context && (!fix.rho))
       {
 	 suff.stat<-rep(0,(n.var+1))
          suff.stat[1]<-mean(logit(c(X,supplement[,3])))
@@ -618,7 +621,7 @@ print("bad")
        I2<-invItemp[1:2,3:9]
        I3<-invItemp[3:9, 1:2]
        I4<-invItemp[3:9, 3:9]
-       dV1<-(I3-t(I2)%*%solve(I1)%*%I2)%*%DM%*%solve(I-DM)
+       dV1<-(I4-t(I2)%*%solve(I1)%*%I2)%*%DM%*%solve(diag(rep(1,7))-DM)
        dV<-matrix(0,9,9)
        dV[3:9,3:9]<-dV1
        Vobs.fisher<-invItemp+dV
@@ -663,8 +666,8 @@ print("bad")
   ## output
   res.out<-list(call = mf, Y = Y, X = X, N = N, 
                 fix.rho = fix.rho, context = context, sem=sem, epsilon=epsilon,
-                mu = theta.em[1:2], sigma = theta.em[3:4],
-                sigma.log = theta.fisher[3:4], suff = res$S[1:n.par],
+                mu = mu, Sigma = Sigma,
+                sigma.log = theta.fisher[(ndim+1):(2*ndim)], suff = res$S[1:n.par],
                 loglik = res$S[n.par+1], iters.em = iters.em, 
                 iters.sem = iters.sem, mu.em = mu.em,
                 sigma.log.em = sigma.log.em,
