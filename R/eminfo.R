@@ -454,7 +454,7 @@ Icom.transform<-function(Icom, Dvec, theta, transformation="Fisher", context, fi
 }
 
 
-info.em<-function(theta.em, suff.stat, context, fix.rho, sem, r12, DM)
+info.em<-function(theta.em, suff.stat, DM, context=TRUE, fix.rho=FALSE, sem=TRUE, r12=0, n)
   {
 
 
@@ -473,7 +473,7 @@ info.em<-function(theta.em, suff.stat, context, fix.rho, sem, r12, DM)
    mu<-param.pack(theta.em, fix.rho=fix.rho, r12=r12,  dim=ndim)$mu
    Sigma<-param.pack(theta.em, fix.rho=fix.rho, r12=r12, dim=ndim)$Sigma
  
-
+  theta.fisher<-param.trans(theta.em)
 
     Icom<-Icom.mvn(mu=mu, Sigma=Sigma, fix.rho=fix.rho, suff.stat=suff.stat, n=n)
     Dvec<-Dcom.mvn(mu=mu, Sigma=Sigma, fix.rho=fix.rho, suff.stat=suff.stat, n=n)
@@ -545,4 +545,15 @@ print(Icom.fisher)
 #Icom.unit<-Icom.transform(Icom, Dvec,theta.em, transformation="unitscale")
 #Vobs.unit<-delta method
 
+  res.out<-list(mu=mu, Sigma=Sigma, suff.stat=suff.stat, context=context, fix.rho=fix.rho)
+  res.out$DM<-DM
+    res.out$Icom<-Icom
+    res.out$Iobs<-Iobs
+    res.out$Fmis<-1-diag(Iobs)/diag(Icom)
+    res.out$Vobs.original<-Vobs
+    res.out$Vobs<-Vobs.sym
+    res.out$Icom.trans<-Icom.fisher
+    res.out$Iobs.trans<-Iobs.fisher
+    res.out$Fmis.trans<-1-diag(Iobs.fisher)/diag(Icom.fisher)
+res.out
 }
