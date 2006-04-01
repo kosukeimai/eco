@@ -8,6 +8,7 @@ export(
        ecoNP,
        ecoRC,
        ecoML,
+       ecoINFO,
        summary.eco,
        summary.ecoNP,
        summary.ecoML,
