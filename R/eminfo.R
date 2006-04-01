@@ -135,10 +135,10 @@ d1st.mvn<-function(mu,Sigma, fix.rho=FALSE) {
       dSig.theta[1,2,d+1]<-dSig.theta[2,1,d+1]<-1/2*s1^(-1/2)*s2^(1/2)*r12
       dSig.theta[1,2,d+2]<-dSig.theta[2,1,d+2]<-1/2*s2^(-1/2)*s1^(1/2)*r12
       if (d==3) {
-        dSig.theta[1,3,d+1]<-dSig.theta[3,1,d+1]<-1/2*s1^(-1/2)*s3^(1/2)*r12
-        dSig.theta[1,3,d+3]<-dSig.theta[3,1,d+3]<-1/2*s3^(-1/2)*s1^(1/2)*r12
-        dSig.theta[2,3,d+2]<-dSig.theta[3,2,d+2]<-1/2*s2^(-1/2)*s3^(1/2)*r12
-        dSig.theta[2,3,d+3]<-dSig.theta[3,2,d+3]<-1/2*s3^(-1/2)*s2^(1/2)*r12
+        dSig.theta[1,3,d+1]<-dSig.theta[3,1,d+1]<-1/2*s1^(-1/2)*s3^(1/2)*r13
+        dSig.theta[1,3,d+3]<-dSig.theta[3,1,d+3]<-1/2*s3^(-1/2)*s1^(1/2)*r13
+        dSig.theta[2,3,d+2]<-dSig.theta[3,2,d+2]<-1/2*s2^(-1/2)*s3^(1/2)*r23
+        dSig.theta[2,3,d+3]<-dSig.theta[3,2,d+3]<-1/2*s3^(-1/2)*s2^(1/2)*r23
       }
     
     if (!fix.rho) {
