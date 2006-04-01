@@ -454,7 +454,7 @@ Icom.transform<-function(Icom, Dvec, theta, transformation="Fisher", context, fi
 }
 
 
-info.em<-function(theta.em, suff.stat, DM, context=TRUE, fix.rho=FALSE, sem=TRUE, r12=0, n)
+ecoINFO<-function(theta.em, suff.stat, DM, context=TRUE, fix.rho=FALSE, sem=TRUE, r12=0, n)
   {
 
 
