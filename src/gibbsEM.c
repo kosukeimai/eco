@@ -248,16 +248,18 @@ for(i=0;i<t_samp;i++) {
 }
 //set the DM matrix (only matters for SEM)
 if (setP.sem==1) {
-  int DMlen=param_len-setP.fixedRho;
+  int DMlen=0;
+  for(i=0; i<param_len;i++)
+    if(setP.varParam[i]) DMlen++;
   for(i=0;i<DMlen;i++)
     for(j=0;j<DMlen;j++)
-      DMmatrix[i*param_len+j]=Rmat[i][j];
+      DMmatrix[i*DMlen+j]=Rmat[i][j];
 }
 
 *itersUsed=main_loop;
 for(i=0;i<(*itersUsed);i++) {
   for(j=0;j<(param_len+1);j++)
-    history[i*6+j]=history_full[i][j];
+    history[i*(param_len+1)+j]=history_full[i][j];
 }
 
 
@@ -645,7 +647,7 @@ void initNCAR(Param* params, double* pdTheta) {
     int i,j,verbose,len,param_len;
     setParam setP_sem=*(params[0].setP);
     param_len=setP_sem.param_len;
-    double SuffSem[setP_sem.suffstat_len]; //sufficient stats
+    double *SuffSem=doubleArray(setP_sem.suffstat_len+1); //sufficient stats
     double phiTI[param_len]; //phi^t_i
     double phiTp1I[param_len]; //phi^{t+1}_i
     double t_optTheta[param_len]; //transformed optimal
@@ -782,6 +784,7 @@ void initNCAR(Param* params, double* pdTheta) {
       }
       Rprintf("\n\n");
     }
+    Free(SuffSem);
     Free(params_sem);
  }
 
