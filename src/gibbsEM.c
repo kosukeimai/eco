@@ -409,6 +409,9 @@ if (verbose>=2 && !setP->sem) Rprintf("E-step start\n");
     }
   }
 
+  //Calculate loglikelihood from survey data
+
+
     /* analytically compute E{W2_i|Y_i} given W1_i, mu and Sigma in x1 homeogeneous areas */
     for (i=n_samp; i<n_samp+x1_samp; i++) {
       temp0=params[i].caseP.Wstar[0];
@@ -432,13 +435,47 @@ if (verbose>=2 && !setP->sem) Rprintf("E-step start\n");
     }
 
     /* Use the values given by the survey data */
+    //Calculate loglik also
+    int dim=setP->ncar ? 3 : 2;
+    double *mu=doubleArray(dim);
+    double *vtemp=doubleArray(dim);
+    double **InvSig=doubleMatrix(dim,dim);/* inverse covariance matrix*/
+    for(i=0;i<dim;i++)
+      for(j=0;j<dim;j++) {
+        if (dim==3) {
+          InvSig[i][j]=setP->InvSigma3[i][j];
+        }
+        else {
+          InvSig[i][j]=setP->InvSigma[i][j];
+        }
+      }
     for (i=n_samp+x1_samp+x0_samp; i<n_samp+x1_samp+x0_samp+s_samp; i++) {
-      Wstar[i][0]=params[i].caseP.Wstar[0];
-      Wstar[i][1]=params[i].caseP.Wstar[1];
+      param = &(params[i]);
+      caseP=&(param->caseP);
+      Wstar[i][0]=caseP->Wstar[0];
+      Wstar[i][1]=caseP->Wstar[1];
       Wstar[i][2]=Wstar[i][0]*Wstar[i][0];
       Wstar[i][3]=Wstar[i][0]*Wstar[i][1];
       Wstar[i][4]=Wstar[i][1]*Wstar[i][1];
+
+      if (setP->calcLoglik==1 && setP->iter>1) {
+        vtemp[0] = caseP->Wstar[0];
+        vtemp[1] = caseP->Wstar[1];
+        if (setP->ncar) {
+          vtemp[2]=logit(caseP->X,"log-liklihood survey");
+          mu[0]=setP->pdTheta[1];
+          mu[1]=setP->pdTheta[2];
+          mu[2]=setP->pdTheta[0];
+          loglik+=dMVN(vtemp,mu,InvSig,dim,0);
+        }
+        else {
+          mu[0]=setP->pdTheta[0];
+          mu[1]=setP->pdTheta[1];
+          loglik+=dMVN(vtemp,mu,InvSig,dim,0);
+        }
+      }
     }
+    Free(mu); Free(vtemp);
 
 
   /*Calculate sufficient statistics */
@@ -479,12 +516,8 @@ void ecoMStep(double* Suff, double* pdTheta, Param* params) {
 int i;
 setParam* setP=params[0].setP;
 
-if (setP->hypTest>0) {
-}
-else {
   pdTheta[0]=Suff[0];  /*mu1*/
   pdTheta[1]=Suff[1];  /*mu2*/
-}
 
   if (!setP->fixedRho) { //standard
     pdTheta[2]=Suff[2]-2*Suff[0]*pdTheta[0]+pdTheta[0]*pdTheta[0];  //sigma11
@@ -501,6 +534,9 @@ else {
     pdTheta[3]=(Imat[1][1]-pdTheta[4]*Imat[0][1]*pow(Imat[1][1]/Imat[0][0],0.5))/(1-pdTheta[4]*pdTheta[4]); //sigma22
     //sigma12 will be determined below by rho
   }
+
+if (setP->hypTest>0) {
+}
 
     //set Sigma
   setP->Sigma[0][0] = pdTheta[2];
