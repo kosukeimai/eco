@@ -101,6 +101,11 @@ void cEMeco(
   setP.ncar=bit(*flag,0);
   setP.fixedRho=bit(*flag,1);
   setP.sem=bit(*flag,2) & (optTheta[2]>0);
+
+  //hard-coded hypothesis test
+  //hypTest is the number of constraints.  hyptTest==0 when we're not checking a hypothesis
+  setP.hypTest=1; setP.hypTestCoeff[0][0]=1; setP.hypTestCoeff[0][1]=-1; setP.hypTestResult[0][0]=1;
+
   if (setP.verbose>=1) Rprintf("OPTIONS (flag: %d)   Ncar: %s; Fixed Rho: %s; SEM: %s\n",*flag,setP.ncar==1 ? "Yes" : "No",
    setP.fixedRho==1 ? "Yes" : "No",setP.sem==1 ? "Second run" : (bit(*flag,2)==1 ? "First run" : "No"));
   setP.verbose=*verbosiosity;
@@ -186,6 +191,7 @@ while (main_loop<=*iteration_max && (start==1 ||
     ecoMStep(Suff,pdTheta,params);
   else
     ecoMStepNCAR(Suff,pdTheta,params);
+  setP.pdTheta=pdTheta;
   transformTheta(pdTheta,t_pdTheta,param_len);
   //char ch;
   //scanf(" %c", &ch );
@@ -473,8 +479,13 @@ void ecoMStep(double* Suff, double* pdTheta, Param* params) {
 int i;
 setParam* setP=params[0].setP;
 
+if (setP->hypTest>0) {
+}
+else {
   pdTheta[0]=Suff[0];  /*mu1*/
   pdTheta[1]=Suff[1];  /*mu2*/
+}
+
   if (!setP->fixedRho) { //standard
     pdTheta[2]=Suff[2]-2*Suff[0]*pdTheta[0]+pdTheta[0]*pdTheta[0];  //sigma11
     pdTheta[3]=Suff[3]-2*Suff[1]*pdTheta[1]+pdTheta[1]*pdTheta[1];  //sigma22

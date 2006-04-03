@@ -46,7 +46,7 @@ typedef struct caseParam caseParam;
 
 struct setParam {
   int n_samp, t_samp, s_samp,x1_samp,x0_samp,param_len,suffstat_len; //types of data sizes
-  int iter, ncar, fixedRho, sem, verbose, calcLoglik; //options
+  int iter, ncar, fixedRho, sem, hypTest, verbose, calcLoglik; //options
   int semDone[7]; //whether that row of the R matrix is done
   int varParam[9]; //whether the parameter is included in the R matrix
   double convergence;
@@ -54,7 +54,9 @@ struct setParam {
   double InvSigma[2][2];
   double Sigma3[3][3];
   double InvSigma3[3][3];
-  //int weirdness;
+  double hypTestCoeff[3][3];
+  double hypTestResult[3][1];
+  double* pdTheta;
 };
 
 typedef struct setParam setParam;
