@@ -113,8 +113,7 @@ ecoML <- function(formula, data = parent.frame(), N=NULL, supplement = NULL,
       for(j in 1:n.par)
         DM[i,j]=res$DMmatrix[(i-1)*n.par+j]
 
-   print(n.par)
-   print(DM)
+
 
 } 
 

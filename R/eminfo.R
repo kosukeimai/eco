@@ -40,8 +40,6 @@ param.pack<-function(theta.em, fix.rho=FALSE,r12=0, dim=ndim)
       Sig[2,3]<-Sig[3,2]<-r12*sqrt(Sig[2,2]*Sig[3,3])
    }
   }
-print(mu)
-print(Sig)
   return(list(mu=mu, Sigma=Sig))
 }
 
@@ -106,6 +104,8 @@ tr<-function(mat) {
 #dSig.theta[n.u, n.u, n.theta]
 
 d1st.mvn<-function(mu,Sigma, fix.rho=FALSE) {
+   #r12, r13,r23 are internal here, 
+   # r12 doesn't correspond to cor(w1, w2) in 3d case (intead, r12=>cor(W1,x)
    d<-length(mu)
    p<-d+d+d*(d-1)/2
    u1<-mu[1]
@@ -159,7 +159,8 @@ d1st.mvn<-function(mu,Sigma, fix.rho=FALSE) {
 }
 
 d2nd.mvn<-function(mu,Sigma,  fix.rho=FALSE) {
-
+   #r12, r13,r23 are internal here, 
+   # r12 doesn't correspond to cor(w1, w2) in 3d case (intead, r12=>cor(W1,x)
    d<-length(mu)
    p<-d+d+d*(d-1)/2
    u1<-mu[1]
@@ -284,7 +285,6 @@ Dcom.mvn<-function(mu, Sigma, suff.stat,n, fix.rho=FALSE) {
 
   if (fix.rho) { 
     p<-p-1 
-    print(p)
   }
 
   Dcom<-rep(0,p)
@@ -478,15 +478,12 @@ ecoINFO<-function(theta.em, suff.stat, DM, context=TRUE, fix.rho=FALSE, sem=TRUE
     Icom<-Icom.mvn(mu=mu, Sigma=Sigma, fix.rho=fix.rho, suff.stat=suff.stat, n=n)
     Dvec<-Dcom.mvn(mu=mu, Sigma=Sigma, fix.rho=fix.rho, suff.stat=suff.stat, n=n)
 
-    print(Icom)
-    print(Dvec)
 
     theta.icom<-theta.em
     if (fix.rho) theta.icom<-c(theta.em[-n.var], r12)
 
     Icom.fisher<-Icom.transform(Icom=Icom, Dvec=Dvec, theta=theta.icom, transformation="Fisher", context=context, fix.rho=fix.rho)   
 
-print(Icom.fisher)
 
     Vcom.fisher <- solve(Icom.fisher)
 
@@ -505,13 +502,12 @@ print(Icom.fisher)
        A3<-invItemp[3:9, 1:2]
        A4<-invItemp[3:9, 3:9]
        dV1<-(A4-t(A2)%*%solve(A1)%*%A2)%*%DM%*%solve(diag(rep(1,7))-DM)
-       print(dV1)
        dV<-matrix(0,9,9)
        dV[3:9,3:9]<-dV1
        Vobs.fisher<-invItemp+dV
 
        index2<-c(1,3,4,2,5,6,7,8,9)
-       Vobs.fisher[index2,index2]
+       Vobs.fisher<-Vobs.fisher[index2,index2]
      }
  
     Iobs.fisher <- solve(Vobs.fisher)
