@@ -120,15 +120,11 @@ void SuffExp(double *t, int n, void *param)
         InvSigma[i][j]=pp->setP->InvSigma[i][j];
       }
     }
-  if (dim==3) {
-    mu[2]=pp->caseP.mu[1]
-  }
   normc=pp->caseP.normcT;
   suff=pp->caseP.suff;
   imposs=0;
 
-
-  for (ii=0; ii<n; ii++)
+   for (ii=0; ii<n; ii++)
     {
      imposs=0; inp=t[ii];
       W1[ii]=getW1starFromT(t[ii],pp,&imposs);
@@ -150,9 +146,9 @@ void SuffExp(double *t, int n, void *param)
           else if (suff==5) t[ii]=invLogit(W1[ii])*t[ii];
           else if (suff==6) t[ii]=invLogit(W2[ii])*t[ii];
           else if (suff==7) {
-            //if(pp->setP->verbose>=3 && dim==3) Rprintf("InvSigma loglik: %5g %5g %5g %5g %5g %5g\n",InvSigma[0][0],InvSigma[0][1],InvSigma[1][0],InvSigma[1][1],InvSigma[1][2],InvSigma[2][2]);
             if (dim == 3) {
-              vtemp[3]=logit(pp->caseP.X,"log-liklihood");
+              //if(pp->setP->verbose>=2 && dim==3) Rprintf("InvSigma loglik: %5g %5g %5g %5g %5g %5g\n",InvSigma[0][0],InvSigma[0][1],InvSigma[1][0],InvSigma[1][1],InvSigma[1][2],InvSigma[2][2]);
+              vtemp[2]=logit(pp->caseP.X,"log-liklihood");
               mu[0]=pp->setP->pdTheta[1];
               mu[1]=pp->setP->pdTheta[2];
               mu[2]=pp->setP->pdTheta[0];

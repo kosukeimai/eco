@@ -114,6 +114,7 @@ void cEMeco(
   setP.t_samp=t_samp; setP.n_samp=n_samp; setP.s_samp=s_samp; setP.x1_samp=x1_samp; setP.x0_samp=x0_samp;
   int param_len=(setP.ncar ? 9 : 5);
   setP.param_len=param_len;
+  setP.pdTheta=doubleArray(param_len);
   setP.suffstat_len=(setP.ncar ? 7 : 5);
 
   /* model parameters */
@@ -169,7 +170,7 @@ while (main_loop<=*iteration_max && (start==1 ||
     }
     start=0;
   }
-
+  for(i=0;i<param_len;i++) setP.pdTheta[i]=pdTheta[i];
 
   if (setP.verbose>=1) {
     Rprintf("cycle %d/%d:",main_loop,*iteration_max);
@@ -185,13 +186,11 @@ while (main_loop<=*iteration_max && (start==1 ||
   transformTheta(pdTheta_old,t_pdTheta_old,param_len);
 
 
-
   ecoEStep(params, Suff);
   if (!setP.ncar)
     ecoMStep(Suff,pdTheta,params);
   else
     ecoMStepNCAR(Suff,pdTheta,params);
-  setP.pdTheta=pdTheta;
   transformTheta(pdTheta,t_pdTheta,param_len);
   //char ch;
   //scanf(" %c", &ch );
@@ -365,7 +364,6 @@ if (verbose>=2 && !setP->sem) Rprintf("E-step start\n");
     }
     else {
       setBounds(param); //I think you only have to do this once...check later
-
       /*if (verbose>=2 && setP->iter==12 && i==422) {
         Rprintf("Bounds: %5g %5g %5g %5g\n",caseP->Wbounds[0][0],caseP->Wbounds[0][1],caseP->Wbounds[1][0],caseP->Wbounds[1][1]);
         setP->weirdness=1;
