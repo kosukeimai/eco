@@ -91,6 +91,20 @@ ecoML <- function(formula, data = parent.frame(), N=NULL, supplement = NULL,
   ## SEM step
   iters.sem<-0
 
+   suff.stat<-res$S
+  if (context && (!fix.rho))
+      {
+	 suff.stat<-rep(0,(n.var+1))
+         suff.stat[1]<-mean(logit(c(X,supplement[,3])))
+         suff.stat[2:3]<-res$S[1:2]
+         suff.stat[4]<-mean((logit(c(X, supplement[,3])))^2)
+         suff.stat[5:6]<-res$S[3:4]
+         suff.stat[7:8]<-res$S[6:7]
+         suff.stat[9]<-res$S[5]
+         suff.stat[10]<-res$S[8]
+      }
+
+
   if (sem) 
   {
     DM <- matrix(rep(NA,n.par*n.par),ncol=n.par)
@@ -117,18 +131,7 @@ ecoML <- function(formula, data = parent.frame(), N=NULL, supplement = NULL,
 
 } 
 
-    suff.stat<-res$S
-  if (context && (!fix.rho))
-      {
-	 suff.stat<-rep(0,(n.var+1))
-         suff.stat[1]<-mean(logit(c(X,supplement[,3])))
-         suff.stat[2:3]<-res$S[1:2]
-         suff.stat[4]<-mean((logit(c(X, supplement[,3])))^2)
-         suff.stat[5:6]<-res$S[3:4]
-         suff.stat[7:8]<-res$S[6:7]
-         suff.stat[9]<-res$S[5]
-         suff.stat[10]<-res$S[8]
-      }
+ 
    
 
 
