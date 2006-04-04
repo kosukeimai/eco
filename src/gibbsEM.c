@@ -461,16 +461,16 @@ if (verbose>=2 && !setP->sem) Rprintf("E-step start\n");
       if (setP->calcLoglik==1 && setP->iter>1) {
         vtemp[0] = caseP->Wstar[0];
         vtemp[1] = caseP->Wstar[1];
+        mu[0]= caseP->mu[0];
+        mu[1]= caseP->mu[1];
         if (setP->ncar) {
-          vtemp[2]=logit(caseP->X,"log-liklihood survey");
-          mu[0]=setP->pdTheta[1];
-          mu[1]=setP->pdTheta[2];
+          vtemp[2]=logit(caseP->X,"log-likelihood survey");
+          //mu[0]=setP->pdTheta[1];
+          //mu[1]=setP->pdTheta[2];
           mu[2]=setP->pdTheta[0];
           loglik+=dMVN(vtemp,mu,InvSig,dim,0);
         }
         else {
-          mu[0]=setP->pdTheta[0];
-          mu[1]=setP->pdTheta[1];
           loglik+=dMVN(vtemp,mu,InvSig,dim,0);
         }
       }
