@@ -194,10 +194,10 @@ double getLogLikelihood(Param* param) {
           mu[0]=param->setP->pdTheta[1];
           mu[1]=param->setP->pdTheta[2];
           mu[2]=param->setP->pdTheta[0];
-          loglik=dMVN(vtemp,mu,InvSig,dim,0);
+          loglik=dMVN(vtemp,mu,InvSig,dim,1);
         }
         else {
-          loglik=dMVN(vtemp,mu,InvSig,dim,0);
+          loglik=dMVN(vtemp,mu,InvSig,dim,1);
         }
       Free(mu); Free(vtemp); FreeMatrix(InvSig,dim);
       return loglik;
