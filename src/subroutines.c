@@ -15,6 +15,35 @@
 #include "rand.h"
 #include "subroutines.h"
 
+
+/*
+ * Computes the dot product of two vectors
+ */
+double dotProduct(double* a, double* b, int size) {
+  int i; double ans=0;
+  for (i=0; i<size; i++) {
+    ans+=a[i]*b[i];
+  }
+  return ans;
+}
+
+/*
+ * Multiply two matrices (A,B) with dims r1,c1,r2,c2
+ * mutates C to return the answer
+ */
+void matrixMul(double** A, double** B, int r1, int c1, int r2, int c2, double** C) {
+  int i,j,k;
+  if (c1!=r2) error("Matrix multiplication: %d != %d", c2, r1);
+  else {
+    for (i=0; i<r1; i++)
+      for (j=0; j<c2; j++) {
+        double entry=0;
+        for(k=0;k<r2;k++) entry += A[i][k]*B[k][j];
+        C[i][j]=entry;
+      }
+  }
+}
+
 /*  The Sweep operator */
 void SWP(
 	 double **X,             /* The Matrix to work on */

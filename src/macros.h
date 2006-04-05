@@ -55,8 +55,8 @@ struct setParam {
   double InvSigma[2][2];
   double Sigma3[3][3];
   double InvSigma3[3][3];
-  double hypTestCoeff[3][3];
-  double hypTestResult[3][1];
+  double** hypTestCoeff;
+  double hypTestResult;
   double* pdTheta;
 };
 

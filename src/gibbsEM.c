@@ -75,6 +75,7 @@ void cEMeco(
 	    int *flag,    /*0th (rightmost) bit: 1 = NCAR, 0=normal; 1st bit: 1 = fixed rho, 0 = not fixed rho*/
 	    int *verbosiosity,    /*How much to print out, 0=silent, 1=cycle, 2=data*/
       int *calcLoglik,    /*How much to print out, 0=silent, 1=cycle, 2=data*/
+	    int *hypTest_L,   /* number of hypothesis constraints */
 	    double *optTheta,  /*optimal theta obtained from previous EM result; if set, then we're doing SEM*/
 
 	    /* storage */
@@ -104,7 +105,14 @@ void cEMeco(
 
   //hard-coded hypothesis test
   //hypTest is the number of constraints.  hyptTest==0 when we're not checking a hypothesis
-  setP.hypTest=1; setP.hypTestCoeff[0][0]=1; setP.hypTestCoeff[0][1]=-1; setP.hypTestResult[0][0]=1;
+  setP.hypTest=(*hypTest_L);
+  if (setP.hypTest>1) error("Unable to do hypothesis testing with more than one constraint");
+  if (setP.hypTest==1) {
+    setP.hypTestCoeff=doubleMatrix(setP.ncar ? 3 : 2,setP.hypTest);
+    setP.hypTestCoeff[0][0]=1; setP.hypTestCoeff[1][0]=-1;
+    if (setP.ncar) setP.hypTestCoeff[2][0]=0;
+    setP.hypTestResult=1;
+  }
 
   if (setP.verbose>=1) Rprintf("OPTIONS (flag: %d)   Ncar: %s; Fixed Rho: %s; SEM: %s\n",*flag,setP.ncar==1 ? "Yes" : "No",
    setP.fixedRho==1 ? "Yes" : "No",setP.sem==1 ? "Second run" : (bit(*flag,2)==1 ? "First run" : "No"));
@@ -507,6 +515,51 @@ setParam* setP=params[0].setP;
   }
 
 if (setP->hypTest>0) {
+  double offset,denom;
+  int dim,j,l,k;
+  dim=setP->ncar ? 3 : 2;
+  l=setP->hypTest;
+  double **InvSigma=doubleMatrix(dim,dim);
+  double** temp_LbyD=doubleMatrix(l,dim);
+  //double** temp_DbyL=doubleMatrix(dim,l);
+  double** temp_LbyL=doubleMatrix(l,l);
+  double numer[2];
+
+  for(i=0;i<dim;i++)
+    for(j=0;j<dim;j++) {
+      if (dim==3) {
+        InvSigma[i][j]=setP->InvSigma3[i][j];
+      }
+      else {
+        InvSigma[i][j]=setP->InvSigma[i][j];
+      }
+    }
+  //transpose
+  double** hypTestCoeffT=doubleMatrix(l,dim);
+  for(i=0;i<dim;i++) hypTestCoeffT[0][i]=setP->hypTestCoeff[i][0];
+
+  //numerators
+  for(k=0;k<2;k++) {
+    for(j=0;j<dim;j++) temp_LbyD[0][j]=0;
+    for(i=0;i<setP->t_samp;i++) {
+      for(j=0;j<dim;j++) temp_LbyD[0][j]+= hypTestCoeffT[0][j]*params[i].caseP.Wstar[k];
+    }
+    for(j=0;j<dim;j++) temp_LbyD[0][j]=temp_LbyD[0][j]-(setP->t_samp*setP->hypTestResult);
+    matrixMul(temp_LbyD,InvSigma,l,dim,dim,dim,temp_LbyD);
+    matrixMul(temp_LbyD,setP->hypTestCoeff,l,dim,dim,l,temp_LbyL);
+    numer[k]=temp_LbyL[0][0];
+  }
+
+  //denominator
+  matrixMul(hypTestCoeffT,InvSigma,l,dim,dim,dim,temp_LbyD);
+  matrixMul(temp_LbyD,setP->hypTestCoeff,l,dim,dim,l,temp_LbyL);
+  denom=setP->t_samp*temp_LbyL[0][0];
+
+  //offset theta
+  for(k=0;k<2;k++) {
+   offset=numer[k]/denom;
+   pdTheta[k]=pdTheta[k]-offset;
+  }
 }
 
     //set Sigma
