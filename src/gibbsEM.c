@@ -365,6 +365,7 @@ if (verbose>=2 && !setP->sem) Rprintf("E-step start\n");
       caseP->Wstar[1]=Wstar[i][1];
       caseP->W[0]=caseP->Y;
       caseP->W[1]=caseP->Y;
+      if (setP->calcLoglik==1 && setP->iter>1) loglik+=getLogLikelihood(param);
       //Rprintf("Skipping %d, Y=%5g",i,caseP->Y);
     }
     else {
