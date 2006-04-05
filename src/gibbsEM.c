@@ -498,7 +498,6 @@ setParam* setP=params[0].setP;
   pdTheta[0]=Suff[0];  /*mu1*/
   pdTheta[1]=Suff[1];  /*mu2*/
 
-
 if (setP->hypTest>0) {
   double offset,denom;
   int dim,j,l,k;
