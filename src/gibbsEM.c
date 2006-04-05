@@ -111,7 +111,7 @@ void cEMeco(
     setP.hypTestCoeff=doubleMatrix(setP.ncar ? 3 : 2,setP.hypTest);
     setP.hypTestCoeff[0][0]=1; setP.hypTestCoeff[1][0]=-1;
     if (setP.ncar) setP.hypTestCoeff[2][0]=0;
-    setP.hypTestResult=1;
+    setP.hypTestResult=0;
   }
 
   if (setP.verbose>=1) Rprintf("OPTIONS (flag: %d)   Ncar: %s; Fixed Rho: %s; SEM: %s\n",*flag,setP.ncar==1 ? "Yes" : "No",
