@@ -40,6 +40,7 @@ struct caseParam {
   double Wstar[2]; //place to store E[W1*] when we calculate it each step
   double Wbounds[2][2];  //[i][j] is {j:lower,upper}-bound of W{i+1}
   int suff; //the sufficient stat we're calculating: 0->W1, 1->W2,2->W1^2,3->W1W2,4->W2^2,7->Log Lik, 5/6,-1 ->test case
+  int dataType; //0=unknown, 1=(X==1),2=(X==0),3=survey
 };
 
 typedef struct caseParam caseParam;

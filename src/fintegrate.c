@@ -165,8 +165,46 @@ void SuffExp(double *t, int n, void *param)
 
 //Returns the log likelihood of a particular case
 double getLogLikelihood(Param* param) {
-  param->caseP.suff=7;
-  return log(paramIntegration(&SuffExp,(void*)param));
+  if (param->caseP.dataType==0  && !(param->caseP.Y>=.990 || param->caseP.Y<=.010)) {
+    param->caseP.suff=7;
+    return log(paramIntegration(&SuffExp,(void*)param));
+  }
+  else if (param->caseP.dataType==3 || (param->caseP.Y>=.990 || param->caseP.Y<=.010)) {
+    int dim=param->setP->ncar ? 3 : 2;
+    double *mu=doubleArray(dim);
+    double *vtemp=doubleArray(dim);
+    double **InvSig=doubleMatrix(dim,dim);/* inverse covariance matrix*/
+    int i,j;
+    for(i=0;i<dim;i++)
+      for(j=0;j<dim;j++) {
+        if (dim==3) {
+          InvSig[i][j]=param->setP->InvSigma3[i][j];
+        }
+        else {
+          InvSig[i][j]=param->setP->InvSigma[i][j];
+        }
+      }
+    double loglik;
+        vtemp[0] = param->caseP.Wstar[0];
+        vtemp[1] = param->caseP.Wstar[1];
+        mu[0]= param->caseP.mu[0];
+        mu[1]= param->caseP.mu[1];
+        if (param->setP->ncar) {
+          vtemp[2]=logit(param->caseP.X,"log-likelihood survey");
+          mu[0]=param->setP->pdTheta[1];
+          mu[1]=param->setP->pdTheta[2];
+          mu[2]=param->setP->pdTheta[0];
+          loglik=dMVN(vtemp,mu,InvSig,dim,0);
+        }
+        else {
+          loglik=dMVN(vtemp,mu,InvSig,dim,0);
+        }
+      Free(mu); Free(vtemp); FreeMatrix(InvSig,dim);
+      return loglik;
+      }
+  else {
+    Rprintf("Error.\n");
+  }
 }
 
 //Finds W2star, given the equation

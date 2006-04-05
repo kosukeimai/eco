@@ -224,28 +224,30 @@ while (main_loop<=*iteration_max && (start==1 ||
 }
 
 /***End main loop ***/
+//finish up: record results and loglik
+Param* param;
+Suff[setP.suffstat_len]=0.0;
+for(i=0;i<param_len;i++) setP.pdTheta[i]=pdTheta[i];
+for(i=0;i<t_samp;i++) {
+   param=&(params[i]);
+  if(i<n_samp) {
+   for(j=0;j<2;j++) inSample[i*2+j]=param->caseP.W[j];
+    //setBounds(param);
+    //setNormConst(param);
+  }
+  Suff[setP.suffstat_len]+=getLogLikelihood(param);
+}
 
 if (setP.verbose>=1) {
   printf("Final Theta:");
     for(i=0;i<param_len;i++) Rprintf(" %.3f",pdTheta[i]);
-    if (setP.calcLoglik==1 && main_loop>2)
+    if (setP.calcLoglik==1 && main_loop>2) {
       Rprintf(" Final LL: %5g",Suff[setP.suffstat_len]);
+      history_full[main_loop-1][param_len]=Suff[setP.suffstat_len];
+    }
     Rprintf("\n");
   }
 
-//finish up: record results and loglik
-Param* param;
-Suff[setP.suffstat_len]=0.0;
-for(i=0;i<t_samp;i++) {
-  if(i<n_samp) {
-   param=&(params[i]);
-   for(j=0;j<2;j++)
-     inSample[i*2+j]=param->caseP.W[j];
-    setBounds(param);
-    setNormConst(param);
-    Suff[setP.suffstat_len]+=getLogLikelihood(param);
-  }
-}
 //set the DM matrix (only matters for SEM)
 if (setP.sem==1) {
   int DMlen=0;
@@ -353,7 +355,7 @@ if (verbose>=2 && !setP->sem) Rprintf("E-step start\n");
   for (i = 0; i<n_samp; i++) {
     param = &(params[i]);
     caseP=&(param->caseP);
-    if (caseP->Y>=.99 || caseP->Y<=.01) { //if Y is near the edge, then W1 and W2 are very constrained
+    if (caseP->Y>=.990 || caseP->Y<=.010) { //if Y is near the edge, then W1 and W2 are very constrained
       Wstar[i][0]=logit(caseP->Y,"Y maxmin W1");
       Wstar[i][1]=logit(caseP->Y,"Y maxmin W2");
       Wstar[i][2]=Wstar[i][0]*Wstar[i][0];
@@ -363,6 +365,7 @@ if (verbose>=2 && !setP->sem) Rprintf("E-step start\n");
       caseP->Wstar[1]=Wstar[i][1];
       caseP->W[0]=caseP->Y;
       caseP->W[1]=caseP->Y;
+      //Rprintf("Skipping %d, Y=%5g",i,caseP->Y);
     }
     else {
       setBounds(param); //I think you only have to do this once...check later
@@ -409,9 +412,6 @@ if (verbose>=2 && !setP->sem) Rprintf("E-step start\n");
     }
   }
 
-  //Calculate loglikelihood from survey data
-
-
     /* analytically compute E{W2_i|Y_i} given W1_i, mu and Sigma in x1 homeogeneous areas */
     for (i=n_samp; i<n_samp+x1_samp; i++) {
       temp0=params[i].caseP.Wstar[0];
@@ -436,19 +436,6 @@ if (verbose>=2 && !setP->sem) Rprintf("E-step start\n");
 
     /* Use the values given by the survey data */
     //Calculate loglik also
-    int dim=setP->ncar ? 3 : 2;
-    double *mu=doubleArray(dim);
-    double *vtemp=doubleArray(dim);
-    double **InvSig=doubleMatrix(dim,dim);/* inverse covariance matrix*/
-    for(i=0;i<dim;i++)
-      for(j=0;j<dim;j++) {
-        if (dim==3) {
-          InvSig[i][j]=setP->InvSigma3[i][j];
-        }
-        else {
-          InvSig[i][j]=setP->InvSigma[i][j];
-        }
-      }
     for (i=n_samp+x1_samp+x0_samp; i<n_samp+x1_samp+x0_samp+s_samp; i++) {
       param = &(params[i]);
       caseP=&(param->caseP);
@@ -457,25 +444,9 @@ if (verbose>=2 && !setP->sem) Rprintf("E-step start\n");
       Wstar[i][2]=Wstar[i][0]*Wstar[i][0];
       Wstar[i][3]=Wstar[i][0]*Wstar[i][1];
       Wstar[i][4]=Wstar[i][1]*Wstar[i][1];
-
-      if (setP->calcLoglik==1 && setP->iter>1) {
-        vtemp[0] = caseP->Wstar[0];
-        vtemp[1] = caseP->Wstar[1];
-        mu[0]= caseP->mu[0];
-        mu[1]= caseP->mu[1];
-        if (setP->ncar) {
-          vtemp[2]=logit(caseP->X,"log-likelihood survey");
-          //mu[0]=setP->pdTheta[1];
-          //mu[1]=setP->pdTheta[2];
-          mu[2]=setP->pdTheta[0];
-          loglik+=dMVN(vtemp,mu,InvSig,dim,0);
-        }
-        else {
-          loglik+=dMVN(vtemp,mu,InvSig,dim,0);
-        }
-      }
+      if (setP->calcLoglik==1 && setP->iter>1) loglik+=getLogLikelihood(param);
     }
-    Free(mu); Free(vtemp);
+
 
 
   /*Calculate sufficient statistics */
@@ -505,7 +476,6 @@ if (verbose>=2 && !setP->sem) Rprintf("E-step start\n");
   suff[setP->suffstat_len]=loglik;
 
 FreeMatrix(Wstar,t_samp);
-
 }
 
 //Standard M-Step
@@ -844,6 +814,7 @@ setParam* setP=params[0].setP;
     }
 
   for (i = 0; i < n_samp; i++) {
+    params[i].caseP.dataType=0;
     params[i].caseP.X=params[i].caseP.data[0];
     params[i].caseP.Y=params[i].caseP.data[1];
     //fix X edge cases
@@ -852,11 +823,13 @@ setParam* setP=params[0].setP;
 
   /*read homeogenous areas information */
     for (i=n_samp; i<n_samp+x1_samp; i++) {
+      params[i].caseP.dataType=1;
       params[i].caseP.W[0]=(x1_W1[i] == 1) ? .9999 : ((x1_W1[i]==0) ? .0001 : x1_W1[i]);
       params[i].caseP.Wstar[0]=logit(params[i].caseP.W[0],"X1 read");
     }
 
     for (i=n_samp+x1_samp; i<n_samp+x1_samp+x0_samp; i++) {
+      params[i].caseP.dataType=2;
       params[i].caseP.W[1]=(x0_W2[i] == 1) ? .9999 : ((x0_W2[i]==0) ? .0001 : x0_W2[i]);
       params[i].caseP.Wstar[1]=logit(params[i].caseP.W[1],"X0 read");
     }
@@ -868,6 +841,7 @@ setParam* setP=params[0].setP;
     for (j=0; j<surv_dim; j++) {
       for (i=n_samp+x1_samp+x0_samp; i<n_samp+x1_samp+x0_samp+s_samp; i++) {
         dtemp=sur_W[itemp++];
+        params[i].caseP.dataType=3;
         if (j<n_dim) {
           params[i].caseP.W[j]=(dtemp == 1) ? .9999 : ((dtemp==0) ? .0001 : dtemp);
           params[i].caseP.Wstar[j]=logit(params[i].caseP.W[j],"Survey read");
@@ -959,7 +933,7 @@ void setHistory(double* t_pdTheta, double loglik, int iter,setParam* setP,double
   int j;
   for(j=0;j<len;j++)
       history_full[iter][j]=t_pdTheta[j];
-  history_full[iter][len]=loglik;
+  if (iter>0) history_full[iter-1][len]=loglik;
 }
 
 /*
