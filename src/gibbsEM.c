@@ -498,21 +498,6 @@ setParam* setP=params[0].setP;
   pdTheta[0]=Suff[0];  /*mu1*/
   pdTheta[1]=Suff[1];  /*mu2*/
 
-  if (!setP->fixedRho) { //standard
-    pdTheta[2]=Suff[2]-2*Suff[0]*pdTheta[0]+pdTheta[0]*pdTheta[0];  //sigma11
-    pdTheta[3]=Suff[3]-2*Suff[1]*pdTheta[1]+pdTheta[1]*pdTheta[1];  //sigma22
-    pdTheta[4]=Suff[4]-Suff[0]*pdTheta[1]-Suff[1]*pdTheta[0]+pdTheta[0]*pdTheta[1]; //sigma12
-    pdTheta[4]=pdTheta[4]/sqrt(pdTheta[2]*pdTheta[3]); /*rho*/
-  }
-  else { //fixed rho
-    double Imat[2][2];
-    Imat[0][0]=Suff[2]-2*pdTheta[0]*Suff[0]+pdTheta[0]*pdTheta[0];  //I_11
-    Imat[1][1]=Suff[3]-2*Suff[1]*pdTheta[1]+pdTheta[1]*pdTheta[1];  //I_22
-    Imat[0][1]=Suff[4]-Suff[0]*pdTheta[1]-Suff[1]*pdTheta[0]+pdTheta[0]*pdTheta[1];  //I_12
-    pdTheta[2]=(Imat[0][0]-pdTheta[4]*Imat[0][1]*pow(Imat[0][0]/Imat[1][1],0.5))/(1-pdTheta[4]*pdTheta[4]); //sigma11
-    pdTheta[3]=(Imat[1][1]-pdTheta[4]*Imat[0][1]*pow(Imat[1][1]/Imat[0][0],0.5))/(1-pdTheta[4]*pdTheta[4]); //sigma22
-    //sigma12 will be determined below by rho
-  }
 
 if (setP->hypTest>0) {
   double offset,denom;
@@ -561,6 +546,22 @@ if (setP->hypTest>0) {
    pdTheta[k]=pdTheta[k]-offset;
   }
 }
+
+  if (!setP->fixedRho) { //standard
+    pdTheta[2]=Suff[2]-2*Suff[0]*pdTheta[0]+pdTheta[0]*pdTheta[0];  //sigma11
+    pdTheta[3]=Suff[3]-2*Suff[1]*pdTheta[1]+pdTheta[1]*pdTheta[1];  //sigma22
+    pdTheta[4]=Suff[4]-Suff[0]*pdTheta[1]-Suff[1]*pdTheta[0]+pdTheta[0]*pdTheta[1]; //sigma12
+    pdTheta[4]=pdTheta[4]/sqrt(pdTheta[2]*pdTheta[3]); /*rho*/
+  }
+  else { //fixed rho
+    double Imat[2][2];
+    Imat[0][0]=Suff[2]-2*pdTheta[0]*Suff[0]+pdTheta[0]*pdTheta[0];  //I_11
+    Imat[1][1]=Suff[3]-2*Suff[1]*pdTheta[1]+pdTheta[1]*pdTheta[1];  //I_22
+    Imat[0][1]=Suff[4]-Suff[0]*pdTheta[1]-Suff[1]*pdTheta[0]+pdTheta[0]*pdTheta[1];  //I_12
+    pdTheta[2]=(Imat[0][0]-pdTheta[4]*Imat[0][1]*pow(Imat[0][0]/Imat[1][1],0.5))/(1-pdTheta[4]*pdTheta[4]); //sigma11
+    pdTheta[3]=(Imat[1][1]-pdTheta[4]*Imat[0][1]*pow(Imat[1][1]/Imat[0][0],0.5))/(1-pdTheta[4]*pdTheta[4]); //sigma22
+    //sigma12 will be determined below by rho
+  }
 
     //set Sigma
   setP->Sigma[0][0] = pdTheta[2];
