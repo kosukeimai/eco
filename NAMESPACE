@@ -23,7 +23,9 @@ export(
        varcov.eco,
        varcov.ecoNP,
        coef.eco,
-       coef.ecoNP)
+       coef.ecoNP.
+       logit,
+       invlogit)
 
 S3method(varcov, eco)
 S3method(varcov, ecoNP)
