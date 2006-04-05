@@ -5,7 +5,7 @@
 ecoML <- function(formula, data = parent.frame(), N=NULL, supplement = NULL, 
                   theta.start = c(0,0,1,1,0), fix.rho = TRUE,
                   context = FALSE, sem = TRUE, epsilon=10^(-10),
-                  maxit = 1000, loglik = TRUE, verbose= TRUE) { 
+                  maxit = 1000, loglik = TRUE, hyptest=FALSE, verbose= TRUE) { 
 
   
   ## getting X and Y
@@ -59,7 +59,7 @@ ecoML <- function(formula, data = parent.frame(), N=NULL, supplement = NULL,
             as.integer(tmp$X1type), as.integer(tmp$samp.X1), as.double(tmp$X1.W1),
             as.integer(tmp$X0type), as.integer(tmp$samp.X0), as.double(tmp$X0.W2),
             as.double(bdd$Wmin[,1,1]), as.double(bdd$Wmax[,1,1]),
-            as.integer(flag),as.integer(verbose),as.integer(loglik),
+            as.integer(flag),as.integer(verbose),as.integer(loglik),as.integer(hyptest),
             optTheta=rep(-1.1,n.var), pdTheta=double(n.var),
             S=double(n.S+1),inSample=double(inSample.length),DMmatrix=double(n.par*n.par),
             itersUsed=as.integer(0),history=double((maxit+1)*(n.var+1)),
@@ -94,7 +94,7 @@ ecoML <- function(formula, data = parent.frame(), N=NULL, supplement = NULL,
    suff.stat<-res$S
   if (context && (!fix.rho))
       {
-	 suff.stat<-rep(0,(n.var+1))
+     suff.stat<-rep(0,(n.var+1))
          suff.stat[1]<-mean(logit(c(X,supplement[,3])))
          suff.stat[2:3]<-res$S[1:2]
          suff.stat[4]<-mean((logit(c(X, supplement[,3])))^2)
@@ -116,7 +116,7 @@ ecoML <- function(formula, data = parent.frame(), N=NULL, supplement = NULL,
               as.integer(tmp$X1type), as.integer(tmp$samp.X1), as.double(tmp$X1.W1),
               as.integer(tmp$X0type), as.integer(tmp$samp.X0), as.double(tmp$X0.W2),
               as.double(bdd$Wmin[,1,1]), as.double(bdd$Wmax[,1,1]),
-              as.integer(flag),as.integer(verbose),as.integer(loglik),
+              as.integer(flag),as.integer(verbose),as.integer(loglik),as.integer(hyptest),
               res$pdTheta, pdTheta=double(n.var), S=double(n.S+1),
               inSample=double(inSample.length),DMmatrix=double(n.par*n.par),
               itersUsed=as.integer(0),history=double((maxit+1)*(n.var+1)),
@@ -140,7 +140,7 @@ ecoML <- function(formula, data = parent.frame(), N=NULL, supplement = NULL,
   ## output
   res.out<-list(call = mf, Y = Y, X = X, N = N, 
                 fix.rho = fix.rho, context = context, sem=sem, epsilon=epsilon,
-		theta.em=theta.em, r12=r12, 
+        theta.em=theta.em, r12=r12, 
                sigma.log = theta.fisher[(ndim+1):(2*ndim)], suff.stat = suff.stat,
                 loglik = res$S[n.par+1], iters.em = iters.em, 
                 iters.sem = iters.sem, mu.em = mu.em,
