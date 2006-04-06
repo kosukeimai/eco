@@ -29,6 +29,7 @@ void ecoSEM(double* optTheta, double* pdTheta, Param* params, double Rmat_old[7]
 void ecoEStep(Param* params, double* suff);
 void ecoMStep(double* Suff, double* pdTheta, Param* params);
 void ecoMStepNCAR(double* Suff, double* pdTheta, Param* params);
+void MStepHypTest(Param* params, double* pdTheta);
 void initTheta(double* pdTheta_in,Param* params, double* pdTheta);
 void initNCAR(Param* params, double* pdTheta);
 void initNCAR(Param* params, double* pdTheta);
@@ -499,53 +500,7 @@ setParam* setP=params[0].setP;
   pdTheta[1]=Suff[1];  /*mu2*/
 
 if (setP->hypTest>0) {
-  double offset,denom;
-  int dim,j,l,k;
-  dim=setP->ncar ? 3 : 2;
-  l=setP->hypTest;
-  double **InvSigma=doubleMatrix(dim,dim);
-  double **Sigma=doubleMatrix(dim,dim);
-  double** temp_LbyD=doubleMatrix(l,dim);
-  double** temp_DbyL=doubleMatrix(dim,l);
-  double** temp_LbyL=doubleMatrix(l,l);
-
-  for(i=0;i<dim;i++)
-    for(j=0;j<dim;j++) {
-      if (dim==3) {
-        InvSigma[i][j]=setP->InvSigma3[i][j];
-        Sigma[i][j]=setP->Sigma3[i][j];
-      }
-      else {
-        InvSigma[i][j]=setP->InvSigma[i][j];
-        Sigma[i][j]=setP->Sigma[i][j];
-      }
-    }
-  //transpose
-  double** hypTestCoeffT=doubleMatrix(l,dim);
-  for(i=0;i<dim;i++) hypTestCoeffT[0][i]=setP->hypTestCoeff[i][0];
-
-  //numerator
-  for(k=0;k<2;k++) temp_DbyL[k][0]=0;
-  for(i=0;i<setP->t_samp;i++) {
-    temp_DbyL[0][0]+=params[i].caseP.Wstar[0];
-    temp_DbyL[1][0]+=params[i].caseP.Wstar[1];
-  }
-  matrixMul(hypTestCoeffT,temp_DbyL,l,dim,dim,l,temp_LbyL);
-  temp_LbyL[0][0]=temp_LbyL[0][0]-(setP->t_samp*setP->hypTestResult);
-  matrixMul(Sigma,setP->hypTestCoeff,dim,dim,dim,l,temp_DbyL);
-  for(k=0;k<2;k++) temp_DbyL[k][0]*=temp_LbyL[0][0];
-
-  //denominator
-  //matrixMul(hypTestCoeffT,InvSigma,l,dim,dim,dim,temp_LbyD);
-  matrixMul(hypTestCoeffT,Sigma,l,dim,dim,dim,temp_LbyD);
-  matrixMul(temp_LbyD,setP->hypTestCoeff,l,dim,dim,l,temp_LbyL);
-  denom=setP->t_samp*temp_LbyL[0][0];
-
-  //offset theta
-  for(k=0;k<2;k++) {
-   offset=temp_DbyL[k][0]/denom;
-   pdTheta[k]=pdTheta[k]-offset;
-  }
+  MStepHypTest(params,pdTheta);
 }
 
   if (!setP->fixedRho) { //standard
@@ -603,6 +558,10 @@ void ecoMStepNCAR(double* Suff, double* pdTheta, Param* params) {
   pdTheta[1]=Suff[0];  /*mu1*/
   pdTheta[2]=Suff[1];  /*mu2*/
 
+  if (setP->hypTest>0) {
+    MStepHypTest(params,pdTheta);
+  }
+
   //set variances and correlations
   //pdTheta[3] is const
   pdTheta[4]=Suff[2]-2*Suff[0]*pdTheta[1]+pdTheta[1]*pdTheta[1]; //s11
@@ -654,6 +613,61 @@ void ecoMStepNCAR(double* Suff, double* pdTheta, Param* params) {
   initNCAR(params,pdTheta);
 
 }
+
+/**
+ * Exta M-Step for hypothesis testing
+ * Mutates pdTheta
+ */
+void MStepHypTest(Param* params, double* pdTheta) {
+  setParam* setP=params[0].setP;
+  double offset,denom;
+  int dim,i,j,l,k;
+  dim=setP->ncar ? 3 : 2;
+  l=setP->hypTest;
+  double** Sigma=doubleMatrix(dim,dim);
+  double** temp_LbyD=doubleMatrix(l,dim);
+  double** temp_DbyL=doubleMatrix(dim,l);
+  double** temp_LbyL=doubleMatrix(l,l);
+
+  for(i=0;i<dim;i++)
+    for(j=0;j<dim;j++) {
+      if (dim==3) {
+        Sigma[i][j]=setP->Sigma3[i][j];
+      }
+      else {
+        Sigma[i][j]=setP->Sigma[i][j];
+      }
+    }
+  //transpose
+  double** hypTestCoeffT=doubleMatrix(l,dim);
+  for(i=0;i<dim;i++) hypTestCoeffT[0][i]=setP->hypTestCoeff[i][0];
+
+  //numerator
+  for(k=0;k<2;k++) temp_DbyL[k][0]=0;
+  for(i=0;i<setP->t_samp;i++) {
+    temp_DbyL[0][0]+=params[i].caseP.Wstar[0];
+    temp_DbyL[1][0]+=params[i].caseP.Wstar[1];
+  }
+  matrixMul(hypTestCoeffT,temp_DbyL,l,dim,dim,l,temp_LbyL);
+  temp_LbyL[0][0]=temp_LbyL[0][0]-(setP->t_samp*setP->hypTestResult);
+  matrixMul(Sigma,setP->hypTestCoeff,dim,dim,dim,l,temp_DbyL);
+  for(k=0;k<2;k++) temp_DbyL[k][0]*=temp_LbyL[0][0];
+
+  //denominator
+  //matrixMul(hypTestCoeffT,InvSigma,l,dim,dim,dim,temp_LbyD);
+  matrixMul(hypTestCoeffT,Sigma,l,dim,dim,dim,temp_LbyD);
+  matrixMul(temp_LbyD,setP->hypTestCoeff,l,dim,dim,l,temp_LbyL);
+  denom=setP->t_samp*temp_LbyL[0][0];
+
+  //offset theta
+  for(k=0;k<2;k++) {
+   offset=temp_DbyL[k][0]/denom;
+   int kindex= (setP->ncar) ? (k+1) : k;
+   pdTheta[kindex]=pdTheta[kindex]-offset;
+  }
+
+}
+
 
 //NCAR initialize
 void initNCAR(Param* params, double* pdTheta) {
