@@ -525,24 +525,25 @@ if (setP->hypTest>0) {
   for(i=0;i<dim;i++) hypTestCoeffT[0][i]=setP->hypTestCoeff[i][0];
 
   //numerator
-  double sum=0;
+  for(k=0;k<2;k++) temp_DbyL[k][0]=0;
   for(i=0;i<setP->t_samp;i++) {
-    temp_DbyL[0][0]=params[i].caseP.Wstar[0];
-    temp_DbyL[1][0]=params[i].caseP.Wstar[1];
-    matrixMul(hypTestCoeffT,temp_DbyL,l,dim,dim,l,temp_LbyL);
-    sum+=temp_LbyL[0][0];
+    temp_DbyL[0][0]+=params[i].caseP.Wstar[0];
+    temp_DbyL[1][0]+=params[i].caseP.Wstar[1];
   }
-  sum=sum-(setP->t_samp*setP->hypTestResult);
+  matrixMul(hypTestCoeffT,temp_DbyL,l,dim,dim,l,temp_LbyL);
+  temp_LbyL[0][0]=temp_LbyL[0][0]-(setP->t_samp*setP->hypTestResult);
   matrixMul(Sigma,setP->hypTestCoeff,dim,dim,dim,l,temp_DbyL);
+  for(k=0;k<2;k++) temp_DbyL[k][0]*=temp_LbyL[0][0];
 
   //denominator
-  matrixMul(hypTestCoeffT,InvSigma,l,dim,dim,dim,temp_LbyD);
+  //matrixMul(hypTestCoeffT,InvSigma,l,dim,dim,dim,temp_LbyD);
+  matrixMul(hypTestCoeffT,Sigma,l,dim,dim,dim,temp_LbyD);
   matrixMul(temp_LbyD,setP->hypTestCoeff,l,dim,dim,l,temp_LbyL);
   denom=setP->t_samp*temp_LbyL[0][0];
 
   //offset theta
   for(k=0;k<2;k++) {
-   offset=temp_DbyL[k][0]*sum/denom;
+   offset=temp_DbyL[k][0]/denom;
    pdTheta[k]=pdTheta[k]-offset;
   }
 }
