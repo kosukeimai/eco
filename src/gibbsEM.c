@@ -503,7 +503,7 @@ if (verbose>=2 && !setP->sem) Rprintf("E-step start\n");
 
   for(j=0; j<setP->suffstat_len; j++)
     suff[j]=suff[j]/t_samp;
-Rprintf("suff0,2,4 %5g %5g %5g",suff[0],suff[2],suff[4]);
+//Rprintf("suff0,2,4 %5g %5g %5g",suff[0],suff[2],suff[4]);
   //if(verbose>=1) Rprintf("Log liklihood %15g\n",loglik);
   suff[setP->suffstat_len]=loglik;
 
@@ -631,7 +631,7 @@ void ecoMStepNCAR(double* Suff, double* pdTheta, Param* params) {
     //CODE BLOCK C
     double Imat[2][2]; //now the T matrix (divided by n) in the paper
     Imat[0][0]=Suff[2] - Suff[0]*Suff[0];  //I_11
-    Imat[0][0]=Suff[3] - Suff[1]*Suff[1];  //I_22
+    Imat[1][1]=Suff[3] - Suff[1]*Suff[1];  //I_22
     Imat[0][1]=Suff[4] - Suff[0]*Suff[1];  //I_12
     pdTheta[4]=(Imat[0][0]-pdTheta[8]*Imat[0][1]*pow(Imat[0][0]/Imat[1][1],0.5))/(1-pdTheta[8]*pdTheta[8]); //sigma11 | 3
     pdTheta[5]=(Imat[1][1]-pdTheta[8]*Imat[0][1]*pow(Imat[1][1]/Imat[0][0],0.5))/(1-pdTheta[8]*pdTheta[8]); //sigma22 | 3
