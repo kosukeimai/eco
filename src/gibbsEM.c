@@ -605,9 +605,8 @@ void ecoMStepNCAR(double* Suff, double* pdTheta, Param* params) {
     pdTheta[5]=(Imat[1][1]-pdTheta[8]*Imat[0][1]*pow(Imat[1][1]/Imat[0][0],0.5))/(1-pdTheta[8]*pdTheta[8]); //sigma22 | 3
 
 
-
+    //CODE BLOCK D
     //pdTheta 6 and 7; beta 1 and beta2
-
     double **InvSigma=doubleMatrix(2,2);
     double **Zmat=doubleMatrix(2,2);
     double **tmp22=doubleMatrix(2,2);
@@ -622,7 +621,7 @@ void ecoMStepNCAR(double* Suff, double* pdTheta, Param* params) {
       }
     for(ii=0;ii<setP->t_samp;ii++) {
         double lx=logit(params[ii].caseP.X,"NCAR beta");
-        Zmat[0][0]=lx; Zmat[1][1]=lx;
+        for (i=0;i<2;i++) Zmat[i][i]=lx - pdTheta[0];
         matrixMul(Zmat,InvSigma,2,2,2,2,tmp22);
         matrixMul(tmp22,Zmat,2,2,2,2,tmp22);
         for (i=0;i<2;i++)
