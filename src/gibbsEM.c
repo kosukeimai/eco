@@ -544,7 +544,7 @@ void ecoMStepNCAR(double* Suff, double* pdTheta, Param* params) {
   //double[2][2] InvSigma=setP->InvSigma;
   //double[3][3] Sigma3=setP->Sigma3;   /* covariance matrix*/
   //double[3][3] InvSigma3=setP->Sigma3;   /* inverse covariance matrix*/
-  int i,verbose,t_samp;
+  int ii,i,j,verbose,t_samp;
   verbose=setP->verbose;
   t_samp=setP->t_samp;
 
@@ -604,8 +604,39 @@ void ecoMStepNCAR(double* Suff, double* pdTheta, Param* params) {
     pdTheta[4]=(Imat[0][0]-pdTheta[8]*Imat[0][1]*pow(Imat[0][0]/Imat[1][1],0.5))/(1-pdTheta[8]*pdTheta[8]); //sigma11 | 3
     pdTheta[5]=(Imat[1][1]-pdTheta[8]*Imat[0][1]*pow(Imat[1][1]/Imat[0][0],0.5))/(1-pdTheta[8]*pdTheta[8]); //sigma22 | 3
 
-    //pdTheta[6]=??; //beta1
-    //pdTheta[7]=??; //beta2
+
+
+    //pdTheta 6 and 7; beta 1 and beta2
+
+    double **InvSigma=doubleMatrix(2,2);
+    double **Zmat=doubleMatrix(2,2);
+    double **tmp22=doubleMatrix(2,2);
+    double **tmp21=doubleMatrix(2,1);
+    double **denom=doubleMatrix(2,2);
+    double **numer=doubleMatrix(2,1);
+    for (i=0;i<2;i++)
+      for(j=0;j<2;j++) {
+        InvSigma[i][j]=setP->InvSigma[i][j];
+        denom[i][j]=0; numer[i][0]=0;
+        Zmat[i][j]=0;
+      }
+    for(ii=0;ii<setP->t_samp;ii++) {
+        double lx=logit(params[ii].caseP.X,"NCAR beta");
+        Zmat[0][0]=lx; Zmat[1][1]=lx;
+        matrixMul(Zmat,InvSigma,2,2,2,2,tmp22);
+        matrixMul(tmp22,Zmat,2,2,2,2,tmp22);
+        for (i=0;i<2;i++)
+          for(j=0;j<2;j++)
+            denom[i][j]+=setP->InvSigma[i][j];
+        for (i=0;i<2;i++) tmp21[i][0]=params[ii].caseP.Wstar[i];
+        matrixMul(Zmat,InvSigma,2,2,2,2,tmp22);
+        matrixMul(tmp22,tmp21,2,2,2,1,tmp21);
+        for (i=0;i<2;i++) numer[i][0]+=tmp21[i][0];
+    }
+    dinv(denom,2,denom);
+    matrixMul(denom,numer,2,2,2,1,numer);
+    pdTheta[6]=numer[0][0]; //beta1
+    pdTheta[7]=numer[1][0]; //beta2
     //pdTheta[8] is constant
 
     //variances
