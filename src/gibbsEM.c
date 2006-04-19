@@ -626,7 +626,7 @@ void ecoMStepNCAR(double* Suff, double* pdTheta, Param* params) {
         matrixMul(tmp22,Zmat,2,2,2,2,tmp22);
         for (i=0;i<2;i++)
           for(j=0;j<2;j++)
-            denom[i][j]+=setP->InvSigma[i][j];
+            denom[i][j]+=tmp22[i][j];
         for (i=0;i<2;i++) tmp21[i][0]=params[ii].caseP.Wstar[i];
         matrixMul(Zmat,InvSigma,2,2,2,2,tmp22);
         matrixMul(tmp22,tmp21,2,2,2,1,tmp21);
