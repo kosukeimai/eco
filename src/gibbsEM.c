@@ -471,39 +471,32 @@ if (verbose>=2 && !setP->sem) Rprintf("E-step start\n");
     suff[3]+=Wstar[i][4];  /* sumE(W_i2^2|Y_i) */
     suff[4]+=Wstar[i][3];  /* sumE(W_i1*W_i2|Y_i) */
     if (setP->ncar) {
-      if (!setP->fixedRho) {
-        char ebuffer[30];
-        sprintf(ebuffer, "mstep X %i", i);
-        double lx= logit(params[i].caseP.X,ebuffer);
-        suff[5] += params[i].caseP.Wstar[0]*lx; /* sumE(W_i1*X|Y_i) */
-        suff[6] += params[i].caseP.Wstar[1]*lx; /* sumE(W_i2*X|Y_i) */
-      }
-      else {
-        suff[5] += Wstar[i][0];
-        suff[6] += Wstar[i][1];
-      }
+      char ebuffer[30];
+      sprintf(ebuffer, "mstep X %i", i);
+      double lx= logit(params[i].caseP.X,ebuffer);
+      suff[5] += params[i].caseP.Wstar[0]*lx; /* sumE(W_i1*X|Y_i) */
+      suff[6] += params[i].caseP.Wstar[1]*lx; /* sumE(W_i2*X|Y_i) */
     }
   }
 
-
-
+/*
   if (setP->ncar && setP->fixedRho) {
     for (j=0; j<5; j++) suff[j]=0;
     for (i=0; i<t_samp; i++) {
         double lx= logit(params[i].caseP.X,"mstep X ncar, fixed");
         double bxm1 = setP->pdTheta[6]*(lx - setP->pdTheta[0]) + (suff[5]/t_samp);
         double bxm2 = setP->pdTheta[7]*(lx - setP->pdTheta[0]) + (suff[6]/t_samp);
-        suff[0] += Wstar[i][0] - bxm1;
-        suff[1] += Wstar[i][1] - bxm2;
+        //suff[0] += Wstar[i][0] - bxm1;
+        //suff[1] += Wstar[i][1] - bxm2;
         suff[2] += Wstar[i][2] - 2*bxm1*Wstar[i][0] + bxm1*bxm1; //S11
         suff[3] += Wstar[i][4] - 2*bxm2*Wstar[i][1] + bxm2*bxm2; //S22
         suff[4] += Wstar[i][3] - bxm1*Wstar[i][1] - bxm2*Wstar[i][0] + bxm1*bxm2; //S12
     }
   }
-
+*/
   for(j=0; j<setP->suffstat_len; j++)
     suff[j]=suff[j]/t_samp;
-//Rprintf("suff0,2,4 %5g %5g %5g",suff[0],suff[2],suff[4]);
+//Rprintf("%5g suff0,2,4 %5g %5g %5g\n",setP->pdTheta[6],suff[0],suff[2],suff[4]);
   //if(verbose>=1) Rprintf("Log liklihood %15g\n",loglik);
   suff[setP->suffstat_len]=loglik;
 
@@ -576,6 +569,10 @@ void ecoMStepNCAR(double* Suff, double* pdTheta, Param* params) {
   double XW2=Suff[6];
 
 
+    //pdTheta[0] is const
+    pdTheta[1]=Suff[0];  /*mu1*/
+    pdTheta[2]=Suff[1];  /*mu2*/
+
 
   if (setP->hypTest>0) {
     MStepHypTest(params,pdTheta);
@@ -584,11 +581,6 @@ void ecoMStepNCAR(double* Suff, double* pdTheta, Param* params) {
 
   //for(i = 0;i<9; i++) Rprintf("%f5.2\n",pdTheta[i]);
   if (!setP->fixedRho) { //variable rho
-
-    //pdTheta[0] is const
-    pdTheta[1]=Suff[0];  /*mu1*/
-    pdTheta[2]=Suff[1];  /*mu2*/
-
 
     //set variances and correlations
     //pdTheta[3] is const
@@ -623,19 +615,16 @@ void ecoMStepNCAR(double* Suff, double* pdTheta, Param* params) {
   else { //fixed rho NEEDS WORK
     //reference: (0) mu_3, (1) mu_1, (2) mu_2, (3) sig_3, (4) sig_1 | 3, (5) sig_2 | 3, (6) beta1, (7) beta2, (8) r_12 | 3
 
-    //pdTheta[0] is const
-    pdTheta[1]=Suff[5];  /*mu1*/
-    pdTheta[2]=Suff[6];  /*mu2*/
-
 
     //CODE BLOCK C
     double Imat[2][2]; //now the T matrix (divided by n) in the paper
-    Imat[0][0]=Suff[2] - Suff[0]*Suff[0];  //I_11
-    Imat[1][1]=Suff[3] - Suff[1]*Suff[1];  //I_22
-    Imat[0][1]=Suff[4] - Suff[0]*Suff[1];  //I_12
+    Imat[0][0]=Suff[2] - 2*pdTheta[6]*(XW1 - pdTheta[0]*pdTheta[1]) - 2*pdTheta[1]*pdTheta[1] + pdTheta[6]*pdTheta[6]*pdTheta[3] + pdTheta[1]*pdTheta[1];  //I_11
+    Imat[1][1]=Suff[3] - 2*pdTheta[7]*(XW2 - pdTheta[0]*pdTheta[2]) - 2*pdTheta[2]*pdTheta[2] + pdTheta[7]*pdTheta[7]*pdTheta[3] + pdTheta[2]*pdTheta[2];  //I_22
+    Imat[0][1]=Suff[4] - pdTheta[6]*(XW2 - pdTheta[0]*pdTheta[2]) - pdTheta[7]*(XW1 - pdTheta[0]*pdTheta[1]) - 2*pdTheta[1]*pdTheta[2] +
+                        pdTheta[6]*pdTheta[7]*pdTheta[3] + pdTheta[1]*pdTheta[1];  //I_12
     pdTheta[4]=(Imat[0][0]-pdTheta[8]*Imat[0][1]*pow(Imat[0][0]/Imat[1][1],0.5))/(1-pdTheta[8]*pdTheta[8]); //sigma11 | 3
     pdTheta[5]=(Imat[1][1]-pdTheta[8]*Imat[0][1]*pow(Imat[1][1]/Imat[0][0],0.5))/(1-pdTheta[8]*pdTheta[8]); //sigma22 | 3
-
+//Rprintf("Imat %5g %5g %5g\n",Imat[0][0],Imat[1][1],Imat[0][1]);
 
     //CODE BLOCK D
     //pdTheta 6 and 7; beta 1 and beta2
