@@ -479,19 +479,18 @@ if (verbose>=2 && !setP->sem) Rprintf("E-step start\n");
         suff[6] += params[i].caseP.Wstar[1]*lx; /* sumE(W_i2*X|Y_i) */
       }
       else {
-        suff[5] = Wstar[i][0];
-        suff[6] = Wstar[i][1];
+        suff[5] += Wstar[i][0];
+        suff[6] += Wstar[i][1];
       }
     }
   }
 
 
+
   if (setP->ncar && setP->fixedRho) {
     for (j=0; j<5; j++) suff[j]=0;
     for (i=0; i<t_samp; i++) {
-        char ebuffer[30];
-        sprintf(ebuffer, "mstep X %i", i);
-        double lx= logit(params[i].caseP.X,ebuffer);
+        double lx= logit(params[i].caseP.X,"mstep X ncar, fixed");
         double bxm1 = setP->pdTheta[6]*(lx - setP->pdTheta[0]) + (suff[5]/t_samp);
         double bxm2 = setP->pdTheta[7]*(lx - setP->pdTheta[0]) + (suff[6]/t_samp);
         suff[0] += Wstar[i][0] - bxm1;
@@ -504,7 +503,7 @@ if (verbose>=2 && !setP->sem) Rprintf("E-step start\n");
 
   for(j=0; j<setP->suffstat_len; j++)
     suff[j]=suff[j]/t_samp;
-
+Rprintf("suff0,2,4 %5g %5g %5g",suff[0],suff[2],suff[4]);
   //if(verbose>=1) Rprintf("Log liklihood %15g\n",loglik);
   suff[setP->suffstat_len]=loglik;
 
