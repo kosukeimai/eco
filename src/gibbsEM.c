@@ -594,15 +594,32 @@ void ecoMStepNCAR(double* Suff, double* pdTheta, Param* params) {
 
   }
   else { //fixed rho NEEDS WORK
+    //reference: (0) mu_3, (1) mu_1, (2) mu_2, (3) sig_3, (4) sig_1 | 3, (5) sig_2 | 3, (6) beta1, (7) beta2, (8) r_12 | 3
+
+    //CODE BLOCK C
+    double Imat[2][2]; //now the T matrix in the paper
+    Imat[0][0]=Suff[2]-2*pdTheta[0]*Suff[0]+pdTheta[0]*pdTheta[0];  //I_11
+    Imat[1][1]=Suff[3]-2*Suff[1]*pdTheta[1]+pdTheta[1]*pdTheta[1];  //I_22
+    Imat[0][1]=Suff[4]-Suff[0]*pdTheta[1]-Suff[1]*pdTheta[0]+pdTheta[0]*pdTheta[1];  //I_12
+    pdTheta[4]=(Imat[0][0]-pdTheta[8]*Imat[0][1]*pow(Imat[0][0]/Imat[1][1],0.5))/(1-pdTheta[8]*pdTheta[8]); //sigma11 | 3
+    pdTheta[5]=(Imat[1][1]-pdTheta[8]*Imat[0][1]*pow(Imat[1][1]/Imat[0][0],0.5))/(1-pdTheta[8]*pdTheta[8]); //sigma22 | 3
+
+    //pdTheta[6]=??; //beta1
+    //pdTheta[7]=??; //beta2
+    //pdTheta[8] is constant
+
     //variances
-    setP->Sigma3[0][0] = pdTheta[4];
-    setP->Sigma3[1][1] = pdTheta[5];
+    //CODE BLOCK B
+    setP->Sigma3[0][0] = pdTheta[4] + pdTheta[6]*pdTheta[6]*pdTheta[3];
+    setP->Sigma3[1][1] = pdTheta[5] + pdTheta[7]*pdTheta[7]*pdTheta[3];
     setP->Sigma3[2][2] = pdTheta[3];
 
     //covariances
-    setP->Sigma3[0][1] = pdTheta[8]*sqrt(pdTheta[4]*pdTheta[5]);
-    setP->Sigma3[0][2] = pdTheta[6]*sqrt(pdTheta[4]*pdTheta[3]);
-    setP->Sigma3[1][2] = pdTheta[7]*sqrt(pdTheta[5]*pdTheta[3]);
+    setP->Sigma3[0][1] = (pdTheta[8]*sqrt(pdTheta[4]*pdTheta[5]) + pdTheta[6]*pdTheta[7]*pdTheta[3])/
+                          (sqrt((pdTheta[4] + pdTheta[6]*pdTheta[6]*pdTheta[3])*(pdTheta[5] + pdTheta[7]*pdTheta[7]*pdTheta[3])));//rho_12 unconditional
+    setP->Sigma3[0][1] = setP->Sigma3[0][1]*sqrt(setP->Sigma3[0][0]*setP->Sigma3[1][1]); //sig_12
+    setP->Sigma3[0][2] = pdTheta[6]*sqrt((pdTheta[3])/(pdTheta[4] + pdTheta[6]*pdTheta[6]*pdTheta[3]))*sqrt(setP->Sigma3[0][0]*setP->Sigma3[2][2]);
+    setP->Sigma3[1][2] = pdTheta[7]*sqrt((pdTheta[3])/(pdTheta[5] + pdTheta[7]*pdTheta[7]*pdTheta[3]))*sqrt(setP->Sigma3[1][1]*setP->Sigma3[2][2]);
 
     //symmetry
     setP->Sigma3[1][0] = setP->Sigma3[0][1];
@@ -672,41 +689,42 @@ void MStepHypTest(Param* params, double* pdTheta) {
 //NCAR initialize
 void initNCAR(Param* params, double* pdTheta) {
   setParam* setP=params[0].setP;
-  /* OLD CODE
-  setP->Sigma[0][0]= setP->Sigma3[0][0]*(1 - pdTheta[5]*pdTheta[5]);
-  setP->Sigma[0][1]= (pdTheta[4] - pdTheta[5]*pdTheta[6])/sqrt((1 - pdTheta[5]*pdTheta[5])*(1 - pdTheta[6]*pdTheta[6]));
-  setP->Sigma[1][0]= setP->Sigma[0][1];
-  setP->Sigma[1][1]= setP->Sigma3[1][1]*(1 - pdTheta[6]*pdTheta[6]);
+    int i;
+  if (!setP->fixedRho) { //variable rho
+    //reference: (0) mu_3, (1) mu_1, (2) mu_2, (3) sig_3, (4) sig_1, (5) sig_2, (6) r_13, (7) r_23, (8) r_12
 
-  dinv2D((double*)(&(setP->Sigma[0][0])), 2, (double*)(&(setP->InvSigma[0][0])),"NCAR M-step S2");
-  dinv2D((double*)(&(setP->Sigma3[0][0])), 3, (double*)(&(setP->InvSigma3[0][0])),"NCAR M-step S3");
+    setP->Sigma[0][0]= pdTheta[4]*(1 - pdTheta[6]*pdTheta[6]);
+    setP->Sigma[1][1]= pdTheta[5]*(1 - pdTheta[7]*pdTheta[7]);
+    setP->Sigma[0][1]= (pdTheta[8] - pdTheta[6]*pdTheta[7])/sqrt((1 - pdTheta[6]*pdTheta[6])*(1 - pdTheta[7]*pdTheta[7])); //correlation
+    setP->Sigma[0][1]= setP->Sigma[0][1]*sqrt(setP->Sigma[0][0]*setP->Sigma[1][1]); //covar
+    setP->Sigma[1][0]= setP->Sigma[0][1]; //symmetry
+    dinv2D((double*)(&(setP->Sigma[0][0])), 2, (double*)(&(setP->InvSigma[0][0])),"NCAR M-step S2");
+    //assign each data point the new mu (different for each point)
+    for(i=0;i<setP->t_samp;i++) {
+      params[i].caseP.mu[0]=pdTheta[1] + pdTheta[6]*sqrt(pdTheta[4]/pdTheta[3])*(logit(params[i].caseP.X,"initNCAR mu0")-pdTheta[0]);
+      params[i].caseP.mu[1]=pdTheta[2] + pdTheta[7]*sqrt(pdTheta[5]/pdTheta[3])*(logit(params[i].caseP.X,"initNCAR mu1")-pdTheta[0]);
+      if(setP->verbose>=2 && !setP->sem && (i<3 || i==422))
+      //if(setP->verbose>=2  && i<3)
+        Rprintf("mu primes for %d: %5g %5g (mu2: %5g p7: %5g p5: %5g X-T: %5g)\n",i,params[i].caseP.mu[0],params[i].caseP.mu[1],pdTheta[2],pdTheta[7],pdTheta[5],logit(params[i].caseP.X,"initNCAR mu0")-pdTheta[0]);
+    }
+  }
+  else { //fixed rho
+    //reference: (0) mu_3, (1) mu_1, (2) mu_2, (3) sig_3, (4) sig_1 | 3, (5) sig_2 | 3, (6) beta1, (7) beta2, (8) r_12 | 3
+    //CODE BLOCK A
+    setP->Sigma[0][0]= pdTheta[4];
+    setP->Sigma[1][1]= pdTheta[5];
+    setP->Sigma[0][1]= pdTheta[8]*sqrt(pdTheta[4]*pdTheta[5]); //covar
+    setP->Sigma[1][0]= setP->Sigma[0][1]; //symmetry
+    dinv2D((double*)(&(setP->Sigma[0][0])), 2, (double*)(&(setP->InvSigma[0][0])),"NCAR M-step S2");
 
-  //assign each data point the new mu (different for each point)
-  int i;
-  for(i=0;i<setP->t_samp;i++) {
-    params[i].caseP.mu[0]=pdTheta[0] + pdTheta[5]*sqrt(setP->Sigma3[0][0]/setP->Sigma3[2][2])*(logit(params[i].caseP.X,"initNCAR mu0")-setP->mu3);
-    params[i].caseP.mu[1]=pdTheta[1] + pdTheta[6]*sqrt(setP->Sigma3[1][1]/setP->Sigma3[2][2])*(logit(params[i].caseP.X,"initNCAR mu1")-setP->mu3);
-    if(setP->verbose>=2 && !setP->sem & i<3)
-      Rprintf("mu primes for %d: %5g %5g\n",i,params[i].caseP.mu[0],params[i].caseP.mu[1]);
-  }*/
+    for(i=0;i<setP->t_samp;i++) {
+      params[i].caseP.mu[0]=pdTheta[1] + pdTheta[6]*(logit(params[i].caseP.X,"initNCAR mu0")-pdTheta[0]);
+      params[i].caseP.mu[1]=pdTheta[2] + pdTheta[7]*(logit(params[i].caseP.X,"initNCAR mu1")-pdTheta[0]);
+      if(setP->verbose>=2 && !setP->sem && (i<3 || i==422))
+      //if(setP->verbose>=2  && i<3)
+        Rprintf("mu primes for %d: %5g %5g (mu2: %5g p7: %5g p5: %5g X-T: %5g)\n",i,params[i].caseP.mu[0],params[i].caseP.mu[1],pdTheta[2],pdTheta[7],pdTheta[5],logit(params[i].caseP.X,"initNCAR mu0")-pdTheta[0]);
+    }
 
-  //NEW CODE, PLEASE CHECK
-  //reference: (0) mu_3, (1) mu_1, (2) mu_2, (3) sig_3, (4) sig_1, (5) sig_2, (6) r_13, (7) r_23, (8) r_12
-
-  setP->Sigma[0][0]= pdTheta[4]*(1 - pdTheta[6]*pdTheta[6]);
-  setP->Sigma[1][1]= pdTheta[5]*(1 - pdTheta[7]*pdTheta[7]);
-  setP->Sigma[0][1]= (pdTheta[8] - pdTheta[6]*pdTheta[7])/sqrt((1 - pdTheta[6]*pdTheta[6])*(1 - pdTheta[7]*pdTheta[7])); //correlation
-  setP->Sigma[0][1]= setP->Sigma[0][1]*sqrt(setP->Sigma[0][0]*setP->Sigma[1][1]); //covar
-  setP->Sigma[1][0]= setP->Sigma[0][1]; //symmetry
-  dinv2D((double*)(&(setP->Sigma[0][0])), 2, (double*)(&(setP->InvSigma[0][0])),"NCAR M-step S2");
-  //assign each data point the new mu (different for each point)
-  int i;
-  for(i=0;i<setP->t_samp;i++) {
-    params[i].caseP.mu[0]=pdTheta[1] + pdTheta[6]*sqrt(pdTheta[4]/pdTheta[3])*(logit(params[i].caseP.X,"initNCAR mu0")-pdTheta[0]);
-    params[i].caseP.mu[1]=pdTheta[2] + pdTheta[7]*sqrt(pdTheta[5]/pdTheta[3])*(logit(params[i].caseP.X,"initNCAR mu1")-pdTheta[0]);
-    if(setP->verbose>=2 && !setP->sem && (i<3 || i==422))
-    //if(setP->verbose>=2  && i<3)
-      Rprintf("mu primes for %d: %5g %5g (mu2: %5g p7: %5g p5: %5g X-T: %5g)\n",i,params[i].caseP.mu[0],params[i].caseP.mu[1],pdTheta[2],pdTheta[7],pdTheta[5],logit(params[i].caseP.X,"initNCAR mu0")-pdTheta[0]);
   }
 }
 
