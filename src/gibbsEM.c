@@ -562,17 +562,20 @@ void ecoMStepNCAR(double* Suff, double* pdTheta, Param* params) {
     MStepHypTest(params,pdTheta);
   }
 
-  //set variances and correlations
-  //pdTheta[3] is const
-  pdTheta[4]=Suff[2]-2*Suff[0]*pdTheta[1]+pdTheta[1]*pdTheta[1]; //s11
-  pdTheta[5]=Suff[3]-2*Suff[1]*pdTheta[2]+pdTheta[2]*pdTheta[2]; //s22
-  pdTheta[6]=(XW1 - pdTheta[0]*Suff[0])/sqrt((Suff[2] - Suff[0]*Suff[0])*pdTheta[3]); //rho_13
-  pdTheta[7]=(XW2 - pdTheta[0]*Suff[1])/sqrt((Suff[3] - Suff[1]*Suff[1])*pdTheta[3]); //rho_23
-  pdTheta[8]=Suff[4]-Suff[0]*pdTheta[2]-Suff[1]*pdTheta[1]+pdTheta[1]*pdTheta[2]; //sigma12
-  pdTheta[8]=pdTheta[8]/sqrt(pdTheta[4]*pdTheta[5]); //rho_12
 
   //for(i = 0;i<9; i++) Rprintf("%f5.2\n",pdTheta[i]);
   if (!setP->fixedRho) { //variable rho
+
+    //set variances and correlations
+    //pdTheta[3] is const
+    pdTheta[4]=Suff[2]-2*Suff[0]*pdTheta[1]+pdTheta[1]*pdTheta[1]; //s11
+    pdTheta[5]=Suff[3]-2*Suff[1]*pdTheta[2]+pdTheta[2]*pdTheta[2]; //s22
+    pdTheta[6]=(XW1 - pdTheta[0]*Suff[0])/sqrt((Suff[2] - Suff[0]*Suff[0])*pdTheta[3]); //rho_13
+    pdTheta[7]=(XW2 - pdTheta[0]*Suff[1])/sqrt((Suff[3] - Suff[1]*Suff[1])*pdTheta[3]); //rho_23
+    pdTheta[8]=Suff[4]-Suff[0]*pdTheta[2]-Suff[1]*pdTheta[1]+pdTheta[1]*pdTheta[2]; //sigma12
+    pdTheta[8]=pdTheta[8]/sqrt(pdTheta[4]*pdTheta[5]); //rho_12
+
+
     //reference: (0) mu_3, (1) mu_1, (2) mu_2, (3) sig_3, (4) sig_1, (5) sig_2, (6) r_13, (7) r_23, (8) r_12
     //variances
     setP->Sigma3[0][0] = pdTheta[4];
