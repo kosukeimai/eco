@@ -37,8 +37,8 @@ void setHistory(double* t_pdTheta, double loglik, int iter,setParam* setP,double
 int closeEnough(double* pdTheta, double* pdTheta_old, int len, double maxerr);
 int semDoneCheck(setParam* setP);
 void gridEStep(Param* params, int n_samp, int s_samp, int x1_samp, int x0_samp, double* suff, int verbose, double minW1, double maxW1);
-void transformTheta(double* pdTheta, double* t_pdTheta, int len);
-void untransformTheta(double* t_pdTheta,double* pdTheta, int len);
+void transformTheta(double* pdTheta, double* t_pdTheta, int len, setParam* setP);
+void untransformTheta(double* t_pdTheta,double* pdTheta, int len, setParam* setP);
 
 void cEMeco(
 	    /*data input */
@@ -161,7 +161,7 @@ while (main_loop<=*iteration_max && (start==1 ||
   setP.iter=main_loop;
   if (start) {
     initTheta(pdTheta_in,params,pdTheta);
-    transformTheta(pdTheta,t_pdTheta,param_len);
+    transformTheta(pdTheta,t_pdTheta,param_len, &setP);
     setHistory(t_pdTheta,0,0,(setParam*)&setP,history_full);
     if (!setP.ncar) {
       for(i=0;i<t_samp;i++) {
@@ -192,7 +192,7 @@ while (main_loop<=*iteration_max && (start==1 ||
   }
   //keep the old theta around for comaprison
   for(i=0;i<param_len;i++) pdTheta_old[i]=pdTheta[i];
-  transformTheta(pdTheta_old,t_pdTheta_old,param_len);
+  transformTheta(pdTheta_old,t_pdTheta_old,param_len,&setP);
 
 
   ecoEStep(params, Suff);
@@ -200,7 +200,7 @@ while (main_loop<=*iteration_max && (start==1 ||
     ecoMStep(Suff,pdTheta,params);
   else
     ecoMStepNCAR(Suff,pdTheta,params);
-  transformTheta(pdTheta,t_pdTheta,param_len);
+  transformTheta(pdTheta,t_pdTheta,param_len,&setP);
   //char ch;
   //scanf(" %c", &ch );
 
@@ -471,11 +471,34 @@ if (verbose>=2 && !setP->sem) Rprintf("E-step start\n");
     suff[3]+=Wstar[i][4];  /* sumE(W_i2^2|Y_i) */
     suff[4]+=Wstar[i][3];  /* sumE(W_i1*W_i2|Y_i) */
     if (setP->ncar) {
-      char ebuffer[30];
-      sprintf(ebuffer, "mstep X %i", i);
-      double lx= logit(params[i].caseP.X,ebuffer);
-      suff[5] += params[i].caseP.Wstar[0]*lx; /* sumE(W_i1*X|Y_i) */
-      suff[6] += params[i].caseP.Wstar[1]*lx; /* sumE(W_i2*X|Y_i) */
+      if (!setP->fixedRho) {
+        char ebuffer[30];
+        sprintf(ebuffer, "mstep X %i", i);
+        double lx= logit(params[i].caseP.X,ebuffer);
+        suff[5] += params[i].caseP.Wstar[0]*lx; /* sumE(W_i1*X|Y_i) */
+        suff[6] += params[i].caseP.Wstar[1]*lx; /* sumE(W_i2*X|Y_i) */
+      }
+      else {
+        suff[5] = Wstar[i][0];
+        suff[6] = Wstar[i][1];
+      }
+    }
+  }
+
+
+  if (setP->ncar && setP->fixedRho) {
+    for (j=0; j<5; j++) suff[j]=0;
+    for (i=0; i<t_samp; i++) {
+        char ebuffer[30];
+        sprintf(ebuffer, "mstep X %i", i);
+        double lx= logit(params[i].caseP.X,ebuffer);
+        double bxm1 = setP->pdTheta[6]*(lx - setP->pdTheta[0]) + (suff[5]/t_samp);
+        double bxm2 = setP->pdTheta[7]*(lx - setP->pdTheta[0]) + (suff[6]/t_samp);
+        suff[0] += Wstar[i][0] - bxm1;
+        suff[1] += Wstar[i][1] - bxm2;
+        suff[2] += Wstar[i][2] - 2*bxm1*Wstar[i][0] + bxm1*bxm1; //S11
+        suff[3] += Wstar[i][4] - 2*bxm2*Wstar[i][1] + bxm2*bxm2; //S22
+        suff[4] += Wstar[i][3] - bxm1*Wstar[i][1] - bxm2*Wstar[i][0] + bxm1*bxm2; //S12
     }
   }
 
@@ -554,9 +577,6 @@ void ecoMStepNCAR(double* Suff, double* pdTheta, Param* params) {
   double XW2=Suff[6];
 
 
-  //pdTheta[0] is const
-  pdTheta[1]=Suff[0];  /*mu1*/
-  pdTheta[2]=Suff[1];  /*mu2*/
 
   if (setP->hypTest>0) {
     MStepHypTest(params,pdTheta);
@@ -565,6 +585,11 @@ void ecoMStepNCAR(double* Suff, double* pdTheta, Param* params) {
 
   //for(i = 0;i<9; i++) Rprintf("%f5.2\n",pdTheta[i]);
   if (!setP->fixedRho) { //variable rho
+
+    //pdTheta[0] is const
+    pdTheta[1]=Suff[0];  /*mu1*/
+    pdTheta[2]=Suff[1];  /*mu2*/
+
 
     //set variances and correlations
     //pdTheta[3] is const
@@ -599,11 +624,16 @@ void ecoMStepNCAR(double* Suff, double* pdTheta, Param* params) {
   else { //fixed rho NEEDS WORK
     //reference: (0) mu_3, (1) mu_1, (2) mu_2, (3) sig_3, (4) sig_1 | 3, (5) sig_2 | 3, (6) beta1, (7) beta2, (8) r_12 | 3
 
+    //pdTheta[0] is const
+    pdTheta[1]=Suff[5];  /*mu1*/
+    pdTheta[2]=Suff[6];  /*mu2*/
+
+
     //CODE BLOCK C
-    double Imat[2][2]; //now the T matrix in the paper
-    Imat[0][0]=Suff[2]-2*pdTheta[1]*Suff[0]+pdTheta[1]*pdTheta[1];  //I_11
-    Imat[1][1]=Suff[3]-2*Suff[1]*pdTheta[2]+pdTheta[2]*pdTheta[2];  //I_22
-    Imat[0][1]=Suff[4]-Suff[0]*pdTheta[2]-Suff[1]*pdTheta[1]+pdTheta[1]*pdTheta[2];  //I_12
+    double Imat[2][2]; //now the T matrix (divided by n) in the paper
+    Imat[0][0]=Suff[2] - Suff[0]*Suff[0];  //I_11
+    Imat[0][0]=Suff[3] - Suff[1]*Suff[1];  //I_22
+    Imat[0][1]=Suff[4] - Suff[0]*Suff[1];  //I_12
     pdTheta[4]=(Imat[0][0]-pdTheta[8]*Imat[0][1]*pow(Imat[0][0]/Imat[1][1],0.5))/(1-pdTheta[8]*pdTheta[8]); //sigma11 | 3
     pdTheta[5]=(Imat[1][1]-pdTheta[8]*Imat[0][1]*pow(Imat[1][1]/Imat[0][0],0.5))/(1-pdTheta[8]*pdTheta[8]); //sigma22 | 3
 
@@ -630,7 +660,7 @@ void ecoMStepNCAR(double* Suff, double* pdTheta, Param* params) {
         for (i=0;i<2;i++)
           for(j=0;j<2;j++)
             denom[i][j]+=tmp22[i][j];
-        for (i=0;i<2;i++) tmp21[i][0]=params[ii].caseP.Wstar[i];
+        for (i=0;i<2;i++) tmp21[i][0]=(params[ii].caseP.Wstar[i] - pdTheta[i+1]); //Wtilde
         matrixMul(Zmat,InvSigma,2,2,2,2,tmp22);
         matrixMul(tmp22,tmp21,2,2,2,1,tmp21);
         for (i=0;i<2;i++) numer[i][0]+=tmp21[i][0];
@@ -875,9 +905,9 @@ void initNCAR(Param* params, double* pdTheta) {
           ecoMStepNCAR(SuffSem,phiTp1I,params_sem);
 
         //step 3: create new R matrix row
-        transformTheta(phiTp1I,t_phiTp1I,setP_sem.param_len);
-        transformTheta(optTheta,t_optTheta,setP_sem.param_len);
-        transformTheta(phiTI,t_phiTI,setP_sem.param_len);
+        transformTheta(phiTp1I,t_phiTp1I,setP_sem.param_len,&setP_sem);
+        transformTheta(optTheta,t_optTheta,setP_sem.param_len,&setP_sem);
+        transformTheta(phiTI,t_phiTI,setP_sem.param_len,&setP_sem);
         /*if (verbose>=2) {
           Rprintf("T+1:");
           for (j=0;j<param_len;j++) Rprintf(" %5g ", phiTp1I[j]);
@@ -991,7 +1021,7 @@ setParam* setP=params[0].setP;
  * Input: pdTheta
  * Mutates: t_pdTheta
  */
-void transformTheta(double* pdTheta, double* t_pdTheta, int len) {
+void transformTheta(double* pdTheta, double* t_pdTheta, int len, setParam* setP) {
   if (len<=5) {
     t_pdTheta[0]=pdTheta[0];
     t_pdTheta[1]=pdTheta[1];
@@ -1006,13 +1036,19 @@ void transformTheta(double* pdTheta, double* t_pdTheta, int len) {
     t_pdTheta[3]=log(pdTheta[3]);
     t_pdTheta[4]=log(pdTheta[4]);
     t_pdTheta[5]=log(pdTheta[5]);
-    t_pdTheta[6]=.5*(log(1+pdTheta[6])-log(1-pdTheta[6]));
-    t_pdTheta[7]=.5*(log(1+pdTheta[7])-log(1-pdTheta[7]));
+    if (!setP->fixedRho) {
+      t_pdTheta[6]=.5*(log(1+pdTheta[6])-log(1-pdTheta[6]));
+      t_pdTheta[7]=.5*(log(1+pdTheta[7])-log(1-pdTheta[7]));
+    }
+    else {
+      t_pdTheta[6]=pdTheta[6];
+      t_pdTheta[7]=pdTheta[7];
+    }
     t_pdTheta[8]=.5*(log(1+pdTheta[8])-log(1-pdTheta[8]));
   }
 }
 
-void untransformTheta(double* t_pdTheta,double* pdTheta, int len) {
+void untransformTheta(double* t_pdTheta,double* pdTheta, int len, setParam* setP) {
   if (len<=5) {
     pdTheta[0]=t_pdTheta[0];
     pdTheta[1]=t_pdTheta[1];
@@ -1027,8 +1063,14 @@ void untransformTheta(double* t_pdTheta,double* pdTheta, int len) {
     pdTheta[3]=exp(t_pdTheta[3]);
     pdTheta[4]=exp(t_pdTheta[4]);
     pdTheta[5]=exp(t_pdTheta[5]);
-    pdTheta[6]=(exp(2*t_pdTheta[6])-1)/(exp(2*t_pdTheta[6])+1);
-    pdTheta[7]=(exp(2*t_pdTheta[7])-1)/(exp(2*t_pdTheta[7])+1);
+    if (!setP->fixedRho) {
+      pdTheta[6]=(exp(2*t_pdTheta[6])-1)/(exp(2*t_pdTheta[6])+1);
+      pdTheta[7]=(exp(2*t_pdTheta[7])-1)/(exp(2*t_pdTheta[7])+1);
+    }
+    else {
+      pdTheta[6]=t_pdTheta[6];
+      pdTheta[7]=t_pdTheta[7];
+    }
     pdTheta[8]=(exp(2*t_pdTheta[8])-1)/(exp(2*t_pdTheta[8])+1);
   }
 }
