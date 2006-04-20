@@ -525,6 +525,7 @@ if (setP->hypTest>0) {
     pdTheta[4]=pdTheta[4]/sqrt(pdTheta[2]*pdTheta[3]); /*rho*/
   }
   else { //fixed rho
+
     double Imat[2][2];
     Imat[0][0]=Suff[2]-2*pdTheta[0]*Suff[0]+pdTheta[0]*pdTheta[0];  //I_11
     Imat[1][1]=Suff[3]-2*Suff[1]*pdTheta[1]+pdTheta[1]*pdTheta[1];  //I_22
@@ -621,7 +622,7 @@ void ecoMStepNCAR(double* Suff, double* pdTheta, Param* params) {
     Imat[0][0]=Suff[2] - 2*pdTheta[6]*(XW1 - pdTheta[0]*pdTheta[1]) - 2*pdTheta[1]*pdTheta[1] + pdTheta[6]*pdTheta[6]*pdTheta[3] + pdTheta[1]*pdTheta[1];  //I_11
     Imat[1][1]=Suff[3] - 2*pdTheta[7]*(XW2 - pdTheta[0]*pdTheta[2]) - 2*pdTheta[2]*pdTheta[2] + pdTheta[7]*pdTheta[7]*pdTheta[3] + pdTheta[2]*pdTheta[2];  //I_22
     Imat[0][1]=Suff[4] - pdTheta[6]*(XW2 - pdTheta[0]*pdTheta[2]) - pdTheta[7]*(XW1 - pdTheta[0]*pdTheta[1]) - 2*pdTheta[1]*pdTheta[2] +
-                        pdTheta[6]*pdTheta[7]*pdTheta[3] + pdTheta[1]*pdTheta[1];  //I_12
+                        pdTheta[6]*pdTheta[7]*pdTheta[3] + pdTheta[1]*pdTheta[2];  //I_12
     pdTheta[4]=(Imat[0][0]-pdTheta[8]*Imat[0][1]*pow(Imat[0][0]/Imat[1][1],0.5))/(1-pdTheta[8]*pdTheta[8]); //sigma11 | 3
     pdTheta[5]=(Imat[1][1]-pdTheta[8]*Imat[0][1]*pow(Imat[1][1]/Imat[0][0],0.5))/(1-pdTheta[8]*pdTheta[8]); //sigma22 | 3
 //Rprintf("Imat %5g %5g %5g\n",Imat[0][0],Imat[1][1],Imat[0][1]);
