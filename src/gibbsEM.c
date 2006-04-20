@@ -959,6 +959,8 @@ setParam* setP=params[0].setP;
     params[i].caseP.Y=params[i].caseP.data[1];
     //fix X edge cases
     params[i].caseP.X=(params[i].caseP.X >= 1) ? .9999 : ((params[i].caseP.X <= 0) ? 0.0001 : params[i].caseP.X);
+    //fix Y edge cases
+    params[i].caseP.Y=(params[i].caseP.Y >= 1) ? .9999 : ((params[i].caseP.Y <= 0) ? 0.0001 : params[i].caseP.Y);
   }
 
   /*read homeogenous areas information */
