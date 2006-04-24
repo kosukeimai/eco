@@ -570,18 +570,16 @@ void ecoMStepNCAR(double* Suff, double* pdTheta, Param* params) {
   double XW2=Suff[6];
 
 
+
+  //for(i = 0;i<9; i++) Rprintf("%f5.2\n",pdTheta[i]);
+  if (!setP->fixedRho) { //variable rho
+
+
     //pdTheta[0] is const
     pdTheta[1]=Suff[0];  /*mu1*/
     pdTheta[2]=Suff[1];  /*mu2*/
 
 
-  if (setP->hypTest>0) {
-    MStepHypTest(params,pdTheta);
-  }
-
-
-  //for(i = 0;i<9; i++) Rprintf("%f5.2\n",pdTheta[i]);
-  if (!setP->fixedRho) { //variable rho
 
     //set variances and correlations
     //pdTheta[3] is const
@@ -616,49 +614,83 @@ void ecoMStepNCAR(double* Suff, double* pdTheta, Param* params) {
   else { //fixed rho NEEDS WORK
     //reference: (0) mu_3, (1) mu_1, (2) mu_2, (3) sig_3, (4) sig_1 | 3, (5) sig_2 | 3, (6) beta1, (7) beta2, (8) r_12 | 3
 
-
-    //CODE BLOCK C
-    double Imat[2][2]; //now the T matrix (divided by n) in the paper
-    Imat[0][0]=Suff[2] - 2*pdTheta[6]*(XW1 - pdTheta[0]*pdTheta[1]) - 2*pdTheta[1]*pdTheta[1] + pdTheta[6]*pdTheta[6]*pdTheta[3] + pdTheta[1]*pdTheta[1];  //I_11
-    Imat[1][1]=Suff[3] - 2*pdTheta[7]*(XW2 - pdTheta[0]*pdTheta[2]) - 2*pdTheta[2]*pdTheta[2] + pdTheta[7]*pdTheta[7]*pdTheta[3] + pdTheta[2]*pdTheta[2];  //I_22
-    Imat[0][1]=Suff[4] - pdTheta[6]*(XW2 - pdTheta[0]*pdTheta[2]) - pdTheta[7]*(XW1 - pdTheta[0]*pdTheta[1]) - 2*pdTheta[1]*pdTheta[2] +
-                        pdTheta[6]*pdTheta[7]*pdTheta[3] + pdTheta[1]*pdTheta[2];  //I_12
-    pdTheta[4]=(Imat[0][0]-pdTheta[8]*Imat[0][1]*pow(Imat[0][0]/Imat[1][1],0.5))/(1-pdTheta[8]*pdTheta[8]); //sigma11 | 3
-    pdTheta[5]=(Imat[1][1]-pdTheta[8]*Imat[0][1]*pow(Imat[1][1]/Imat[0][0],0.5))/(1-pdTheta[8]*pdTheta[8]); //sigma22 | 3
-//Rprintf("Imat %5g %5g %5g\n",Imat[0][0],Imat[1][1],Imat[0][1]);
-
     //CODE BLOCK D
-    //pdTheta 6 and 7; beta 1 and beta2
+    //compute beta based on previous sigma
+    //beta is mu1,beta1,mu2,beta, which are pdTheta 1,2,6,7
     double **InvSigma=doubleMatrix(2,2);
-    double **Zmat=doubleMatrix(2,2);
-    double **tmp22=doubleMatrix(2,2);
+    double **Zmat=doubleMatrix(4,2);
+    double **Zmat_t=doubleMatrix(2,4);
+    double **tmp41=doubleMatrix(4,1);
+    double **tmp42=doubleMatrix(4,2);
+    double **tmp44=doubleMatrix(4,4);
     double **tmp21=doubleMatrix(2,1);
-    double **denom=doubleMatrix(2,2);
-    double **numer=doubleMatrix(2,1);
-    for (i=0;i<2;i++)
-      for(j=0;j<2;j++) {
-        InvSigma[i][j]=setP->InvSigma[i][j];
+    double **denom=doubleMatrix(4,4);
+    double **numer=doubleMatrix(4,1);
+    for (i=0;i<4;i++)
+      for(j=0;j<4;j++) {
+        if (j<2) {
+          if (i<2) InvSigma[i][j]=setP->InvSigma[i][j];
+          Zmat[i][j]=0; Zmat_t[j][i]=0;
+        }
         denom[i][j]=0; numer[i][0]=0;
-        Zmat[i][j]=0;
       }
+//Rprintf("InvSigma %5g %5g %5g\n",InvSigma[0][0],InvSigma[1][1],InvSigma[0][1]);
     for(ii=0;ii<setP->t_samp;ii++) {
         double lx=logit(params[ii].caseP.X,"NCAR beta");
-        for (i=0;i<2;i++) Zmat[i][i]=lx - pdTheta[0];
-        matrixMul(Zmat,InvSigma,2,2,2,2,tmp22);
-        matrixMul(tmp22,Zmat,2,2,2,2,tmp22);
-        for (i=0;i<2;i++)
-          for(j=0;j<2;j++)
-            denom[i][j]+=tmp22[i][j];
-        for (i=0;i<2;i++) tmp21[i][0]=(params[ii].caseP.Wstar[i] - pdTheta[i+1]); //Wtilde
-        matrixMul(Zmat,InvSigma,2,2,2,2,tmp22);
-        matrixMul(tmp22,tmp21,2,2,2,1,tmp21);
-        for (i=0;i<2;i++) numer[i][0]+=tmp21[i][0];
+        for(j=0;j<2;j++) {
+          Zmat_t[j][j*2+1]=lx - pdTheta[0];
+          Zmat_t[j][j*2]=1;
+          Zmat[j*2+1][j]=lx - pdTheta[0];
+          Zmat[j*2][j]=1;
+        }
+        matrixMul(Zmat,InvSigma,4,2,2,2,tmp42);
+        matrixMul(tmp42,Zmat_t,4,2,2,4,tmp44);
+        for (i=0;i<4;i++)
+          for(j=0;j<4;j++)
+            denom[i][j]+=tmp44[i][j];
+        //for (i=0;i<2;i++) tmp21[i][0]=(params[ii].caseP.Wstar[i] - pdTheta[i+1]); //Wtilde ??
+        for (i=0;i<2;i++) tmp21[i][0]=params[ii].caseP.Wstar[i]; //Wstar
+        //matrixMul(Zmat,InvSigma,4,2,2,2,tmp42);  //no need to repeat calculation
+        matrixMul(tmp42,tmp21,4,2,2,1,tmp41);
+        for (i=0;i<4;i++) numer[i][0]+=tmp41[i][0];
     }
-    dinv(denom,2,denom);
-    matrixMul(denom,numer,2,2,2,1,numer);
-    pdTheta[6]=numer[0][0]; //beta1
-    pdTheta[7]=numer[1][0]; //beta2
+//Rprintf("Denom %5g %5g %5g %5g\n",denom[0][0],denom[0][1],denom[0][2],denom[0][3]);
+//Rprintf("Denom %5g %5g %5g %5g\n",denom[2][0],denom[2][1],denom[2][2],denom[2][3]);
+    dinv(denom,4,denom);
+//Rprintf("Denomi %5g %5g %5g %5g\n",denom[0][0],denom[0][1],denom[0][2],denom[0][3]);
+//Rprintf("Denomi %5g %5g %5g %5g\n",denom[2][0],denom[2][1],denom[2][2],denom[2][3]);
+//Rprintf("Numer %5g %5g %5g %5g\n",numer[0][0],numer[1][0],numer[2][0],numer[3][0]);
+    matrixMul(denom,numer,4,4,4,1,numer);
+//Rprintf("Numer %5g %5g %5g\n",numer[0][0],numer[1][0],numer[2][0]);
+    pdTheta[1]=numer[0][0]; //mu1
+    pdTheta[6]=numer[1][0]; //beta1
+    pdTheta[2]=numer[2][0]; //mu2
+    pdTheta[7]=numer[3][0]; //beta2
     //pdTheta[8] is constant
+Rprintf("Compare Suff1 %5g to pdT1 %5g \n",Suff[0],pdTheta[1]);
+Rprintf("Compare Suff2 %5g to pdT2 %5g \n",Suff[1],pdTheta[2]);
+
+    if (setP->hypTest>0) {
+      MStepHypTest(params,pdTheta);
+    }
+
+
+
+    //CODE BLOCK C
+    //Compute sigma conditional on beta
+    double Smat[2][2]; //the S matrix (divided by n) in the paper
+    double Tmat[2][2]; //the T matrix (divided by n) in the paper
+    double S1=Suff[0] - pdTheta[1]; //S_1 / n
+    double S2=Suff[1] - pdTheta[2]; //S_2 / n
+    Smat[0][0]=Suff[2] - 2*pdTheta[6]*(XW1 - pdTheta[0]*Suff[0]) - 2*pdTheta[1]*Suff[0] + pdTheta[6]*pdTheta[6]*pdTheta[3] + pdTheta[1]*pdTheta[1];  //S_11
+    Smat[1][1]=Suff[3] - 2*pdTheta[7]*(XW2 - pdTheta[0]*Suff[1]) - 2*pdTheta[2]*Suff[1] + pdTheta[7]*pdTheta[7]*pdTheta[3] + pdTheta[2]*pdTheta[2];  //S_22
+    Smat[0][1]=Suff[4] - pdTheta[6]*(XW2 - pdTheta[0]*Suff[1]) - pdTheta[1]*Suff[1] - pdTheta[7]*(XW1 - pdTheta[0]*Suff[0]) - pdTheta[2]*Suff[0] +
+                        pdTheta[6]*pdTheta[7]*pdTheta[3] + pdTheta[1]*pdTheta[2];  //S_12
+    Tmat[0][0]=Smat[0][0] - S1*S1;
+    Tmat[1][1]=Smat[1][1] - S2*S2;
+    Tmat[0][1]=Smat[0][1] - S1*S2;
+    pdTheta[4]=(Tmat[0][0]-pdTheta[8]*Tmat[0][1]*pow(Tmat[0][0]/Tmat[1][1],0.5))/(1-pdTheta[8]*pdTheta[8]); //sigma11 | 3
+    pdTheta[5]=(Tmat[1][1]-pdTheta[8]*Tmat[0][1]*pow(Tmat[1][1]/Tmat[0][0],0.5))/(1-pdTheta[8]*pdTheta[8]); //sigma22 | 3
 
     //variances
     //CODE BLOCK B
