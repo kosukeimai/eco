@@ -5,11 +5,12 @@
   Copyright: GPL version 2 or later.
 *******************************************************************/
 
+#include <string.h>
 #include <stddef.h>
 #include <stdio.h>      
 #include <math.h>
 #include <Rmath.h>
-#include <R_ext/Utils.h>
+#include <R.h>
 #include "vector.h"
 #include "subroutines.h"
 #include "rand.h"
@@ -44,7 +45,7 @@ void preBaseX(
   int progress = 1, itempP = ftrunc((double) n_draw/10);
 
   /* get random seed */
-  GetRNGstate();
+  void GetRNGstate();
   
   for(main_loop=0; main_loop<n_draw; main_loop++){
     Sigma[0][0] = pdSigma[itempS]-pdSigma[itempS+2]*pdSigma[itempS+2]/pdSigma[itempS+5];
@@ -64,16 +65,16 @@ void preBaseX(
       if (itempP == main_loop) {
         Rprintf("%3d percent done.\n", progress*10);
         itempP+=ftrunc((double) n_draw/10); progress++;
-        R_FlushConsole();
+        void R_FlushConsole();
       }
-    R_CheckUserInterrupt();
+    void R_CheckUserInterrupt(void);
   }
   
   if(*verbose)
     Rprintf("100 percent done.\n");
 
   /** write out the random seed **/
-  PutRNGstate();
+  void PutRNGstate();
 
   /* Freeing the memory */
   free(mu);

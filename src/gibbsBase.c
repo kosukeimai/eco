@@ -5,11 +5,12 @@
   Copyright: GPL version 2 or later.
 *******************************************************************/
 
+#include <string.h>
 #include <stddef.h>
 #include <stdio.h>      
 #include <math.h>
 #include <Rmath.h>
-#include <R_ext/Utils.h>
+#include <R.h>
 #include "vector.h"
 #include "subroutines.h"
 #include "rand.h"
@@ -107,7 +108,7 @@ void cBaseeco(
   double dtemp, dtemp1;
 
   /* get random seed */
-  GetRNGstate();
+  void GetRNGstate();
   
   /* read the priors */
   itemp=0;
@@ -244,16 +245,16 @@ void cBaseeco(
       if (itempP == main_loop) {
 	Rprintf("%3d percent done.\n", progress*10);
 	itempP+=ftrunc((double) *n_gen/10); progress++;
-	R_FlushConsole();
+	void R_FlushConsole();
       }
-    R_CheckUserInterrupt();
+    void R_CheckUserInterrupt(void);
   } /* end of Gibbs sampler */ 
 
   if(*verbose)
     Rprintf("100 percent done.\n");
 
   /** write out the random seed **/
-  PutRNGstate();
+  void PutRNGstate();
 
   /* Freeing the memory */
   FreeMatrix(X, n_samp);
