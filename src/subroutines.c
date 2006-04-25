@@ -11,6 +11,7 @@
 #include <math.h>
 #include <Rmath.h>
 #include <R.h>
+#include <R_ext/Lapack.h>
 #include "vector.h"
 #include "rand.h"
 #include "subroutines.h"
