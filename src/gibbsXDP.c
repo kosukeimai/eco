@@ -11,6 +11,7 @@
 #include <math.h>
 #include <Rmath.h>
 #include <R.h>
+#include <Rinterface.h>
 #include "vector.h"
 #include "subroutines.h"
 #include "rand.h"
@@ -143,7 +144,7 @@ void cDPecoX(
   double **onedata = doubleMatrix(1, (n_dim+1));
 
   /* get random seed */
-  void GetRNGstate();
+  GetRNGstate();
 
   /* read priors under G0*/
   itemp=0;
@@ -400,7 +401,7 @@ void cDPecoX(
   }
 
   /*store Gibbs draws after burn_in */
-  void R_CheckUserInterrupt(void);
+  R_CheckUserInterrupt();
   if (main_loop>=*burn_in) {
     itempC++;
     if (itempC==nth){
@@ -431,7 +432,7 @@ void cDPecoX(
     if (itempP == main_loop) {
       Rprintf("%3d percent done.\n", progress*10);
       itempP+=ftrunc((double) *n_gen/10); progress++;
-      void R_FlushConsole();
+      R_FlushConsole();
     }
   } /*end of MCMC for DP*/
 
@@ -439,7 +440,7 @@ if (*verbose)
      Rprintf("100 percent done.\n");
      
      /** write out the random seed **/
-     void PutRNGstate();
+     PutRNGstate();
     
     /* Freeing the memory */
      FreeMatrix(S0, n_dim+1);  

@@ -5,11 +5,13 @@
   Copyright: GPL version 2 or later.
 *******************************************************************/
 
+#include <string.h>
 #include <stddef.h>
 #include <stdio.h>      
 #include <math.h>
 #include <Rmath.h>
 #include <R.h>
+#include <Rinterface.h>
 #include "vector.h"
 #include "subroutines.h"
 #include "rand.h"
@@ -45,7 +47,7 @@ void preDPX(
   int progress = 1, itempP = ftrunc((double) n_draw/10);
 
   /* get random seed */
-  void GetRNGstate();
+  GetRNGstate();
   
   for(main_loop=0; main_loop<n_draw; main_loop++){
     for(i=0; i<n_samp; i++) {
@@ -65,16 +67,16 @@ void preDPX(
       if (itempP == main_loop) {
         Rprintf("%3d percent done.\n", progress*10);
         itempP+=ftrunc((double) n_draw/10); progress++;
-        void R_FlushConsole();
+        R_FlushConsole();
       }
-    void R_CheckUserInterrupt(void);
+    R_CheckUserInterrupt();
   }
   
   if(*verbose)
     Rprintf("100 percent done.\n");
 
   /** write out the random seed **/
-  void PutRNGstate();
+  PutRNGstate();
 
   /* Freeing the memory */
   free(mu);

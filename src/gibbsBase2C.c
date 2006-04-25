@@ -9,7 +9,7 @@
 #include <stdio.h>      
 #include <math.h>
 #include <Rmath.h>
-#include <R_ext/Utils.h>
+#include <Rinterface.h>
 #include <R.h>
 #include "vector.h"
 #include "subroutines.h"

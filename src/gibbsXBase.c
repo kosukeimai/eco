@@ -11,6 +11,7 @@
 #include <math.h>
 #include <Rmath.h>
 #include <R.h>
+#include <Rinterface.h>
 #include "vector.h"
 #include "subroutines.h"
 #include "rand.h"
@@ -115,7 +116,7 @@ void cBaseecoX(
   double dtemp, dtemp1;
   
   /* get random seed */
-  void GetRNGstate();
+  GetRNGstate();
   
   /* priors */
   itemp = 0;
@@ -249,7 +250,7 @@ void cBaseecoX(
     NIWupdate(Wstar, mu, Sigma, InvSigma, mu0, tau0, nu0, S0, t_samp, n_dim+1);
     
     /*store Gibbs draw after burn-in and every nth draws */      
-    void R_CheckUserInterrupt(void);
+    R_CheckUserInterrupt();
     if (main_loop>=*burn_in){
       itempC++;
       if (itempC==nth){
@@ -275,7 +276,7 @@ void cBaseecoX(
       if (itempP == main_loop) {
 	Rprintf("%3d percent done.\n", progress*10);
 	itempP+=ftrunc((double) *n_gen/10); progress++;
-	void R_FlushConsole();
+	R_FlushConsole();
       }
   } /*end of MCMC for normal */ 
   
@@ -284,7 +285,7 @@ void cBaseecoX(
 
 
   /** write out the random seed **/
-  void PutRNGstate();
+  PutRNGstate();
 
   /* Freeing the memory */
   FreeMatrix(X, n_samp);

@@ -11,6 +11,7 @@
 #include <math.h>
 #include <Rmath.h>
 #include <R.h>
+#include <Rinterface.h>
 #include "vector.h"
 #include "subroutines.h"
 #include "rand.h"
@@ -108,7 +109,7 @@ void cBaseeco(
   double dtemp, dtemp1;
 
   /* get random seed */
-  void GetRNGstate();
+  GetRNGstate();
   
   /* read the priors */
   itemp=0;
@@ -245,16 +246,16 @@ void cBaseeco(
       if (itempP == main_loop) {
 	Rprintf("%3d percent done.\n", progress*10);
 	itempP+=ftrunc((double) *n_gen/10); progress++;
-	void R_FlushConsole();
+	R_FlushConsole();
       }
-    void R_CheckUserInterrupt(void);
+    R_CheckUserInterrupt();
   } /* end of Gibbs sampler */ 
 
   if(*verbose)
     Rprintf("100 percent done.\n");
 
   /** write out the random seed **/
-  void PutRNGstate();
+  PutRNGstate();
 
   /* Freeing the memory */
   FreeMatrix(X, n_samp);

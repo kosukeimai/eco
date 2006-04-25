@@ -11,6 +11,7 @@
 #include <math.h>
 #include <Rmath.h>
 #include <R.h>
+#include <Rinterface.h>
 #include "vector.h"
 #include "subroutines.h"
 #include "rand.h"
@@ -140,7 +141,7 @@ void cBaseecoZ(
   double **mtemp2 = doubleMatrix(n_cov, n_cov);
 
   /* get random seed */
-  void GetRNGstate();
+  GetRNGstate();
 
   /**read prior information*/
   itemp=0;
@@ -352,7 +353,7 @@ void cBaseecoZ(
     dinv(InvSigma, n_dim, Sigma);
     
     /*store Gibbs draw after burn-in and every nth draws */      
-    void R_CheckUserInterrupt(void);
+    R_CheckUserInterrupt();
     if (main_loop>=*burn_in){
       itempC++;
       if (itempC==nth){
@@ -373,14 +374,12 @@ void cBaseecoZ(
       if (itempP == main_loop) {
 	Rprintf("%3d percent done.\n", progress*10);
 	itempP+=ftrunc((double) *n_gen/10); progress++;
-      void R_FlushConsole();
+      R_FlushConsole();
       }
   } /*end of MCMC for normal */ 
   
-
-
   /** write out the random seed **/
-  void PutRNGstate();
+  PutRNGstate();
 
   /* Freeing the memory */
   FreeMatrix(X, n_samp);
