@@ -29,9 +29,9 @@ void ecoSEM(double* optTheta, double* pdTheta, Param* params, double Rmat_old[7]
 void ecoEStep(Param* params, double* suff);
 void ecoMStep(double* Suff, double* pdTheta, Param* params);
 void ecoMStepNCAR(double* Suff, double* pdTheta, Param* params);
+void ecoMStepCCAR(double* Suff, double* pdTheta, Param* params);
 void MStepHypTest(Param* params, double* pdTheta);
 void initTheta(double* pdTheta_in,Param* params, double* pdTheta);
-void initNCAR(Param* params, double* pdTheta);
 void initNCAR(Param* params, double* pdTheta);
 void setHistory(double* t_pdTheta, double loglik, int iter,setParam* setP,double history_full[][10]);
 int closeEnough(double* pdTheta, double* pdTheta_old, int len, double maxerr);
@@ -102,7 +102,8 @@ void cEMeco(
   //set options
   setP.ncar=bit(*flag,0);
   setP.fixedRho=bit(*flag,1);
-  setP.sem=bit(*flag,2) & (optTheta[2]>0);
+  setP.sem=bit(*flag,2) & (optTheta[2]!=0);
+  setP.ccar=0; setP.ccar_nvar=0;
 
   //hard-coded hypothesis test
   //hypTest is the number of constraints.  hyptTest==0 when we're not checking a hypothesis
@@ -121,10 +122,12 @@ void cEMeco(
   setP.calcLoglik=*calcLoglik;
   setP.convergence=*convergence;
   setP.t_samp=t_samp; setP.n_samp=n_samp; setP.s_samp=s_samp; setP.x1_samp=x1_samp; setP.x0_samp=x0_samp;
-  int param_len=(setP.ncar ? 9 : 5);
+  int param_len=setP.ccar ? setP.ccar_nvar : (setP.ncar ? 9 : 5);
   setP.param_len=param_len;
   setP.pdTheta=doubleArray(param_len);
   setP.suffstat_len=(setP.ncar ? 7 : 5);
+  setP.SigmaK=doubleMatrix(param_len,param_len); //CCAR
+  setP.InvSigmaK=doubleMatrix(param_len,param_len); //CCAR
 
   /* model parameters */
   //double **Sigma=doubleMatrix(n_dim,n_dim);/* inverse covariance matrix*/
@@ -626,14 +629,16 @@ void ecoMStepNCAR(double* Suff, double* pdTheta, Param* params) {
     double **tmp21=doubleMatrix(2,1);
     double **denom=doubleMatrix(4,4);
     double **numer=doubleMatrix(4,1);
-    for (i=0;i<4;i++)
+    for (i=0;i<4;i++) {
       for(j=0;j<4;j++) {
         if (j<2) {
           if (i<2) InvSigma[i][j]=setP->InvSigma[i][j];
           Zmat[i][j]=0; Zmat_t[j][i]=0;
         }
-        denom[i][j]=0; numer[i][0]=0;
+        denom[i][j]=0;
       }
+      numer[i][0]=0;
+    }
 //Rprintf("InvSigma %5g %5g %5g\n",InvSigma[0][0],InvSigma[1][1],InvSigma[0][1]);
     for(ii=0;ii<setP->t_samp;ii++) {
         double lx=logit(params[ii].caseP.X,"NCAR beta");
@@ -710,6 +715,109 @@ Rprintf("Compare Suff2 %5g to pdT2 %5g \n",Suff[1],pdTheta[2]);
     setP->Sigma3[2][0] = setP->Sigma3[0][2];
     setP->Sigma3[2][1] = setP->Sigma3[1][2];
   }
+  dinv2D((double*)(&(setP->Sigma3[0][0])), 3, (double*)(&(setP->InvSigma3[0][0])),"NCAR M-step S3");
+  initNCAR(params,pdTheta);
+
+}
+
+//M-Step under NCAR
+void ecoMStepCCAR(double* Suff, double* pdTheta, Param* params) {
+    setParam* setP=params[0].setP;
+    int k=setP->ccar_nvar;
+    int ii,i,j,verbose,t_samp;
+    verbose=setP->verbose;
+    t_samp=setP->t_samp;
+    double **InvSigma=doubleMatrix(2,2);
+    double **Z_i=doubleMatrix(k,2);
+    double **Z_i_t=doubleMatrix(2,k);
+    double **tmpk1=doubleMatrix(k,1);
+    double **tmpk2=doubleMatrix(k,2);
+    double **tmpkk=doubleMatrix(k,k);
+    double **tmp21=doubleMatrix(2,1);
+    double **tmp21_b=doubleMatrix(2,1);
+    double **tmp12=doubleMatrix(1,2);
+    double **tmp22=doubleMatrix(2,2);
+    double **denom=doubleMatrix(k,k);
+    double **numer=doubleMatrix(k,1);
+//betas
+    for (i=0;i<k;i++) {
+      for(j=0;j<k;j++) {
+        if (j<2) {
+          if (i<2) InvSigma[i][j]=setP->InvSigma[i][j];
+        }
+        denom[i][j]=0;
+      }
+      numer[i][0]=0;
+    }
+//Rprintf("InvSigma %5g %5g %5g\n",InvSigma[0][0],InvSigma[1][1],InvSigma[0][1]);
+    for(ii=0;ii<setP->t_samp;ii++) {
+      for (i=0;i<k;i++) {
+        for(j=0;j<k;j++) {
+          Z_i[i][j]=params[ii].caseP.Z_i[i][j];
+          Z_i_t[i][j]=params[ii].caseP.Z_i[j][i];
+        }
+      }
+        matrixMul(Z_i,InvSigma,k,2,2,2,tmpk2);
+        matrixMul(tmpk2,Z_i_t,k,2,2,k,tmpkk);
+        for (i=0;i<k;i++)
+          for(j=0;j<k;j++)
+            denom[i][j]+=tmpkk[i][j];
+        for (i=0;i<2;i++) tmp21[i][0]=params[ii].caseP.Wstar[i]; //Wstar
+        matrixMul(tmpk2,tmp21,k,2,2,1,tmpk1);
+        for (i=0;i<k;i++) numer[i][0]+=tmpk1[i][0];
+    }
+    dinv(denom,k,denom);
+    matrixMul(denom,numer,k,k,k,1,numer);
+    for(i=0; i<k;i++) pdTheta[i]=numer[i][0]; //betas
+//Rprintf("Compare Suff1 %5g to pdT1 %5g \n",Suff[0],pdTheta[1]);
+//Rprintf("Compare Suff2 %5g to pdT2 %5g \n",Suff[1],pdTheta[2]);
+
+    if (setP->hypTest>0) {
+      MStepHypTest(params,pdTheta);
+    }
+
+//conditional Sigma
+    //start at 0
+    for(i=0; i<2;i++)
+      for(j=0; j<2;j++)
+        setP->Sigma[i][j] = 0;
+
+
+    for(ii=0;ii<setP->t_samp;ii++) {
+      for (i=0;i<k;i++) {
+        for(j=0;j<k;j++) {
+          Z_i_t[i][j]=params[ii].caseP.Z_i[j][i];
+        }
+      }
+      matrixMul(Z_i_t,numer,2,k,k,1,tmp21_b);
+      for (i=0;i<2;i++) tmp21[i][0]=params[ii].caseP.Wstar[i]; //Wstar
+      for (i=0;i<2;i++) tmp21[i][0] = tmp21[i][0] - tmp21_b[i][0]; //Wstar - Z_t*B
+      for (i=0;i<2;i++) tmp12[0][i] = tmp21[i][0]; //invserse
+      matrixMul(tmp21,tmp12,2,1,1,2,tmp22);
+      for(i=0; i<2;i++)
+        for(j=0; j<2;j++)
+          setP->Sigma[i][j] += tmp22[i][j];
+    }
+    dinv2D((double*)(&(setP->Sigma[0][0])), 2, (double*)(&(setP->InvSigma[0][0])),"CCAR M-step S2");
+
+    //variances
+    //CODE BLOCK B
+    setP->Sigma3[0][0] = pdTheta[4] + pdTheta[6]*pdTheta[6]*pdTheta[3];
+    setP->Sigma3[1][1] = pdTheta[5] + pdTheta[7]*pdTheta[7]*pdTheta[3];
+    setP->Sigma3[2][2] = pdTheta[3];
+
+    //covariances
+    setP->Sigma3[0][1] = (pdTheta[8]*sqrt(pdTheta[4]*pdTheta[5]) + pdTheta[6]*pdTheta[7]*pdTheta[3])/
+                          (sqrt((pdTheta[4] + pdTheta[6]*pdTheta[6]*pdTheta[3])*(pdTheta[5] + pdTheta[7]*pdTheta[7]*pdTheta[3])));//rho_12 unconditional
+    setP->Sigma3[0][1] = setP->Sigma3[0][1]*sqrt(setP->Sigma3[0][0]*setP->Sigma3[1][1]); //sig_12
+    setP->Sigma3[0][2] = pdTheta[6]*sqrt((pdTheta[3])/(pdTheta[4] + pdTheta[6]*pdTheta[6]*pdTheta[3]))*sqrt(setP->Sigma3[0][0]*setP->Sigma3[2][2]);
+    setP->Sigma3[1][2] = pdTheta[7]*sqrt((pdTheta[3])/(pdTheta[5] + pdTheta[7]*pdTheta[7]*pdTheta[3]))*sqrt(setP->Sigma3[1][1]*setP->Sigma3[2][2]);
+
+    //symmetry
+    setP->Sigma3[1][0] = setP->Sigma3[0][1];
+    setP->Sigma3[2][0] = setP->Sigma3[0][2];
+    setP->Sigma3[2][1] = setP->Sigma3[1][2];
+
   dinv2D((double*)(&(setP->Sigma3[0][0])), 3, (double*)(&(setP->InvSigma3[0][0])),"NCAR M-step S3");
   initNCAR(params,pdTheta);
 
@@ -809,6 +917,32 @@ void initNCAR(Param* params, double* pdTheta) {
         Rprintf("mu primes for %d: %5g %5g (mu2: %5g p7: %5g p5: %5g X-T: %5g)\n",i,params[i].caseP.mu[0],params[i].caseP.mu[1],pdTheta[2],pdTheta[7],pdTheta[5],logit(params[i].caseP.X,"initNCAR mu0")-pdTheta[0]);
     }
 
+  }
+}
+
+//CCAR initialize
+void initCCAR(Param* params, double* pdTheta) {
+  setParam* setP=params[0].setP;
+    int i;
+  if (!setP->fixedRho) { //variable rho
+    //reference: (0) mu_3, (1) mu_1, (2) mu_2, (3) sig_3, (4) sig_1, (5) sig_2, (6) r_13, (7) r_23, (8) r_12
+
+    setP->Sigma[0][0]= pdTheta[4]*(1 - pdTheta[6]*pdTheta[6]);
+    setP->Sigma[1][1]= pdTheta[5]*(1 - pdTheta[7]*pdTheta[7]);
+    setP->Sigma[0][1]= (pdTheta[8] - pdTheta[6]*pdTheta[7])/sqrt((1 - pdTheta[6]*pdTheta[6])*(1 - pdTheta[7]*pdTheta[7])); //correlation
+    setP->Sigma[0][1]= setP->Sigma[0][1]*sqrt(setP->Sigma[0][0]*setP->Sigma[1][1]); //covar
+    setP->Sigma[1][0]= setP->Sigma[0][1]; //symmetry
+    dinv2D((double*)(&(setP->Sigma[0][0])), 2, (double*)(&(setP->InvSigma[0][0])),"NCAR M-step S2");
+    //assign each data point the new mu (different for each point)
+    for(i=0;i<setP->t_samp;i++) {
+      params[i].caseP.mu[0]=pdTheta[1] + pdTheta[6]*sqrt(pdTheta[4]/pdTheta[3])*(logit(params[i].caseP.X,"initNCAR mu0")-pdTheta[0]);
+      params[i].caseP.mu[1]=pdTheta[2] + pdTheta[7]*sqrt(pdTheta[5]/pdTheta[3])*(logit(params[i].caseP.X,"initNCAR mu1")-pdTheta[0]);
+      if(setP->verbose>=2 && !setP->sem && (i<3 || i==422))
+      //if(setP->verbose>=2  && i<3)
+        Rprintf("mu primes for %d: %5g %5g (mu2: %5g p7: %5g p5: %5g X-T: %5g)\n",i,params[i].caseP.mu[0],params[i].caseP.mu[1],pdTheta[2],pdTheta[7],pdTheta[5],logit(params[i].caseP.X,"initNCAR mu0")-pdTheta[0]);
+    }
+  }
+  else { //fixed rho
   }
 }
 

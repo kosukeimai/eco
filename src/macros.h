@@ -41,13 +41,14 @@ struct caseParam {
   double Wbounds[2][2];  //[i][j] is {j:lower,upper}-bound of W{i+1}
   int suff; //the sufficient stat we're calculating: 0->W1, 1->W2,2->W1^2,3->W1W2,4->W2^2,7->Log Lik, 5/6,-1 ->test case
   int dataType; //0=unknown, 1=(X==1),2=(X==0),3=survey
+  double** Z_i; //CCAR: k x 2
 };
 
 typedef struct caseParam caseParam;
 
 struct setParam {
   int n_samp, t_samp, s_samp,x1_samp,x0_samp,param_len,suffstat_len; //types of data sizes
-  int iter, ncar, fixedRho, sem, hypTest, verbose, calcLoglik; //options
+  int iter, ncar, ccar, ccar_nvar, fixedRho, sem, hypTest, verbose, calcLoglik; //options
   int semDone[7]; //whether that row of the R matrix is done
   int varParam[9]; //whether the parameter is included in the R matrix
   double convergence;
@@ -55,6 +56,8 @@ struct setParam {
   double InvSigma[2][2];
   double Sigma3[3][3];
   double InvSigma3[3][3];
+  double** SigmaK; //for CCAR
+  double** InvSigmaK;
   double** hypTestCoeff;
   double hypTestResult;
   double* pdTheta;
