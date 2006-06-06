@@ -683,14 +683,18 @@ Rprintf("Compare Suff2 %5g to pdT2 %5g \n",Suff[1],pdTheta[2]);
 
     //CODE BLOCK C
     //Compute sigma conditional on beta
+    //reference: (0) mu_3, (1) mu_1, (2) mu_2, (3) sig_3, (4) sig_1 | 3, (5) sig_2 | 3, (6) beta1, (7) beta2, (8) r_12 | 3
     double Smat[2][2]; //the S matrix (divided by n) in the paper
     double Tmat[2][2]; //the T matrix (divided by n) in the paper
-    double S1=Suff[0] - pdTheta[1]; //S_1 / n
-    double S2=Suff[1] - pdTheta[2]; //S_2 / n
-    Smat[0][0]=Suff[2] - 2*pdTheta[6]*(XW1 - pdTheta[0]*Suff[0]) - 2*pdTheta[1]*Suff[0] + pdTheta[6]*pdTheta[6]*pdTheta[3] + pdTheta[1]*pdTheta[1];  //S_11
-    Smat[1][1]=Suff[3] - 2*pdTheta[7]*(XW2 - pdTheta[0]*Suff[1]) - 2*pdTheta[2]*Suff[1] + pdTheta[7]*pdTheta[7]*pdTheta[3] + pdTheta[2]*pdTheta[2];  //S_22
-    Smat[0][1]=Suff[4] - pdTheta[6]*(XW2 - pdTheta[0]*Suff[1]) - pdTheta[1]*Suff[1] - pdTheta[7]*(XW1 - pdTheta[0]*Suff[0]) - pdTheta[2]*Suff[0] +
-                        pdTheta[6]*pdTheta[7]*pdTheta[3] + pdTheta[1]*pdTheta[2];  //S_12
+    double S1=Suff[0]; //S_1 = Sufficient stat of W1* - beta1 * (sum of [(X_i - \mu3)]) ; second term goes to zero
+    double S2=Suff[1]; //S_2 =  Sufficient stat of W2*
+    //Smat[0][0]=Suff[2] - 2*pdTheta[6]*(XW1 - pdTheta[0]*Suff[0]) - 2*pdTheta[1]*Suff[0] + pdTheta[6]*pdTheta[6]*pdTheta[3] + pdTheta[1]*pdTheta[1];  //S_11
+    //Smat[1][1]=Suff[3] - 2*pdTheta[7]*(XW2 - pdTheta[0]*Suff[1]) - 2*pdTheta[2]*Suff[1] + pdTheta[7]*pdTheta[7]*pdTheta[3] + pdTheta[2]*pdTheta[2];  //S_22
+    //Smat[0][1]=Suff[4] - pdTheta[6]*(XW2 - pdTheta[0]*Suff[1]) - pdTheta[1]*Suff[1] - pdTheta[7]*(XW1 - pdTheta[0]*Suff[0]) - pdTheta[2]*Suff[0] +
+    //                    pdTheta[6]*pdTheta[7]*pdTheta[3] + pdTheta[1]*pdTheta[2];  //S_12
+    Smat[0][0]=Suff[2] - 2*pdTheta[6]*(XW1 - pdTheta[0]*Suff[0]) - 2*pdTheta[1]*Suff[0] + pdTheta[6]*pdTheta[6]*pdTheta[3];  //S_11
+    Smat[1][1]=Suff[3] - 2*pdTheta[7]*(XW2 - pdTheta[0]*Suff[1]) - 2*pdTheta[2]*Suff[1] + pdTheta[7]*pdTheta[7]*pdTheta[3];  //S_22
+    Smat[0][1]=Suff[4] - pdTheta[6]*(XW2 - pdTheta[0]*Suff[1]) - pdTheta[7]*(XW1 - pdTheta[0]*Suff[0]) + pdTheta[6]*pdTheta[7]*pdTheta[3] ;  //S_12
     Tmat[0][0]=Smat[0][0] - S1*S1;
     Tmat[1][1]=Smat[1][1] - S2*S2;
     Tmat[0][1]=Smat[0][1] - S1*S2;
@@ -720,7 +724,7 @@ Rprintf("Compare Suff2 %5g to pdT2 %5g \n",Suff[1],pdTheta[2]);
 
 }
 
-//M-Step under NCAR
+//M-Step under CCAR
 void ecoMStepCCAR(double* Suff, double* pdTheta, Param* params) {
     setParam* setP=params[0].setP;
     int k=setP->ccar_nvar;
