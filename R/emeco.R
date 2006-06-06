@@ -133,7 +133,8 @@ ecoML <- function(formula, data = parent.frame(), N=NULL, supplement = NULL,
 
  
    
-
+  if (!context) names(theta.em)<-c("u1","u2","s1","s2","r12")
+  if (context) names(theta.em)<-c("ux","u1","u2","sx","s1","s2","r1x","r2x","r12")
 
 
 
