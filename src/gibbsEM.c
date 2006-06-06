@@ -692,8 +692,8 @@ Rprintf("Compare Suff2 %5g to pdT2 %5g \n",Suff[1],pdTheta[2]);
     //Smat[1][1]=Suff[3] - 2*pdTheta[7]*(XW2 - pdTheta[0]*Suff[1]) - 2*pdTheta[2]*Suff[1] + pdTheta[7]*pdTheta[7]*pdTheta[3] + pdTheta[2]*pdTheta[2];  //S_22
     //Smat[0][1]=Suff[4] - pdTheta[6]*(XW2 - pdTheta[0]*Suff[1]) - pdTheta[1]*Suff[1] - pdTheta[7]*(XW1 - pdTheta[0]*Suff[0]) - pdTheta[2]*Suff[0] +
     //                    pdTheta[6]*pdTheta[7]*pdTheta[3] + pdTheta[1]*pdTheta[2];  //S_12
-    Smat[0][0]=Suff[2] - 2*pdTheta[6]*(XW1 - pdTheta[0]*Suff[0]) - 2*pdTheta[1]*Suff[0] + pdTheta[6]*pdTheta[6]*pdTheta[3];  //S_11
-    Smat[1][1]=Suff[3] - 2*pdTheta[7]*(XW2 - pdTheta[0]*Suff[1]) - 2*pdTheta[2]*Suff[1] + pdTheta[7]*pdTheta[7]*pdTheta[3];  //S_22
+    Smat[0][0]=Suff[2] - 2*pdTheta[6]*(XW1 - pdTheta[0]*Suff[0]) + pdTheta[6]*pdTheta[6]*pdTheta[3];  //S_11
+    Smat[1][1]=Suff[3] - 2*pdTheta[7]*(XW2 - pdTheta[0]*Suff[1]) + pdTheta[7]*pdTheta[7]*pdTheta[3];  //S_22
     Smat[0][1]=Suff[4] - pdTheta[6]*(XW2 - pdTheta[0]*Suff[1]) - pdTheta[7]*(XW1 - pdTheta[0]*Suff[0]) + pdTheta[6]*pdTheta[7]*pdTheta[3] ;  //S_12
     Tmat[0][0]=Smat[0][0] - S1*S1;
     Tmat[1][1]=Smat[1][1] - S2*S2;
