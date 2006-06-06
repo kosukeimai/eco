@@ -34,13 +34,18 @@ double dotProduct(double* a, double* b, int size) {
  */
 void matrixMul(double** A, double** B, int r1, int c1, int r2, int c2, double** C) {
   int i,j,k;
+  double tmp[r1][c2];
   if (c1!=r2) error("Matrix multiplication: %d != %d", c2, r1);
   else {
     for (i=0; i<r1; i++)
       for (j=0; j<c2; j++) {
         double entry=0;
         for(k=0;k<r2;k++) entry += A[i][k]*B[k][j];
-        C[i][j]=entry;
+        tmp[i][j]=entry;
+      }
+    for (i=0; i<r1; i++)
+      for (j=0; j<c2; j++) {
+        C[i][j]=tmp[i][j];
       }
   }
 }

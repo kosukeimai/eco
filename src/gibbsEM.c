@@ -672,8 +672,8 @@ void ecoMStepNCAR(double* Suff, double* pdTheta, Param* params) {
     pdTheta[2]=numer[2][0]; //mu2
     pdTheta[7]=numer[3][0]; //beta2
     //pdTheta[8] is constant
-Rprintf("Compare Suff1 %5g to pdT1 %5g \n",Suff[0],pdTheta[1]);
-Rprintf("Compare Suff2 %5g to pdT2 %5g \n",Suff[1],pdTheta[2]);
+//Rprintf("Compare Suff1 %5g to pdT1 %5g \n",Suff[0],pdTheta[1]);
+//Rprintf("Compare Suff2 %5g to pdT2 %5g \n",Suff[1],pdTheta[2]);
 
     if (setP->hypTest>0) {
       MStepHypTest(params,pdTheta);
