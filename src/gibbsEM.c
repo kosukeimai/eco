@@ -39,6 +39,8 @@ int semDoneCheck(setParam* setP);
 void gridEStep(Param* params, int n_samp, int s_samp, int x1_samp, int x0_samp, double* suff, int verbose, double minW1, double maxW1);
 void transformTheta(double* pdTheta, double* t_pdTheta, int len, setParam* setP);
 void untransformTheta(double* t_pdTheta,double* pdTheta, int len, setParam* setP);
+void ncarUnTransform(double* pdTheta);
+void ncarTransform(double* pdTheta);
 
 void cEMeco(
 	    /*data input */
@@ -102,7 +104,7 @@ void cEMeco(
   //set options
   setP.ncar=bit(*flag,0);
   setP.fixedRho=bit(*flag,1);
-  setP.sem=bit(*flag,2) & (optTheta[2]!=0);
+  setP.sem=bit(*flag,2) & (optTheta[2]!=-1.1);
   setP.ccar=0; setP.ccar_nvar=0;
 
   //hard-coded hypothesis test
@@ -721,7 +723,7 @@ void ecoMStepNCAR(double* Suff, double* pdTheta, Param* params) {
   }
   dinv2D((double*)(&(setP->Sigma3[0][0])), 3, (double*)(&(setP->InvSigma3[0][0])),"NCAR M-step S3");
   initNCAR(params,pdTheta);
-
+  if (!setP->fixedRho) ncarUnTransform(pdTheta);
 }
 
 //M-Step under CCAR
@@ -883,6 +885,7 @@ void MStepHypTest(Param* params, double* pdTheta) {
 
 
 //NCAR initialize
+//note that for fixed rho, the input is the UNTRANSFORMED PARAMETERS
 void initNCAR(Param* params, double* pdTheta) {
   setParam* setP=params[0].setP;
     int i;
@@ -1047,6 +1050,7 @@ void initCCAR(Param* params, double* pdTheta) {
           if (verbose>=2) {
             Rprintf("Check 1");
           }
+          //if (setP_sem.fixedRho)
           initNCAR(params_sem,phiTI);
           if (verbose>=2) {
             Rprintf("Check 2");
@@ -1236,10 +1240,55 @@ void untransformTheta(double* t_pdTheta,double* pdTheta, int len, setParam* setP
   }
 }
 
-/*
+/**
+ * untransforms theta under ncar
+ * input reference:  (0) mu_3, (1) mu_1, (2) mu_2, (3) sig_3, (4) sig_1 | 3, (5) sig_2 | 3, (6) beta1, (7) beta2, (8) r_12 | 3
+ * output reference: (0) mu_3, (1) mu_1, (2) mu_2, (3) sig_3, (4) sig_1, (5) sig_2, (6) r_13, (7) r_23, (8) r_12
+ * mutates: pdTheta
+ **/
+void ncarUnTransform(double* pdTheta) {
+  double* tmp=doubleArray(9);
+  int i;
+  for (i=0;i<9;i++) tmp[i]=pdTheta[i];
+  pdTheta[0]=tmp[0];
+  pdTheta[1]=tmp[1];
+  pdTheta[2]=tmp[2];
+  pdTheta[3]=tmp[3];
+  pdTheta[4]=tmp[4] + tmp[6]*tmp[6]*tmp[3];
+  pdTheta[5]=tmp[5] + tmp[7]*tmp[7]*tmp[3];
+  pdTheta[6]=(tmp[6]*sqrt(tmp[3]))/(sqrt(pdTheta[4]));
+  pdTheta[7]=(tmp[7]*sqrt(tmp[3]))/(sqrt(pdTheta[5]));
+  pdTheta[8]=(tmp[8]*sqrt(tmp[4]*tmp[5]) + tmp[6]*tmp[7]*tmp[3])/(sqrt(pdTheta[4]*pdTheta[5]));
+  Free(tmp);
+}
+
+/**
+ * transforms theta under ncar
+ * input reference:  (0) mu_3, (1) mu_1, (2) mu_2, (3) sig_3, (4) sig_1, (5) sig_2, (6) r_13, (7) r_23, (8) r_12
+ * output reference: (0) mu_3, (1) mu_1, (2) mu_2, (3) sig_3, (4) sig_1 | 3, (5) sig_2 | 3, (6) beta1, (7) beta2, (8) r_12 | 3
+ * mutates: pdTheta
+ **/
+void ncarTransform(double* pdTheta) {
+  double* tmp=doubleArray(9);
+  int i;
+  for (i=0;i<9;i++) tmp[i]=pdTheta[i];
+  pdTheta[0]=tmp[0];
+  pdTheta[1]=tmp[1];
+  pdTheta[2]=tmp[2];
+  pdTheta[3]=tmp[3];
+  pdTheta[4]=tmp[4] - tmp[6]*tmp[6]*tmp[4];
+  pdTheta[5]=tmp[5] - tmp[5]*tmp[5]*tmp[4];
+  pdTheta[6]=tmp[6]*sqrt(tmp[4]/tmp[3]);
+  pdTheta[7]=tmp[7]*sqrt(tmp[5]/tmp[3]);
+  pdTheta[8]=(tmp[8] - tmp[6]*tmp[7])/(sqrt((1 - tmp[6]*tmp[6])*(1 - tmp[7]*tmp[7])));
+  Free(tmp);
+}
+
+
+/**
  * Input transformed theta, loglikelihood, iteration
  * Mutates: history_full
- */
+ **/
 void setHistory(double* t_pdTheta, double loglik, int iter,setParam* setP,double history_full[][10]) {
   //calc len
   /*if you don't want to record the contant m3 and s3 in ncar use the code commented out*/
