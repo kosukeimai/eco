@@ -1201,14 +1201,8 @@ void transformTheta(double* pdTheta, double* t_pdTheta, int len, setParam* setP)
     t_pdTheta[3]=log(pdTheta[3]);
     t_pdTheta[4]=log(pdTheta[4]);
     t_pdTheta[5]=log(pdTheta[5]);
-    if (!setP->fixedRho) {
-      t_pdTheta[6]=.5*(log(1+pdTheta[6])-log(1-pdTheta[6]));
-      t_pdTheta[7]=.5*(log(1+pdTheta[7])-log(1-pdTheta[7]));
-    }
-    else {
-      t_pdTheta[6]=pdTheta[6];
-      t_pdTheta[7]=pdTheta[7];
-    }
+    t_pdTheta[6]=.5*(log(1+pdTheta[6])-log(1-pdTheta[6]));
+    t_pdTheta[7]=.5*(log(1+pdTheta[7])-log(1-pdTheta[7]));
     t_pdTheta[8]=.5*(log(1+pdTheta[8])-log(1-pdTheta[8]));
   }
 }
