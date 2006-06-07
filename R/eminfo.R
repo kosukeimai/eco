@@ -229,7 +229,7 @@ d2nd.mvn<-function(mu,Sigma,  fix.rho=FALSE) {
 
 ##assuming the order of sufficient statistics
 ## 2d, mean(W1), mean(W2), mean(W1^2) mean(W2^2), mean(W1W2)
-## 2d, mean(X), mean(W1), mean(W2), mean(X^2),mean(W1^2) mean(W2^2),
+## 3d, mean(X), mean(W1), mean(W2), mean(X^2),mean(W1^2) mean(W2^2),
 ##     mean(XW1), mean(XW2), mean(W1W2)
 
 suff<-function(mu, suff.stat,n) {
@@ -543,6 +543,28 @@ ecoINFO<-function(theta.em, suff.stat, DM, context=TRUE, fix.rho=FALSE, sem=TRUE
 #Icom.unit<-Icom.transform(Icom, Dvec,theta.em, transformation="unitscale")
 #Vobs.unit<-delta method
 
+if (!context) {
+   names(mu)<-c("W1","W2")
+   colnames(Sigma)<-rownames(Sigma)<-c("W1","W2")
+   names(suff.stat)<-c("S1","S2","S11","S22","S12")
+   if (!fix.rho) colnames(DM)<-rownames(DM)<-c("u1","u2","s1","s2","r12")   
+   if (fix.rho) colnames(DM)<-rownames(DM)<-c("u1","u2","s1","s2")   
+}   
+if (context) {
+   names(mu)<-c("X","W1","W2")
+   colnames(Sigma)<-rownames(Sigma)<-c("X","W1","W2")
+   names(suff.stat)<-c("Sx","S1","S2","Sxx","S11","S22","Sx1","Sx2","S12")
+   if (!fix.rho) {
+    colnames(DM)<-rownames(DM)<-c("u1","u2","s1","s2","r1x","r2x","r12")
+    colnames(Icom)<-rownames(Icom)<-c("ux","u1","u2","sx","s1","s2","r1x","r2x","r12")   }  
+   if (fix.rho) {
+    colnames(DM)<-rownames(DM)<-c("u1","u2","s1","s2","r1x","r2x")   
+colnames(Icom)<-rownames(Icom)<-c("ux","u1","u2","sx","s1","s2","r1x","r2x")   }  
+}   
+
+colnames(Iobs)<-colnames(Iobs.fisher)<-colnames(Icom.fisher)<-colnames(Vobs)<-colnames(Vobs.sym)<-colnames(Icom)
+rownames(Iobs)<-rownames(Iobs.fisher)<-rownames(Icom.fisher)<-rownames(Vobs)<-rownames(Vobs.sym)<-rownames(Icom)
+
   res.out<-list(mu=mu, Sigma=Sigma, suff.stat=suff.stat, context=context, fix.rho=fix.rho)
   res.out$DM<-DM
     res.out$Icom<-Icom
@@ -553,5 +575,7 @@ ecoINFO<-function(theta.em, suff.stat, DM, context=TRUE, fix.rho=FALSE, sem=TRUE
     res.out$Icom.trans<-Icom.fisher
     res.out$Iobs.trans<-Iobs.fisher
     res.out$Fmis.trans<-1-diag(Iobs.fisher)/diag(Icom.fisher)
+    res.out$Imiss<-res.out$Icom-res.out$Iobs
+    res.out$Ieigen<-eigen(res.out$Imiss)[[1]][1]
 res.out
 }
