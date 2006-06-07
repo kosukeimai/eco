@@ -39,8 +39,8 @@ int semDoneCheck(setParam* setP);
 void gridEStep(Param* params, int n_samp, int s_samp, int x1_samp, int x0_samp, double* suff, int verbose, double minW1, double maxW1);
 void transformTheta(double* pdTheta, double* t_pdTheta, int len, setParam* setP);
 void untransformTheta(double* t_pdTheta,double* pdTheta, int len, setParam* setP);
-void ncarUnTransform(double* pdTheta);
-void ncarTransform(double* pdTheta);
+void ncarFixedRhoTransform(double* pdTheta);
+void ncarFixedRhoUnTransform(double* pdTheta);
 
 void cEMeco(
 	    /*data input */
@@ -180,7 +180,9 @@ while (main_loop<=*iteration_max && (start==1 ||
       dinv2D((double*)&setP.Sigma[0][0], 2, (double*)&setP.InvSigma[0][0], "Start of main loop");
     }
     else {
+      if (setP.fixedRho) ncarFixedRhoTransform(pdTheta);
       initNCAR(params,pdTheta);
+      if (setP.fixedRho) ncarFixedRhoUnTransform(pdTheta);
     }
     start=0;
   }
@@ -616,8 +618,10 @@ void ecoMStepNCAR(double* Suff, double* pdTheta, Param* params) {
           //}
 
   }
-  else { //fixed rho NEEDS WORK
+  else { //fixed rho
     //reference: (0) mu_3, (1) mu_1, (2) mu_2, (3) sig_3, (4) sig_1 | 3, (5) sig_2 | 3, (6) beta1, (7) beta2, (8) r_12 | 3
+
+    ncarFixedRhoTransform(pdTheta); //need the fixed param (pdTheta[8]) to be the conditional correlation
 
     //CODE BLOCK D
     //compute beta based on previous sigma
@@ -723,7 +727,7 @@ void ecoMStepNCAR(double* Suff, double* pdTheta, Param* params) {
   }
   dinv2D((double*)(&(setP->Sigma3[0][0])), 3, (double*)(&(setP->InvSigma3[0][0])),"NCAR M-step S3");
   initNCAR(params,pdTheta);
-  if (!setP->fixedRho) ncarUnTransform(pdTheta);
+  if (setP->fixedRho) ncarFixedRhoUnTransform(pdTheta);
 }
 
 //M-Step under CCAR
@@ -1050,8 +1054,9 @@ void initCCAR(Param* params, double* pdTheta) {
           if (verbose>=2) {
             Rprintf("Check 1");
           }
-          //if (setP_sem.fixedRho)
+          if (setP_sem.fixedRho) ncarFixedRhoTransform(phiTI);
           initNCAR(params_sem,phiTI);
+          if (setP_sem.fixedRho) ncarFixedRhoUnTransform(phiTI);
           if (verbose>=2) {
             Rprintf("Check 2");
           }
@@ -1240,7 +1245,7 @@ void untransformTheta(double* t_pdTheta,double* pdTheta, int len, setParam* setP
  * output reference: (0) mu_3, (1) mu_1, (2) mu_2, (3) sig_3, (4) sig_1, (5) sig_2, (6) r_13, (7) r_23, (8) r_12
  * mutates: pdTheta
  **/
-void ncarUnTransform(double* pdTheta) {
+void ncarFixedRhoUnTransform(double* pdTheta) {
   double* tmp=doubleArray(9);
   int i;
   for (i=0;i<9;i++) tmp[i]=pdTheta[i];
@@ -1262,7 +1267,7 @@ void ncarUnTransform(double* pdTheta) {
  * output reference: (0) mu_3, (1) mu_1, (2) mu_2, (3) sig_3, (4) sig_1 | 3, (5) sig_2 | 3, (6) beta1, (7) beta2, (8) r_12 | 3
  * mutates: pdTheta
  **/
-void ncarTransform(double* pdTheta) {
+void ncarFixedRhoTransform(double* pdTheta) {
   double* tmp=doubleArray(9);
   int i;
   for (i=0;i<9;i++) tmp[i]=pdTheta[i];
@@ -1271,7 +1276,7 @@ void ncarTransform(double* pdTheta) {
   pdTheta[2]=tmp[2];
   pdTheta[3]=tmp[3];
   pdTheta[4]=tmp[4] - tmp[6]*tmp[6]*tmp[4];
-  pdTheta[5]=tmp[5] - tmp[5]*tmp[5]*tmp[4];
+  pdTheta[5]=tmp[5] - tmp[7]*tmp[7]*tmp[5];
   pdTheta[6]=tmp[6]*sqrt(tmp[4]/tmp[3]);
   pdTheta[7]=tmp[7]*sqrt(tmp[5]/tmp[3]);
   pdTheta[8]=(tmp[8] - tmp[6]*tmp[7])/(sqrt((1 - tmp[6]*tmp[6])*(1 - tmp[7]*tmp[7])));
