@@ -107,6 +107,9 @@ ecoML <- function(formula, data = parent.frame(), N=NULL, supplement = NULL,
 
   if (sem) 
   {
+    #Aaron's change: make more general?
+    if (fix.rho & context) n.par<-n.par+1
+
     DM <- matrix(rep(NA,n.par*n.par),ncol=n.par)
 
     res <- .C("cEMeco", as.double(tmp$d), as.double(theta.start),
@@ -126,7 +129,6 @@ ecoML <- function(formula, data = parent.frame(), N=NULL, supplement = NULL,
     for(i in 1:n.par)
       for(j in 1:n.par)
         DM[i,j]=res$DMmatrix[(i-1)*n.par+j]
-
 
 
 } 
