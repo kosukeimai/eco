@@ -327,7 +327,7 @@ void initTheta(double* pdTheta_in,Param* params, double* pdTheta) {
     pdTheta[8]=pdTheta_in[6];
     for(i=0;i<param_len;i++) setP->varParam[i]=1;
     setP->varParam[0]=0;setP->varParam[3]=0;
-    if (setP->fixedRho) setP->varParam[8]=0;
+    //if (setP->fixedRho) setP->varParam[8]=0;
   }
   int varlen=0;
   for(i=0; i<param_len;i++)
