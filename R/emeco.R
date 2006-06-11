@@ -29,7 +29,7 @@ ecoML <- function(formula, data = parent.frame(), N=NULL, supplement = NULL,
  
   n.par<-n.S<-n.var 
   if (context) {
-      n.par<-n.S<-n.var-2
+      n.par<-n.var-2
    }
 
   if (fix.rho) n.par<-n.par-1
