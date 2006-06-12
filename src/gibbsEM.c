@@ -127,7 +127,7 @@ void cEMeco(
   int param_len=setP.ccar ? setP.ccar_nvar : (setP.ncar ? 9 : 5);
   setP.param_len=param_len;
   setP.pdTheta=doubleArray(param_len);
-  setP.suffstat_len=(setP.ncar ? 7 : 5);
+  setP.suffstat_len=(setP.ncar ? 9 : 5);
   setP.SigmaK=doubleMatrix(param_len,param_len); //CCAR
   setP.InvSigmaK=doubleMatrix(param_len,param_len); //CCAR
 
@@ -336,18 +336,14 @@ void initTheta(double* pdTheta_in,Param* params, double* pdTheta) {
       setP->semDone[i]=0;
 }
 
-/*
- * The E-step for parametric ecological inference
- * Takes in a Param array of length n_samp + t_samp + x0_samp + x1_samp
- * Suff should be an array of length 5
- * On exit: suff holds the sufficient statistics as follows
- * suff[0]=E[W1*]
- * suff[1]=E[W2*]
- * suff[2]=E[W1*^2]
- * suff[3]=E[W2*^2] **note the different order from Wstar matrix
- * suff[4]=E[W1*W2*]
- * suff[5]=log liklihood
- */
+/**
+  * The E-step for parametric ecological inference
+  * Takes in a Param array of length n_samp + t_samp + x0_samp + x1_samp
+  * Suff should be an array with the same length as the number of params (+1)
+  * On exit: suff holds the sufficient statistics and loglik as follows
+  * CAR: (0) E[W1*] (1) E[W2*] (2) E[W1*^2] (3) E[W2*^2] (4) E[W1*W2*] (5) loglik
+  * NCAR: (0) X, (1) W1, (2) W2, (3) X^2, (4) W1^2, (5) W2^2, (6) x*W1, (7) X*W2, (8) W1*W2, (9) loglik
+ **/
 
 
 
@@ -470,37 +466,32 @@ if (verbose>=2 && !setP->sem) Rprintf("E-step start\n");
   for (j=0; j<setP->suffstat_len; j++)
     suff[j]=0;
 
+
+  //CAR: (0) E[W1*] (1) E[W2*] (2) E[W1*^2] (3) E[W2*^2] (4) E[W1*W2*] (5) loglik
+  //NCAR: (0) X, (1) W1, (2) W2, (3) X^2, (4) W1^2, (5) W2^2, (6) x*W1, (7) X*W2, (8) W1*W2, (9) loglik
   /* compute sufficient statistics */
   for (i=0; i<t_samp; i++) {
-    suff[0]+=Wstar[i][0];  /* sumE(W_i1|Y_i) */
-    suff[1]+=Wstar[i][1];  /* sumE(W_i2|Y_i) */
-    suff[2]+=Wstar[i][2];  /* sumE(W_i1^2|Y_i) */
-    suff[3]+=Wstar[i][4];  /* sumE(W_i2^2|Y_i) */
-    suff[4]+=Wstar[i][3];  /* sumE(W_i1*W_i2|Y_i) */
-    if (setP->ncar) {
-      char ebuffer[30];
-      sprintf(ebuffer, "mstep X %i", i);
-      double lx= logit(params[i].caseP.X,ebuffer);
-      suff[5] += params[i].caseP.Wstar[0]*lx; /* sumE(W_i1*X|Y_i) */
-      suff[6] += params[i].caseP.Wstar[1]*lx; /* sumE(W_i2*X|Y_i) */
+    if (!setP->ncar) {
+      suff[0] += Wstar[i][0];  /* sumE(W_i1|Y_i) */
+      suff[1] += Wstar[i][1];  /* sumE(W_i2|Y_i) */
+      suff[2] += Wstar[i][2];  /* sumE(W_i1^2|Y_i) */
+      suff[3] += Wstar[i][4];  /* sumE(W_i2^2|Y_i) */
+      suff[4] += Wstar[i][3];  /* sumE(W_i1*W_i2|Y_i) */
+    }
+    else if (setP->ncar) {
+      double lx= logit(params[i].caseP.X,"mstep X");
+      suff[0] += lx;
+      suff[1] += Wstar[i][0];
+      suff[2] += Wstar[i][1];
+      suff[3] += lx*lx;
+      suff[4] += Wstar[i][2];
+      suff[5] += Wstar[i][4];
+      suff[6] += params[i].caseP.Wstar[0]*lx;
+      suff[7] += params[i].caseP.Wstar[1]*lx;
+      suff[8] += Wstar[i][3];
     }
   }
 
-/*
-  if (setP->ncar && setP->fixedRho) {
-    for (j=0; j<5; j++) suff[j]=0;
-    for (i=0; i<t_samp; i++) {
-        double lx= logit(params[i].caseP.X,"mstep X ncar, fixed");
-        double bxm1 = setP->pdTheta[6]*(lx - setP->pdTheta[0]) + (suff[5]/t_samp);
-        double bxm2 = setP->pdTheta[7]*(lx - setP->pdTheta[0]) + (suff[6]/t_samp);
-        //suff[0] += Wstar[i][0] - bxm1;
-        //suff[1] += Wstar[i][1] - bxm2;
-        suff[2] += Wstar[i][2] - 2*bxm1*Wstar[i][0] + bxm1*bxm1; //S11
-        suff[3] += Wstar[i][4] - 2*bxm2*Wstar[i][1] + bxm2*bxm2; //S22
-        suff[4] += Wstar[i][3] - bxm1*Wstar[i][1] - bxm2*Wstar[i][0] + bxm1*bxm2; //S12
-    }
-  }
-*/
   for(j=0; j<setP->suffstat_len; j++)
     suff[j]=suff[j]/t_samp;
 //Rprintf("%5g suff0,2,4 %5g %5g %5g\n",setP->pdTheta[6],suff[0],suff[2],suff[4]);
@@ -560,6 +551,7 @@ if (setP->hypTest>0) {
 
 
 //M-Step under NCAR
+//NCAR: (0) X, (1) W1, (2) W2, (3) X^2, (4) W1^2, (5) W2^2, (6) x*W1, (7) X*W2, (8) W1*W2, (9) loglik
 void ecoMStepNCAR(double* Suff, double* pdTheta, Param* params) {
 
   setParam* setP=params[0].setP;
@@ -573,8 +565,8 @@ void ecoMStepNCAR(double* Suff, double* pdTheta, Param* params) {
 
 
   //set E[XW*]
-  double XW1=Suff[5];
-  double XW2=Suff[6];
+  double XW1=Suff[6];
+  double XW2=Suff[7];
 
 
 
@@ -583,18 +575,16 @@ void ecoMStepNCAR(double* Suff, double* pdTheta, Param* params) {
 
 
     //pdTheta[0] is const
-    pdTheta[1]=Suff[0];  /*mu1*/
-    pdTheta[2]=Suff[1];  /*mu2*/
-
-
+    pdTheta[1]=Suff[1];  /*mu1*/
+    pdTheta[2]=Suff[2];  /*mu2*/
 
     //set variances and correlations
     //pdTheta[3] is const
-    pdTheta[4]=Suff[2]-2*Suff[0]*pdTheta[1]+pdTheta[1]*pdTheta[1]; //s11
-    pdTheta[5]=Suff[3]-2*Suff[1]*pdTheta[2]+pdTheta[2]*pdTheta[2]; //s22
-    pdTheta[6]=(XW1 - pdTheta[0]*Suff[0])/sqrt((Suff[2] - Suff[0]*Suff[0])*pdTheta[3]); //rho_13
-    pdTheta[7]=(XW2 - pdTheta[0]*Suff[1])/sqrt((Suff[3] - Suff[1]*Suff[1])*pdTheta[3]); //rho_23
-    pdTheta[8]=Suff[4]-Suff[0]*pdTheta[2]-Suff[1]*pdTheta[1]+pdTheta[1]*pdTheta[2]; //sigma12
+    pdTheta[4]=Suff[4]-2*Suff[1]*pdTheta[1]+pdTheta[1]*pdTheta[1]; //s11
+    pdTheta[5]=Suff[5]-2*Suff[2]*pdTheta[2]+pdTheta[2]*pdTheta[2]; //s22
+    pdTheta[6]=(XW1 - pdTheta[0]*Suff[1])/sqrt((Suff[4] - Suff[1]*Suff[1])*pdTheta[3]); //rho_13
+    pdTheta[7]=(XW2 - pdTheta[0]*Suff[2])/sqrt((Suff[5] - Suff[2]*Suff[2])*pdTheta[3]); //rho_23
+    pdTheta[8]=Suff[8]-Suff[1]*pdTheta[2]-Suff[2]*pdTheta[1]+pdTheta[1]*pdTheta[2]; //sigma12
     pdTheta[8]=pdTheta[8]/sqrt(pdTheta[4]*pdTheta[5]); //rho_12
 
 
@@ -678,13 +668,16 @@ void ecoMStepNCAR(double* Suff, double* pdTheta, Param* params) {
     pdTheta[2]=numer[2][0]; //mu2
     pdTheta[7]=numer[3][0]; //beta2
     //pdTheta[8] is constant
-//Rprintf("Compare Suff1 %5g to pdT1 %5g \n",Suff[0],pdTheta[1]);
-//Rprintf("Compare Suff2 %5g to pdT2 %5g \n",Suff[1],pdTheta[2]);
+//Rprintf("Compare Suff1 %5g to pdT1 %5g \n",Suff[1],pdTheta[1]);
+//Rprintf("Compare Suff2 %5g to pdT2 %5g \n",Suff[2],pdTheta[2]);
 
     if (setP->hypTest>0) {
       MStepHypTest(params,pdTheta);
     }
 
+    //CAR: (0) E[W1*] (1) E[W2*] (2) E[W1*^2] (3) E[W2*^2] (4) E[W1*W2*] (5) loglik
+    //NCAR: (0) X, (1) W1, (2) W2, (3) X^2, (4) W1^2, (5) W2^2, (6) x*W1, (7) X*W2, (8) W1*W2, (9) loglik
+    //0->1, 1->2, 2->4, 3->5, 4->8
 
 
     //CODE BLOCK C
@@ -692,15 +685,12 @@ void ecoMStepNCAR(double* Suff, double* pdTheta, Param* params) {
     //reference: (0) mu_3, (1) mu_1, (2) mu_2, (3) sig_3, (4) sig_1 | 3, (5) sig_2 | 3, (6) beta1, (7) beta2, (8) r_12 | 3
     double Smat[2][2]; //the S matrix (divided by n) in the paper
     double Tmat[2][2]; //the T matrix (divided by n) in the paper
-    double S1=Suff[0]; //S_1 = Sufficient stat of W1* - beta1 * (sum of [(X_i - \mu3)]) ; second term goes to zero
-    double S2=Suff[1]; //S_2 =  Sufficient stat of W2*
-    //Smat[0][0]=Suff[2] - 2*pdTheta[6]*(XW1 - pdTheta[0]*Suff[0]) - 2*pdTheta[1]*Suff[0] + pdTheta[6]*pdTheta[6]*pdTheta[3] + pdTheta[1]*pdTheta[1];  //S_11
-    //Smat[1][1]=Suff[3] - 2*pdTheta[7]*(XW2 - pdTheta[0]*Suff[1]) - 2*pdTheta[2]*Suff[1] + pdTheta[7]*pdTheta[7]*pdTheta[3] + pdTheta[2]*pdTheta[2];  //S_22
-    //Smat[0][1]=Suff[4] - pdTheta[6]*(XW2 - pdTheta[0]*Suff[1]) - pdTheta[1]*Suff[1] - pdTheta[7]*(XW1 - pdTheta[0]*Suff[0]) - pdTheta[2]*Suff[0] +
-    //                    pdTheta[6]*pdTheta[7]*pdTheta[3] + pdTheta[1]*pdTheta[2];  //S_12
-    Smat[0][0]=Suff[2] - 2*pdTheta[6]*(XW1 - pdTheta[0]*Suff[0]) + pdTheta[6]*pdTheta[6]*pdTheta[3];  //S_11
-    Smat[1][1]=Suff[3] - 2*pdTheta[7]*(XW2 - pdTheta[0]*Suff[1]) + pdTheta[7]*pdTheta[7]*pdTheta[3];  //S_22
-    Smat[0][1]=Suff[4] - pdTheta[6]*(XW2 - pdTheta[0]*Suff[1]) - pdTheta[7]*(XW1 - pdTheta[0]*Suff[0]) + pdTheta[6]*pdTheta[7]*pdTheta[3] ;  //S_12
+    double S1=Suff[1]; //S_1 = Sufficient stat of W1* - beta1 * (sum of [(X_i - \mu3)]) ; second term goes to zero
+    double S2=Suff[2]; //S_2 =  Sufficient stat of W2*
+
+    Smat[0][0]=Suff[4] - 2*pdTheta[6]*(XW1 - pdTheta[0]*Suff[1]) + pdTheta[6]*pdTheta[6]*pdTheta[3];  //S_11
+    Smat[1][1]=Suff[5] - 2*pdTheta[7]*(XW2 - pdTheta[0]*Suff[2]) + pdTheta[7]*pdTheta[7]*pdTheta[3];  //S_22
+    Smat[0][1]=Suff[8] - pdTheta[6]*(XW2 - pdTheta[0]*Suff[2]) - pdTheta[7]*(XW1 - pdTheta[0]*Suff[1]) + pdTheta[6]*pdTheta[7]*pdTheta[3] ;  //S_12
     Tmat[0][0]=Smat[0][0] - S1*S1;
     Tmat[1][1]=Smat[1][1] - S2*S2;
     Tmat[0][1]=Smat[0][1] - S1*S2;
@@ -779,8 +769,7 @@ void ecoMStepCCAR(double* Suff, double* pdTheta, Param* params) {
     dinv(denom,k,denom);
     matrixMul(denom,numer,k,k,k,1,numer);
     for(i=0; i<k;i++) pdTheta[i]=numer[i][0]; //betas
-//Rprintf("Compare Suff1 %5g to pdT1 %5g \n",Suff[0],pdTheta[1]);
-//Rprintf("Compare Suff2 %5g to pdT2 %5g \n",Suff[1],pdTheta[2]);
+
 
     if (setP->hypTest>0) {
       MStepHypTest(params,pdTheta);
