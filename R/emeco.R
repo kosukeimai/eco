@@ -32,11 +32,11 @@ ecoML <- function(formula, data = parent.frame(), N=NULL, supplement = NULL,
       n.par<-n.var-2
    }
 
-  if (fix.rho) n.par<-n.par-1
-
   r12<-NULL
   if (fix.rho) 
-     r12<-theta.start[n.par+1]
+     r12<-theta.start[n.par]
+
+  if (!context & fix.rho) n.par<-n.par-1
 
   flag<-as.integer(context)+2*as.integer(fix.rho)+2^2*as.integer(sem)
 
@@ -46,6 +46,9 @@ ecoML <- function(formula, data = parent.frame(), N=NULL, supplement = NULL,
   n <- tmp$n.samp+tmp$survey.samp+tmp$samp.X1+tmp$samp.X0
   inSample.length <- ndim*tmp$n.samp
 
+  cat("npar   ", n.par, "\n")
+  cat("nvar   ", n.var, "\n")
+  cat("nS     ",n.S, "\n")
 
   #if NCAR and the user did not provide a theta.start
   if (context && (length(theta.start)==5) ) 
@@ -92,7 +95,7 @@ ecoML <- function(formula, data = parent.frame(), N=NULL, supplement = NULL,
   iters.sem<-0
 
    suff.stat<-res$S
-  if (context && (!fix.rho))
+  if (context)
       {
      suff.stat<-rep(0,(n.var+1))
          suff.stat[1]<-mean(logit(c(X,supplement[,3])))
@@ -107,8 +110,6 @@ ecoML <- function(formula, data = parent.frame(), N=NULL, supplement = NULL,
 
   if (sem) 
   {
-    #Aaron's change: make more general?
-    if (fix.rho & context) n.par<-n.par+1
 
     DM <- matrix(rep(NA,n.par*n.par),ncol=n.par)
 

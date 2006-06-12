@@ -457,18 +457,18 @@ Icom.transform<-function(Icom, Dvec, theta, transformation="Fisher", context, fi
 ecoINFO<-function(theta.em, suff.stat, DM, context=TRUE, fix.rho=FALSE, sem=TRUE, r12=0, n)
   {
 
-
+    if (context) fix.rho<-FALSE
     ndim<-2
     if (context) ndim<-3
 
     n.var<-2*ndim+ ndim*(ndim-1)/2
  
-    n.par<-n.S<-n.var 
+    n.par<-n.var 
     if (context) {
-      n.par<-n.S<-n.var-2
+      n.par<-n.var-2
     }
 
-   if (fix.rho) n.par<-n.par-1
+   if (!context & fix.rho) n.par<-n.par-1
 
    mu<-param.pack(theta.em, fix.rho=fix.rho, r12=r12,  dim=ndim)$mu
    Sigma<-param.pack(theta.em, fix.rho=fix.rho, r12=r12, dim=ndim)$Sigma
@@ -511,6 +511,8 @@ ecoINFO<-function(theta.em, suff.stat, DM, context=TRUE, fix.rho=FALSE, sem=TRUE
        index2<-c(1,3,4,2,5,6,7,8,9)
        Vobs.fisher<-Vobs.fisher[index2,index2]
      }
+
+ 
  
     Iobs.fisher <- solve(Vobs.fisher)
 
