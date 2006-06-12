@@ -1,0 +1,26 @@
+wallace.txt
+Unit of analysis: county (South only)
+Y: Wallace's percent of the 1968 Presidential vote
+X: Percent of the population that is Black (1960 census data)
+Other variables: FIPS (county code)
+
+-------------------------------------------------------------
+
+housep88.txt
+Unit of analysis: congressional district
+Y: proportion voting for the Democrat in the House race
+X: proportion voting for the Democrat in the presidential race
+Other variables:
+N: number of major party voters in the presidential contest
+HPCT: House election turnout divided by presidential election turnout (truncated at 1)
+DIST: ICPSR state and district code
+
+-------------------------------------------------------------
+
+forgnlit30.txt
+Unit of analysis: state
+Y: Percent of population foreign born (1930 census data)
+X: Percent of population illiterate (1930 census data)
+Other variables: FIPS (state code)
+
+-------------------------------------------------------------
