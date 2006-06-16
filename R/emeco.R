@@ -72,17 +72,17 @@ ecoML <- function(formula, data = parent.frame(), N=NULL, supplement = NULL,
   theta.em<-res$pdTheta
   theta.fisher<-param.trans(theta.em, transformation="Fisher")
   iters.em<-res$itersUsed
-  mu.em <- matrix(rep(NA,iters.em*ndim),ncol=ndim)
+  mu.log.em <- matrix(rep(NA,iters.em*ndim),ncol=ndim)
   sigma.log.em <- matrix(rep(NA,iters.em*ndim),ncol=ndim)
-  loglike.em <- as.double(rep(NA,iters.em))
+  loglike.log.em <- as.double(rep(NA,iters.em))
   nrho<-length(theta.em)-2*ndim
   rho.fisher.em <- matrix(rep(NA,iters.em*nrho),ncol=nrho)
   for(i in 1:iters.em) {
-    mu.em[i,1:ndim]=res$history[(i-1)*(n.var+1)+(1:ndim)]
+    mu.log.em[i,1:ndim]=res$history[(i-1)*(n.var+1)+(1:ndim)]
     sigma.log.em[i,1:ndim]=res$history[(i-1)*(n.var+1)+ndim+(1:ndim)]
      if (nrho!=0)
     rho.fisher.em[i, 1:nrho]=res$history[(i-1)*(n.var+1)+2*ndim+(1:nrho)]
-    loglike.em[i]=res$history[(i-1)*(n.var+1)+2*ndim+nrho+1]
+    loglike.log.em[i]=res$history[(i-1)*(n.var+1)+2*ndim+nrho+1]
   }
 
   ## In sample prediction of W
@@ -145,17 +145,31 @@ ecoML <- function(formula, data = parent.frame(), N=NULL, supplement = NULL,
   res.out<-list(call = mf, Y = Y, X = X, N = N, 
                 fix.rho = fix.rho, context = context, sem=sem, epsilon=epsilon,
         theta.em=theta.em, r12=r12, 
-               sigma.log = theta.fisher[(ndim+1):(2*ndim)], suff.stat = suff.stat,
+               sigma.log = theta.fisher[(ndim+1):(2*ndim)], suff.stat = suff.stat[1:n.par],
                 loglik = res$S[n.par+1], iters.em = iters.em, 
-                iters.sem = iters.sem, mu.em = mu.em,
+                iters.sem = iters.sem, mu.log.em = mu.log.em, 
                 sigma.log.em = sigma.log.em,
-                rho.fisher.em = rho.fisher.em, loglike.em = loglike.em,
+                rho.fisher.em = rho.fisher.em, loglike.log.em = loglike.log.em,
                 W = W)
   
   if (sem) {
     res.out$DM<-DM
 
   }
+  res.info<- ecoINFO(theta.em, suff.stat, DM, context=context, fix.rho=fix.rho, sem=sem, r12=r12, n=(dim(data)[1]+dim(supplement)[1]))
+    res.out$DM<-res.info$DM
+    res.out$Icom<-res.info$Icom
+    res.out$Iobs<-res.info$Iobs
+    res.out$Fmis<-res.info$Fmis
+    res.out$Vobs.original<-res.info$Vobs.original
+    res.out$Vobs<-res.info$Vobs
+    res.out$Icom.trans<-res.info$Icom.trans
+    res.out$Iobs.trans<-res.info$obs.trans
+    res.out$Fmis.trans<-res.info$Fmis.trans
+    res.out$Imiss<-res.info$Imiss
+    res.out$Ieigen<-res.out$Ieigen
+
+ res.out$Iobs<-res.info$Iobs
 
   class(res.out) <- "ecoML"
   return(res.out)
