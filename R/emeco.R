@@ -46,10 +46,6 @@ ecoML <- function(formula, data = parent.frame(), N=NULL, supplement = NULL,
   n <- tmp$n.samp+tmp$survey.samp+tmp$samp.X1+tmp$samp.X0
   inSample.length <- ndim*tmp$n.samp
 
-  cat("npar   ", n.par, "\n")
-  cat("nvar   ", n.var, "\n")
-  cat("nS     ",n.S, "\n")
-
   #if NCAR and the user did not provide a theta.start
   if (context && (length(theta.start)==5) ) 
     theta.start<-c(0,0,1,1,0,0,0)
@@ -154,9 +150,9 @@ ecoML <- function(formula, data = parent.frame(), N=NULL, supplement = NULL,
   
   if (sem) {
     res.out$DM<-DM
-
-  }
-  res.info<- ecoINFO(theta.em, suff.stat, DM, context=context, fix.rho=fix.rho, sem=sem, r12=r12, n=(dim(data)[1]+dim(supplement)[1]))
+ n<-dim(data)[1]
+if (!is.null(supplement)) n<-n+dim(supplement)[1]
+  res.info<- ecoINFO(theta.em, suff.stat, DM, context=context, fix.rho=fix.rho, sem=sem, r12=r12, n=n)
     res.out$DM<-res.info$DM
     res.out$Icom<-res.info$Icom
     res.out$Iobs<-res.info$Iobs
@@ -170,7 +166,7 @@ ecoML <- function(formula, data = parent.frame(), N=NULL, supplement = NULL,
     res.out$Ieigen<-res.out$Ieigen
 
  res.out$Iobs<-res.info$Iobs
-
+}
   class(res.out) <- "ecoML"
   return(res.out)
 }

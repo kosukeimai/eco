@@ -502,8 +502,6 @@ ecoINFO<-function(theta.em, suff.stat, DM, context=TRUE, fix.rho=FALSE, sem=TRUE
        A3<-invItemp[3:9, 1:2]
        A4<-invItemp[3:9, 3:9]
        dV1<-(A4-t(A2)%*%solve(A1)%*%A2)%*%DM%*%solve(diag(rep(1,7))-DM)
-       cat("dV\n")
-       print(dV1)
        dV<-matrix(0,9,9)
        dV[3:9,3:9]<-dV1
        Vobs.fisher<-invItemp+dV
