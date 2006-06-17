@@ -20,8 +20,8 @@
 \usage{
    ecoML(formula, data = parent.frame(), N=NULL, supplement = NULL, 
          theta.start = c(0,0,1,1,0), fix.rho = TRUE,
-         context = FALSE, sem = TRUE, theta.start = c(0,0,1,1,0),
-         epsilon=10^(-10), maxit = 1000, loglik = TRUE, verbose= TRUE)  
+         context = FALSE, sem = TRUE, epsilon=10^(-10), 
+	maxit = 1000, loglik = TRUE, verbose= TRUE)  
 }
 
 \arguments{
@@ -113,7 +113,7 @@ data(census)
 ## examples. See Imai, Lu and Strauss (2006) for more complete analyses.
 
 ## fit the parametric model with the default prior specification
-res <- ecoML(Y ~ X, data = census, verbose = TRUE)
+#res <- ecoML(Y ~ X, data = census, verbose = TRUE)
 ## summarize the results
 ##summary(res)  not run yet
 
@@ -128,9 +128,9 @@ data(census)
 ## fit the parametric model with contextual effects and some individual 
 ## level data
 ## using the default prior specification
-surv<-1:200
-res1 <- eco(Y ~ X, N = N, context = TRUE, data = census[-surv,], 
-   	supplement=data[surv,4:5], verbose = TRUE)
+surv<-1:600
+res1 <- ecoML(Y ~ X, context = TRUE, data = census[-surv,], 
+   	supplement=census[surv,c(4:5,1)], maxit=100,verbose = TRUE)
 ## summarize the results--not run yet
 ##summary(res1)
 
