@@ -411,7 +411,7 @@ if (verbose>=2 && !setP->sem) Rprintf("E-step start\n");
    // Rprintf("E0 %d %5g %5g %5g %5g %5g %5g %5g %5g err:%5g\n", i, caseP->X, caseP->Y, caseP->mu[0], caseP->mu[1], caseP->normcT,Wstar[i][0],Wstar[i][1],Wstar[i][2],fabs(caseP->W[0]-getW1FromW2(caseP->X, caseP->Y,caseP->W[1])));
   //}
    //report error E1 if E[W1],E[W2] is not on the tomography line
-  if (fabs(caseP->W[0]-getW1FromW2(caseP->X, caseP->Y,caseP->W[1]))>0.01) {
+  if (fabs(caseP->W[0]-getW1FromW2(caseP->X, caseP->Y,caseP->W[1]))>0.011) {
     Rprintf("E1 %d %5g %5g %5g %5g %5g %5g %5g %5g err:%5g\n", i, caseP->X, caseP->Y, caseP->mu[0], caseP->mu[1], caseP->normcT,Wstar[i][0],Wstar[i][1],Wstar[i][2],fabs(caseP->W[0]-getW1FromW2(caseP->X, caseP->Y,caseP->W[1])));
     char ch;
     scanf("Hit enter to continue %c\n", &ch );
