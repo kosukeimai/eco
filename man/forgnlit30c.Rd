@@ -26,7 +26,7 @@
      at least 10 years of age that is illiterate \cr
     W2 \tab numeric \tab proportion of the native-born white population
      at least 10 years of age that is illiterate \cr
-    state \tab numeric \tab the ICPSR state code
+    state \tab numeric \tab the ICPSR state code \cr
     county \tab numeric \tab the ICPSR (within state) county code 
   }
 }
