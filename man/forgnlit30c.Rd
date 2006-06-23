@@ -1,4 +1,4 @@
-\name{forgnlit30}
+\name{forgnlit30c}
 
 \docType{data}
 
@@ -13,7 +13,7 @@
   the 1930 census and were first analyzed by Robinson (1950).
 }
 
-\usage{data(forgnlit30)}
+\usage{data(forgnlit30c)}
 
 \format{A data frame containing 6 variables and 3100 observations
  \tabular{lll}{
