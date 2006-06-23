@@ -10,12 +10,13 @@
   This data set contains, on a county level, the proportion of
   white residents ten years and older who are foreign born, and
   the proportion of those residents who are literate.  Data come from
-  the 1930 census and were first analyzed by Robinson (1950).
+  the 1930 census and were first analyzed by Robinson (1950). Counties
+  with fewer than 100 foreign born residents are dropped.
 }
 
 \usage{data(forgnlit30c)}
 
-\format{A data frame containing 6 variables and 3100 observations
+\format{A data frame containing 6 variables and 1976 observations
  \tabular{lll}{
     X \tab numeric \tab proportion of the white population at least 10
      years of age that is foreign born \cr
