@@ -570,7 +570,9 @@ rownames(Iobs)<-rownames(Iobs.fisher)<-rownames(Icom.fisher)<-rownames(Vobs)<-ro
     res.out$Icom<-Icom
     res.out$Iobs<-Iobs
     res.out$Fmis<-1-diag(Iobs)/diag(Icom)
+    res.out$Vcom<-Vcom<-solve(Icom)
     res.out$Vobs.original<-Vobs
+    res.out$VFmis<-1-diag(Vcom)/diag(Vobs)
     res.out$Vobs<-Vobs.sym
     res.out$Icom.trans<-Icom.fisher
     res.out$Iobs.trans<-Iobs.fisher

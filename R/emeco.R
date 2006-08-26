@@ -159,11 +159,13 @@ if (!is.null(supplement)) n<-n+dim(supplement)[1]
     res.out$Fmis<-res.info$Fmis
     res.out$Vobs.original<-res.info$Vobs.original
     res.out$Vobs<-res.info$Vobs
+    res.out$Iobs<-res.info$Iobs
+    res.out$VFmis<-res.info$VFmis
     res.out$Icom.trans<-res.info$Icom.trans
-    res.out$Iobs.trans<-res.info$obs.trans
+    res.out$Iobs.trans<-res.info$Iobs.trans
     res.out$Fmis.trans<-res.info$Fmis.trans
     res.out$Imiss<-res.info$Imiss
-    res.out$Ieigen<-res.out$Ieigen
+    res.out$Ieigen<-res.info$Ieigen
 
  res.out$Iobs<-res.info$Iobs
 }

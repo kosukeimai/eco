@@ -21,7 +21,7 @@
    ecoML(formula, data = parent.frame(), N=NULL, supplement = NULL, 
          theta.start = c(0,0,1,1,0), fix.rho = TRUE,
          context = FALSE, sem = TRUE, epsilon=10^(-10), 
-	maxit = 1000, loglik = TRUE, verbose= TRUE)  
+	maxit = 1000, loglik = TRUE, hyptest=FALSE, verbose= TRUE)  
 }
 
 \arguments{
@@ -78,6 +78,10 @@
   } 
   \item{loglik}{Logical. If \code{TRUE}, the loglikelihood at each iteration
     of EM is saved. The default is \code{TRUE}. 
+  } 
+  \item{hyptest}{Logical. If \code{TRUE}, model is estimated under the null
+hypothesis that mean of \eqn{W1} and \eqn{W2} is the same. 
+ The default is \code{FALSE}. 
   } 
   \item{verbose}{Logical. If \code{TRUE}, the progress of the Gibbs 
    sampler is printed to the screen. The default is \code{FALSE}.
@@ -182,11 +186,15 @@ res1 <- ecoML(Y ~ X, context = TRUE, data = census[-surv,],
   \item{Vobs}{The (symmetrized) variance-covariance matrix of the EM paramter
     estimates. The dimension of \code{Vobs} is same as 
     \code{Icom}.}
+ \item{Iobs}{The (expected) complete-data variance-covariance matrix. 
+The dimension of \code{Iobs} is same as \code{Icom}.}
   \item{Vobs.original}{The estimated variance-covariance matrix of the 
     EM paramter  estimates. The dimension of \code{Vobs} is same as 
     \code{Icom}.}
   \item{Fmis}{The fraction of missing information associated with each 
     parameter estimation. }
+  \item{VFmis}{The proportion of increased varaince associated with each 
+    parameter estimation due to observed data. }
   \item{Ieigen}{The largest eigen value of \code{Imiss}.}
   \item{DM}{The rate-of-converence matrix of the SEM algorithm. For details,
     see Meng and Rubin(1999).}
