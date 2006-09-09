@@ -118,9 +118,9 @@ void cEMeco(
     setP.hypTestResult=0;
   }
 
+  setP.verbose=*verbosiosity;
   if (setP.verbose>=1) Rprintf("OPTIONS (flag: %d)   Ncar: %s; Fixed Rho: %s; SEM: %s\n",*flag,setP.ncar==1 ? "Yes" : "No",
    setP.fixedRho==1 ? "Yes" : "No",setP.sem==1 ? "Second run" : (bit(*flag,2)==1 ? "First run" : "No"));
-  setP.verbose=*verbosiosity;
   setP.calcLoglik=*calcLoglik;
   setP.convergence=*convergence;
   setP.t_samp=t_samp; setP.n_samp=n_samp; setP.s_samp=s_samp; setP.x1_samp=x1_samp; setP.x0_samp=x0_samp;
@@ -363,7 +363,7 @@ s_samp=setP->s_samp;
 
   double **Wstar=doubleMatrix(t_samp,5);     /* pseudo data(transformed)*/
 loglik=0;
-if (verbose>=2 && !setP->sem) Rprintf("E-step start\n");
+if (verbose>=3 && !setP->sem) Rprintf("E-step start\n");
   for (i = 0; i<n_samp; i++) {
     param = &(params[i]);
     caseP=&(param->caseP);
@@ -420,7 +420,7 @@ if (verbose>=2 && !setP->sem) Rprintf("E-step start\n");
   if (Wstar[i][4]<pow(Wstar[i][1],2) || Wstar[i][2]<pow(Wstar[i][0],2))
      Rprintf("E2 %d %5g %5g %5g %5g %5g %5g %5g %5g\n", i, caseP->X, caseP->Y, caseP->normcT, caseP->mu[1],Wstar[i][0],Wstar[i][1],Wstar[i][2],Wstar[i][4]);
   //used for debugging if necessary
-  if (verbose>=2 && !setP->sem && (i<10 || (caseP->mu[1] < -1.7 && caseP->mu[0] > 1.4)))
+  if (verbose>=2 && !setP->sem && ((i<10 && verbose>=3) || (caseP->mu[1] < -1.7 && caseP->mu[0] > 1.4)))
      Rprintf("%d %5.2f %5.2f %5.2f %5.2f %5.2f %5.2f %5.2f %5.2f %5.2f\n", i, caseP->X, caseP->Y, caseP->mu[0], caseP->mu[1], param->setP->Sigma[0][1], caseP->normcT, caseP->W[0],caseP->W[1],Wstar[i][2]);
     }
   }
