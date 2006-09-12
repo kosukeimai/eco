@@ -267,7 +267,7 @@ double getW2starPrimeFromT(double t, Param* param) {
 
 //parameterized integration: bounds always from 0,1
 double paramIntegration(integr_fn f, void *ex) {
-  double epsabs=0.000000001, epsrel=0.000000001;
+  double epsabs=pow(10,-11), epsrel=pow(10,-11);
   double result=9999, anserr=9999;
   int limit=100;
   int last, neval, ier;
