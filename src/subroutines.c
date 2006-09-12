@@ -90,12 +90,20 @@ void dinv(double **X,
   if (!errorM) {
     F77_CALL(dpptri)("U", &size, pdInv, &errorM);
     if (errorM) {
-      Rprintf("LAPACK dpptri failed, %d\n", errorM);
+      if (errorM>0) {
+        Rprintf("The matrix being inverted is singular. Error code %d\n", errorM);
+      } else {
+        Rprintf("The matrix being inverted contained an illegal value. Error code %d.\n", errorM);
+      }
       error("Exiting from dinv().\n");
     }
   }
   else {
-    Rprintf("LAPACK dpptrf failed, %d\n", errorM);
+    if (errorM>0) {
+      Rprintf("The matrix being inverted was not positive definite. Error code %d\n", errorM);
+    } else {
+      Rprintf("The matrix being inverted contained an illegal value. Error code %d.\n", errorM);
+    }
     error("Exiting from dinv().\n");
   }
   for (i = 0, j = 0; j < size; j++) {
@@ -130,14 +138,22 @@ void dinv2D(double* X,
     F77_CALL(dpptri)("U", &size, pdInv, &errorM);
     if (errorM) {
       Rprintf(emsg);
-      Rprintf(": LAPACK dpptri failed, %d\n", errorM);
+    if (errorM>0) {
+      Rprintf(": The matrix being inverted is singular. Error code %d\n", errorM);
+    } else {
+      Rprintf(": The matrix being inverted contained an illegal value. Error code %d.\n", errorM);
+    }
       error("Exiting from dinv2D().\n");
     }
   }
   else {
     Rprintf(emsg);
     //Rprintf(": LAPACK dpptrf failed, %d with corners elements %5g %5g ; %5g %5g\n", errorM,pdInv[0],pdInv[(size == 3) ? 5 : 2],*(X+0),*(X+size*size-1));
-    Rprintf(": LAPACK dpptrf failed, %d\n", errorM);
+    if (errorM>0) {
+      Rprintf(": The matrix being inverted was not positive definite. Error code %d\n", errorM);
+    } else {
+      Rprintf(": The matrix being inverted contained an illegal value. Error code %d.\n", errorM);
+    }
     error("Exiting from dinv2D().\n");
   }
 
@@ -166,7 +182,11 @@ void dcholdc(double **X, int size, double **L)
       pdTemp[i++] = X[k][j];
   F77_CALL(dpptrf)("U", &size, pdTemp, &errorM);
   if (errorM) {
-    Rprintf("LAPACK dpptrf failed, %d\n", errorM);
+    if (errorM>0) {
+      Rprintf("The matrix being inverted was not positive definite. Error code %d\n", errorM);
+    } else {
+      Rprintf("The matrix being inverted contained an illegal value. Error code %d.\n", errorM);
+    }
     error("Exiting from dcholdc().\n");
   }
   for (j = 0, i = 0; j < size; j++) {
@@ -249,7 +269,11 @@ void dcholdc2D(double *X, int size, double *L)
       pdTemp[i++] = *(X+size*k+j); //pdTemp[i++] = X[k][j];
   F77_CALL(dpptrf)("U", &size, pdTemp, &errorM);
   if (errorM) {
-    Rprintf("LAPACK dpptrf failed, s:%d 00:%4g e:%d\n", size, *(X), errorM);
+    if (errorM>0) {
+      Rprintf("The matrix being inverted was not positive definite. Error code %d\n", errorM);
+    } else {
+      Rprintf("The matrix being inverted contained an illegal value. Error code %d.\n", errorM);
+    }
     error("Exiting from dcholdc2D().\n");
   }
   for (j = 0, i = 0; j < size; j++) {
