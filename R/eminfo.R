@@ -476,7 +476,7 @@ ecoINFO<-function(theta.em, suff.stat, DM, context=TRUE, fix.rho=FALSE, sem=TRUE
   theta.fisher<-param.trans(theta.em)
 
     Icom<-Icom.mvn(mu=mu, Sigma=Sigma, fix.rho=fix.rho, suff.stat=suff.stat, n=n)
-    Dvec<-Dcom.mvn(mu=mu, Sigma=Sigma, fix.rho=fix.rho, suff.stat=suff.stat, n=n)
+   Dvec<-Dcom.mvn(mu=mu, Sigma=Sigma, fix.rho=fix.rho, suff.stat=suff.stat, n=n)
 
 
     theta.icom<-theta.em

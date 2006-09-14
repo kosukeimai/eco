@@ -150,9 +150,13 @@ ecoML <- function(formula, data = parent.frame(), N=NULL, supplement = NULL,
   
   if (sem) {
     res.out$DM<-DM
- n<-dim(data)[1]
-if (!is.null(supplement)) n<-n+dim(supplement)[1]
-  res.info<- ecoINFO(theta.em, suff.stat, DM, context=context, fix.rho=fix.rho, sem=sem, r12=r12, n=n)
+#print(dim(data))
+# n<-dim(data)[1]
+#if (!is.null(supplement)) n<-n+dim(supplement)[1]
+#cat("n2=", n,"\n")
+
+ res.info<- ecoINFO(theta.em=res.out$theta.em, suff.stat=res.out$suff.stat, DM=res.out$DM, context=context, fix.rho=fix.rho, sem=sem, r12=res.out$r12, n=n)
+
     res.out$DM<-res.info$DM
     res.out$Icom<-res.info$Icom
     res.out$Iobs<-res.info$Iobs
@@ -169,6 +173,7 @@ if (!is.null(supplement)) n<-n+dim(supplement)[1]
 
  res.out$Iobs<-res.info$Iobs
 }
+
   class(res.out) <- "ecoML"
   return(res.out)
 }
