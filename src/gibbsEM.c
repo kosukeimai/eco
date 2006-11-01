@@ -396,9 +396,9 @@ if (verbose>=3 && !setP->sem) Rprintf("E-step start\n");
           caseP->Wstar[j]=Wstar[i][j];
       }
       caseP->suff=5;
-      caseP->W[0]=paramIntegration(&SuffExp,param);;
+      caseP->W[0]=paramIntegration(&SuffExp,param);
       caseP->suff=6;
-      caseP->W[1]=paramIntegration(&SuffExp,param);;
+      caseP->W[1]=paramIntegration(&SuffExp,param);
       caseP->suff=-1;
       testdens=paramIntegration(&SuffExp,param);
       if (setP->calcLoglik==1 && setP->iter>1) loglik+=getLogLikelihood(param);
@@ -655,14 +655,9 @@ void ecoMStepNCAR(double* Suff, double* pdTheta, Param* params) {
         matrixMul(tmp42,tmp21,4,2,2,1,tmp41);
         for (i=0;i<4;i++) numer[i][0]+=tmp41[i][0];
     }
-//Rprintf("Denom %5g %5g %5g %5g\n",denom[0][0],denom[0][1],denom[0][2],denom[0][3]);
-//Rprintf("Denom %5g %5g %5g %5g\n",denom[2][0],denom[2][1],denom[2][2],denom[2][3]);
     dinv(denom,4,denom);
-//Rprintf("Denomi %5g %5g %5g %5g\n",denom[0][0],denom[0][1],denom[0][2],denom[0][3]);
-//Rprintf("Denomi %5g %5g %5g %5g\n",denom[2][0],denom[2][1],denom[2][2],denom[2][3]);
-//Rprintf("Numer %5g %5g %5g %5g\n",numer[0][0],numer[1][0],numer[2][0],numer[3][0]);
     matrixMul(denom,numer,4,4,4,1,numer);
-//Rprintf("Numer %5g %5g %5g\n",numer[0][0],numer[1][0],numer[2][0]);
+
     pdTheta[1]=numer[0][0]; //mu1
     pdTheta[6]=numer[1][0]; //beta1
     pdTheta[2]=numer[2][0]; //mu2

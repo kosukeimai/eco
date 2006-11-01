@@ -210,20 +210,23 @@ double getLogLikelihood(Param* param) {
 //Finds W2star, given the equation
 //Y=XW1 + (1-X)W2 and the Wistar=logit(Wi)
 //imposs is set to 1 if the equation cannot be satisfied
-double getW2starFromW1star(double X, double Y, double W1, int* imposs) {
-      if (W1>30) W1=1; //prevent overflow or underflow
-      else W1=1/(1+exp(-1*W1));
+double getW2starFromW1star(double X, double Y, double W1star, int* imposs) {
+      double W1;
+      if (W1star>30) W1=1; //prevent overflow or underflow
+      else W1=1/(1+exp(-1*W1star));
       double W2=Y/(1-X)-X*W1/(1-X);
+
       if(W2>=1 || W2<=0) *imposs=1; //impossible pair of values
       else W2=log(W2/(1-W2));
       return W2;
 }
 
-double getW1starFromW2star(double X, double Y, double W2, int* imposs) {
-      if (W2>30) W2=1; //prevent overflow or underflow
-      else W2=1/(1+exp(-1*W2));
+double getW1starFromW2star(double X, double Y, double W2star, int* imposs) {
+      double W2;
+      if (W2star>30) W2=1; //prevent overflow or underflow
+      else W2=1/(1+exp(-1*W2star));
       double W1=(Y-(1-X)*W2)/X;
-      //Rprintf(" %5g %5g %5g %5g\n", X,Y,W2, W1);
+
       if(W1>=1 || W1<=0) *imposs=1; //impossible pair of values
       else W1=log(W1/(1-W1));
       return W1;
@@ -251,6 +254,7 @@ double getW2starFromT(double t, Param* param, int* imposs) {
     return W2;
 }
 //W1star'(t)
+//see paper for derivation: W1*(t) = (1/W1)*((w1_ub - w1_lb)/(1-W1)
 double getW1starPrimeFromT(double t, Param* param) {
     double m=(param->caseP.Wbounds[0][1] - param->caseP.Wbounds[0][0]);
     double W1=m*t + param->caseP.Wbounds[0][0];
@@ -258,6 +262,7 @@ double getW1starPrimeFromT(double t, Param* param) {
     return W1;
 }
 //W2star'(t)
+//see paper for derivation: W2*(t) = (1/W2)*((w2_lb - w2_ub)/(1-W2)
 double getW2starPrimeFromT(double t, Param* param) {
     double m=(param->caseP.Wbounds[1][0] - param->caseP.Wbounds[1][1]);
     double W2=m*t + param->caseP.Wbounds[1][1];
