@@ -2,11 +2,9 @@ useDynLib(eco)
 
 importFrom(MASS, mvrnorm)
 
-export(
-       eco, 	
+export(eco, 	
        ecoBD,
        ecoNP,
-       ecoRC,
        ecoML,
        ecoINFO,
        summary.eco,
@@ -23,10 +21,7 @@ export(
        varcov.eco,
        varcov.ecoNP,
        coef.eco,
-       coef.ecoNP,
-       logit,
-       invlogit,
-       tr)
+       coef.ecoNP)
 
 S3method(varcov, eco)
 S3method(varcov, ecoNP)
