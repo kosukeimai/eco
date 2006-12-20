@@ -19,7 +19,7 @@
 
 \usage{
    ecoML(formula, data = parent.frame(), N=NULL, supplement = NULL, 
-         theta.start = c(0,0,1,1,0), fix.rho = TRUE,
+         theta.start = c(0,0,1,1,0), fix.rho = FALSE,
          context = FALSE, sem = TRUE, epsilon=10^(-10), 
 	maxit = 1000, loglik = TRUE, hyptest=FALSE, verbose= TRUE)  
 }
@@ -47,7 +47,7 @@
   (when \code{context=TRUE}) or the partial correlation(when
    \code{context=FALSE}) between \eqn{W_1} and \eqn{W_2} 
     is fixed through the estimation. For details, see 
-     Imai,Lu and Strauss(2006). The default is \code{TRUE}.
+     Imai,Lu and Strauss(2006). The default is \code{FALSE}.
   } 
   \item{context}{Logical. If \code{TRUE}, the contextual effect is also
     modeled. See Imai and Lu (2005) for details. The default is
@@ -89,24 +89,23 @@ hypothesis that mean of \eqn{W1} and \eqn{W2} is the same.
 }
 
 \details{
-  An example of \eqn{2 \times 2} ecological table for racial voting is
-  given below: 
-  \tabular{lccc}{
-    \tab black voters  \tab white voters \tab \cr
-    Voted \tab \eqn{W_{1i}}  \tab \eqn{W_{2i}} \tab \eqn{Y_i} \cr
-    Not voted \tab \eqn{1-W_{1i}}  \tab \eqn{1-W_{2i}} \tab \eqn{1-Y_i}  \cr
-    \tab \eqn{X_i} \tab \eqn{1-X_i} \tab 
-  }
-  where \eqn{Y_i} and \eqn{X_i} represent the observed margins, and
-  \eqn{W_1} and \eqn{W_2} are unknown variables. All variables are
-  proportions and hence bounded between 0 and 1. For each \eqn{i}, the
-  following deterministic relationship holds,
-  \eqn{Y_i=X_i W_{1i}+(1-X_i)W_{2i}}.
+When \code{SEM} is \code{TRUE}, \code{ecoML} computes the observed-data 
+information matrix for the parameters of interest based on Supplmented-EM 
+algorithm. The inverse of the observed-data information matrix can be used 
+to estimate the variance-covariance matrix for the parameters estimated
+from EM alogrithmss. In addition, it also computes the expected complete-data 
+information matrix. Based on these two measures, one can further calculate 
+the fraction of missing information associated with each parameter. (See
+Imai, Lu and Strauss (2006) for more details about fraction of missing 
+information.)
+ 
+Moreover, when \code{hytest=TRUE}, \code{ecoML} allows to estimate the 
+parametric model under the null hypothesis that \code{mu_1=mu_2}. One 
+can then construct a log-likelihood ratio test to assess the hypothesis of 
+equal means. The associated fraction of missing information for the test 
+statistic can be also calculated. (For details, see Meng and ?, Imai, Lu
+and Strauss (2006) for implementation in ecological inference).
 
- In particular, we consider two assumptions, CAR when 
-\eqn{W_1} and \eqn{W_2} are independent from the 
-contextual variable \eqn{X}, and NCAR when they are 
-correlated with \eqn{X}.
 }
 \examples{
 
@@ -116,7 +115,7 @@ data(census)
 ## NOTE: convergence has not been properly assessed for the following
 ## examples. See Imai, Lu and Strauss (2006) for more complete analyses.
 
-## fit the parametric model with the default prior specification
+## fit the parametric model with the default model specifications
 #res <- ecoML(Y ~ X, data = census, verbose = TRUE)
 ## summarize the results
 ##summary(res)  not run yet
@@ -129,7 +128,7 @@ data(census)
 ## load the Robinson's census data
 data(census)
 
-## fit the parametric model with contextual effects and some individual 
+## fit the parametric model with some individual 
 ## level data
 ## using the default prior specification
 surv<-1:600
@@ -152,9 +151,9 @@ res1 <- ecoML(Y ~ X, context = TRUE, data = census[-surv,],
     assumtion is adopted, and contextual effect is modelled.}
   \item{sem}{Whether SEM alogorithm is used to estimate the standard
     errors and observed information matrix for the parameter estimates.}
-  \item{rho.fix}{Whether the correlation or the partial correlation between
+  \item{fix.rho}{Whether the correlation or the partial correlation between
     \eqn{W_1} an \eqn{W_2} is fixed in the estimation.}
-  \item{r12}{If \code{rho.fix=TRUE}, the value that \eqn{\r12} is fixed to.}
+  \item{r12}{If \code{fix.rho=TRUE}, the value that \eqn{\r12} is fixed to.}
   \item{epsilon}{The precision criterion for EM convergence. 
     \eqn{\sqrt{\epsilon}} is the precision criterion for SEM convergence.}
   \item{theta.sem}{The EM estimates of \eqn{E(W_1)},\eqn{E(W_2)},
@@ -174,6 +173,9 @@ res1 <- ecoML(Y ~ X, context = TRUE, data = census[-surv,],
     at each iteration of EM.} 
   Moreover, when \code{sem=TRUE}, \code{ecoML} also output the following
   values:
+ \item{DM}{The matrix characterzing the rates of convergence of the EM 
+algorithms. Such information is also used to calculate the observed-data
+information matrix}
   \item{Icom}{The (expected) complete data information matrix estimated 
     via SEM algorithm. When \code{context=FALSE, fix.rho=TRUE}, 
     \code{Icom} is 4 by 4. When \code{context=FALSE, fix.rho=FALSE}, 
@@ -209,8 +211,8 @@ The dimension of \code{Iobs} is same as \code{Icom}.}
 \author{
   Kosuke Imai, Department of Politics, Princeton University,
   \email{kimai@Princeton.Edu}, \url{http://imai.princeton.edu};
-  Ying Lu, Institute for Quantitative Social Sciences, 
-  Harvard University \email{ylu@Latte.Harvard.Edu};
+  Ying Lu, Department of Sociology, University of Colorado at Boulder, 
+  \email{ying.lu@Colorado.Edu};
   Aaron Strauss, Department of Politics, Princeton University,
  \email{abstraus@Princeton.Edu}.
 }
