@@ -22,7 +22,7 @@
    ecoML(formula, data = parent.frame(), N = NULL, supplement = NULL, 
          theta.start = c(0,0,1,1,0), fix.rho = FALSE,
          context = FALSE, sem = TRUE, epsilon = 10^(-10), 
-	 maxit = 1000, loglik = TRUE, hyptest = FALSE, verbose = TRUE)  
+     maxit = 1000, loglik = TRUE, hyptest = FALSE, verbose = TRUE)  
 }
 
 \arguments{
@@ -118,16 +118,22 @@ data(census)
 
 ## NOTE: convergence has not been properly assessed for the following
 ## examples. See Imai, Lu and Strauss (2006) for more complete analyses.
+## In the first example below, in the interest of time, only part of the
+## data set is analyzed and the covergence requirement is less stringent
+## than the default setting.
+
+## In the second example, the program is arbitrarily halted 100 iterations
+## into the simulation, before convergence.
 
 ## fit the parametric model with the default model specifications
-\dontrun{res <- ecoML(Y ~ X, data = census, verbose = TRUE)}
+res <- ecoML(Y ~ X, data = census[1:100,],epsilon=10^(-6), verbose = TRUE)
 ## summarize the results
-\dontrun{summary(res)}  
+summary(res)
 
 ## obtain out-of-sample prediction
-\dontrun{out <- predict(res, verbose = TRUE)}
+out <- predict(res, verbose = TRUE)
 ## summarize the results
-\dontrun{summary(out)}
+summary(out)
 
 ## load the Robinson's census data
 data(census)
@@ -135,10 +141,10 @@ data(census)
 ## fit the parametric model with some individual 
 ## level data using the default prior specification
 surv <- 1:600
-\dontrun{res1 <- ecoML(Y ~ X, context = TRUE, data = census[-surv,], 
-   	               supplement = census[surv,c(4:5,1)], maxit=100, verbose = TRUE)}
+res1 <- ecoML(Y ~ X, context = TRUE, data = census[-surv,], 
+                   supplement = census[surv,c(4:5,1)], maxit=100, verbose = TRUE)
 ## summarize the results
-\dontrun{summary(res1)}
+summary(res1)
 
 }
 
