@@ -65,7 +65,7 @@ double dMVT(
     value+=(Y[j]-MEAN[j])*(Y[j]-MEAN[j])*SIG_INV[j][j];
   }
 
-  value=0.5*ddet2D(SIG_INV, dim,1) - 0.5*dim*(log((double)nu)+log(M_PI)) -
+  value=0.5*ddet(SIG_INV, dim,1) - 0.5*dim*(log((double)nu)+log(M_PI)) -
     0.5*((double)dim+nu)*log(1+value/(double)nu) +
     lgammafn(0.5*(double)(nu+dim)) - lgammafn(0.5*(double)nu);
 
