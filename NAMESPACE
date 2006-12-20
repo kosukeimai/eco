@@ -6,7 +6,6 @@ export(eco,
        ecoBD,
        ecoNP,
        ecoML,
-       ecoINFO,
        summary.eco,
        summary.ecoNP,
        summary.ecoML,
@@ -16,12 +15,7 @@ export(eco,
        predict.eco,
        predict.ecoX,
        predict.ecoNP,
-       predict.ecoNPX,
-       varcov,
-       varcov.eco,
-       varcov.ecoNP,
-       coef.eco,
-       coef.ecoNP)
+       predict.ecoNPX)
 
 S3method(varcov, eco)
 S3method(varcov, ecoNP)
