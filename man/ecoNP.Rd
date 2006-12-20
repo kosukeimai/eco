@@ -109,22 +109,6 @@ ecoNP(formula, data = parent.frame(), N = NULL, supplement = NULL,
   }
 }
 
-\details{
-  An example of \eqn{2 \times 2} ecological table for racial voting is
-  given below: 
-  \tabular{lccc}{
-    \tab black voters  \tab white voters \tab \cr
-    Voted \tab \eqn{W_{1i}}  \tab \eqn{W_{2i}} \tab \eqn{Y_i} \cr
-    Not voted \tab \eqn{1-W_{1i}}  \tab \eqn{1-W_{2i}} \tab \eqn{1-Y_i}  \cr
-    \tab \eqn{X_i} \tab \eqn{1-X_i} \tab 
-  }
-  where \eqn{Y_i} and \eqn{X_i} represent the observed margins, and
-  \eqn{W_1} and \eqn{W_2} are unknown variables. All variables are
-  proportions and hence bounded between 0 and 1. For each \eqn{i}, the
-  following deterministic relationship holds,
-  \eqn{Y_i=X W_{1i}+(1-X_i)W_{2i}}.
-}
-
 \examples{
 
 ## load the registration data

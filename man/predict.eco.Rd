@@ -13,8 +13,10 @@ Model for Ecological Inference in 2x2 Tables}
 }
 
 \usage{
-  \method{predict}{eco}(object, newdraw = NULL, subset = NULL, verbose = FALSE, ...)
-  \method{predict}{ecoX}(object, newdraw = NULL, subset = NULL, newdata = NULL, cond = FALSE, verbose = FALSE, ...)
+  \method{predict}{eco}(object, newdraw = NULL, subset = NULL,
+                   verbose = FALSE, ...)
+  \method{predict}{ecoX}(object, newdraw = NULL, subset = NULL,
+                   newdata = NULL, cond = FALSE, verbose = FALSE, ...)
 }
 
 \arguments{

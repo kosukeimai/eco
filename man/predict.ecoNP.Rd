@@ -13,8 +13,10 @@
 }
 
 \usage{
-  \method{predict}{ecoNP}(object, newdraw = NULL, subset = NULL, obs = NULL, verbose = FALSE, ...)
-  \method{predict}{ecoNPX}(object, newdraw = NULL, subset = NULL, obs = NULL, cond = FALSE, verbose = FALSE, ...)
+  \method{predict}{ecoNP}(object, newdraw = NULL, subset = NULL, obs = NULL,
+                   verbose = FALSE, ...)
+  \method{predict}{ecoNPX}(object, newdraw = NULL, subset = NULL, obs = NULL,
+                   cond = FALSE, verbose = FALSE, ...)
 }
 
 \arguments{

@@ -61,14 +61,17 @@
   }
   \item{theta.start}{A numeric vector that specifies the starting values
     for the mean, variance, and covariance. When \code{context = FALSE},
-    the elements of \code{theta.start} correspond to (\eqn{E(W_1), E(W_2), 
-      V(W_1), V(W_2),\rho(W_1,W_2)}). When \code{context=TRUE}, the 
-    elements of \code{theta.start} correspond to (\eqn{E(W_1), E(W_2), 
-      V(W_1),V(W_2),\rho(W_1X),\rho(W_2X),\rho(W_1,W_2)}). Moreover, when
-    \code{fix.rho=TRUE}, \eqn{\rho(W_1,W_2)} is set to be the correlation
-    between \eqn{W_1} and \eqn{W_2} when \code{context = FALSE}, and 
-    the partial correlation between \eqn{W_1} and \eqn{W_2} given \eqn{X}
-    when \code{context = FALSE}. The default is \code{c(0,0,1,1,0)}.
+    the elements of \code{theta.start} correspond to (\eqn{E(W_1)},
+    \eqn{E(W_2)}, \eqn{var(W_1)}, \eqn{var(W_2)},
+    \eqn{cor(W_1,W_2)}). When \code{context = TRUE}, the
+    elements of \code{theta.start} correspond to (\eqn{E(W_1)},
+    \eqn{E(W_2)}, \eqn{var(W_1)}, \eqn{var(W_2)}, \eqn{corr(W_1, X)},
+    \eqn{corr(W_2, X)}, \eqn{corr(W_1,W_2)}). Moreover, when
+    \code{fix.rho=TRUE}, \eqn{corr(W_1,W_2)} is set to be the
+    correlation between \eqn{W_1} and \eqn{W_2} when \code{context =
+      FALSE}, and the partial correlation between \eqn{W_1} and
+    \eqn{W_2} given \eqn{X} when \code{context = FALSE}. The default is
+    \code{c(0,0,1,1,0)}. 
   }
   \item{epsilon}{A positive number that specifies the convergence criterion
     for EM algorithm. The square root of \code{epsilon} is the convergence 
@@ -153,18 +156,20 @@ surv <- 1:600
     errors and observed information matrix for the parameter estimates.}
   \item{fix.rho}{Whether the correlation or the partial correlation between
     \eqn{W_1} an \eqn{W_2} is fixed in the estimation.}
-  \item{r12}{If \code{fix.rho = TRUE}, the value that \eqn{\r12} is fixed to.}
+  \item{r12}{If \code{fix.rho = TRUE}, the value that \eqn{corr(W_1,
+      W_2)} is fixed to.}
   \item{epsilon}{The precision criterion for EM convergence. 
     \eqn{\sqrt{\epsilon}} is the precision criterion for SEM convergence.}
   \item{theta.sem}{The ML estimates of \eqn{E(W_1)},\eqn{E(W_2)},
-    \eqn{V(W_1)},\eqn{V(W_2)}, and \eqn{COV(W_1,W_2)}. If 
-    \code{context = TRUE}, \eqn{E(X)},\eqn{COV(W_1,X)}, 
-    \eqn{COV(W_2,X)} are also reported.}
+    \eqn{var(W_1)},\eqn{var(W_2)}, and \eqn{cov(W_1,W_2)}. If
+    \code{context = TRUE}, \eqn{E(X)},\eqn{cov(W_1,X)}, 
+    \eqn{cov(W_2,X)} are also reported.}
   \item{W}{Insample estimation of \eqn{W_1} and \eqn{W_2}.}
   \item{suff.stat}{The sufficient statistics for \code{theta.em}.}
   \item{iters.em}{Number of EM iterations before convergence is achieved.}
   \item{iters.sem}{Number of SEM iterations before convergence is achieved.}
-  \item{loglik}{The loglihood of the model when convergence is achieved.}
+  \item{loglik}{The log-likelihood of the model when convergence is
+    achieved.}
   \item{loglik.log.em}{A vector saving the value of the log-likelihood
     function at each iteration of the EM algorithm.}
   \item{mu.log.em}{A matrix saving the mean estimation at each 
