@@ -3,7 +3,7 @@
 ### main function
 ###
 ecoML <- function(formula, data = parent.frame(), N=NULL, supplement = NULL, 
-                  theta.start = c(0,0,1,1,0), fix.rho = TRUE,
+                  theta.start = c(0,0,1,1,0), fix.rho = FALSE,
                   context = FALSE, sem = TRUE, epsilon=10^(-10),
                   maxit = 1000, loglik = TRUE, hyptest=FALSE, verbose= TRUE) { 
 
@@ -152,7 +152,7 @@ ecoML <- function(formula, data = parent.frame(), N=NULL, supplement = NULL,
     res.out$DM<-DM
 #print(dim(data))
 # n<-dim(data)[1]
-#if (!is.null(supplement)) n<-n+dim(supplement)[1]
+if (!is.null(supplement)) n<-n+dim(supplement)[1]
 #cat("n2=", n,"\n")
 
  res.info<- ecoINFO(theta.em=res.out$theta.em, suff.stat=res.out$suff.stat, DM=res.out$DM, context=context, fix.rho=fix.rho, sem=sem, r12=res.out$r12, n=n)
