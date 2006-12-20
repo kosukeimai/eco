@@ -2,7 +2,7 @@
 
 \alias{ecoNP}
 
-\title{Fitting the Nonparametric Bayesian Model of Ecological Inference
+\title{Fitting the Nonparametric Bayesian Models of Ecological Inference
   in 2x2 Tables}  
 
 \description{
@@ -10,9 +10,8 @@
   a Dirichlet process prior) for ecological inference in \eqn{2 \times
   2} tables via Markov chain Monte Carlo. It gives the in-sample
   predictions as well as out-of-sample predictions for population
-  inference.  The model and algorithm are described in Imai and Lu
-  (2004). The contextual effect can also be modeled by following the
-  strategy described in Imai and Lu (2005).
+  inference.  The models and algorithms are described in Imai, Lu and
+  Strauss (2006). 
 }
 
 \usage{
@@ -133,7 +132,7 @@ data(reg)
 
 ## NOTE: We set the number of MCMC draws to be a very small number in
 ## the following examples; i.e., convergence has not been properly
-## assessed. See Imai and Lu (2004, 2005) for more complete examples.
+## assessed. See Imai, Lu and Strauss (2006) for more complete examples.
 
 ## fit the nonparametric model to give in-sample predictions
 ## store the parameters to make population inference later
@@ -201,22 +200,18 @@ summary(pres1)
 }
 
 \author{
-  Kosuke Imai, Department of Politics, Princeton University
-  \email{kimai@Princeton.Edu}, \url{http://www.princeton.edu/~kimai};
-  Ying Lu, Institute for Quantitative Social Sciences, 
-  Harvard University \email{ylu@Latte.Harvard.Edu}}
-
-\references{
-  Imai, Kosuke and Ying Lu. (2004) \dQuote{ Parametric and Nonparametric
-  Bayesian Models for Ecological Inference in \eqn{2 \times 2}
-  Tables.} Proceedings of the American Statistical Association.
-\url{http://www.princeton.edu/~kimai/research/einonpar.html}
-
-Imai, Kosuke and Ying Lu. (2005) \dQuote{An Incomplete Data Approach
-  to Ecological Inference.} Working Paper, Princeton University,
-available at
-\url{http://www.princeton.edu/~kimai/research/einonpar.html} 
+  Kosuke Imai, Department of Politics, Princeton University,
+  \email{kimai@Princeton.Edu}, \url{http://imai.princeton.edu};
+  Ying Lu, Department of Sociology, University of Colorado at Boulder, 
+  \email{ying.lu@Colorado.Edu}
 }
 
-\seealso{\code{eco}, \code{predict.eco}, \code{summary.ecoNP}}
+\references{
+  Imai, Kosuke, Ying Lu and Aaron Strauss. (2006) \dQuote{Bayesian and
+    Likelihood Inference for 2 x 2 Ecological Tables: An Incomplete Data
+    Approach} Technical Report, Princeton University, available at 
+  \url{http://imai.princeton.edu/research/eiall.html}
+}
+
+\seealso{\code{eco}, \code{ecoML}, \code{predict.eco}, \code{summary.ecoNP}}
 \keyword{models}

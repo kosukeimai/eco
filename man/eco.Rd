@@ -10,9 +10,9 @@
   Normal/Inverse-Wishart prior) for ecological inference in \eqn{2
   \times 2} tables via Markov chain Monte Carlo. It gives the in-sample
   predictions as well as the estimates of the model parameters. The
-  model and algorithm are described in Imai and Lu (2004). The
+  model and algorithm are described in Imai, Lu and Strauss (2006). The
   contextual effect can also be modeled by following the strategy
-  described in Imai and Lu (2005).
+  described in Imai, Lu, and Strauss (2006).
 }
 
 \usage{
@@ -135,7 +135,7 @@ eco(formula, data = parent.frame(), N = NULL, supplement = NULL,
 data(reg)
 
 ## NOTE: convergence has not been properly assessed for the following
-## examples. See Imai and Lu (2004, 2005) for more complete analyses.
+## examples. See Imai, Lu and Strauss (2006) for more complete analyses.
 
 ## fit the parametric model with the default prior specification
 res <- eco(Y ~ X, data = reg, verbose = TRUE)
@@ -190,23 +190,18 @@ summary(out1)
 }
 
 \author{
-  Kosuke Imai, Department of Politics, Princeton University
+  Kosuke Imai, Department of Politics, Princeton University,
   \email{kimai@Princeton.Edu}, \url{http://imai.princeton.edu};
-  Ying Lu, Institute for Quantitative Social Sciences, 
-  Harvard University \email{ylu@Latte.Harvard.Edu}}
+  Ying Lu, Department of Sociology, University of Colorado at Boulder, 
+  \email{ying.lu@Colorado.Edu}
+  }
 
-\references{
-  Imai, Kosuke and Ying Lu. (2004) \dQuote{ Parametric and Nonparametric
-  Bayesian Models for Ecological Inference in \eqn{2 \times 2}
-  Tables.} Working Paper, Princeton University,
-  available at
-  \url{http://imai.princeton.edu/research/einonpar.html}
-
-  Imai, Kosuke and Ying Lu. (2005) \dQuote{An Incomplete Data Approach
-  to Ecological Inference.} Working Paper, Princeton University,
-  available at
-  \url{http://imai.princeton.edu/research/coarse.html} }
+  \references{
+  Imai, Kosuke, Ying Lu and Aaron Strauss. (2006) \dQuote{Bayesian and
+    Likelihood Inference for 2 x 2 Ecological Tables: An Incomplete Data
+    Approach} Technical Report, Princeton University, available at 
+  \url{http://imai.princeton.edu/research/eiall.html}
 }
 
-\seealso{\code{ecoNP}, \code{predict.eco}, \code{summary.eco}}
+\seealso{\code{ecoML}, \code{ecoNP}, \code{predict.eco}, \code{summary.eco}}
 \keyword{models}
