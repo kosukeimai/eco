@@ -70,6 +70,8 @@ ecoBD <- function(formula, data = parent.frame(), N=NULL){
     dimnames(Wmin) <- dimnames(Wmax) <-
       list(if (is.null(rownames(X))) 1:n.obs else rownames(X),
            rlab, clab)
+    colnames(X) <- clab
+    colnames(Y) <- rlab
     if (!is.null(N)) {
       Nmin <- Nmax <- array(NA, c(n.obs, R, C), dimnames =
                             dimnames(Wmin))
@@ -88,13 +90,13 @@ ecoBD <- function(formula, data = parent.frame(), N=NULL){
                                list(dimnames(Wmin)[[2]], dimnames(Wmin)[[3]]))
   if (is.null(N))
     for (j in 1:C) {
-      aggWmin[,j] <- apply(Wmin[,,j]*X[,j], 2, mean)
-      aggWmax[,j] <- apply(Wmax[,,j]*X[,j], 2, mean)
+      aggWmin[,j] <- apply(Wmin[,,j], 2, weighted.mean, X[,j])
+      aggWmax[,j] <- apply(Wmax[,,j], 2, weighted.mean, X[,j])
     }
   else
     for (j in 1:C) {
-      aggWmin[,j] <- apply(Wmin[,,j]*X[,j], 2, weighted.mean, N)
-      aggWmax[,j] <- apply(Wmax[,,j]*X[,j], 2, weighted.mean, N)
+      aggWmin[,j] <- apply(Wmin[,,j], 2, weighted.mean, X[,j]*N)
+      aggWmax[,j] <- apply(Wmax[,,j], 2, weighted.mean, X[,j]*N)
     }
 
   if (!is.null(Nmin) & !is.null(Nmax)) {
