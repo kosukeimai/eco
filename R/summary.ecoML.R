@@ -1,30 +1,55 @@
+##for simlicity, this summary function only reports parameters related to W_1 and W_2
 summary.ecoML <- function(object, CI = c(2.5, 97.5), subset=NULL, units=FALSE,...) { 
 
-  n.col<-5
-  if (object$fix.rho) n.col<-4
+
+	  n.col<-5
+	  if (object$fix.rho) n.col<-4
+
+
   n.row<-1
   if (object$sem) n.row<-3
+
+
   param.table<-matrix(NA, n.row, n.col)
-  param.table[1,1:2]<-object$mu
-  param.table[1,3:4]<-object$sigma
-  if (!object$fix.rho) param.table[1,5]<-object$rho
+   
+  if (!object$context)
+   param.table[1,]<-object$theta.em	
+  else if (object$context && !object$fix.rho)
+   param.table[1,]<-object$theta.em[c(2,3,5,6,9)]	
+  else if (object$context && object$fix.rho)
+   param.table[1,]<-object$theta.em[c(2,3,5,6)]	
 
   if (n.row>1) {
+    if (!object$context) {
     param.table[2,]<-sqrt(diag(object$Vobs))
     param.table[3,]<-Fmis<-1-diag(object$Iobs)/diag(object$Icom)
+   }
+   else if (object$context && !object$fix.rho) {
+    param.table[2,]<-sqrt(diag(object$Vobs)[c(2,3,5,6,9)])
+    param.table[3,]<-Fmis<-(1-diag(object$Iobs)/diag(object$Icom))[c(2,3,5,6,9)]
+  }
+   else if (object$context && object$fix.rho) {
+    param.table[2,]<-sqrt(diag(object$Vobs)[c(2,3,5,6)])
+    param.table[3,]<-Fmis<-(1-diag(object$Iobs)/diag(object$Icom))[c(2,3,5,6)]
+  }
+
   }
   cname<-c("mu1", "mu2", "sigma1", "sigma2", "rho")
   rname<-c("ML est.", "std. err.", "frac. missing")
+  
+
+
   rownames(param.table)<-rname[1:n.row]
   colnames(param.table)<-cname[1:n.col]
   
   n.obs <- nrow(object$W)
-  if (is.null(subset)) subset <- 1:n.obs 
+
+   if (is.null(subset)) subset <- 1:n.obs 
   else if (!is.numeric(subset))
     stop("Subset should be a numeric vector.")
   else if (!all(subset %in% c(1:n.obs)))
     stop("Subset should be any numbers in 1:obs.")
-      
+    
   table.names<-c("mean", "std.dev", paste(min(CI), "%", sep=" "),
                  paste(max(CI), "%", sep=" ")) 
 
@@ -67,10 +92,10 @@ summary.ecoML <- function(object, CI = c(2.5, 97.5), subset=NULL, units=FALSE,..
   ans <- list(call = object$call, iters.sem = object$iters.sem,
               iters.em = object$iters.em, epsilon = object$epsilon,
               sem = object$sem, fix.rho = object$fix.rho, loglik = object$loglik,
-              rho=NULL, param.table = param.table, W.table = W.table, 
+              rho=object$rho, param.table = param.table, W.table = W.table, 
               agg.wtable = agg.wtable, agg.table=agg.table, n.obs = n.obs) 
-  if (object$fix.rho)
-    ans$rho<-object$rho0
+ # if (object$fix.rho)
+ #   ans$rho<-object$rho
   
   class(ans) <-"summary.ecoML"
   return(ans)

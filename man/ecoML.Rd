@@ -125,6 +125,9 @@ data(census)
 ## In the second example, the program is arbitrarily halted 100 iterations
 ## into the simulation, before convergence.
 
+## load the Robinson's census data
+data(census)
+
 ## fit the parametric model with the default model specifications
 res <- ecoML(Y ~ X, data = census[1:100,],epsilon=10^(-6), verbose = TRUE)
 ## summarize the results
@@ -134,9 +137,6 @@ summary(res)
 out <- predict(res, verbose = TRUE)
 ## summarize the results
 summary(out)
-
-## load the Robinson's census data
-data(census)
 
 ## fit the parametric model with some individual 
 ## level data using the default prior specification
