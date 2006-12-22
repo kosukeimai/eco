@@ -1159,10 +1159,10 @@ setParam* setP=params[0].setP;
     }
 
     if (setP->verbose>=2) {
-      printf("Y X\n");
+      Rprintf("Y X\n");
       for(i=0;i<5;i++) Rprintf("%5d%14g%14g\n",i,params[i].caseP.Y,params[i].caseP.X);
       if (s_samp>0) {
-        printf("SURVEY data\nY X\n");
+        Rprintf("SURVEY data\nY X\n");
         int s_max=fmin2(n_samp+x1_samp+x0_samp+s_samp,n_samp+x1_samp+x0_samp+5);
         for(i=n_samp+x1_samp+x0_samp; i<s_max; i++) Rprintf("%5d%14g%14g\n",i,params[i].caseP.Y,params[i].caseP.X);
       }
