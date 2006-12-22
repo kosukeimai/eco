@@ -255,7 +255,7 @@ for(i=0;i<t_samp;i++) {
 }
 
 if (setP.verbose>=1) {
-  printf("Final Theta:");
+  Rprintf("Final Theta:");
     for(i=0;i<param_len;i++) Rprintf(" %.3f",pdTheta[i]);
     if (setP.calcLoglik==1 && main_loop>2) {
       Rprintf(" Final LL: %5g",Suff[setP.suffstat_len]);
