@@ -315,8 +315,8 @@ void initTheta(double* pdTheta_in,Param* params, double* pdTheta) {
       mu3sq += lx*lx;
     }
     pdTheta[0] = pdTheta[0]/setP->t_samp;
-    mu3sq = mu3sq/setP->t_samp;
-    pdTheta[3] = mu3sq-pdTheta[0]*pdTheta[0]; //variance
+    mu3sq = mu3sq/(setP->t_samp - 1);
+    pdTheta[3] = mu3sq-(setP->t_samp/(setP->t_samp - 1))*pdTheta[0]*pdTheta[0]; //variance
     //fill from pdTheta_in
     pdTheta[1]=pdTheta_in[0];
     pdTheta[2]=pdTheta_in[1];
