@@ -1142,7 +1142,7 @@ setParam* setP=params[0].setP;
 
   /*read the survey data */
     itemp=0;
-    surv_dim=n_dim + (setP->ncar ? (n_dim-1) : 0); //if NCAR, the survey data will include X's
+    surv_dim=n_dim + (setP->ncar ? 1 : 0); //if NCAR, the survey data will include X's
     for (j=0; j<surv_dim; j++) {
       for (i=n_samp+x1_samp+x0_samp; i<n_samp+x1_samp+x0_samp+s_samp; i++) {
         dtemp=sur_W[itemp++];
@@ -1151,7 +1151,7 @@ setParam* setP=params[0].setP;
           params[i].caseP.W[j]=(dtemp == 1) ? .9999 : ((dtemp==0) ? .0001 : dtemp);
           params[i].caseP.Wstar[j]=logit(params[i].caseP.W[j],"Survey read");
         }
-        else {
+        else { //if given the X (NCAR), we set the X and contruct Y
           params[i].caseP.X=(dtemp == 1) ? .9999 : ((dtemp==0) ? .0001 : dtemp);
           params[i].caseP.Y=params[i].caseP.X*params[i].caseP.W[0]+(1-params[i].caseP.X);
         }
