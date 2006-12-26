@@ -150,9 +150,19 @@ void dinv2D(double* X,
   else {
     Rprintf(emsg);
     if (errorM>0) {
-      Rprintf(": Warning, the matrix being inverted was not positive definite on minor order %d.\n", errorM);
-      dinv2D_sym(X,size,X_inv,emsg);
-      skip=1;
+      /* The matrix is not positive definite.
+       * This error does occur with proper data, when the likelihood curve is flat,
+       * usually with the combination of NCAR and SEM.  At one point we tried
+       * inverting the matrix via an alternative method that does not rely on
+       * positive definiteness (see below), but that just led to further errors.
+       * Instead, the program halts as gracefully as possible.
+       */
+      //Inverting the matrix anyway:
+      //Rprintf(": Warning, the matrix being inverted was not positive definite on minor order %d.\n", errorM);
+      //dinv2D_sym(X,size,X_inv,emsg);
+      //skip=1;
+      Rprintf(": Error, the matrix being inverted was not positive definite on minor order %d.\n", errorM);
+      error("The program cannot continue; try a different model or including supplemental data.\n");
     } else {
       Rprintf(": The matrix being inverted contained an illegal value. Error code %d.\n", errorM);
       error("Exiting from dinv2D().\n");
