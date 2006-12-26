@@ -116,7 +116,7 @@ void dinv(double **X,
   Free(pdInv);
 }
 
-/* inverting a matrix
+/* inverting a matrix, first tyring positive definite trick, and then symmetric
  * Uses special syntax since we don't know dimensions of array
  * Prevents memory errors for matrices created with double[][]
  */
@@ -124,8 +124,9 @@ void dinv2D(double* X,
 	  int	size,
 	  double* X_inv,char* emsg)
 {
-  int i,j, k, errorM;
+  int i,j, k, errorM, skip;
   double *pdInv = doubleArray(size*size);
+  skip=0;
 
   for (i = 0, j = 0; j < size; j++)
     for (k = 0; k <= j; k++)
@@ -148,24 +149,89 @@ void dinv2D(double* X,
   }
   else {
     Rprintf(emsg);
-    //Rprintf(": LAPACK dpptrf failed, %d with corners elements %5g %5g ; %5g %5g\n", errorM,pdInv[0],pdInv[(size == 3) ? 5 : 2],*(X+0),*(X+size*size-1));
     if (errorM>0) {
-      Rprintf(": The matrix being inverted was not positive definite. Error code %d\n", errorM);
+      Rprintf(": Warning, the matrix being inverted was not positive definite on minor order %d.\n", errorM);
+      dinv2D_sym(X,size,X_inv,emsg);
+      skip=1;
     } else {
       Rprintf(": The matrix being inverted contained an illegal value. Error code %d.\n", errorM);
+      error("Exiting from dinv2D().\n");
     }
-    error("Exiting from dinv2D().\n");
   }
 
+  if (skip==0) {
   for (i = 0, j = 0; j < size; j++) {
     for (k = 0; k <= j; k++) {
-      //X_inv[j][k] = pdInv[i];
-      //X_inv[k][j] = pdInv[i++];
       *(X_inv+size*j+k) = pdInv[i];
       *(X_inv+size*k+j) = pdInv[i++];
     }
   }
+  }
 
+  Free(pdInv);
+}
+
+
+/* inverting a matrix, assumes symmtretric, but not pos def
+ * Uses special syntax since we don't know dimensions of array
+ * Prevents memory errors for matrices created with double[][]
+*/
+void dinv2D_sym(double* X,
+	  int	size,
+	  double* X_inv,char* emsg)
+{
+  int i,j, k, errorM, size2;
+  size2=size*size;
+  double *pdInv = doubleArray(size2);
+  double *B= doubleArray(size2);
+  int *factor_out = intArray(size);
+
+  //init pdInv and B.  B is identity
+  for (i = 0, j = 0; j < size; j++)
+    for (k = 0; k < size; k++) {
+      if (j==k) B[i]=1;
+      else B[i]=0;
+      pdInv[i]=*(X+k*size+j);
+      i++;
+    }
+
+  //for (i = 0, j = 0; j < size; j++)
+  //  for (k = 0; k <= j; k++) {
+  //    pdInv[i++] = *(X+k*size+j);
+  //  }
+
+  double *work0 = doubleArray(size2);
+  int test=-1;
+  F77_CALL(dsysv)("U", &size, &size, pdInv, &size, factor_out, B, &size, work0, &test, &errorM);
+  int lwork=(int)work0[0];
+  Free(work0);
+
+  //Rprintf("work size %d\n",lwork);
+  double *work = doubleArray(lwork);
+  //Rprintf("In A: %5g %5g %5g %5g\n",pdInv[0],pdInv[1],pdInv[2],pdInv[3]);
+  //Rprintf("In B: %5g %5g %5g %5g\n",B[0],B[1],B[2],B[3]);
+  F77_CALL(dsysv)("U", &size, &size, pdInv, &size, factor_out, B, &size, work, &lwork, &errorM);
+  Free(work);
+  //Rprintf("Out1: %5g %5g %5g %5g %d\n",B[0],B[1],B[2],B[3],errorM);
+
+  if (errorM) {
+    Rprintf(emsg);
+    if (errorM>0) {
+      Rprintf(": The matrix being inverted is singular. Error code %d\n", errorM);
+    } else {
+      Rprintf(": The matrix being inverted contained an illegal value. Error code %d.\n", errorM);
+    }
+    error("Exiting from dinv2D_sym() (dsytrf).\n");
+  }
+
+  for (i = 0, j = 0; j < size; j++) {
+    for (k = 0; k < size; k++) {
+      *(X_inv+size*j+k) = B[i++];
+    }
+  }
+
+  free(factor_out);
+  Free(B);
   Free(pdInv);
 }
 
@@ -286,4 +352,9 @@ void dcholdc2D(double *X, int size, double *L)
   }
 
   Free(pdTemp);
+}
+
+int main () {
+  printf("hello world");
+  return 0;
 }
