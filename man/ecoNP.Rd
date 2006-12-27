@@ -140,14 +140,14 @@ data(census)
 
 ## fit the parametric model with contextual effects and N 
 ## using the default prior specification
-res1 <- ecoNP(Y ~ X, N = N, context = TRUE, param = TRUE, data = census,
-              n.draws = 25, verbose = TRUE)
+\dontrun{res1 <- ecoNP(Y ~ X, N = N, context = TRUE, param = TRUE, data = census,
+              n.draws = 25, verbose = TRUE)}
 ## summarize the results
-summary(res1)
+\dontrun{summary(res1)}
 
 ## out-of sample prediction 
-pres1 <- predict(res1)
-summary(pres1)
+\dontrun{pres1 <- predict(res1)}
+\dontrun{summary(pres1)}
 }
 
 \value{

@@ -1,5 +1,5 @@
 ##for simlicity, this summary function only reports parameters related to W_1 and W_2
-summary.ecoML <- function(object, CI = c(2.5, 97.5), units=FALSE, subset=NULL, ...) { 
+summary.ecoML <- function(object, CI = c(2.5, 97.5),  param = TRUE, units = FALSE, subset = NULL, ...) { 
 
 
       n.col<-5

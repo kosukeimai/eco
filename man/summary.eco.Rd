@@ -1,6 +1,7 @@
 \name{summary.eco}
 
 \alias{summary.eco}
+\alias{print.eco}
 \alias{print.summary.eco}
 
 \title{Summarizing the Results for the Bayesian Parametric Model for

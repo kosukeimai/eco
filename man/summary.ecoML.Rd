@@ -11,10 +11,10 @@
 }
 
 \usage{
-  \method{summary}{eco}(object, CI = c(2.5, 97.5), units = FALSE,
-            subset = NULL,...) 
+  \method{summary}{ecoML}(object, CI = c(2.5, 97.5),  param = TRUE, units = FALSE,
+     subset = NULL, ...) 
 
-  \method{print}{summary.eco}(x, digits = max(3, getOption("digits") - 3), ...)
+  \method{print}{summary.ecoML}(x, digits = max(3, getOption("digits") - 3), ...)
 }
 
 \arguments{
@@ -23,15 +23,16 @@
     intervals used to summarize the results. The default is the
     equal tail 95 percent credible interval.
   }
-  \item{units}{Logical. If \code{TRUE}, the in-sample predictions for
-    each unit or for a subset of units will be provided. The default 
-    value is \code{FALSE}.
-  } 
+  \item{param}{Ignored.}
   \item{subset}{A numeric vector indicating the subset of the units whose 
     in-sample predications to be provided when \code{units} is 
     \code{TRUE}. The default value is \code{NULL} where the in-sample 
     predictions for each unit will be provided.
   }
+  \item{units}{Logical. If \code{TRUE}, the in-sample predictions for
+    each unit or for a subset of units will be provided. The default 
+    value is \code{FALSE}.
+  } 
   
   \item{x}{An object of class \code{summary.ecoML}.}
   \item{digits}{the number of significant digits to use when printing.}

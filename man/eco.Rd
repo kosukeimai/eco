@@ -138,28 +138,28 @@ data(reg)
 ## examples. See Imai, Lu and Strauss (2006) for more complete analyses.
 
 ## fit the parametric model with the default prior specification
-res <- eco(Y ~ X, data = reg, verbose = TRUE)
+\dontrun{res <- eco(Y ~ X, data = reg, verbose = TRUE)}
 ## summarize the results
-summary(res)
+\dontrun{summary(res)}
 
 ## obtain out-of-sample prediction
-out <- predict(res, verbose = TRUE)
+\dontrun{out <- predict(res, verbose = TRUE)}
 ## summarize the results
-summary(out)
+\dontrun{summary(out)}
 
 ## load the Robinson's census data
 data(census)
 
 ## fit the parametric model with contextual effects and N 
 ## using the default prior specification
-res1 <- eco(Y ~ X, N = N, context = TRUE, data = census, verbose = TRUE)
+\dontrun{res1 <- eco(Y ~ X, N = N, context = TRUE, data = census, verbose = TRUE)}
 ## summarize the results
-summary(res1)
+\dontrun{summary(res1)}
 
 ## obtain out-of-sample prediction
-out1 <- predict(res1, verbose = TRUE)
+\dontrun{out1 <- predict(res1, verbose = TRUE)}
 ## summarize the results
-summary(out1)
+\dontrun{summary(out1)}
 
 }
 
