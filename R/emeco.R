@@ -44,7 +44,11 @@ ecoML <- function(formula, data = parent.frame(), N=NULL, supplement = NULL,
   tmp <- checkdata(X, Y, supplement, ndim)
   bdd <- ecoBD(formula=formula, data=data)
   n <- tmp$n.samp+tmp$survey.samp+tmp$samp.X1+tmp$samp.X0
-  inSample.length <- ndim*tmp$n.samp
+  wcol<-ndim
+  if (context) {
+    wcol<-wcol-1
+  }
+  inSample.length <- wcol*tmp$n.samp
 
   #if NCAR and the user did not provide a theta.start
   if (context && (length(theta.start)==5) ) 
@@ -82,9 +86,9 @@ ecoML <- function(formula, data = parent.frame(), N=NULL, supplement = NULL,
   }
 
   ## In sample prediction of W
-  W <- matrix(rep(NA,inSample.length),ncol=ndim)
+  W <- matrix(rep(NA,inSample.length),ncol=wcol)
   for (i in 1:tmp$n.samp)
-    for (j in 1:ndim)
+    for (j in 1:wcol)
       W[i,j]=res$inSample[(i-1)*2+j]
 
   ## SEM step

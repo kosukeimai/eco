@@ -119,7 +119,7 @@ void cEMeco(
   }
 
   setP.verbose=*verbosiosity;
-  if (setP.verbose>=1) Rprintf("OPTIONS (flag: %d)   Ncar: %s; Fixed Rho: %s; SEM: %s\n",*flag,setP.ncar==1 ? "Yes" : "No",
+  if (setP.verbose>=1) Rprintf("OPTIONS::  Ncar: %s; Fixed Rho: %s; SEM: %s\n",setP.ncar==1 ? "Yes" : "No",
    setP.fixedRho==1 ? "Yes" : "No",setP.sem==1 ? "Second run" : (bit(*flag,2)==1 ? "First run" : "No"));
   setP.calcLoglik=*calcLoglik;
   setP.convergence=*convergence;

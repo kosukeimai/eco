@@ -1,9 +1,10 @@
 ##for simlicity, this summary function only reports parameters related to W_1 and W_2
-summary.ecoML <- function(object, CI = c(2.5, 97.5), subset=NULL, units=FALSE,...) { 
+summary.ecoML <- function(object, CI = c(2.5, 97.5), units=FALSE, subset=NULL, ...) { 
 
 
-	  n.col<-5
-	  if (object$fix.rho) n.col<-4
+      n.col<-5
+      if(object$context) n.col<-7
+      if (object$fix.rho) n.col<-n.col-1
 
 
   n.row<-1
@@ -12,12 +13,18 @@ summary.ecoML <- function(object, CI = c(2.5, 97.5), subset=NULL, units=FALSE,..
 
   param.table<-matrix(NA, n.row, n.col)
    
-  if (!object$context)
-   param.table[1,]<-object$theta.em	
-  else if (object$context && !object$fix.rho)
-   param.table[1,]<-object$theta.em[c(2,3,5,6,9)]	
-  else if (object$context && object$fix.rho)
-   param.table[1,]<-object$theta.em[c(2,3,5,6)]	
+  if (!object$context) {
+   param.table[1,]<-object$theta.em 
+   cname<-c("mu1", "mu2", "sigma1", "sigma2", "rho")
+  }
+  else if (object$context && !object$fix.rho) {
+   cname<-c("mu1", "mu2", "sigma1", "sigma2", "rho1X","rho2X","rho12")
+   param.table[1,]<-object$theta.em[c(2,3,5,6,7,8,9)]   
+  }
+  else if (object$context && object$fix.rho) {
+   cname<-c("mu1", "mu2", "sigma1", "sigma2", "rho1X","rho2X")
+   param.table[1,]<-object$theta.em[c(2,3,5,6,7,8)] 
+  }
 
   if (n.row>1) {
     if (!object$context) {
@@ -25,8 +32,8 @@ summary.ecoML <- function(object, CI = c(2.5, 97.5), subset=NULL, units=FALSE,..
     param.table[3,]<-Fmis<-1-diag(object$Iobs)/diag(object$Icom)
    }
    else if (object$context && !object$fix.rho) {
-    param.table[2,]<-sqrt(diag(object$Vobs)[c(2,3,5,6,9)])
-    param.table[3,]<-Fmis<-(1-diag(object$Iobs)/diag(object$Icom))[c(2,3,5,6,9)]
+    param.table[2,]<-sqrt(diag(object$Vobs)[c(2,3,5,6,7,8,9)])
+    param.table[3,]<-Fmis<-(1-diag(object$Iobs)/diag(object$Icom))[c(2,3,5,6,7,8,9)]
   }
    else if (object$context && object$fix.rho) {
     param.table[2,]<-sqrt(diag(object$Vobs)[c(2,3,5,6)])
@@ -34,7 +41,6 @@ summary.ecoML <- function(object, CI = c(2.5, 97.5), subset=NULL, units=FALSE,..
   }
 
   }
-  cname<-c("mu1", "mu2", "sigma1", "sigma2", "rho")
   rname<-c("ML est.", "std. err.", "frac. missing")
   
 
@@ -57,10 +63,15 @@ summary.ecoML <- function(object, CI = c(2.5, 97.5), subset=NULL, units=FALSE,..
   W2.mean <- mean(object$W[,2])
   W1.sd <- sd(object$W[,1])
   W2.sd <- sd(object$W[,2])
-  W1.q1 <-  W1.mean-1.96*W1.sd
-  W1.q2 <-  W1.mean+1.96*W1.sd
-  W2.q1 <-  W2.mean-1.96*W2.sd
-  W2.q2 <-  W2.mean+1.96*W2.sd
+#  W1.q1 <-  W1.mean-1.96*W1.sd
+#  W1.q2 <-  W1.mean+1.96*W1.sd
+#  W2.q1 <-  W2.mean-1.96*W2.sd
+#  W2.q2 <-  W2.mean+1.96*W2.sd
+  W1.q1 <-  quantile(object$W[,1],min(CI)/100)
+  W1.q2 <-  quantile(object$W[,1],max(CI)/100)
+  W2.q1 <-  quantile(object$W[,2],min(CI)/100)
+  W2.q2 <-  quantile(object$W[,2],max(CI)/100)
+  
   agg.table <- rbind(cbind(W1.mean, W1.sd, W1.q1, W1.q2),
                      cbind(W2.mean, W2.sd, W2.q1, W2.q2)) 
   colnames(agg.table) <- table.names
@@ -75,10 +86,14 @@ summary.ecoML <- function(object, CI = c(2.5, 97.5), subset=NULL, units=FALSE,..
   W2.mean <- mean(object$W[,2] *(1-object$X)*N)
   W1.sd <- sd(object$W[,1]* object$X*N)
   W2.sd <- sd(object$W[,2]*(1-object$X)*N)
-  W1.q1 <-  W1.mean-1.96*W1.sd
-  W1.q2 <-  W1.mean+1.96*W1.sd
-  W2.q1 <-  W2.mean-1.96*W2.sd
-  W2.q2 <-  W2.mean+1.96*W2.sd
+#  W1.q1 <-  W1.mean-1.96*W1.sd
+#  W1.q2 <-  W1.mean+1.96*W1.sd
+#  W2.q1 <-  W2.mean-1.96*W2.sd
+#  W2.q2 <-  W2.mean+1.96*W2.sd
+  W1.q1 <-  quantile(object$W[,1] * object$X*N,min(CI)/100)
+  W1.q2 <-  quantile(object$W[,1] * object$X*N,max(CI)/100)
+  W2.q1 <-  quantile(object$W[,2]*(1-object$X),min(CI)/100)
+  W2.q2 <-  quantile(object$W[,2]*(1-object$X),max(CI)/100)
   agg.wtable <- rbind(cbind(W1.mean, W1.sd, W1.q1, W1.q2),
                       cbind(W2.mean, W2.sd, W2.q1, W2.q2))
   colnames(agg.wtable) <- table.names
