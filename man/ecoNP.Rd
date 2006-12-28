@@ -58,9 +58,9 @@ ecoNP(formula, data = parent.frame(), N = NULL, supplement = NULL,
   \item{nu0}{A positive integer representing the prior degrees of
   freedom of the variance matrix \eqn{\Sigma}. the default is \code{4}.
   } 
-  \item{S0}{A postive scalar or a positive definite matrix that specifies 
+  \item{S0}{A positive scalar or a positive definite matrix that specifies 
   the prior scale matrix for the variance matrix \eqn{\Sigma}. If it is 
-  a scalar, then the prior scale matrix will be a digonal matrix with 
+  a scalar, then the prior scale matrix will be a diagonal matrix with 
   the same dimensions as \eqn{\Sigma} and the diagonal elements all take value 
   of \code{S0}, otherwise \code{S0} needs to have same dimensions as 
   \eqn{\Sigma}. When \code{context=TRUE}, \eqn{\Sigma} is a 
@@ -104,7 +104,7 @@ ecoNP(formula, data = parent.frame(), N = NULL, supplement = NULL,
     Markov chain; i.e. the number of Gibbs draws between the recorded
     values that are skipped. The default is \code{0}.
   } 
-  \item{verbose}{Logical. If \code{TRUE}, the progress of the gibbs 
+  \item{verbose}{Logical. If \code{TRUE}, the progress of the Gibbs 
    sampler is printed to the screen. The default is \code{FALSE}.
   }
 }

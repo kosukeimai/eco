@@ -81,7 +81,7 @@
     before the convergence criterion is met. The default is \code{1000}.
   } 
   \item{loglik}{Logical. If \code{TRUE}, the value of the log-likelihood
-    funcation at each iteration of EM is saved. The default is
+    function at each iteration of EM is saved. The default is
     \code{TRUE}.
   } 
   \item{hyptest}{Logical. If \code{TRUE}, model is estimated under the null
@@ -119,7 +119,7 @@ data(census)
 ## NOTE: convergence has not been properly assessed for the following
 ## examples. See Imai, Lu and Strauss (2006) for more complete analyses.
 ## In the first example below, in the interest of time, only part of the
-## data set is analyzed and the covergence requirement is less stringent
+## data set is analyzed and the convergence requirement is less stringent
 ## than the default setting.
 
 ## In the second example, the program is arbitrarily halted 100 iterations
@@ -170,7 +170,7 @@ surv <- 1:600
     \eqn{var(W_1)},\eqn{var(W_2)}, and \eqn{cov(W_1,W_2)}. If
     \code{context = TRUE}, \eqn{E(X)},\eqn{cov(W_1,X)}, 
     \eqn{cov(W_2,X)} are also reported.}
-  \item{W}{Insample estimation of \eqn{W_1} and \eqn{W_2}.}
+  \item{W}{In-sample estimation of \eqn{W_1} and \eqn{W_2}.}
   \item{suff.stat}{The sufficient statistics for \code{theta.em}.}
   \item{iters.em}{Number of EM iterations before convergence is achieved.}
   \item{iters.sem}{Number of SEM iterations before convergence is achieved.}

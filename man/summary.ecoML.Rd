@@ -63,7 +63,7 @@
     depends on how many correlation parameters exist in the model. Column
     order is the same as the order of the parameters in \code{param.table}.}
   \item{param.table}{Final estimates of the parameter values for the model. 
-    Excludes paramters fixed by the user upon calling \code{ecoML}.}
+    Excludes parameters fixed by the user upon calling \code{ecoML}.}
   \item{agg.table}{Aggregate estimates of the marginal means
     of \eqn{W_1} and \eqn{W_2}}
   \item{agg.wtable}{Aggregate estimates of the marginal means

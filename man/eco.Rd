@@ -59,9 +59,9 @@ eco(formula, data = parent.frame(), N = NULL, supplement = NULL,
   \item{nu0}{A positive integer representing the prior degrees of
   freedom of the variance matrix \eqn{\Sigma}. the default is \code{4}.
   } 
-  \item{S0}{A postive scalar or a positive definite matrix that specifies 
+  \item{S0}{A positive scalar or a positive definite matrix that specifies 
   the prior scale matrix for the variance matrix \eqn{\Sigma}. If it is 
-  a scalar, then the prior scale matrix will be a digonal matrix with 
+  a scalar, then the prior scale matrix will be a diagonal matrix with 
   the same dimensions as \eqn{\Sigma} and the diagonal elements all take value 
   of \code{S0}, otherwise \code{S0} needs to have same dimensions as 
   \eqn{\Sigma}. When \code{context=TRUE}, \eqn{\Sigma} is a 
@@ -79,7 +79,7 @@ eco(formula, data = parent.frame(), N = NULL, supplement = NULL,
   \item{Sigma.start}{A scalar or a positive definite matrix
    that specified the starting value of the variance matrix 
    \eqn{\Sigma}. If it is  a scalar, then the prior scale 
-  matrix will be a digonal matrix with the same dimensions 
+  matrix will be a diagonal matrix with the same dimensions 
   as \eqn{\Sigma} and the diagonal elements all take value 
   of \code{S0}, otherwise \code{S0} needs to have same dimensions as 
   \eqn{\Sigma}. When \code{context=TRUE}, \eqn{\Sigma} is a 

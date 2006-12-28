@@ -10,7 +10,7 @@
   This data set contains the proportion of the residents who are black,
   the proportion of those who can read, the total population as well as
   the actual black literacy rate and white literacy rate for 1040
-  counties in the US. The dataset was originally analyzed by Robison
+  counties in the US. The dataset was originally analyzed by Robinson
   (1950) at the state level. King (1997) recoded the 1910 census at
   county level. The data set only includes those who are older than 10
   years of age. 
