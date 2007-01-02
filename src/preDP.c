@@ -1,17 +1,9 @@
-/******************************************************************
-  This file is a part of eco: R Package for Fitting Bayesian Models 
-  of Ecological Inference for 2x2 Tables
-  by Kosuke Imai and Ying Lu
-  Copyright: GPL version 2 or later.
-*******************************************************************/
-
 #include <stddef.h>
 #include <string.h>
 #include <stdio.h>      
 #include <math.h>
 #include <Rmath.h>
 #include <R.h>
-#include <Rinterface.h>
 #include "vector.h"
 #include "subroutines.h"
 #include "rand.h"

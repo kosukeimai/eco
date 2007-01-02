@@ -1,9 +1,3 @@
-/******************************************************************
-  This file is a part of eco: R Package for Ecological Inference
-  by Kosuke Imai and Ying Lu
-  Copyright: GPL version 2 or later.
-*******************************************************************/
-
 #include <stddef.h>
 #include <stdio.h>      
 #include <math.h>
