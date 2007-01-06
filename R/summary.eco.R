@@ -13,12 +13,12 @@ summary.eco <- function(object, CI = c(2.5, 97.5), param = TRUE,
   table.names<-c("mean", "std.dev", paste(min(CI), "%", sep=" "),
                  paste(max(CI), "%", sep=" ")) 
 
-  if (is.null(object$N))
-    N <- rep(1, nrow(object$X))
-  else N <- object$N
+  
+  agg.table <-agg.wtable <-NULL
+  N<-rep(1, length(object$X))
+  W1.agg.mean <- object$W[,1,]%*% (object$X*N/sum(object$X*N))
+  W2.agg.mean <- object$W[,2,]%*% ((1-object$X)*N/sum((1-object$X)*N))
 
-  W1.agg.mean <- object$W[,1,] %*% (object$X*N/sum(object$X*N))
-  W2.agg.mean <- object$W[,2,] %*% ((1-object$X)*N/sum((1-object$X)*N))
   agg.table <- rbind(cbind(mean(W1.agg.mean), sd(W1.agg.mean), 
                            quantile(W1.agg.mean, min(CI)/100), 
                            quantile(W1.agg.mean, max(CI)/100)),
@@ -27,6 +27,23 @@ summary.eco <- function(object, CI = c(2.5, 97.5), param = TRUE,
                            quantile(W2.agg.mean, max(CI)/100)))
   colnames(agg.table) <- table.names
   rownames(agg.table) <- c("W1", "W2")
+
+    
+  if (!is.null(object$N)) {
+    N <- object$N
+
+    W1.agg.wmean <- object$W[,1,] %*% (object$X*N/sum(object$X*N))
+    W2.agg.wmean <- object$W[,2,] %*% ((1-object$X)*N/sum((1-object$X)*N))
+    agg.wtable <- rbind(cbind(mean(W1.agg.wmean), sd(W1.agg.wmean), 
+                           quantile(W1.agg.wmean, min(CI)/100), 
+                           quantile(W1.agg.wmean, max(CI)/100)),
+                     cbind(mean(W2.agg.wmean), sd(W2.agg.mean), 
+                           quantile(W2.agg.wmean, min(CI)/100), 
+                           quantile(W2.agg.mean, max(CI)/100)))
+    colnames(agg.wtable) <- table.names
+    rownames(agg.wtable) <- c("W1", "W2")
+  }
+
   
   if (units) {
      W1.table <- cbind(apply(object$W[,1,subset], 2, mean), 
@@ -58,7 +75,7 @@ summary.eco <- function(object, CI = c(2.5, 97.5), param = TRUE,
     param.table <- NULL
   
   ans <- list(call = object$call, W1.table = W1.table, W2.table = W2.table,
-              agg.table = agg.table, param.table = param.table,
+              agg.table = agg.table, agg.wtable=agg.wtable, param.table = param.table,
               n.draws = n.draws, n.obs = n.obs) 
   
   class(ans) <-"summary.eco"

@@ -77,27 +77,35 @@ summary.ecoML <- function(object, CI = c(2.5, 97.5),  param = TRUE, units = FALS
   colnames(agg.table) <- table.names
   rownames(agg.table) <- c("W1", "W2")
 
-  if (is.null(object$N))
-    N <- rep(1, nrow(object$X))
-  else
+ # if (is.null(object$N))
+ #   N <- rep(1, nrow(object$X))
+ # else
+ 
+ agg.wtable<-NULL
+ if (!is.null(object$N)) {
     N <- object$N
 
-  W1.mean <- mean(object$W[,1] * object$X*N)
-  W2.mean <- mean(object$W[,2] *(1-object$X)*N)
-  W1.sd <- sd(object$W[,1]* object$X*N)
-  W2.sd <- sd(object$W[,2]*(1-object$X)*N)
-#  W1.q1 <-  W1.mean-1.96*W1.sd
-#  W1.q2 <-  W1.mean+1.96*W1.sd
-#  W2.q1 <-  W2.mean-1.96*W2.sd
-#  W2.q2 <-  W2.mean+1.96*W2.sd
-  W1.q1 <-  quantile(object$W[,1] * object$X*N,min(CI)/100)
-  W1.q2 <-  quantile(object$W[,1] * object$X*N,max(CI)/100)
-  W2.q1 <-  quantile(object$W[,2]*(1-object$X),min(CI)/100)
-  W2.q2 <-  quantile(object$W[,2]*(1-object$X),max(CI)/100)
+  weighted.var <- function(x, w) {
+    return(sum(w * (x - weighted.mean(x,w))^2)/((length(x)-1)*mean(w)))
+    }
+
+  W1.mean <- weighted.mean(object$W[,1], object$X*N)
+  W2.mean <- weighted.mean(object$W[,2], (1-object$X)*N)
+  W1.sd <- weighted.var(object$W[,1], object$X*N)^0.5
+  W2.sd <- weighted.var(object$W[,1], (1-object$X)*N)^0.5
+  W1.q1 <-  W1.mean-1.96*W1.sd
+  W1.q2 <-  W1.mean+1.96*W1.sd
+  W2.q1 <-  W2.mean-1.96*W2.sd
+  W2.q2 <-  W2.mean+1.96*W2.sd
+#  W1.q1 <-  quantile(object$W[,1] * object$X*N/mean(object$X*N),min(CI)/100)
+#  W1.q2 <-  quantile(object$W[,1] * object$X*N/mean(object$X*N),max(CI)/100)
+#  W2.q1 <-  quantile(object$W[,2]*(1-object$X)*N/(mean((1-object$X)*N)),min(CI)/100)
+#  W2.q2 <-  quantile(object$W[,2]*(1-object$X)*N/(mean((1-object$X)*N)),max(CI)/100)
   agg.wtable <- rbind(cbind(W1.mean, W1.sd, W1.q1, W1.q2),
                       cbind(W2.mean, W2.sd, W2.q1, W2.q2))
   colnames(agg.wtable) <- table.names
   rownames(agg.wtable) <- c("W1", "W2")
+  }
   
   if (units) 
     W.table <- object$W[subset,] 

@@ -16,9 +16,10 @@ print.summary.ecoML <- function(x, digits=max(3,
   cat("\nUnweighted:\n")
   printCoefmat(x$agg.table, digits=digits, na.print="NA",...)
   
+  if (!is.null(x$agg.wtable)) {
   cat("\nWeighted:\n")
   printCoefmat(x$agg.wtable, digits=digits, na.print="NA",...)
-  
+  }
   if (!is.null(x$W.table)) {
     cat("\n\nUnit-level Estimates of W:\n")
     printCoefmat(x$W.table, digits=digits, na.print="NA",...)
