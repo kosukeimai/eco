@@ -1,11 +1,9 @@
 #include <stddef.h>
 #include <stdio.h>
 #include <math.h>
+#include <R.h>
 #include <Rmath.h>
-#include <R_ext/Utils.h>
 #include <R_ext/PrtUtil.h>
-#include <R_ext/Memory.h>
-#include <R_ext/Random.h>
 #include "vector.h"
 #include "subroutines.h"
 #include "rand.h"
