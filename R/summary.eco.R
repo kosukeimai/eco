@@ -37,9 +37,9 @@ summary.eco <- function(object, CI = c(2.5, 97.5), param = TRUE,
     agg.wtable <- rbind(cbind(mean(W1.agg.wmean), sd(W1.agg.wmean), 
                            quantile(W1.agg.wmean, min(CI)/100), 
                            quantile(W1.agg.wmean, max(CI)/100)),
-                     cbind(mean(W2.agg.wmean), sd(W2.agg.mean), 
+                     cbind(mean(W2.agg.wmean), sd(W2.agg.wmean), 
                            quantile(W2.agg.wmean, min(CI)/100), 
-                           quantile(W2.agg.mean, max(CI)/100)))
+                           quantile(W2.agg.wmean, max(CI)/100)))
     colnames(agg.wtable) <- table.names
     rownames(agg.wtable) <- c("W1", "W2")
   }

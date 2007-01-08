@@ -34,9 +34,9 @@ summary.ecoNP <- function(object, CI=c(2.5, 97.5), param=FALSE, units=FALSE, sub
     agg.wtable <- rbind(cbind(mean(W1.agg.wmean), sd(W1.agg.wmean), 
                            quantile(W1.agg.wmean, min(CI)/100), 
                            quantile(W1.agg.wmean, max(CI)/100)),
-                     cbind(mean(W2.agg.wmean), sd(W2.agg.mean), 
+                     cbind(mean(W2.agg.wmean), sd(W2.agg.wmean), 
                            quantile(W2.agg.wmean, min(CI)/100), 
-                           quantile(W2.agg.mean, max(CI)/100)))
+                           quantile(W2.agg.wmean, max(CI)/100)))
     colnames(agg.wtable) <- table.names
     rownames(agg.wtable) <- c("W1", "W2")
   }
@@ -93,7 +93,8 @@ summary.ecoNP <- function(object, CI=c(2.5, 97.5), param=FALSE, units=FALSE, sub
       param.table <- NULL
 
   ans <- list(call = object$call, W1.table = W1.table, W2.table = W2.table,
-              agg.table = agg.table, param.table = param.table,
+              agg.table = agg.table, agg.wtable=agg.wtable, 
+		param.table = param.table,
               n.draws = n.draws, n.obs = n.obs) 
 
   class(ans) <-c("summary.eco", "summary.ecoNP") 
