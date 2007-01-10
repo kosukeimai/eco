@@ -204,6 +204,7 @@ double getLogLikelihood(Param* param) {
       }
   else {
     Rprintf("Error.\n");
+    return 0;
   }
 }
 
