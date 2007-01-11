@@ -84,7 +84,10 @@ summary.ecoML <- function(object, CI = c(2.5, 97.5),  param = TRUE, units = FALS
  agg.wtable<-NULL
  if (!is.null(object$N)) {
     N <- object$N
-
+}
+else {
+    N <- rep(1:n.obs)
+}
   weighted.var <- function(x, w) {
     return(sum(w * (x - weighted.mean(x,w))^2)/((length(x)-1)*mean(w)))
     }
@@ -105,7 +108,7 @@ summary.ecoML <- function(object, CI = c(2.5, 97.5),  param = TRUE, units = FALS
                       cbind(W2.mean, W2.sd, W2.q1, W2.q2))
   colnames(agg.wtable) <- table.names
   rownames(agg.wtable) <- c("W1", "W2")
-  }
+  
   
   if (units) 
     W.table <- object$W[subset,] 
