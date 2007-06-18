@@ -83,9 +83,9 @@ ecoBD(formula, data = parent.frame(), N = NULL)
 data(reg)
 
 ## calculate the bounds
-\dontrun{res <- ecoBD(Y ~ X, N = N, data = reg)}
+res <- ecoBD(Y ~ X, N = N, data = reg)
 ## print the results
-\dontrun{print(res)}
+print(res)
 }
 
 \value{
@@ -114,9 +114,10 @@ data(reg)
 
 \author{
   Kosuke Imai, Department of Politics, Princeton University
-  \email{kimai@Princeton.Edu}, \url{http://www.princeton.edu/~kimai};
+  \email{kimai@Princeton.Edu}, \url{http://imai.princeton.edu/};
   Ying Lu, Institute for Quantitative Social Sciences, 
-  Harvard University \email{ylu@Latte.Harvard.Edu}}
+  Harvard University \email{ylu@Latte.Harvard.Edu}
+}
 
 \references{
   Imai, Kosuke. (2005) \dQuote{Ecological Inference in \eqn{R \times C}
