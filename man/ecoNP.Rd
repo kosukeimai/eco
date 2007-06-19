@@ -191,10 +191,15 @@ data(census)
 }
 
 \references{
-  Imai, Kosuke, Ying Lu and Aaron Strauss. (2006) \dQuote{Bayesian and
-    Likelihood Inference for 2 x 2 Ecological Tables: An Incomplete Data
-    Approach} Technical Report, Princeton University, available at 
-  \url{http://imai.princeton.edu/research/eiall.html}
+  Imai, Kosuke, Ying Lu and Aaron Strauss. (Forthcoming).
+  \dQuote{eco: R Package for Ecological Inference in 2x2 Tables}
+  Journal of Statistical Software, available at
+  \url{http://imai.princeton.edu/research/eco.html}
+
+  Imai, Kosuke, Ying Lu and Aaron Strauss. (Forthcoming).
+  \dQuote{Bayesian and Likelihood Inference for 2 x 2 Ecological Tables:
+    An Incomplete Data Approach} Political Analysis, available at
+ \url{http://imai.princeton.edu/research/eiall.html}
 }
 
 \seealso{\code{eco}, \code{ecoML}, \code{predict.eco}, \code{summary.ecoNP}}

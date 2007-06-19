@@ -116,6 +116,18 @@ print(res)
   The object can be printed through \code{print.ecoBD}.
 }
 
+\references{
+  Imai, Kosuke, Ying Lu and Aaron Strauss. (Forthcoming)
+  \dQuote{eco: R Package for Ecological Inference in 2x2 Tables}
+  Journal of Statistical Software, available at
+  \url{http://imai.princeton.edu/research/eco.html}
+
+  Imai, Kosuke, Ying Lu and Aaron Strauss. (Forthcoming)
+  \dQuote{Bayesian and Likelihood Inference for 2 x 2 Ecological Tables:
+    An Incomplete Data Approach} Political Analysis, available at
+ \url{http://imai.princeton.edu/research/eiall.html}
+}
+
 \author{
   Kosuke Imai, Department of Politics, Princeton University
   \email{kimai@Princeton.Edu}, \url{http://imai.princeton.edu/};
