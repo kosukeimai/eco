@@ -31,14 +31,18 @@ ecoBD <- function(formula, data = parent.frame(), N=NULL){
     R <- ncol(Y)
     Wmin <- Wmax <- Nmin <- Nmax <- array(NA, c(n.obs, R, C))
     clab <- rlab <- NULL
-    for (j in 1:C) {
-      if ((j == C) & (length(vnames) < j+2))
-        clab <- c(clab, "other")
-      else
-        clab <- c(clab, vnames[[j+2]])
+    if (length(vnames) == 3)
+      clab <- c(vnames[[3]], paste("not",vnames[[3]]))
+    else {
+      for (j in 1:C) {
+        if ((j == C) & (length(vnames) < j+2))
+          clab <- c(clab, "other")
+        else
+          clab <- c(clab, vnames[[j+2]])
+      }
     }
     if (length(vnamesR) == 1)
-      rlab <- c(vnamesR, "other")
+      rlab <- c(vnamesR, paste("not",vnamesR))
     else {
       for (i in 1:R) {
         if ((i == R) & (length(vnamesR) < i+1))
@@ -73,14 +77,18 @@ ecoBD <- function(formula, data = parent.frame(), N=NULL){
     R <- ncol(Y)
     Wmin <- Wmax <- array(NA, c(n.obs, R, C))
     clab <- rlab <- NULL
-    for (j in 1:C) {
-      if ((j == C) & (length(vnames) < j+2))
-        clab <- c(clab, "other")
-      else
-        clab <- c(clab, vnames[[j+2]])
+    if (length(vnames) == 3)
+      clab <- c(vnames[[3]], paste("not",vnames[[3]]))
+    else {
+      for (j in 1:C) {
+        if ((j == C) & (length(vnames) < j+2))
+          clab <- c(clab, "other")
+        else
+          clab <- c(clab, vnames[[j+2]])
+      }
     }
     if (length(vnamesR) == 1)
-      rlab <- c(vnamesR, "other")
+      rlab <- c(vnamesR, paste("not",vnamesR))
     else {
       for (i in 1:R) {
         if ((i == R) & (length(vnamesR) < i+1))
