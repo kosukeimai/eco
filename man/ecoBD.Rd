@@ -37,8 +37,12 @@ ecoBD(formula, data = parent.frame(), N = NULL)
   For example, \code{Y ~ X} specifies \code{Y} as the first column
   margin and \code{X} as the first row margin in \eqn{2 \times 2} tables.
   If counts are used, \code{formula} may omit the last row and/or column
-  margin of the table only if \code{N} is supplied. For larger tables,
-  one can use \code{cbind()} and \code{+}. For example, \code{cbind(Y1,
+  margin of the table only if \code{N} is supplied. In this example, the
+  columns will be labeled as \code{X} and \code{not X}, and the rows
+  will be labeled as \code{Y} and \code{not Y}.
+
+  For larger tables, one can use \code{cbind()} and \code{+}. For
+  example, \code{cbind(Y1,
     Y2, Y3) ~ X1 + X2 + X3 + X4)} specifies \eqn{3 \times 4} tables.
  
   An \eqn{R \times C} ecological table in the form of counts:
@@ -117,11 +121,6 @@ print(res)
   \email{kimai@Princeton.Edu}, \url{http://imai.princeton.edu/};
   Ying Lu, Institute for Quantitative Social Sciences, 
   Harvard University \email{ylu@Latte.Harvard.Edu}
-}
-
-\references{
-  Imai, Kosuke. (2005) \dQuote{Ecological Inference in \eqn{R \times C}
-    Tables} Working Paper, Princeton University.
 }
 
 \seealso{\code{eco}, \code{ecoNP}}
