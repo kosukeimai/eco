@@ -56,27 +56,26 @@ void NormConstT(double *t, int n, void *param)
 
   dtemp=1/(2*M_PI*sqrt(Sigma[0][0]*Sigma[1][1]*(1-rho*rho)));
 
-  for (ii=0; ii<n; ii++)
-    {
-      imposs=0; inp=t[ii];
-      W1[ii]=getW1starFromT(t[ii],pp,&imposs);
-      if (!imposs) W2[ii]=getW2starFromT(t[ii],pp,&imposs);
-		  if (imposs==1) t[ii]=0;
-      else {
-          W1p[ii]=getW1starPrimeFromT(t[ii],pp);
-          W2p[ii]=getW2starPrimeFromT(t[ii],pp);
-          pfact=sqrt(W1p[ii]*W1p[ii]+W2p[ii]*W2p[ii]);
-          t[ii]=exp(-1/(2*(1-rho*rho))*
-                ((W1[ii]-mu[0])*(W1[ii]-mu[0])/Sigma[0][0]+
-                 (W2[ii]-mu[1])*(W2[ii]-mu[1])/Sigma[1][1]-
-                  2*rho*(W1[ii]-mu[0])*(W2[ii]-mu[1])
-                /sqrt(Sigma[0][0]*Sigma[1][1])))*dtemp*pfact;
-    //if (pp->setP->weirdness)
-     //   Rprintf("Normc... %d %d %5g -> %5g %5g => %5g with %5g imposs %d\n", ii, n, inp, W1[ii], W2[ii],t[ii],pfact,imposs);
-        //char ch;
-        //scanf(" %c", &ch );
-      }
+  for (ii=0; ii<n; ii++) {
+    imposs=0; inp=t[ii];
+    W1[ii]=getW1starFromT(t[ii],pp,&imposs);
+    if (!imposs) W2[ii]=getW2starFromT(t[ii],pp,&imposs);
+    if (imposs==1) t[ii]=0;
+    else {
+        W1p[ii]=getW1starPrimeFromT(t[ii],pp);
+        W2p[ii]=getW2starPrimeFromT(t[ii],pp);
+        pfact=sqrt(W1p[ii]*W1p[ii]+W2p[ii]*W2p[ii]);
+        t[ii]=exp(-1/(2*(1-rho*rho))*
+              ((W1[ii]-mu[0])*(W1[ii]-mu[0])/Sigma[0][0]+
+               (W2[ii]-mu[1])*(W2[ii]-mu[1])/Sigma[1][1]-
+                2*rho*(W1[ii]-mu[0])*(W2[ii]-mu[1])
+              /sqrt(Sigma[0][0]*Sigma[1][1])))*dtemp*pfact;
+  //if (pp->setP->weirdness)
+   //   Rprintf("Normc... %d %d %5g -> %5g %5g => %5g with %5g imposs %d\n", ii, n, inp, W1[ii], W2[ii],t[ii],pfact,imposs);
+      //char ch;
+      //scanf(" %c", &ch );
     }
+  }
   Free(W1);
   Free(W1p);
   Free(W2);
@@ -91,7 +90,8 @@ void NormConstT(double *t, int n, void *param)
  */
 void SuffExp(double *t, int n, void *param)
 {
-  int ii,imposs,suff,i,j;
+  int ii,imposs,i,j;
+  sufficient_stat suff;
   Param *pp=(Param *)param;
   int dim = (pp->setP->ncar==1) ? 3 : 2;
   double *mu=doubleArray(dim);
@@ -109,7 +109,7 @@ void SuffExp(double *t, int n, void *param)
   W2p = doubleArray(n);
   mu[0]= pp->caseP.mu[0];
   mu[1]= pp->caseP.mu[1];
-  for(i=0;i<dim;i++)
+  for(i=0;i<dim;i++) {
     for(j=0;j<dim;j++) {
       if (dim==3) {
         Sigma[i][j]=pp->setP->Sigma3[i][j];
@@ -120,62 +120,62 @@ void SuffExp(double *t, int n, void *param)
         InvSigma[i][j]=pp->setP->InvSigma[i][j];
       }
     }
+  }
   normc=pp->caseP.normcT;
   suff=pp->caseP.suff;
   imposs=0;
 
-   for (ii=0; ii<n; ii++)
-    {
-     imposs=0; inp=t[ii];
-      W1[ii]=getW1starFromT(t[ii],pp,&imposs);
-      if (!imposs) W2[ii]=getW2starFromT(t[ii],pp,&imposs);
-		  if (imposs==1) t[ii]=0;
-      else {
-          W1p[ii]=getW1starPrimeFromT(t[ii],pp);
-          W2p[ii]=getW2starPrimeFromT(t[ii],pp);
-          pfact=sqrt(W1p[ii]*W1p[ii]+W2p[ii]*W2p[ii]);
-          vtemp[0] = W1[ii];
-          vtemp[1] = W2[ii];
-          density=dBVNtomo(vtemp, pp, 0,normc);
-          t[ii] = density*pfact;
-          if (suff==0) t[ii]=W1[ii]*t[ii];
-          else if (suff==1) t[ii]=W2[ii]*t[ii];
-          else if (suff==2) t[ii]=W1[ii]*W1[ii]*t[ii];
-          else if (suff==3) t[ii]=W1[ii]*W2[ii]*t[ii];
-          else if (suff==4) t[ii]=W2[ii]*W2[ii]*t[ii];
-          else if (suff==5) t[ii]=invLogit(W1[ii])*t[ii];
-          else if (suff==6) t[ii]=invLogit(W2[ii])*t[ii];
-          else if (suff==7) {
-            if (dim == 3) {
-              //if(pp->setP->verbose>=2 && dim==3) Rprintf("InvSigma loglik: %5g %5g %5g %5g %5g %5g\n",InvSigma[0][0],InvSigma[0][1],InvSigma[1][0],InvSigma[1][1],InvSigma[1][2],InvSigma[2][2]);
-              vtemp[2]=logit(pp->caseP.X,"log-liklihood");
-              mu[0]=pp->setP->pdTheta[1];
-              mu[1]=pp->setP->pdTheta[2];
-              mu[2]=pp->setP->pdTheta[0];
-            }
-            t[ii]=dMVN(vtemp,mu,InvSigma,dim,0)*pfact;
-            //t[ii]=dMVN3(vtemp,mu,(double*)(&(InvSigma[0][0])),dim,0)*pfact;
-          }
-          else if (suff!=-1) Rprintf("Error Suff= %d",suff);
+  for (ii=0; ii<n; ii++) {
+    imposs=0; inp=t[ii];
+    W1[ii]=getW1starFromT(t[ii],pp,&imposs);
+    if (!imposs) W2[ii]=getW2starFromT(t[ii],pp,&imposs);
+    if (imposs==1) t[ii]=0;
+    else {
+      W1p[ii]=getW1starPrimeFromT(t[ii],pp);
+      W2p[ii]=getW2starPrimeFromT(t[ii],pp);
+      pfact=sqrt(W1p[ii]*W1p[ii]+W2p[ii]*W2p[ii]);
+      vtemp[0] = W1[ii];
+      vtemp[1] = W2[ii];
+      density=dBVNtomo(vtemp, pp, 0,normc);
+      t[ii] = density*pfact;
+      if (suff==SS_W1star) t[ii]=W1[ii]*t[ii];
+      else if (suff==SS_W2star) t[ii]=W2[ii]*t[ii];
+      else if (suff==SS_W1star2) t[ii]=W1[ii]*W1[ii]*t[ii];
+      else if (suff==SS_W1W2star) t[ii]=W1[ii]*W2[ii]*t[ii];
+      else if (suff==SS_W2star2) t[ii]=W2[ii]*W2[ii]*t[ii];
+      else if (suff==SS_W1) t[ii]=invLogit(W1[ii])*t[ii];
+      else if (suff==SS_W2) t[ii]=invLogit(W2[ii])*t[ii];
+      else if (suff==SS_Loglik) {
+        if (dim == 3) {
+          //if(pp->setP->verbose>=2 && dim==3) Rprintf("InvSigma loglik: %5g %5g %5g %5g %5g %5g\n",InvSigma[0][0],InvSigma[0][1],InvSigma[1][0],InvSigma[1][1],InvSigma[1][2],InvSigma[2][2]);
+          vtemp[2]=logit(pp->caseP.X,"log-likelihood");
+          mu[0]=pp->setP->pdTheta[1];
+          mu[1]=pp->setP->pdTheta[2];
+          mu[2]=pp->setP->pdTheta[0];
         }
+        t[ii]=dMVN(vtemp,mu,InvSigma,dim,0)*pfact;
+        //t[ii]=dMVN3(vtemp,mu,(double*)(&(InvSigma[0][0])),dim,0)*pfact;
+      }
+      else if (suff!=SS_Test) Rprintf("Error Suff= %d",suff);
     }
+  }
   Free(W1);Free(W1p);Free(W2);Free(W2p);Free(mu);Free(vtemp);
   FreeMatrix(Sigma,dim); FreeMatrix(InvSigma,dim);
 }
 
 //Returns the log likelihood of a particular case
 double getLogLikelihood(Param* param) {
-  if (param->caseP.dataType==0  && !(param->caseP.Y>=.990 || param->caseP.Y<=.010)) {
-    param->caseP.suff=7;
+  if (param->caseP.dataType==DPT_General  && !(param->caseP.Y>=.990 || param->caseP.Y<=.010)) {
+    param->caseP.suff=SS_Loglik;
     return log(paramIntegration(&SuffExp,(void*)param));
   }
-  else if (param->caseP.dataType==3 || (param->caseP.Y>=.990 || param->caseP.Y<=.010)) {
+  else if (param->caseP.dataType==DPT_Survey || (param->caseP.Y>=.990 || param->caseP.Y<=.010)) {
     int dim=param->setP->ncar ? 3 : 2;
     double *mu=doubleArray(dim);
     double *vtemp=doubleArray(dim);
     double **InvSig=doubleMatrix(dim,dim);/* inverse covariance matrix*/
     int i,j;
-    for(i=0;i<dim;i++)
+    for(i=0;i<dim;i++) {
       for(j=0;j<dim;j++) {
         if (dim==3) {
           InvSig[i][j]=param->setP->InvSigma3[i][j];
@@ -184,24 +184,25 @@ double getLogLikelihood(Param* param) {
           InvSig[i][j]=param->setP->InvSigma[i][j];
         }
       }
+    }
     double loglik;
-        vtemp[0] = param->caseP.Wstar[0];
-        vtemp[1] = param->caseP.Wstar[1];
-        mu[0]= param->caseP.mu[0];
-        mu[1]= param->caseP.mu[1];
-        if (param->setP->ncar) {
-          vtemp[2]=logit(param->caseP.X,"log-likelihood survey");
-          mu[0]=param->setP->pdTheta[1];
-          mu[1]=param->setP->pdTheta[2];
-          mu[2]=param->setP->pdTheta[0];
-          loglik=dMVN(vtemp,mu,InvSig,dim,1);
-        }
-        else {
-          loglik=dMVN(vtemp,mu,InvSig,dim,1);
-        }
-      Free(mu); Free(vtemp); FreeMatrix(InvSig,dim);
-      return loglik;
-      }
+    vtemp[0] = param->caseP.Wstar[0];
+    vtemp[1] = param->caseP.Wstar[1];
+    mu[0]= param->caseP.mu[0];
+    mu[1]= param->caseP.mu[1];
+    if (param->setP->ncar) {
+      vtemp[2]=logit(param->caseP.X,"log-likelihood survey");
+      mu[0]=param->setP->pdTheta[1];
+      mu[1]=param->setP->pdTheta[2];
+      mu[2]=param->setP->pdTheta[0];
+      loglik=dMVN(vtemp,mu,InvSig,dim,1);
+    }
+    else {
+      loglik=dMVN(vtemp,mu,InvSig,dim,1);
+    }
+    Free(mu); Free(vtemp); FreeMatrix(InvSig,dim);
+    return loglik;
+  }
   else {
     Rprintf("Error.\n");
     return 0;
@@ -212,63 +213,63 @@ double getLogLikelihood(Param* param) {
 //Y=XW1 + (1-X)W2 and the Wistar=logit(Wi)
 //imposs is set to 1 if the equation cannot be satisfied
 double getW2starFromW1star(double X, double Y, double W1star, int* imposs) {
-      double W1;
-      if (W1star>30) W1=1; //prevent overflow or underflow
-      else W1=1/(1+exp(-1*W1star));
-      double W2=Y/(1-X)-X*W1/(1-X);
+  double W1;
+  if (W1star>30) W1=1; //prevent overflow or underflow
+  else W1=1/(1+exp(-1*W1star));
+  double W2=Y/(1-X)-X*W1/(1-X);
 
-      if(W2>=1 || W2<=0) *imposs=1; //impossible pair of values
-      else W2=log(W2/(1-W2));
-      return W2;
+  if(W2>=1 || W2<=0) *imposs=1; //impossible pair of values
+  else W2=log(W2/(1-W2));
+  return W2;
 }
 
 double getW1starFromW2star(double X, double Y, double W2star, int* imposs) {
-      double W2;
-      if (W2star>30) W2=1; //prevent overflow or underflow
-      else W2=1/(1+exp(-1*W2star));
-      double W1=(Y-(1-X)*W2)/X;
+  double W2;
+  if (W2star>30) W2=1; //prevent overflow or underflow
+  else W2=1/(1+exp(-1*W2star));
+  double W1=(Y-(1-X)*W2)/X;
 
-      if(W1>=1 || W1<=0) *imposs=1; //impossible pair of values
-      else W1=log(W1/(1-W1));
-      return W1;
+  if(W1>=1 || W1<=0) *imposs=1; //impossible pair of values
+  else W1=log(W1/(1-W1));
+  return W1;
 }
 
 double getW1FromW2(double X, double Y, double W2) {
-      return (Y-(1-X)*W2)/X;
+  return (Y-(1-X)*W2)/X;
 }
 
 
 //W1star(t)
 //W1(t)=(W1_ub - W1_lb)*t + W1_lb
 double getW1starFromT(double t, Param* param, int* imposs) {
-    double W1=(param->caseP.Wbounds[0][1] - param->caseP.Wbounds[0][0])*t + param->caseP.Wbounds[0][0];
-    if (W1==1 || W1==0) *imposs=1;
-    else W1=log(W1/(1-W1));
-    return W1;
+  double W1=(param->caseP.Wbounds[0][1] - param->caseP.Wbounds[0][0])*t + param->caseP.Wbounds[0][0];
+  if (W1==1 || W1==0) *imposs=1;
+  else W1=log(W1/(1-W1));
+  return W1;
 }
 //W2star(t)
 //W2(t)=(W2_lb - W2_ub)*t + W2_lb
 double getW2starFromT(double t, Param* param, int* imposs) {
-    double W2=(param->caseP.Wbounds[1][0] - param->caseP.Wbounds[1][1])*t + param->caseP.Wbounds[1][1];
-    if (W2==1 || W2==0) *imposs=1;
-    else W2=log(W2/(1-W2));
-    return W2;
+  double W2=(param->caseP.Wbounds[1][0] - param->caseP.Wbounds[1][1])*t + param->caseP.Wbounds[1][1];
+  if (W2==1 || W2==0) *imposs=1;
+  else W2=log(W2/(1-W2));
+  return W2;
 }
 //W1star'(t)
 //see paper for derivation: W1*(t) = (1/W1)*((w1_ub - w1_lb)/(1-W1)
 double getW1starPrimeFromT(double t, Param* param) {
-    double m=(param->caseP.Wbounds[0][1] - param->caseP.Wbounds[0][0]);
-    double W1=m*t + param->caseP.Wbounds[0][0];
-    W1=(1/W1)*(m/(1-W1));
-    return W1;
+  double m=(param->caseP.Wbounds[0][1] - param->caseP.Wbounds[0][0]);
+  double W1=m*t + param->caseP.Wbounds[0][0];
+  W1=(1/W1)*(m/(1-W1));
+  return W1;
 }
 //W2star'(t)
 //see paper for derivation: W2*(t) = (1/W2)*((w2_lb - w2_ub)/(1-W2)
 double getW2starPrimeFromT(double t, Param* param) {
-    double m=(param->caseP.Wbounds[1][0] - param->caseP.Wbounds[1][1]);
-    double W2=m*t + param->caseP.Wbounds[1][1];
-    W2=(1/W2)*(m/(1-W2));
-    return W2;
+  double m=(param->caseP.Wbounds[1][0] - param->caseP.Wbounds[1][1]);
+  double W2=m*t + param->caseP.Wbounds[1][1];
+  W2=(1/W2)*(m/(1-W2));
+  return W2;
 }
 
 //parameterized integration: bounds always from 0,1
@@ -281,8 +282,8 @@ double paramIntegration(integr_fn f, void *ex) {
   int *iwork=(int *) Calloc(limit, int);
   double *work=(double *)Calloc(lenw, double);
   double lb=0.00001; double ub=.99999;
-    Rdqags(f, ex, &lb, &ub, &epsabs, &epsrel, &result,
-      &anserr, &neval, &ier, &limit, &lenw, &last, iwork, work);
+  Rdqags(f, ex, &lb, &ub, &epsabs, &epsrel, &result,
+    &anserr, &neval, &ier, &limit, &lenw, &last, iwork, work);
 
   Free(iwork);
   Free(work);
@@ -299,7 +300,7 @@ double paramIntegration(integr_fn f, void *ex) {
 
 /* integrate normalizing constant and set it in param*/
 void setNormConst(Param* param) {
-    param->caseP.normcT=paramIntegration(&NormConstT,(void*)param);
+  param->caseP.normcT=paramIntegration(&NormConstT,(void*)param);
 }
 
 

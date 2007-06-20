@@ -5,6 +5,16 @@
 /****************/
 /** structrues **/
 /****************/
+
+/* ENUMS
+ * sufficient statistic to calculate: 0->W1*, 1->W2*, 2->(W1*)^2, 3->(W1*)(W2*), 4->(W2*)^2, 5->W1,6->W2 7->Log Lik,8->test
+ * data point type: 0=general, 1= homogenous with (X==1), 2= homogenous with (X==0), 3=survey (W1 and W2 are known)
+ */
+ enum e_sufficient_stats {SS_W1star, SS_W2star, SS_W1star2, SS_W1W2star, SS_W2star2, SS_W1, SS_W2, SS_Loglik, SS_Test};
+ typedef enum e_sufficient_stats sufficient_stat;
+ enum e_datapoint_types {DPT_General,DPT_Homog_X1, DPT_Homog_x0, DPT_Survey};
+ typedef enum e_datapoint_types datapoint_type;
+
 /* parameters and observed data */
 struct Param_old{
   double mu[2];
@@ -23,9 +33,7 @@ struct Param_old{
   double W1_ub;
   double W2_lb;
   double W2_ub;
-  int W1_inf; //inf: 0->(lb,ub), -1->(-inf,ub), 1->(lb,inf), 2->(-inf,inf)
-  int W2_inf;
-  int suff; //the sufficient stat we're calculating: 0->W1, 1->W2,2->W1^2,3->W1W2,4->W2^2,7->Log Lik, 5/6,-1 ->test case
+  sufficient_stat suff; //the sufficient stat we're calculating: 0->W1, 1->W2,2->W1^2,3->W1W2,4->W2^2,7->Log Lik, 5/6,-1 ->test case
 };
 
 typedef struct Param_old Param_old;
@@ -40,7 +48,7 @@ struct caseParam {
   double Wstar[2]; //place to store E[W1*] when we calculate it each step
   double Wbounds[2][2];  //[i][j] is {j:lower,upper}-bound of W{i+1}
   int suff; //the sufficient stat we're calculating: 0->W1, 1->W2,2->W1^2,3->W1W2,4->W2^2,7->Log Lik, 5/6,-1 ->test case
-  int dataType; //0=unknown, 1=(X==1),2=(X==0),3=survey
+  datapoint_type dataType;
   double** Z_i; //CCAR: k x 2
 };
 

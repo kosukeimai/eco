@@ -385,11 +385,11 @@ if (verbose>=3 && !setP->sem) Rprintf("E-step start\n");
         if (j<2)
           caseP->Wstar[j]=Wstar[i][j];
       }
-      caseP->suff=5;
+      caseP->suff=SS_W1;
       caseP->W[0]=paramIntegration(&SuffExp,param);
-      caseP->suff=6;
+      caseP->suff=SS_W2;
       caseP->W[1]=paramIntegration(&SuffExp,param);
-      caseP->suff=-1;
+      caseP->suff=SS_Test;
       testdens=paramIntegration(&SuffExp,param);
       if (setP->calcLoglik==1 && setP->iter>1) loglik+=getLogLikelihood(param);
 
@@ -1095,9 +1095,9 @@ void initCCAR(Param* params, double* pdTheta) {
  void readData(Param* params, int n_dim, double* pdX, double* sur_W, double* x1_W1, double* x0_W2,
                 int n_samp, int s_samp, int x1_samp, int x0_samp) {
      /* read the data set */
-int itemp,i,j,surv_dim;
-double dtemp;
-setParam* setP=params[0].setP;
+  int itemp,i,j,surv_dim;
+  double dtemp;
+  setParam* setP=params[0].setP;
 
   /** Packing Y, X  **/
   itemp = 0;
@@ -1107,7 +1107,7 @@ setParam* setP=params[0].setP;
     }
 
   for (i = 0; i < n_samp; i++) {
-    params[i].caseP.dataType=0;
+    params[i].caseP.dataType=DPT_General;
     params[i].caseP.X=params[i].caseP.data[0];
     params[i].caseP.Y=params[i].caseP.data[1];
     //fix X edge cases
@@ -1117,46 +1117,51 @@ setParam* setP=params[0].setP;
   }
 
   /*read homeogenous areas information */
-    for (i=n_samp; i<n_samp+x1_samp; i++) {
-      params[i].caseP.dataType=1;
-      params[i].caseP.W[0]=(x1_W1[i] == 1) ? .9999 : ((x1_W1[i]==0) ? .0001 : x1_W1[i]);
-      params[i].caseP.Wstar[0]=logit(params[i].caseP.W[0],"X1 read");
-    }
+  for (i=n_samp; i<n_samp+x1_samp; i++) {
+    params[i].caseP.dataType=DPT_Homog_X1;
+    params[i].caseP.W[0]=(x1_W1[i] == 1) ? .9999 : ((x1_W1[i]==0) ? .0001 : x1_W1[i]);
+    params[i].caseP.Wstar[0]=logit(params[i].caseP.W[0],"X1 read");
+  }
 
-    for (i=n_samp+x1_samp; i<n_samp+x1_samp+x0_samp; i++) {
-      params[i].caseP.dataType=2;
-      params[i].caseP.W[1]=(x0_W2[i] == 1) ? .9999 : ((x0_W2[i]==0) ? .0001 : x0_W2[i]);
-      params[i].caseP.Wstar[1]=logit(params[i].caseP.W[1],"X0 read");
-    }
+  for (i=n_samp+x1_samp; i<n_samp+x1_samp+x0_samp; i++) {
+    params[i].caseP.dataType=DPT_Homog_X0;
+    params[i].caseP.W[1]=(x0_W2[i] == 1) ? .9999 : ((x0_W2[i]==0) ? .0001 : x0_W2[i]);
+    params[i].caseP.Wstar[1]=logit(params[i].caseP.W[1],"X0 read");
+  }
+
+  /*Current version of program does not handle homogenous data*/
+  if ((n_samp+x1_samp+x0_samp)>n_samp) {
+    printf("WARNING: Homogenous data is not processed by the current version of the eco program.");
+  }
 
 
   /*read the survey data */
-    itemp=0;
-    surv_dim=n_dim + (setP->ncar ? 1 : 0); //if NCAR, the survey data will include X's
-    for (j=0; j<surv_dim; j++) {
-      for (i=n_samp+x1_samp+x0_samp; i<n_samp+x1_samp+x0_samp+s_samp; i++) {
-        dtemp=sur_W[itemp++];
-        params[i].caseP.dataType=3;
-        if (j<n_dim) {
-          params[i].caseP.W[j]=(dtemp == 1) ? .9999 : ((dtemp==0) ? .0001 : dtemp);
-          params[i].caseP.Wstar[j]=logit(params[i].caseP.W[j],"Survey read");
-        }
-        else { //if given the X (NCAR), we set the X and contruct Y
-          params[i].caseP.X=(dtemp == 1) ? .9999 : ((dtemp==0) ? .0001 : dtemp);
-          params[i].caseP.Y=params[i].caseP.X*params[i].caseP.W[0]+(1-params[i].caseP.X);
-        }
+  itemp=0;
+  surv_dim=n_dim + (setP->ncar ? 1 : 0); //if NCAR, the survey data will include X's
+  for (j=0; j<surv_dim; j++) {
+    for (i=n_samp+x1_samp+x0_samp; i<n_samp+x1_samp+x0_samp+s_samp; i++) {
+      dtemp=sur_W[itemp++];
+      params[i].caseP.dataType=DPT_Survey;
+      if (j<n_dim) {
+        params[i].caseP.W[j]=(dtemp == 1) ? .9999 : ((dtemp==0) ? .0001 : dtemp);
+        params[i].caseP.Wstar[j]=logit(params[i].caseP.W[j],"Survey read");
+      }
+      else { //if given the X (NCAR), we set the X and contruct Y
+        params[i].caseP.X=(dtemp == 1) ? .9999 : ((dtemp==0) ? .0001 : dtemp);
+        params[i].caseP.Y=params[i].caseP.X*params[i].caseP.W[0]+(1-params[i].caseP.X);
       }
     }
+  }
 
-    if (setP->verbose>=2) {
-      Rprintf("Y X\n");
-      for(i=0;i<5;i++) Rprintf("%5d%14g%14g\n",i,params[i].caseP.Y,params[i].caseP.X);
-      if (s_samp>0) {
-        Rprintf("SURVEY data\nY X\n");
-        int s_max=fmin2(n_samp+x1_samp+x0_samp+s_samp,n_samp+x1_samp+x0_samp+5);
-        for(i=n_samp+x1_samp+x0_samp; i<s_max; i++) Rprintf("%5d%14g%14g\n",i,params[i].caseP.Y,params[i].caseP.X);
-      }
+  if (setP->verbose>=2) {
+    Rprintf("Y X\n");
+    for(i=0;i<5;i++) Rprintf("%5d%14g%14g\n",i,params[i].caseP.Y,params[i].caseP.X);
+    if (s_samp>0) {
+      Rprintf("SURVEY data\nY X\n");
+      int s_max=fmin2(n_samp+x1_samp+x0_samp+s_samp,n_samp+x1_samp+x0_samp+5);
+      for(i=n_samp+x1_samp+x0_samp; i<s_max; i++) Rprintf("%5d%14g%14g\n",i,params[i].caseP.Y,params[i].caseP.X);
     }
+  }
 
  }
 
