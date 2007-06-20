@@ -12,7 +12,7 @@
  */
  enum e_sufficient_stats {SS_W1star, SS_W2star, SS_W1star2, SS_W1W2star, SS_W2star2, SS_W1, SS_W2, SS_Loglik, SS_Test};
  typedef enum e_sufficient_stats sufficient_stat;
- enum e_datapoint_types {DPT_General,DPT_Homog_X1, DPT_Homog_x0, DPT_Survey};
+ enum e_datapoint_types {DPT_General,DPT_Homog_X1, DPT_Homog_X0, DPT_Survey};
  typedef enum e_datapoint_types datapoint_type;
 
 /* parameters and observed data */

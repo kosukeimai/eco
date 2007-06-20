@@ -182,7 +182,7 @@ while (main_loop<=*iteration_max && (start==1 ||
     Rprintf("cycle %d/%d:",main_loop,*iteration_max);
     for(i=0;i<param_len;i++)
       if (setP.varParam[i])
-        Rprintf(" %.3f",pdTheta[i]);
+        Rprintf(" %5.3f",pdTheta[i]);
     if (setP.calcLoglik==1 && main_loop>2)
       Rprintf(" Prev LL: %5g",Suff[setP.suffstat_len]);
     Rprintf("\n");
