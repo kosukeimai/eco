@@ -203,52 +203,52 @@ double dBVNtomo(double *Wstar,  /* Wstar values */
   double density;
   double rho, dtemp;
 
-    Param *param=(Param *)pp;
-    MEAN[0]=param->caseP.mu[0];
-    MEAN[1]=param->caseP.mu[1];
-    SIGMA[0][0]=param->setP->Sigma[0][0];
-    SIGMA[1][1]=param->setP->Sigma[1][1];
-    SIGMA[0][1]=param->setP->Sigma[0][1];
-    SIGMA[1][0]=param->setP->Sigma[1][0];
+  Param *param=(Param *)pp;
+  MEAN[0]=param->caseP.mu[0];
+  MEAN[1]=param->caseP.mu[1];
+  SIGMA[0][0]=param->setP->Sigma[0][0];
+  SIGMA[1][1]=param->setP->Sigma[1][1];
+  SIGMA[0][1]=param->setP->Sigma[0][1];
+  SIGMA[1][0]=param->setP->Sigma[1][0];
 
 
-    rho=SIGMA[0][1]/sqrt(SIGMA[0][0]*SIGMA[1][1]);
-    dtemp=1/(2*M_PI*sqrt(SIGMA[0][0]*SIGMA[1][1]*(1-rho*rho)));
+  rho=SIGMA[0][1]/sqrt(SIGMA[0][0]*SIGMA[1][1]);
+  dtemp=1/(2*M_PI*sqrt(SIGMA[0][0]*SIGMA[1][1]*(1-rho*rho)));
 
 
-    density=-1/(2*(1-rho*rho))*
-    ((Wstar[0]-MEAN[0])*(Wstar[0]-MEAN[0])/SIGMA[0][0]+
-     +(Wstar[1]-MEAN[1])*(Wstar[1]-MEAN[1])/SIGMA[1][1]
-     -2*rho*(Wstar[0]-MEAN[0])*(Wstar[1]-MEAN[1])/sqrt(SIGMA[0][0]*SIGMA[1][1]))
-    +log(dtemp)-log(normc);
+  density=-1/(2*(1-rho*rho))*
+   ((Wstar[0]-MEAN[0])*(Wstar[0]-MEAN[0])/SIGMA[0][0]+
+    +(Wstar[1]-MEAN[1])*(Wstar[1]-MEAN[1])/SIGMA[1][1]
+    -2*rho*(Wstar[0]-MEAN[0])*(Wstar[1]-MEAN[1])/sqrt(SIGMA[0][0]*SIGMA[1][1]))
+   +log(dtemp)-log(normc);
 
-     if (give_log==0) density=exp(density);
-      /*Rprintf("s11 %5g s22 %5g normc %5g dtemp %5g ldensity %5g\n", SIGMA[0][0],SIGMA[1][1],normc, dtemp, density);
-      char ch;
-     scanf(" %c", &ch );*/
+  if (give_log==0) density=exp(density);
+    /*Rprintf("s11 %5g s22 %5g normc %5g dtemp %5g ldensity %5g\n", SIGMA[0][0],SIGMA[1][1],normc, dtemp, density);
+    char ch;
+    scanf(" %c", &ch );*/
 
-    Free(MEAN);
-    FreeMatrix(SIGMA,dim);
+  Free(MEAN);
+  FreeMatrix(SIGMA,dim);
 
-     return density;
+  return density;
 
 
 }
 
-    double invLogit(double x) {
-      if (x>30) return 0;
-      else return (1/(1+exp(-1*x)));
-    }
+double invLogit(double x) {
+  if (x>30) return 0;
+  else return (1/(1+exp(-1*x)));
+}
 
-    double logit(double x,char* emsg) {
-      if (x>=1 || x<=0) {
-        Rprintf(emsg);
-        Rprintf(": %5g is out of logit range\n",x);
-      }
-      return log(x/(1-x));
-    }
+double logit(double x,char* emsg) {
+  if (x>=1 || x<=0) {
+    Rprintf(emsg);
+    Rprintf(": %5g is out of logit range\n",x);
+  }
+  return log(x/(1-x));
+}
 
-    int bit(int t, int n) {
-     t=t>>n;
-     return (t % 2);
-    }
+int bit(int t, int n) {
+  t=t>>n;
+  return (t % 2);
+}
