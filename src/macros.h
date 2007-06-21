@@ -15,7 +15,7 @@
  enum e_datapoint_types {DPT_General,DPT_Homog_X1, DPT_Homog_X0, DPT_Survey};
  typedef enum e_datapoint_types datapoint_type;
 
-/* parameters and observed data */
+/* parameters and observed data  -- no longer used*/
 struct Param_old{
   double mu[2];
   double Sigma[2][2];
@@ -38,6 +38,9 @@ struct Param_old{
 
 typedef struct Param_old Param_old;
 
+/**
+ * The structure that holds per-record infromation
+ */
 struct caseParam {
   double mu[2];
   double data[2]; //collect the data
@@ -54,6 +57,9 @@ struct caseParam {
 
 typedef struct caseParam caseParam;
 
+/**
+ * The structure that holds dataset infromation
+ */
 struct setParam {
   int n_samp, t_samp, s_samp,x1_samp,x0_samp,param_len,suffstat_len; //types of data sizes
   int iter, ncar, ccar, ccar_nvar, fixedRho, sem, hypTest, verbose, calcLoglik; //options

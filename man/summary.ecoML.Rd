@@ -63,7 +63,8 @@
     depends on how many correlation parameters exist in the model. Column
     order is the same as the order of the parameters in \code{param.table}.}
   \item{param.table}{Final estimates of the parameter values for the model. 
-    Excludes parameters fixed by the user upon calling \code{ecoML}.}
+    Excludes parameters fixed by the user upon calling \code{ecoML}.
+    See \code{ecoML} documentation for order of parameters.}
   \item{agg.table}{Aggregate estimates of the marginal means
     of \eqn{W_1} and \eqn{W_2}}
   \item{agg.wtable}{Aggregate estimates of the marginal means
@@ -74,7 +75,7 @@
   This object can be printed by \code{print.summary.eco}
 }
 
-\seealso{\code{eco}, \code{predict.eco}}
+\seealso{\code{ecoML}}
 
 \author{
   Kosuke Imai, Department of Politics, Princeton University,

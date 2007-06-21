@@ -8,7 +8,9 @@
 \description{
   \code{ecoML} is used to fit parametric models for ecological 
   inference in \eqn{2 \times 2} tables via Expectation Maximization (EM)
-  algorithms. It gives the point estimates of the parameters for models
+  algorithms. The data is specified in proportions. At it's most basic setting, the algorithm
+  assumes that the individual-level proportions (i.e., \eqn{W_1} and \eqn{W_2}) and distributed bivariate normally (after logit
+  transformations). The function calculates point estimates of the parameters for models
   based on different assumptions. The standard errors of the point
   estimates are also computed via Supplemented EM algorithms. Moreover,
   \code{ecoML} quantifies the amount of missing information associated
@@ -28,8 +30,9 @@
 \arguments{
   \item{formula}{A symbolic description of the model to be fit,
     specifying the column and row margins of \eqn{2 \times
-      2} ecological tables. \code{Y ~ X} specifies \code{Y} as the
-    column margin and \code{X} as the row margin. Details and specific
+    2} ecological tables. \code{Y ~ X} specifies \code{Y} as the
+    column margin (e.g., turnout) and \code{X} (e.g., percent
+    African-American) as the row margin. Details and specific
     examples are given below.
   } 
   \item{data}{An optional data frame in which to interpret the variables
@@ -52,11 +55,13 @@
     Imai, Lu and Strauss(2006). The default is \code{FALSE}.
   } 
   \item{context}{Logical. If \code{TRUE}, the contextual effect is also
-    modeled. See Imai, Lu and Strauss (2006) for details. The default is
-    \code{FALSE}. 
+    modeled. In this case, the row margin (i.e., X) and the individual-level rates
+    (i.e., \eqn{W_1} and \eqn{W_2}) are assumed to be distributed tri-variate normally
+    (after logit transformations). See Imai, Lu and Strauss (2006) for
+    details. The default is \code{FALSE}. 
   }
   \item{sem}{Logical. If \code{TRUE}, the standard errors of parameter
-   estimates are estimated via SEM algorithm. The default is
+   estimates are estimated via SEM algorithm, as well as the fraction of missing data. The default is
     \code{TRUE}. 
   }
   \item{theta.start}{A numeric vector that specifies the starting values
@@ -85,7 +90,7 @@
     \code{TRUE}.
   } 
   \item{hyptest}{Logical. If \code{TRUE}, model is estimated under the null
-    hypothesis that mean of \eqn{W1} and \eqn{W2} is the same. 
+    hypothesis that means of \eqn{W1} and \eqn{W2} are the same. 
     The default is \code{FALSE}. 
   } 
   \item{verbose}{Logical. If \code{TRUE}, the progress of the EM and SEM
@@ -129,7 +134,7 @@ data(census)
 data(census)
 
 ## fit the parametric model with the default model specifications
-\dontrun{res <- ecoML(Y ~ X, data = census[1:100,],epsilon=10^(-6), verbose = TRUE)}
+\dontrun{res <- ecoML(Y ~ X, data = census[1:100,],N=census[1:100,3],epsilon=10^(-6), verbose = TRUE)}
 ## summarize the results
 \dontrun{summary(res)}
 
@@ -178,10 +183,14 @@ surv <- 1:600
     achieved.}
   \item{loglik.log.em}{A vector saving the value of the log-likelihood
     function at each iteration of the EM algorithm.}
-  \item{mu.log.em}{A matrix saving the mean estimation at each 
-    iteration of EM.}
-  \item{Sigma.log.em}{A matrix saving the variance-covariance estimation 
-    at each iteration of EM.} 
+  \item{mu.log.em}{A matrix saving the unweighted mean estimation of the logit-transformed
+    individual-level proportions (i.e., \eqn{W_1} and \eqn{W_2}) at each iteration of the EM process.}
+  \item{Sigma.log.em}{A matrix saving the log of the variance estimation of the logit-transformed
+    individual-level proportions (i.e., \eqn{W_1} and \eqn{W_2}) at each iteration of EM process.
+    Note, non-transformed variances are displayed on the screen (when \code{verbose = TRUE}).} 
+  \item{rho.fisher.em}{A matrix saving the fisher transformation of the estimation of the correlations between
+    the logit-transformed individual-level proportions (i.e., \eqn{W_1} and \eqn{W_2}) at each iteration of EM process.
+    Note, non-transformed correlations are displayed on the screen (when \code{verbose = TRUE}).} 
   Moreover, when \code{sem=TRUE}, \code{ecoML} also output the following
   values:
   \item{DM}{The matrix characterizing the rates of convergence of the EM 
@@ -209,7 +218,6 @@ surv <- 1:600
   \item{VFmis}{The proportion of increased variance associated with each 
     parameter estimation due to observed data. }
   \item{Ieigen}{The largest eigen value of \code{Imiss}.}
-  \item{DM}{The rate-of-convergence matrix of the SEM algorithm.}
   \item{Icom.trans}{The complete data information matrix for the fisher 
     transformed parameters.}
   \item{Iobs.trans}{The observed data information matrix for the fisher 

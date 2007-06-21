@@ -1,7 +1,7 @@
 /******************************************************************
   This file is a part of eco: R Package for Estimating Fitting
   Bayesian Models of Ecological Inference for 2X2 tables
-  by Ying Lu and Kosuke Imai
+  by Kosuke Imai, Ying Lu, and Aaron Strauss
   Copyright: GPL version 2 or later.
 *******************************************************************/
 
@@ -22,9 +22,11 @@
 #include "fintegrate.h"
 //#include  <gsl/gsl_integration.h>
 
-//Bivariate normal distribution, with parameterization
-//see: http://mathworld.wolfram.com/BivariateNormalDistribution.html
-//see for param: http://www.math.uconn.edu/~binns/reviewII210.pdf
+/**
+ * Bivariate normal distribution, with parameterization
+ * see: http://mathworld.wolfram.com/BivariateNormalDistribution.html
+ * see for param: http://www.math.uconn.edu/~binns/reviewII210.pdf
+ */
 void NormConstT(double *t, int n, void *param)
 {
   int ii;
@@ -84,7 +86,7 @@ void NormConstT(double *t, int n, void *param)
   FreeMatrix(Sigma,dim);
 }
 
-/*
+/**
  * Integrand for computing sufficient statistic
  * Which statistic to estimate depends on param->suff (see macros.h)
  */
@@ -163,13 +165,34 @@ void SuffExp(double *t, int n, void *param)
   FreeMatrix(Sigma,dim); FreeMatrix(InvSigma,dim);
 }
 
-//Returns the log likelihood of a particular case
+
+/**
+ * Returns the log likelihood of a particular case (i.e, record, datapoint)
+ */
 double getLogLikelihood(Param* param) {
   if (param->caseP.dataType==DPT_General  && !(param->caseP.Y>=.990 || param->caseP.Y<=.010)) {
+    //non-survey data: do integration to find likelihood
     param->caseP.suff=SS_Loglik;
     return log(paramIntegration(&SuffExp,(void*)param));
-  }
-  else if (param->caseP.dataType==DPT_Survey || (param->caseP.Y>=.990 || param->caseP.Y<=.010)) {
+
+
+  } else if (param->caseP.dataType==DPT_Homog_X1 || param->caseP.dataType==DPT_Homog_X0) {
+      //Homogenenous data: just do normal likelihood on one dimension
+      double lik,sigma2,val,mu;
+      val = (param->caseP.dataType==DPT_Homog_X1) ? param->caseP.Wstar[0] : param->caseP.Wstar[1];
+      if (!param->setP->ncar) {
+        mu = (param->caseP.dataType==DPT_Homog_X1) ? param->setP->pdTheta[0] : param->setP->pdTheta[1];
+        sigma2 = (param->caseP.dataType==DPT_Homog_X1) ? param->setP->pdTheta[2] : param->setP->pdTheta[3];
+      } else {
+        mu = (param->caseP.dataType==DPT_Homog_X1) ? param->setP->pdTheta[1] : param->setP->pdTheta[2];
+        sigma2 = (param->caseP.dataType==DPT_Homog_X1) ? param->setP->pdTheta[4] : param->setP->pdTheta[5];
+      }
+      lik=(1/(sqrt(2*M_PI*sigma2)))*exp(-(.5/sigma2)*(val - mu)*(val - mu));
+      //return log(lik);
+      return 0; //fix later
+
+  } else if (param->caseP.dataType==DPT_Survey || (param->caseP.Y>=.990 || param->caseP.Y<=.010)) {
+    //Survey data (or v tight bounds): multi-variate normal
     int dim=param->setP->ncar ? 3 : 2;
     double *mu=doubleArray(dim);
     double *vtemp=doubleArray(dim);
@@ -203,15 +226,23 @@ double getLogLikelihood(Param* param) {
     Free(mu); Free(vtemp); FreeMatrix(InvSig,dim);
     return loglik;
   }
-  else {
-    Rprintf("Error.\n");
+  else { //Unknown type
+    Rprintf("Error; unkown type: %d\n",param->caseP.dataType);
     return 0;
   }
 }
 
-//Finds W2star, given the equation
-//Y=XW1 + (1-X)W2 and the Wistar=logit(Wi)
-//imposs is set to 1 if the equation cannot be satisfied
+/**
+ **********
+ * Line integral helper function
+ **********
+ */
+
+/**
+ * Returns W2star from W1star, given the following equalities
+ * Y=XW1 + (1-X)W2 and the Wi-star=logit(Wi)
+ * mutation: imposs is set to 1 if the equation cannot be satisfied
+ */
 double getW2starFromW1star(double X, double Y, double W1star, int* imposs) {
   double W1;
   if (W1star>30) W1=1; //prevent overflow or underflow
@@ -223,6 +254,11 @@ double getW2starFromW1star(double X, double Y, double W1star, int* imposs) {
   return W2;
 }
 
+/**
+ * Returns W1star from W2star, given the following equalities
+ * Y=XW1 + (1-X)W2 and the Wi-star=logit(Wi)
+ * mutation: imposs is set to 1 if the equation cannot be satisfied
+ */
 double getW1starFromW2star(double X, double Y, double W2star, int* imposs) {
   double W2;
   if (W2star>30) W2=1; //prevent overflow or underflow
@@ -234,37 +270,53 @@ double getW1starFromW2star(double X, double Y, double W2star, int* imposs) {
   return W1;
 }
 
+/**
+ * Returns W1 from W2, X, and Y given
+ * Y=XW1 + (1-X)W2
+ */
 double getW1FromW2(double X, double Y, double W2) {
   return (Y-(1-X)*W2)/X;
 }
 
 
-//W1star(t)
-//W1(t)=(W1_ub - W1_lb)*t + W1_lb
+ /**
+ * W1star(t)
+ * W1(t)=(W1_ub - W1_lb)*t + W1_lb
+ * mutates impossible to true if W1 is non-finite at t
+ */
 double getW1starFromT(double t, Param* param, int* imposs) {
   double W1=(param->caseP.Wbounds[0][1] - param->caseP.Wbounds[0][0])*t + param->caseP.Wbounds[0][0];
   if (W1==1 || W1==0) *imposs=1;
   else W1=log(W1/(1-W1));
   return W1;
 }
-//W2star(t)
-//W2(t)=(W2_lb - W2_ub)*t + W2_lb
+
+/**
+ * W2star(t)
+ * W2(t)=(W2_lb - W2_ub)*t + W2_lb
+ */
 double getW2starFromT(double t, Param* param, int* imposs) {
   double W2=(param->caseP.Wbounds[1][0] - param->caseP.Wbounds[1][1])*t + param->caseP.Wbounds[1][1];
   if (W2==1 || W2==0) *imposs=1;
   else W2=log(W2/(1-W2));
   return W2;
 }
-//W1star'(t)
-//see paper for derivation: W1*(t) = (1/W1)*((w1_ub - w1_lb)/(1-W1)
+
+/**
+ * W1star'(t)
+ * see paper for derivation: W1*(t) = (1/W1)*((w1_ub - w1_lb)/(1-W1)
+ */
 double getW1starPrimeFromT(double t, Param* param) {
   double m=(param->caseP.Wbounds[0][1] - param->caseP.Wbounds[0][0]);
   double W1=m*t + param->caseP.Wbounds[0][0];
   W1=(1/W1)*(m/(1-W1));
   return W1;
 }
-//W2star'(t)
-//see paper for derivation: W2*(t) = (1/W2)*((w2_lb - w2_ub)/(1-W2)
+
+/**
+ * W2star'(t)
+ * see paper for derivation: W2*(t) = (1/W2)*((w2_lb - w2_ub)/(1-W2)
+ */
 double getW2starPrimeFromT(double t, Param* param) {
   double m=(param->caseP.Wbounds[1][0] - param->caseP.Wbounds[1][1]);
   double W2=m*t + param->caseP.Wbounds[1][1];
@@ -272,7 +324,10 @@ double getW2starPrimeFromT(double t, Param* param) {
   return W2;
 }
 
-//parameterized integration: bounds always from 0,1
+/**
+ * parameterized line integration
+ * lower bound is t=0, upper bound is t=1
+ */
 double paramIntegration(integr_fn f, void *ex) {
   double epsabs=pow(10,-11), epsrel=pow(10,-11);
   double result=9999, anserr=9999;
@@ -298,13 +353,15 @@ double paramIntegration(integr_fn f, void *ex) {
 
 }
 
-/* integrate normalizing constant and set it in param*/
+/**
+ * integrate normalizing constant and set it in param
+ */
 void setNormConst(Param* param) {
   param->caseP.normcT=paramIntegration(&NormConstT,(void*)param);
 }
 
 
-/*
+/**
  * Set the bounds on W1 and W2 in their parameter
  */
 void setBounds(Param* param) {
