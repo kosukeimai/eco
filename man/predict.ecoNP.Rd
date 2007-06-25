@@ -1,5 +1,6 @@
 \name{predict.ecoNP}
 
+\alias{predict.ecoNP}
 \alias{predict.ecoNPX}
 
 \title{Out-of-Sample Posterior Prediction under the
