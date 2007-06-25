@@ -134,92 +134,134 @@ void cDPeco(
   /* get random seed */
   GetRNGstate();
 
+
   /* read priors under G0*/
   itemp=0;
   for(k=0;k<n_dim;k++)
     for(j=0;j<n_dim;j++) S0[j][k]=pdS0[itemp++];
+
 
   /* read the data set */
   itemp = 0;
   for (j = 0; j < n_dim; j++) 
     for (i = 0; i < n_samp; i++) X[i][j] = pdX[itemp++];
 
+
   /*Intialize W, Wsatr for n_samp */
   for (i=0; i< n_samp; i++) {
-    if (X[i][1]!=0 && X[i][1]!=1) {
-      W[i][0]=runif(minW1[i], maxW1[i]);
-      W[i][1]=(X[i][1]-X[i][0]*W[i][0])/(1-X[i][0]);
-    }
+
+    if (X[i][1]!=0 && X[i][1]!=1) 
+      {
+	W[i][0]=runif(minW1[i], maxW1[i]);
+	W[i][1]=(X[i][1]-X[i][0]*W[i][0])/(1-X[i][0]);
+      }
+
     if (X[i][1]==0) 
       for (j=0; j<n_dim; j++) W[i][j]=0.0001;
-    if (X[i][1]==1) 
+ 
+   if (X[i][1]==1) 
       for (j=0; j<n_dim; j++) W[i][j]=0.9999;
+
     for (j=0; j<n_dim; j++)
       Wstar[i][j]=log(W[i][j])-log(1-W[i][j]);
   }
 
   /*read homeogenous areas information */
   if (*x1==1)
-    for (i=0; i<x1_samp; i++) {
-      W[(n_samp+i)][0]=x1_W1[i];
-      if (W[(n_samp+i)][0]==0) W[(n_samp+i)][0]=0.0001;
-      if (W[(n_samp+i)][0]==1) W[(n_samp+i)][0]=0.9999;
-      Wstar[(n_samp+i)][0]=log(W[(n_samp+i)][0])-log(1-W[(n_samp+i)][0]);
-    }
+    for (i=0; i<x1_samp; i++) 
+      {
+	W[(n_samp+i)][0]=x1_W1[i];
+
+	if (W[(n_samp+i)][0]==0) 
+	  W[(n_samp+i)][0]=0.0001;
+
+	if (W[(n_samp+i)][0]==1) 
+	  W[(n_samp+i)][0]=0.9999;
+
+	Wstar[(n_samp+i)][0]=log(W[(n_samp+i)][0])-log(1-W[(n_samp+i)][0]);
+      }
 
   if (*x0==1)
-    for (i=0; i<x0_samp; i++) {
-      W[(n_samp+x1_samp+i)][1]=x0_W2[i];
-      if (W[(n_samp+x1_samp+i)][1]==0) W[(n_samp+x1_samp+i)][1]=0.0001;
-      if (W[(n_samp+x1_samp+i)][1]==1) W[(n_samp+x1_samp+i)][1]=0.9999;
-      Wstar[(n_samp+x1_samp+i)][1]=log(W[(n_samp+x1_samp+i)][1])-log(1-W[(n_samp+x1_samp+i)][1]);
-    }
+    for (i=0; i<x0_samp; i++) 
+      {
+	W[(n_samp+x1_samp+i)][1]=x0_W2[i];
+
+	if (W[(n_samp+x1_samp+i)][1]==0) 
+	  W[(n_samp+x1_samp+i)][1]=0.0001;
+	
+	if (W[(n_samp+x1_samp+i)][1]==1) 
+	  W[(n_samp+x1_samp+i)][1]=0.9999;
+	
+	Wstar[(n_samp+x1_samp+i)][1]=log(W[(n_samp+x1_samp+i)][1])-log(1-W[(n_samp+x1_samp+i)][1]);
+      }
 
   /*read the survey data */
-  if (*survey==1) {
-    itemp = 0;
-    for (j=0; j<n_dim; j++)
-      for (i=0; i<s_samp; i++) {
-        S_W[i][j]=sur_W[itemp++];
-        if (S_W[i][j]==0) S_W[i][j]=0.0001;
-        if (S_W[i][j]==1) S_W[i][j]=0.9999;
-        S_Wstar[i][j]=log(S_W[i][j])-log(1-S_W[i][j]);
-	W[n_samp+x1_samp+x0_samp+i][j]=S_W[i][j];
-	Wstar[n_samp+x1_samp+x0_samp+i][j]=S_Wstar[i][j];
-      }
-  }
+  if (*survey==1) 
+    {
+      itemp = 0;
+      
+      for (j=0; j<n_dim; j++)
+	for (i=0; i<s_samp; i++) 
+	  {
+	    S_W[i][j]=sur_W[itemp++];
+	
+	    if (S_W[i][j]==0) 
+	      S_W[i][j]=0.0001;
+	    
+	    if (S_W[i][j]==1) 
+	      S_W[i][j]=0.9999;
+	    
+	    S_Wstar[i][j]=log(S_W[i][j])-log(1-S_W[i][j]);
+	    W[n_samp+x1_samp+x0_samp+i][j]=S_W[i][j];
+	    Wstar[n_samp+x1_samp+x0_samp+i][j]=S_Wstar[i][j];
+	  }
+    }
+
 
   /* Calcualte grids */
   if (*Grid)
     GridPrep(W1g,W2g, X, maxW1, minW1, n_grid, n_samp, n_step);
 
+
   /* parmeters for Bivaraite t-distribution-unchanged in MCMC */
   for (j=0;j<n_dim;j++)
     for(k=0;k<n_dim;k++)
       mtemp[j][k]=S0[j][k]*(1+tau0)/(tau0*(nu0-n_dim+1));
+
   dinv(mtemp, n_dim, S_bvt);
 
   /**draw initial values of mu_i, Sigma_i under G0  for all effective sample**/
   /*1. Sigma_i under InvWish(nu0, S0^-1) with E(Sigma)=S0/(nu0-3)*/
   /*   InvSigma_i under Wish(nu0, S0^-1 */
   /*2. mu_i|Sigma_i under N(mu0, Sigma_i/tau0) */
+
   dinv(S0, n_dim, mtemp);
-  for(i=0;i<t_samp;i++){
-    /*draw from wish(nu0, S0^-1) */
-    rWish(InvSigma[i], mtemp, nu0, n_dim);
-    dinv(InvSigma[i], n_dim, Sigma[i]);
-    for (j=0;j<n_dim;j++)
-      for(k=0;k<n_dim;k++) mtemp1[j][k]=Sigma[i][j][k]/tau0;
-    rMVN(mu[i], mu0, mtemp1, n_dim);
-  }
+
+  for(i=0;i<t_samp;i++)
+    {
+      /*draw from wish(nu0, S0^-1) */
+      rWish(InvSigma[i], mtemp, nu0, n_dim);
+      dinv(InvSigma[i], n_dim, Sigma[i]);
+
+      for (j=0;j<n_dim;j++)
+	for(k=0;k<n_dim;k++) 
+	  mtemp1[j][k]=Sigma[i][j][k]/tau0;
+
+      rMVN(mu[i], mu0, mtemp1, n_dim);
+    }
+
 
   /* initialize the cluster membership */
+
   nstar=t_samp;  /* the # of disticnt values */
+
   for(i=0;i<t_samp;i++)
     C[i]=i; /*cluster is from 0...n_samp-1 */
+
   
   if (*verbose)
     Rprintf("Starting Gibbs Sampler...\n");
+
   for(main_loop=0; main_loop<*n_gen; main_loop++){
     /**update W, Wstar given mu, Sigma only for the unknown W/Wstar**/
     for (i=0;i<n_samp;i++){
@@ -229,24 +271,27 @@ void cDPeco(
 	else
 	  rMH(W[i], X[i], minW1[i], maxW1[i],  mu[i], InvSigma[i], n_dim);
       }
+
       /*3 compute Wsta_i from W_i*/
       Wstar[i][0]=log(W[i][0])-log(1-W[i][0]);
       Wstar[i][1]=log(W[i][1])-log(1-W[i][1]);
     }
   
-  if (*x1==1)
-    for (i=0; i<x1_samp; i++) {
-      dtemp=mu[n_samp+i][1]+Sigma[n_samp+i][0][1]/Sigma[n_samp+i][0][0]*(Wstar[n_samp+i][0]-mu[n_samp+i][0]);
-      dtemp1=Sigma[n_samp+i][1][1]*(1-Sigma[n_samp+i][0][1]*Sigma[n_samp+i][0][1]/(Sigma[n_samp+i][0][0]*Sigma[n_samp+i][1][1]));
-      Wstar[n_samp+i][1]=norm_rand()*sqrt(dtemp1)+dtemp;
-      W[n_samp+i][1]=exp(Wstar[n_samp+i][1])/(1+exp(Wstar[n_samp+i][1]));
-    }
+    if (*x1==1)
+      for (i=0; i<x1_samp; i++) {
+	dtemp=mu[n_samp+i][1]+Sigma[n_samp+i][0][1]/Sigma[n_samp+i][0][0]*(Wstar[n_samp+i][0]-mu[n_samp+i][0]);
+	dtemp1=Sigma[n_samp+i][1][1]*(1-Sigma[n_samp+i][0][1]*Sigma[n_samp+i][0][1]/(Sigma[n_samp+i][0][0]*Sigma[n_samp+i][1][1]));
+
+	Wstar[n_samp+i][1]=norm_rand()*sqrt(dtemp1)+dtemp;
+	W[n_samp+i][1]=exp(Wstar[n_samp+i][1])/(1+exp(Wstar[n_samp+i][1]));
+      }
 
   /*update W1 given W2, mu_ord and Sigma_ord in x0 homeogeneous areas */
   if (*x0==1)
     for (i=0; i<x0_samp; i++) {
       dtemp=mu[n_samp+x1_samp+i][0]+Sigma[n_samp+x1_samp+i][0][1]/Sigma[n_samp+x1_samp+i][1][1]*(Wstar[n_samp+x1_samp+i][1]-mu[n_samp+x1_samp+i][1]);
       dtemp1=Sigma[n_samp+x1_samp+i][0][0]*(1-Sigma[n_samp+x1_samp+i][0][1]*Sigma[n_samp+x1_samp+i][0][1]/(Sigma[n_samp+x1_samp+i][0][0]*Sigma[n_samp+x1_samp+i][1][1]));
+
       Wstar[n_samp+i][0]=norm_rand()*sqrt(dtemp1)+dtemp;
       W[n_samp+x1_samp+i][0]=exp(Wstar[n_samp+x1_samp+i][0])/(1+exp(Wstar[n_samp+x1_samp+i][0]));
     }
@@ -260,30 +305,40 @@ void cDPeco(
 	q[j]=dMVN(Wstar[i], mu[j], InvSigma[j], n_dim, 0);
       else
 	q[j]=alpha*dMVT(Wstar[i], mu0, S_bvt, nu0-n_dim+1, 2, 0);
+
       dtemp+=q[j]; 
       qq[j]=dtemp; /*compute qq, the cumlative of q*/    
     }
+
     /*standardize q and qq */
-    for (j=0; j<t_samp; j++) qq[j]/=dtemp;
+    for (j=0; j<t_samp; j++) 
+      qq[j]/=dtemp;
     
     /** draw the configuration parameter **/
     j=0; dtemp=unif_rand();
-    while (dtemp > qq[j]) j++;
+
+    while (dtemp > qq[j]) 
+      j++;
+
+
     /** Dirichlet update Sigma_i, mu_i|Sigma_i **/
     /* j=i: posterior update given Wstar[i] */
     if (j==i){
       onedata[0][0] = Wstar[i][0];
       onedata[0][1] = Wstar[i][1];
+
       NIWupdate(onedata, mu[i], Sigma[i], InvSigma[i], mu0, tau0,nu0, S0, 1, n_dim);
       C[i]=nstar;
       nstar++;
     }
+
     /* j=i': replace with i' obs */
     else {
       /*1. mu_i=mu_j, Sigma_i=Sigma_j*/
       /*2. update C[i]=C[j] */
       for(k=0;k<n_dim;k++) {
 	mu[i][k]=mu[j][k];
+
 	for(l=0;l<n_dim;l++) {
 	  Sigma[i][k][l]=Sigma[j][k][l];
 	  InvSigma[i][k][l]=InvSigma[j][k][l];
@@ -294,11 +349,16 @@ void cDPeco(
     sortC[i]=C[i];
   } /* end of i loop*/
   
+
   /** remixing step using effective sample of Wstar**/
-  for(i=0;i<t_samp;i++) indexC[i]=i;
+  for(i=0;i<t_samp;i++) 
+    indexC[i]=i;
+
   R_qsort_int_I(sortC, indexC, 1, t_samp);
   
-  nstar=0; i=0;
+  nstar=0; 
+  i=0;
+
   while (i<t_samp){
     j=sortC[i]; /*saves the first element in a block of same values */
     nj=0;       /* counter for a block of same values */
@@ -306,20 +366,26 @@ void cDPeco(
     /* get data for remixing */
     while ((sortC[i]==j) && (i<t_samp)) {
       label[nj]=indexC[i];
+
       for (k=0; k<n_dim; k++)
 	Wstarmix[nj][k]=Wstar[label[nj]][k];
+
       nj++; i++;
     } /* i records the current position in IndexC */
       /* nj records the # of obs in Psimix */
+
     
     /** posterior update for mu_mix, Sigma_mix based on Psimix **/
     NIWupdate(Wstarmix, mu_mix,Sigma_mix, InvSigma_mix, mu0, tau0, nu0, S0, nj, n_dim);     
     
+
     /**update mu, Simgat with mu_mix, Sigmat_mix via label**/
     for (j=0;j<nj;j++){
       C[label[j]]=nstar;  /* updating C vector with no gap */
+
       for (k=0; k<n_dim; k++){
 	mu[label[j]][k]=mu_mix[k];
+
 	for (l=0;l<n_dim;l++){
 	  Sigma[label[j]][k][l]=Sigma_mix[k][l];
 	  InvSigma[label[j]][k][l]=InvSigma_mix[k][l];
@@ -328,19 +394,24 @@ void cDPeco(
     }
     nstar++; /*finish update one distinct value*/
   } /* nstar is the number of distinct values */
+
+
   
   /** updating alpha **/
   if(*pinUpdate) {
     dtemp=b0-log(rbeta(alpha+1, (double) t_samp));
     dtemp1=(double)(a0+nstar-1)/(t_samp*dtemp);
+
     if(unif_rand() < dtemp1)
       alpha=rgamma(a0+nstar, 1/dtemp);
     else 
       alpha=rgamma(a0+nstar-1, 1/dtemp);
   }
+
   
   /*store Gibbs draws after burn_in */
    R_CheckUserInterrupt();
+
   if (main_loop>=*burn_in) {
      itempC++;
     if (itempC==nth){

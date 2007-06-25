@@ -11,7 +11,7 @@
   2} tables via Markov chain Monte Carlo. It gives the in-sample
   predictions as well as out-of-sample predictions for population
   inference.  The models and algorithms are described in Imai, Lu and
-  Strauss (2006). 
+  Strauss (Forthcoming a and b). 
 }
 
 \usage{
@@ -25,9 +25,10 @@ ecoNP(formula, data = parent.frame(), N = NULL, supplement = NULL,
 \arguments{
   \item{formula}{A symbolic description of the model to be fit,
     specifying the column and row margins of \eqn{2 \times
-      2} ecological tables. \code{Y ~ X} specifies \code{Y} as the
-    column margin and \code{X} as the row margin. Details and specific
-    examples are given below.
+    2} ecological tables. \code{Y ~ X} specifies \code{Y} as the
+    column margin (e.g., turnout) and \code{X} as the row margin
+   (e.g., percent African-American). Details and specific examples 
+   are given below.
   } 
   \item{data}{An optional data frame in which to interpret the variables
     in \code{formula}. The default is the environment in which
@@ -42,28 +43,33 @@ ecoNP(formula, data = parent.frame(), N = NULL, supplement = NULL,
     model. The default is \code{NULL}.
   }      
   \item{context}{Logical. If \code{TRUE}, the contextual effect is also
-    modeled. See Imai and Lu (2005) for details. The default is
-    \code{FALSE}. 
+    modeled, that is to assume the row margin \eqn{X} and the unknown 
+   \eqn{W_1} and \eqn{W_2} are correlated. See Ima, Lu and Strauss
+   (Forthcoming b) for details. The default is \code{FALSE}. 
   }
   \item{mu0}{A scalar or a numeric vector that specifies the prior mean 
-    for the mean parameter \eqn{\mu}. If it is a scalar, then its value
-    will be repeated to yield a vector of the length of \eqn{\mu}, otherwise,
+    for the mean parameter \eqn{\mu} of the base prior distribution \eqn{G_0}
+    (see Imia, Lu and Strauss (Forthcoming a and b) for detailed 
+    descriptions of Dirichlete prior and the normal base prior distribution) . 
+    If it is a scalar, then its value will be repeated to yield a vector 
+    of the length of \eqn{\mu}, otherwise,
     it needs to be a vector of same length as \eqn{\mu}.
     When \code{context=TRUE }, the length of \eqn{\mu} is 3, 
     otherwise it is 2. The default is \code{0}. 
   } 
-  \item{tau0}{A positive integer representing the prior scale
-  for the mean parameter \eqn{\mu}. The default is \code{2}.
-  } 
+  \item{tau0}{A positive integer representing the scale parameter of the 
+  Normal-Inverse Wishart prior for the mean and variance parameter
+  \eqn{(\mu_i, \Sigma_i)} of each observation. The default is \code{2}.} 
+
   \item{nu0}{A positive integer representing the prior degrees of
-  freedom of the variance matrix \eqn{\Sigma}. the default is \code{4}.
+  freedom of the variance matrix \eqn{\Sigma_i}. the default is \code{4}.
   } 
   \item{S0}{A positive scalar or a positive definite matrix that specifies 
-  the prior scale matrix for the variance matrix \eqn{\Sigma}. If it is 
+  the prior scale matrix for the variance matrix \eqn{\Sigma_i}. If it is 
   a scalar, then the prior scale matrix will be a diagonal matrix with 
-  the same dimensions as \eqn{\Sigma} and the diagonal elements all take value 
-  of \code{S0}, otherwise \code{S0} needs to have same dimensions as 
-  \eqn{\Sigma}. When \code{context=TRUE}, \eqn{\Sigma} is a 
+  the same dimensions as \eqn{\Sigma_i} and the diagonal elements all
+  take value of \code{S0}, otherwise \code{S0} needs to have same 
+  dimensions as \eqn{\Sigma_i}. When \code{context=TRUE}, \eqn{\Sigma} is a 
   \eqn{3 \times 3} matrix, otherwise, it is \eqn{2 \times 2}. 
    The default is \code{10}.
   } 
@@ -139,15 +145,14 @@ plot(density(out[,2]), main = "W2")
 data(census)
 
 ## fit the parametric model with contextual effects and N 
-## using the default prior specification
-\dontrun{res1 <- ecoNP(Y ~ X, N = N, context = TRUE, param = TRUE, data = census,
-              n.draws = 25, verbose = TRUE)}
+## using the default prior specificationres1 <- ecoNP(Y ~ X, N = N, 
+context = TRUE, param = TRUE, data = census, n.draws = 25, verbose = TRUE)
 ## summarize the results
-\dontrun{summary(res1)}
+summary(res1)
 
 ## out-of sample prediction 
-\dontrun{pres1 <- predict(res1)}
-\dontrun{summary(pres1)}
+pres1 <- predict(res1)
+summary(pres1)
 }
 
 \value{

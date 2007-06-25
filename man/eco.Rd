@@ -10,10 +10,9 @@
   Normal/Inverse-Wishart prior) for ecological inference in \eqn{2
   \times 2} tables via Markov chain Monte Carlo. It gives the in-sample
   predictions as well as the estimates of the model parameters. The
-  model and algorithm are described in Imai, Lu and Strauss (2006). The
-  contextual effect can also be modeled by following the strategy
-  described in Imai, Lu, and Strauss (2006).
-}
+  model and algorithm are described in Imai, Lu and Strauss (Forthcoming 
+  a and b). 
+  }
 
 \usage{
 eco(formula, data = parent.frame(), N = NULL, supplement = NULL, 
@@ -26,8 +25,9 @@ eco(formula, data = parent.frame(), N = NULL, supplement = NULL,
 \arguments{
   \item{formula}{A symbolic description of the model to be fit,
     specifying the column and row margins of \eqn{2 \times
-      2} ecological tables. \code{Y ~ X} specifies \code{Y} as the
-    column margin and \code{X} as the row margin. Details and specific
+    2} ecological tables. \code{Y ~ X} specifies \code{Y} as the
+    column margin  (e.g., turnout) and \code{X} as the row margin 
+    (e.g., percent African-American). Details and specific
     examples are given below.
   } 
   \item{data}{An optional data frame in which to interpret the variables
@@ -43,27 +43,31 @@ eco(formula, data = parent.frame(), N = NULL, supplement = NULL,
     model. The default is \code{NULL}.
   }
   \item{context}{Logical. If \code{TRUE}, the contextual effect is also
-    modeled. See Imai and Lu (2005) for details. The default is
-    \code{FALSE}. 
+    modeled, that is to assume the row margin \eqn{X} and the unknown 
+   \eqn{W_1} and \eqn{W_2} are correlated. See Imai, Lu and Strauss 
+   (Forthcoming b) for details. The default is \code{FALSE}. 
   }
   \item{mu0}{A scalar or a numeric vector that specifies the prior mean 
-    for the mean parameter \eqn{\mu}. If it is a scalar, then its value
-    will be repeated to yield a vector of the length of \eqn{\mu}, otherwise,
-    it needs to be a vector of same length as \eqn{\mu}.
-    When \code{context=TRUE}, the length of \eqn{\mu} is 3, 
-    otherwise it is 2. The default is \code{0}. 
+    for the mean parameter \eqn{\mu} for \eqn{(W_1,W_2)} (or for 
+    \eqn{(W_1, W_2, X)} if \code{context=TRUE}). When the input of 
+    \code{mu0} is a scalar, its value will be repeated to yield a vector of 
+     the length of \eqn{\mu}, otherwise, it needs to be a vector of same 
+    length as \eqn{\mu}. When \code{context=TRUE}, the length of \eqn{\mu} 
+    is 3, otherwise it is 2. The default is \code{0}. 
   } 
-  \item{tau0}{A positive integer representing the prior scale
-  for the mean parameter \eqn{\mu}. The default is \code{2}.
-  } 
+  \item{tau0}{A positive integer representing the scale parameter of the 
+  Normal-Inverse Wishart prior for the mean and variance parameter
+  \eqn{(\mu, \Sigma)}. The default is \code{2}.} 
   \item{nu0}{A positive integer representing the prior degrees of
-  freedom of the variance matrix \eqn{\Sigma}. the default is \code{4}.
+  freedom of the Normal-Inverse Wishart prior for the mean and 
+  variance parameter \eqn{(\mu, \Sigma)}. The default is \code{4}.
   } 
   \item{S0}{A positive scalar or a positive definite matrix that specifies 
-  the prior scale matrix for the variance matrix \eqn{\Sigma}. If it is 
+  the prior scale matrix of the Normal-Inverse Wishart prior for the 
+  mean and variance parameter \eqn{(\mu, \Sigma)} . If it is 
   a scalar, then the prior scale matrix will be a diagonal matrix with 
-  the same dimensions as \eqn{\Sigma} and the diagonal elements all take value 
-  of \code{S0}, otherwise \code{S0} needs to have same dimensions as 
+  the same dimensions as \eqn{\Sigma} and the diagonal elements all take 
+  value of \code{S0}, otherwise \code{S0} needs to have same dimensions as 
   \eqn{\Sigma}. When \code{context=TRUE}, \eqn{\Sigma} is a 
   \eqn{3 \times 3} matrix, otherwise, it is \eqn{2 \times 2}. 
    The default is \code{10}.
@@ -96,6 +100,7 @@ eco(formula, data = parent.frame(), N = NULL, supplement = NULL,
     algorithm is used where candidate draws are sampled from the uniform
     distribution on the tomography line for each unit. Note that the
     grid method is significantly slower than the Metropolis algorithm.
+    The default is \code{FALSE}.
   }
   \item{n.draws}{A positive integer. The number of MCMC draws.
     The default is \code{5000}.
@@ -116,17 +121,20 @@ eco(formula, data = parent.frame(), N = NULL, supplement = NULL,
 \details{
   An example of \eqn{2 \times 2} ecological table for racial voting is
   given below: 
-  \tabular{lccc}{
-    \tab black voters  \tab white voters \tab \cr
-    Voted \tab \eqn{W_{1i}}  \tab \eqn{W_{2i}} \tab \eqn{Y_i} \cr
-    Not voted \tab \eqn{1-W_{1i}}  \tab \eqn{1-W_{2i}} \tab \eqn{1-Y_i}  \cr
-    \tab \eqn{X_i} \tab \eqn{1-X_i} \tab 
+  \tabular{llccc}{
+    \tab \tab black voters  \tab  white voters \tab \cr
+    \tab vote \tab \eqn{W_{1i}}  \tab \eqn{W_{2i}} \tab \eqn{Y_i} \cr
+    \tab not vote \tab \eqn{1-W_{1i}}  \tab \eqn{1-W_{2i}} \tab \eqn{1-Y_i}  \cr
+    \tab \tab \eqn{X_i} \tab \eqn{1-X_i} \tab 
   }
   where \eqn{Y_i} and \eqn{X_i} represent the observed margins, and
-  \eqn{W_1} and \eqn{W_2} are unknown variables. All variables are
-  proportions and hence bounded between 0 and 1. For each \eqn{i}, the
-  following deterministic relationship holds,
-  \eqn{Y_i=X_i W_{1i}+(1-X_i)W_{2i}}.
+  \eqn{W_1} and \eqn{W_2} are unknown variables. In this exmaple, 
+  \eqn{Y_i} is the turnout rate in the ith precint, \eqn{X_i} is the
+  proproption of African American in the ith precinct. The unknowns 
+  \eqn{W_{1i}} an d\eqn{W_{2i}} are the black and white turnout, 
+  respectively. All variables are proportions and hence bounded 
+  between 0 and 1. For each \eqn{i}, the following deterministic 
+  relationship holds, \eqn{Y_i=X_i W_{1i}+(1-X_i)W_{2i}}.
 }
 
 \examples{
@@ -135,31 +143,32 @@ eco(formula, data = parent.frame(), N = NULL, supplement = NULL,
 data(reg)
 
 ## NOTE: convergence has not been properly assessed for the following
-## examples. See Imai, Lu and Strauss (2006) for more complete analyses.
+## examples. See Imai, Lu and Strauss (Forthcoming a and b) for more
+## complete analyses.
 
 ## fit the parametric model with the default prior specification
-\dontrun{res <- eco(Y ~ X, data = reg, verbose = TRUE)}
+res <- eco(Y ~ X, data = reg, verbose = TRUE)
 ## summarize the results
-\dontrun{summary(res)}
+summary(res)
 
 ## obtain out-of-sample prediction
-\dontrun{out <- predict(res, verbose = TRUE)}
+out <- predict(res, verbose = TRUE)
 ## summarize the results
-\dontrun{summary(out)}
+summary(out)
 
 ## load the Robinson's census data
 data(census)
 
 ## fit the parametric model with contextual effects and N 
 ## using the default prior specification
-\dontrun{res1 <- eco(Y ~ X, N = N, context = TRUE, data = census, verbose = TRUE)}
+res1 <- eco(Y ~ X, N = N, context = TRUE, data = census, verbose = TRUE)
 ## summarize the results
-\dontrun{summary(res1)}
+summary(res1)
 
 ## obtain out-of-sample prediction
-\dontrun{out1 <- predict(res1, verbose = TRUE)}
+out1 <- predict(res1, verbose = TRUE)
 ## summarize the results
-\dontrun{summary(out1)}
+summary(out1)
 
 }
 

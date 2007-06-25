@@ -104,10 +104,12 @@ void cBaseeco(
   /* get random seed */
   GetRNGstate();
   
+
   /* read the priors */
   itemp=0;
   for(k=0;k<n_dim;k++)
     for(j=0;j<n_dim;j++) S0[j][k]=pdS0[itemp++];
+
 
   /* read the data */
   itemp = 0;
@@ -115,16 +117,20 @@ void cBaseeco(
     for (i = 0; i < n_samp; i++) 
       X[i][j] = pdX[itemp++];
 
+
   /* Initialize W, Wstar for n_samp */
   for (i=0; i< n_samp; i++) {
     if (X[i][1]!=0 && X[i][1]!=1) {
       W[i][0]=runif(minW1[i], maxW1[i]);
       W[i][1]=(X[i][1]-X[i][0]*W[i][0])/(1-X[i][0]);
     }
+
     if (X[i][1]==0) 
       for (j=0; j<n_dim; j++) W[i][j]=0.0001;
+
     if (X[i][1]==1) 
       for (j=0; j<n_dim; j++) W[i][j]=0.9999;
+
     for (j=0; j<n_dim; j++)
       Wstar[i][j]=log(W[i][j])-log(1-W[i][j]);
   }
@@ -133,26 +139,43 @@ void cBaseeco(
   if (*x1==1) 
     for (i=0; i<x1_samp; i++) {
       W[(n_samp+i)][0]=x1_W1[i];
-      if (W[(n_samp+i)][0]==0) W[(n_samp+i)][0]=0.0001;
-      if (W[(n_samp+i)][0]==1) W[(n_samp+i)][0]=0.9999;
+
+      if (W[(n_samp+i)][0]==0) 
+	W[(n_samp+i)][0]=0.0001;
+
+      if (W[(n_samp+i)][0]==1) 
+	W[(n_samp+i)][0]=0.9999;
+
       Wstar[(n_samp+i)][0]=log(W[(n_samp+i)][0])-log(1-W[(n_samp+i)][0]);
     }
+
   if (*x0==1) 
     for (i=0; i<x0_samp; i++) {
       W[(n_samp+x1_samp+i)][1]=x0_W2[i];
-      if (W[(n_samp+x1_samp+i)][1]==0) W[(n_samp+x1_samp+i)][1]=0.0001;
-      if (W[(n_samp+x1_samp+i)][1]==1) W[(n_samp+x1_samp+i)][1]=0.9999;
+
+      if (W[(n_samp+x1_samp+i)][1]==0) 
+	W[(n_samp+x1_samp+i)][1]=0.0001;
+      
+      if (W[(n_samp+x1_samp+i)][1]==1) 
+	W[(n_samp+x1_samp+i)][1]=0.9999;
+
       Wstar[(n_samp+x1_samp+i)][1]=log(W[(n_samp+x1_samp+i)][1])-log(1-W[(n_samp+x1_samp+i)][1]);
     }
 
   /* read the survey data */
   if (*survey==1) {
     itemp = 0;
+
     for (j=0; j<n_dim; j++)
       for (i=0; i<s_samp; i++) {
 	S_W[i][j]=sur_W[itemp++];
-	if (S_W[i][j]==0) S_W[i][j]=0.0001;
-	if (S_W[i][j]==1) S_W[i][j]=0.9999;
+
+	if (S_W[i][j]==0) 
+	  S_W[i][j]=0.0001;
+
+	if (S_W[i][j]==1) 
+	  S_W[i][j]=0.9999;
+
 	S_Wstar[i][j]=log(S_W[i][j])-log(1-S_W[i][j]);
 	W[(n_samp+x1_samp+x0_samp+i)][j]=S_W[i][j];
 	Wstar[(n_samp+x1_samp+x0_samp+i)][j]=S_Wstar[i][j];
@@ -172,18 +195,24 @@ void cBaseeco(
   itemp = 0;
   for(j=0;j<n_dim;j++){
     mu[j] = mustart[j];
+
     for(k=0;k<n_dim;k++)
       Sigma[j][k]=Sigmastart[itemp++];
   }
   dinv(Sigma, n_dim, InvSigma);
+
+
   
   /*** Gibbs sampler! ***/
   if (*verbose)
     Rprintf("Starting Gibbs Sampler...\n");
+
   for(main_loop=0; main_loop<*n_gen; main_loop++){
     /** update W, Wstar given mu, Sigma in regular areas **/
+
     for (i=0;i<n_samp;i++){
       if ( X[i][1]!=0 && X[i][1]!=1 ) {
+
 	if (*Grid)
 	  rGrid(W[i], W1g[i], W2g[i], n_grid[i], mu, InvSigma, n_dim);
 	else 
@@ -193,6 +222,7 @@ void cBaseeco(
       Wstar[i][0]=log(W[i][0])-log(1-W[i][0]);
       Wstar[i][1]=log(W[i][1])-log(1-W[i][1]);
     }
+
     
     /* update W2 given W1, mu and Sigma in x1 homeogeneous areas */
     if (*x1==1)
@@ -220,6 +250,7 @@ void cBaseeco(
     /*store Gibbs draw after burn-in and every nth draws */      
     if (main_loop>=*burn_in){
       itempC++;
+
       if (itempC==nth){
 	pdSMu0[itempA]=mu[0];
 	pdSMu1[itempA]=mu[1];
@@ -227,6 +258,7 @@ void cBaseeco(
 	pdSSig01[itempA]=Sigma[0][1];
 	pdSSig11[itempA]=Sigma[1][1];
 	itempA++;
+
 	for(i=0; i<(n_samp+x1_samp+x0_samp); i++){
 	  pdSW1[itempS]=W[i][0];
 	  pdSW2[itempS]=W[i][1];
@@ -235,6 +267,8 @@ void cBaseeco(
 	itempC=0;
       }
     } 
+
+
     if (*verbose)
       if (itempP == main_loop) {
 	Rprintf("%3d percent done.\n", progress*10);
