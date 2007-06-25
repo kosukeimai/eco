@@ -24,7 +24,7 @@
    ecoML(formula, data = parent.frame(), N = NULL, supplement = NULL, 
          theta.start = c(0,0,1,1,0), fix.rho = FALSE,
          context = FALSE, sem = TRUE, epsilon = 10^(-10), 
-     maxit = 1000, loglik = TRUE, hyptest = FALSE, verbose = TRUE)  
+     maxit = 1000, loglik = TRUE, hyptest = FALSE, verbose = FALSE)  
 }
 
 \arguments{
