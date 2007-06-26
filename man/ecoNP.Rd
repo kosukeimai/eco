@@ -127,11 +127,13 @@ data(reg)
 ## fit the nonparametric model to give in-sample predictions
 ## store the parameters to make population inference later
 res <- ecoNP(Y ~ X, data = reg, n.draws = 50, param = TRUE, verbose = TRUE) 
+
 ##summarize the results
 summary(res)
 
 ## obtain out-of-sample prediction
 out <- predict(res, verbose = TRUE)
+
 ## summarize the results
 summary(out)
 
@@ -145,8 +147,11 @@ plot(density(out[,2]), main = "W2")
 data(census)
 
 ## fit the parametric model with contextual effects and N 
-## using the default prior specificationres1 <- ecoNP(Y ~ X, N = N, 
-context = TRUE, param = TRUE, data = census, n.draws = 25, verbose = TRUE)
+## using the default prior specification
+
+res1 <- ecoNP(Y ~ X, N = N, context = TRUE, param = TRUE, data = census, 
+n.draws = 25, verbose = TRUE)
+
 ## summarize the results
 summary(res1)
 
