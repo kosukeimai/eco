@@ -1,11 +1,11 @@
 Package: eco
-Version: 3.1-0
+Version: 3.1-1
 Date: 2007-6-25
 Title: R Package for Ecological Inference in 2x2 Tables
 Author: Kosuke Imai <kimai@princeton.edu>,
         Ying Lu <ying.lu@colorado.edu>,
 	Aaron Strauss <abstraus@Princeton.EDU>.
-Maintainer: Kosuke Imai <kimai@princeton.edu>
+Maintainer: Ying Lu <ying.lu@colorado.edu>
 Depends: R (>= 2.0), MASS
 Description: eco is a publicly available R package that implements the
   Bayesian and likelihood methods proposed in Imai, Lu, and Strauss 
