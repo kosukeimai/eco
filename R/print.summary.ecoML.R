@@ -9,20 +9,20 @@ print.summary.ecoML <- function(x, digits=max(3,
       cat("\nOriginal Model Parameters (rho is fixed at ", x$rho, "):\n", sep="")   
     else
       cat("\nOriginal Model Parameters:\n")
-    printCoefmat(x$param.table, digits=digits, na.print="NA",...)
+    print(x$param.table, digits=digits, na.print="NA",...)
   }
 
   cat("\n*** Insample Predictions ***\n")
   cat("\nUnweighted:\n")
-  printCoefmat(x$agg.table, digits=digits, na.print="NA",...)
+  print(x$agg.table, digits=digits, na.print="NA",...)
   
   if (!is.null(x$agg.wtable)) {
   cat("\nWeighted:\n")
-  printCoefmat(x$agg.wtable, digits=digits, na.print="NA",...)
+  print(x$agg.wtable, digits=digits, na.print="NA",...)
   }
   if (!is.null(x$W.table)) {
     cat("\n\nUnit-level Estimates of W:\n")
-    printCoefmat(x$W.table, digits=digits, na.print="NA",...)
+    print(x$W.table, digits=digits, na.print="NA",...)
   }
 
   cat("\n\nLog-likelihood:", x$loglik)

@@ -47,6 +47,9 @@ eco <- function(formula, data = parent.frame(), N = NULL, supplement = NULL,
   # check data and modify inputs 
   tmp <- checkdata(X,Y, supplement, ndim)  
   bdd <- ecoBD(formula=formula, data=data)
+  W1min <- bdd$Wmin[order(tmp$order.old)[1:nrow(tmp$d)],1,1]
+  W1max <- bdd$Wmax[order(tmp$order.old)[1:nrow(tmp$d)],1,1]
+ 
 
   ## fitting the model
   n.store <- floor((n.draws-burnin)/(thin+1))
@@ -64,7 +67,7 @@ eco <- function(formula, data = parent.frame(), N = NULL, supplement = NULL,
               as.integer(tmp$X1type), as.integer(tmp$samp.X1),
               as.double(tmp$X1.W1), as.integer(tmp$X0type),
               as.integer(tmp$samp.X0), as.double(tmp$X0.W2),
-              as.double(bdd$Wmin[,1,1]), as.double(bdd$Wmax[,1,1]),
+              as.double(W1min), as.double(W1max),
               as.integer(parameter), as.integer(grid), 
               pdSMu0 = double(n.store), pdSMu1 = double(n.store), pdSMu2 = double(n.store),
               pdSSig00=double(n.store), pdSSig01=double(n.store), pdSSig02=double(n.store),
@@ -80,7 +83,7 @@ eco <- function(formula, data = parent.frame(), N = NULL, supplement = NULL,
               as.integer(tmp$X1type), as.integer(tmp$samp.X1),
               as.double(tmp$X1.W1), as.integer(tmp$X0type),
               as.integer(tmp$samp.X0), as.double(tmp$X0.W2),
-              as.double(bdd$Wmin[,1,1]), as.double(bdd$Wmax[,1,1]),
+              as.double(W1min), as.double(W1max),
               as.integer(parameter), as.integer(grid), 
               pdSMu0=double(n.store), pdSMu1=double(n.store), 
 	      pdSSig00=double(n.store),

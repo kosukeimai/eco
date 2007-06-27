@@ -43,6 +43,10 @@ ecoML <- function(formula, data = parent.frame(), N=NULL, supplement = NULL,
   ##checking data
   tmp <- checkdata(X, Y, supplement, ndim)
   bdd <- ecoBD(formula=formula, data=data)
+  W1min <- bdd$Wmin[order(tmp$order.old)[1:nrow(tmp$d)],1,1]
+  W1max <- bdd$Wmax[order(tmp$order.old)[1:nrow(tmp$d)],1,1]
+
+
   n <- tmp$n.samp+tmp$survey.samp+tmp$samp.X1+tmp$samp.X0
   wcol<-ndim
   if (context) {
@@ -61,7 +65,7 @@ ecoML <- function(formula, data = parent.frame(), N=NULL, supplement = NULL,
             as.double(tmp$survey.data),
             as.integer(tmp$X1type), as.integer(tmp$samp.X1), as.double(tmp$X1.W1),
             as.integer(tmp$X0type), as.integer(tmp$samp.X0), as.double(tmp$X0.W2),
-            as.double(bdd$Wmin[,1,1]), as.double(bdd$Wmax[,1,1]),
+            as.double(W1min), as.double(W1max),
             as.integer(flag),as.integer(verbose),as.integer(loglik),as.integer(hyptest),
             optTheta=rep(-1.1,n.var), pdTheta=double(n.var),
             S=double(n.S+1),inSample=double(inSample.length),DMmatrix=double(n.par*n.par),
