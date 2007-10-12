@@ -22,5 +22,5 @@ Description: eco is a publicly available R package that implements the
   parametric likelihood models.
 LazyLoad: yes
 LazyData: yes
-License: GPL (version 2 or later)
+License: GPL (>= 2)
 URL: http://imai.princeton.edu/research/eco.html
