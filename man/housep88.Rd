@@ -37,7 +37,7 @@
 }
 \references{
  Burden, Barry C. and David C. Kimball (1988). ``A New Approach To Ticket-
-  Splitting.'' {\em The American Political Science Review}. vol 92.,
+  Splitting.'' The American Political Science Review. vol 92.,
    no. 3, pp. 553-544.
 }
 

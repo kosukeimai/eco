@@ -30,7 +30,7 @@
 
  \references{ Wasserman, Ira M. and David R. Segal (1973).
 ``Aggregation Effects in the Ecological Study of Presidential
-Voting.'' {\em American Journal of Political Science}, vol. 17, pp.
+Voting.'' American Journal of Political Science. vol. 17, pp.
 177-81.
  }
 

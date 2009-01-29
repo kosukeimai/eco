@@ -10,8 +10,7 @@
   Normal/Inverse-Wishart prior) for ecological inference in \eqn{2
   \times 2} tables via Markov chain Monte Carlo. It gives the in-sample
   predictions as well as the estimates of the model parameters. The
-  model and algorithm are described in Imai, Lu and Strauss (Forthcoming 
-  a and b). 
+  model and algorithm are described in Imai, Lu and Strauss (2008, Forthcoming). 
   }
 
 \usage{
@@ -45,7 +44,7 @@ eco(formula, data = parent.frame(), N = NULL, supplement = NULL,
   \item{context}{Logical. If \code{TRUE}, the contextual effect is also
     modeled, that is to assume the row margin \eqn{X} and the unknown 
    \eqn{W_1} and \eqn{W_2} are correlated. See Imai, Lu and Strauss 
-   (Forthcoming b) for details. The default is \code{FALSE}. 
+   (Forthcoming) for details. The default is \code{FALSE}. 
   }
   \item{mu0}{A scalar or a numeric vector that specifies the prior mean 
     for the mean parameter \eqn{\mu} for \eqn{(W_1,W_2)} (or for 
@@ -143,7 +142,7 @@ eco(formula, data = parent.frame(), N = NULL, supplement = NULL,
 data(reg)
 
 ## NOTE: convergence has not been properly assessed for the following
-## examples. See Imai, Lu and Strauss (Forthcoming a and b) for more
+## examples. See Imai, Lu and Strauss (2008, Forthcoming) for more
 ## complete analyses.
 
 ## fit the parametric model with the default prior specification
@@ -211,9 +210,9 @@ summary(out1)
   Journal of Statistical Software, available at
   \url{http://imai.princeton.edu/research/eco.html}
 
-  Imai, Kosuke, Ying Lu and Aaron Strauss. (Forthcoming). \dQuote{Bayesian and
+  Imai, Kosuke, Ying Lu and Aaron Strauss. (2008). \dQuote{Bayesian and
     Likelihood Inference for 2 x 2 Ecological Tables: An Incomplete Data
-    Approach} Political Analysis, available at 
+    Approach} Political Analysis, Vol. 16, No. 1 (Winter), pp. 41-69. available at 
   \url{http://imai.princeton.edu/research/eiall.html}
 }
 

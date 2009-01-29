@@ -11,7 +11,7 @@
   2} tables via Markov chain Monte Carlo. It gives the in-sample
   predictions as well as out-of-sample predictions for population
   inference.  The models and algorithms are described in Imai, Lu and
-  Strauss (Forthcoming a and b). 
+  Strauss (2008, Forthcoming). 
 }
 
 \usage{
@@ -44,12 +44,12 @@ ecoNP(formula, data = parent.frame(), N = NULL, supplement = NULL,
   }      
   \item{context}{Logical. If \code{TRUE}, the contextual effect is also
     modeled, that is to assume the row margin \eqn{X} and the unknown 
-   \eqn{W_1} and \eqn{W_2} are correlated. See Ima, Lu and Strauss
-   (Forthcoming b) for details. The default is \code{FALSE}. 
+   \eqn{W_1} and \eqn{W_2} are correlated. See Imai, Lu and Strauss
+   (2008, Forthcoming) for details. The default is \code{FALSE}. 
   }
   \item{mu0}{A scalar or a numeric vector that specifies the prior mean 
     for the mean parameter \eqn{\mu} of the base prior distribution \eqn{G_0}
-    (see Imia, Lu and Strauss (Forthcoming a and b) for detailed 
+    (see Imai, Lu and Strauss (2008, Forthcoming) for detailed 
     descriptions of Dirichlete prior and the normal base prior distribution) . 
     If it is a scalar, then its value will be repeated to yield a vector 
     of the length of \eqn{\mu}, otherwise,
@@ -206,9 +206,9 @@ summary(pres1)
   Journal of Statistical Software, available at
   \url{http://imai.princeton.edu/research/eco.html}
 
-  Imai, Kosuke, Ying Lu and Aaron Strauss. (Forthcoming).
+  Imai, Kosuke, Ying Lu and Aaron Strauss. (2008).
   \dQuote{Bayesian and Likelihood Inference for 2 x 2 Ecological Tables:
-    An Incomplete Data Approach} Political Analysis, available at
+    An Incomplete Data Approach} Political Analysis, Vol. 16, No. 1 (Winter), pp. 41-69. available at
  \url{http://imai.princeton.edu/research/eiall.html}
 }
 
