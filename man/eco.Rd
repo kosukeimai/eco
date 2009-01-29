@@ -44,7 +44,7 @@ eco(formula, data = parent.frame(), N = NULL, supplement = NULL,
   \item{context}{Logical. If \code{TRUE}, the contextual effect is also
     modeled, that is to assume the row margin \eqn{X} and the unknown 
    \eqn{W_1} and \eqn{W_2} are correlated. See Imai, Lu and Strauss 
-   (Forthcoming) for details. The default is \code{FALSE}. 
+   (2008, Forthcoming) for details. The default is \code{FALSE}. 
   }
   \item{mu0}{A scalar or a numeric vector that specifies the prior mean 
     for the mean parameter \eqn{\mu} for \eqn{(W_1,W_2)} (or for 
