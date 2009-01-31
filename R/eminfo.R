@@ -14,7 +14,7 @@ invlogit <-function(Y)
 ####assuming theta.em
 ##2 d: mu1, mu2, sig1, sig2, r12
 ##3 d: mu3, mu1, mu2, sig3, sig1, sig2, r13, r23, r12
-param.pack<-function(theta.em, fix.rho=FALSE,r12=0, dim=ndim) 
+param.pack<-function(theta.em, fix.rho=FALSE,r12=0, dim) 
   {
     mu<-rep(0, dim)
     Sig<-matrix(0,dim, dim)
