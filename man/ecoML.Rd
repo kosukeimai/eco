@@ -40,7 +40,8 @@
     \code{ecoML} is called. 
   }
   \item{N}{An optional variable representing the size of the unit; e.g.,
-    the total number of voters.
+    the total number of voters.  \code{N} needs to be a vector of same length 
+    as \code{Y} and \code{X} or a scalar.
   }
   \item{supplement}{An optional matrix of supplemental data. The matrix
     has two columns, which contain additional individual-level data such
