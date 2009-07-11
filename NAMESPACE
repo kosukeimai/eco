@@ -15,7 +15,8 @@ export(eco,
        predict.eco,
        predict.ecoX,
        predict.ecoNP,
-       predict.ecoNPX)
+       predict.ecoNPX,
+       Qfun)
 
 S3method(varcov, eco)
 S3method(varcov, ecoNP)
