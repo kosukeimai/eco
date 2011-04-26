@@ -1,6 +1,6 @@
 Package: eco
-Version: 3.1-4
-Date: 2009-07-12
+Version: 3.1-5
+Date: 2011-04-26
 Title: R Package for Ecological Inference in 2x2 Tables
 Author: Kosuke Imai <kimai@princeton.edu>,
         Ying Lu <yl46@nyu.edu>,
