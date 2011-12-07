@@ -13,8 +13,8 @@ summary.ecoNP <- function(object, CI=c(2.5, 97.5), param=FALSE, units=FALSE, sub
   agg.table <-agg.wtable <-NULL
   
   N<-rep(1, length(object$X))
-  W1.agg.mean <- object$W[,1,]%*% (object$X*N/sum(object$X*N))
-  W2.agg.mean <- object$W[,2,]%*% ((1-object$X)*N/sum((1-object$X)*N))
+  W1.agg.mean <- as.vector(object$W[,1,]%*% (object$X*N/sum(object$X*N)))
+  W2.agg.mean <- as.vector(object$W[,2,]%*% ((1-object$X)*N/sum((1-object$X)*N)))
 
   agg.table <- rbind(cbind(mean(W1.agg.mean), sd(W1.agg.mean), 
                            quantile(W1.agg.mean, min(CI)/100), 
@@ -29,8 +29,8 @@ summary.ecoNP <- function(object, CI=c(2.5, 97.5), param=FALSE, units=FALSE, sub
   if (!is.null(object$N)) {
     N <- object$N
 
-    W1.agg.wmean <- object$W[,1,] %*% (object$X*N/sum(object$X*N))
-    W2.agg.wmean <- object$W[,2,] %*% ((1-object$X)*N/sum((1-object$X)*N))
+    W1.agg.wmean <- as.vector(object$W[,1,] %*% (object$X*N/sum(object$X*N)))
+    W2.agg.wmean <- as.vector(object$W[,2,] %*% ((1-object$X)*N/sum((1-object$X)*N)))
     agg.wtable <- rbind(cbind(mean(W1.agg.wmean), sd(W1.agg.wmean), 
                            quantile(W1.agg.wmean, min(CI)/100), 
                            quantile(W1.agg.wmean, max(CI)/100)),
