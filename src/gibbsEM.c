@@ -1191,7 +1191,7 @@ void initCCAR(Param* params, double* pdTheta) {
 
   /*Current version of program does not handle homogenous data*/
   if ((x1_samp+x0_samp)>0) {
-    printf("WARNING: Homogenous data is ignored and not handled by the current version of eco.");
+    Rprintf("WARNING: Homogenous data is ignored and not handled by the current version of eco.");
   }
 
 

@@ -365,6 +365,6 @@ void dcholdc2D(double *X, int size, double *L)
 }
 
 int main () {
-  printf("hello world");
+  Rprintf("hello world");
   return 0;
 }
