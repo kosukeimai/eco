@@ -1217,8 +1217,8 @@ void printColumnHeader(int main_loop, int iteration_max, setParam* setP, int fin
   param_len = setP->param_len;
 
   char temp[50]; int hlen;
-  if (!finalTheta) hlen=sprintf(temp, "cycle %d/%d:",main_loop,iteration_max); //Length of cycle text
-  else hlen=sprintf(temp, "Final Theta:");
+  if (!finalTheta) hlen=Rprintf(temp, "cycle %d/%d:",main_loop,iteration_max); //Length of cycle text
+  else hlen=Rprintf(temp, "Final Theta:");
   for (i=0;i<hlen;i++) Rprintf(" ");
 
   if (param_len<=5) { //CAR
