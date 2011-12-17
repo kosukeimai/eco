@@ -1218,8 +1218,8 @@ void printColumnHeader(int main_loop, int iteration_max, setParam* setP, int fin
 
   //trying to print nicely, but it throws an error
   //char temp[50]; int hlen;
-  //if (!finalTheta) hlen=Rprintf(temp, "cycle %d/%d:",main_loop,iteration_max); //Length of cycle text
-  //else hlen=Rprintf(temp, "Final Theta:");
+  //if (!finalTheta) hlen=sprintf(temp, "cycle %d/%d:",main_loop,iteration_max); //Length of cycle text
+  //else hlen=sprintf(temp, "Final Theta:");
   //for (i=0;i<hlen;i++) Rprintf(" ");
   
   if (!finalTheta) Rprintf("cycle %d/%d:",main_loop,iteration_max);
