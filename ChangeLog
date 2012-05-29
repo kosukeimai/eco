@@ -1,0 +1,13 @@
+3.1-5  05.29.12  minor fixes 
+3.1-4  07.12.09  minor fixes 
+3.1-3  07.05.09  minor fixes 
+3.1-2  01.29.09  minor documentation fixes 
+3.1-1  06.27.07  some minor improvements; final version for JSS publication 
+3.0-2  01.11.07  made it comparible with the Windows; a bug fix in summary.ecoML() 
+3.0-1  12.27.06  a major revision; added ML estimation, calculation of fraction of missing information, stable release for R-2.4.1 
+2.2-2  09.23.06  changed due to updates in R 
+2.2-1  09.28.05  nonparametric model with contextual effects added
+2.1-1  07.06.05  a major revision; added bounds and prediction; added/updated other functionalities 
+1.1-1  06.15.05  add the Metropolis algorithm to sample W 
+1.0-1  12.21.04  first official version; submitted to CRAN
+0.9-1  09.07.04  first beta version 

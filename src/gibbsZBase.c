@@ -268,7 +268,7 @@ void cBaseecoZ(
       for (i=0; i<x1_samp; i++) {
 	dtemp=mu[n_samp+i][1]+Sigma[0][1]/Sigma[0][0]*(Wstar[n_samp+i][0]-mu[n_samp+i][0]);
 	dtemp1=Sigma[1][1]*(1-Sigma[0][1]*Sigma[0][1]/(Sigma[0][0]*Sigma[1][1]));
-	printf("\n%14g%14g\n", dtemp, dtemp1);
+	Rprintf("\n%14g%14g\n", dtemp, dtemp1);
 	dtemp1=sqrt(dtemp1);
 	Wstar[n_samp+i][1]=rnorm(dtemp, dtemp1);
 	W[n_samp+i][1]=exp(Wstar[n_samp+i][1])/(1+exp(Wstar[n_samp+i][1]));
