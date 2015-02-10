@@ -140,7 +140,7 @@ eco(formula, data = parent.frame(), N = NULL, supplement = NULL,
 \examples{
 
 ## load the registration data
-data(reg)
+\dontrun{data(reg)
 
 ## NOTE: convergence has not been properly assessed for the following
 ## examples. See Imai, Lu and Strauss (2008, Forthcoming) for more
@@ -169,7 +169,7 @@ summary(res1)
 out1 <- predict(res1, verbose = TRUE)
 ## summarize the results
 summary(out1)
-
+}
 }
 
 \value{

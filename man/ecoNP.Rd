@@ -127,7 +127,7 @@ data(reg)
 
 ## fit the nonparametric model to give in-sample predictions
 ## store the parameters to make population inference later
-res <- ecoNP(Y ~ X, data = reg, n.draws = 50, param = TRUE, verbose = TRUE) 
+\dontrun{res <- ecoNP(Y ~ X, data = reg, n.draws = 50, param = TRUE, verbose = TRUE)
 
 ##summarize the results
 summary(res)
@@ -158,7 +158,7 @@ summary(res1)
 
 ## out-of sample prediction 
 pres1 <- predict(res1)
-summary(pres1)
+summary(pres1)}
 }
 
 \value{
