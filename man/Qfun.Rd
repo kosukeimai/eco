@@ -32,11 +32,10 @@ Development, New York University,
  \email{abstraus@Princeton.Edu}.
   }
 
-  \references{
-  Imai, Kosuke, Ying Lu and Aaron Strauss. (Forthcoming).
+  \references{ Imai, Kosuke, Ying Lu and Aaron Strauss. (2011).
   \dQuote{eco: R Package for Ecological Inference in 2x2 Tables}
-  Journal of Statistical Software, available at
-  \url{http://imai.princeton.edu/research/eco.html}
+  Journal of Statistical Software, Vol. 42, No. 5, pp. 1-23. available
+  at \url{http://imai.princeton.edu/research/eco.html}
 
   Imai, Kosuke, Ying Lu and Aaron Strauss. (2008). \dQuote{Bayesian and
     Likelihood Inference for 2 x 2 Ecological Tables: An Incomplete Data

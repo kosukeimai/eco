@@ -17,7 +17,7 @@
   with each parameter and allows researcher to examine the impact of
   missing information on parameter estimation in ecological
   inference. The models and algorithms are described in Imai,
-  Lu and Strauss (Forthcoming).
+  Lu and Strauss (2008, 2011).
 }
 
 \usage{
@@ -237,17 +237,16 @@ surv <- 1:600
  \email{abstraus@Princeton.Edu}.
 }
 
-\references{
-  Imai, Kosuke, Ying Lu and Aaron Strauss. (Forthcoming).
+\references{ Imai, Kosuke, Ying Lu and Aaron Strauss. (2011).
   \dQuote{eco: R Package for Ecological Inference in 2x2 Tables}
-  Journal of Statistical Software, available at
-  \url{http://imai.princeton.edu/research/eco.html}
+  Journal of Statistical Software, Vol. 42, No. 5, pp. 1-23. available
+  at \url{http://imai.princeton.edu/research/eco.html}
   
-  Imai, Kosuke, Ying Lu and Aaron Strauss. (Forthcoming).
-  \dQuote{Bayesian and Likelihood Inference for 2 x 2 Ecological Tables:
-    An Incomplete Data Approach} Political Analysis, available at
- \url{http://imai.princeton.edu/research/eiall.html}
-}
+  Imai, Kosuke, Ying Lu and Aaron Strauss. (2008).  \dQuote{Bayesian
+  and Likelihood Inference for 2 x 2 Ecological Tables: An Incomplete
+  Data Approach} Political Analysis, Vol. 16, No. 1 (Winter),
+  pp. 41-69. available at
+  \url{http://imai.princeton.edu/research/eiall.html} }
 
 \seealso{\code{eco}, \code{ecoNP}, \code{summary.ecoML}}
 \keyword{models}

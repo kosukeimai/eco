@@ -5,13 +5,12 @@
 \title{Fitting the Parametric Bayesian Model of Ecological Inference in
   2x2 Tables}
 
-\description{
-  \code{eco} is used to fit the parametric Bayesian model (based on a
-  Normal/Inverse-Wishart prior) for ecological inference in \eqn{2
-  \times 2} tables via Markov chain Monte Carlo. It gives the in-sample
-  predictions as well as the estimates of the model parameters. The
-  model and algorithm are described in Imai, Lu and Strauss (2008, Forthcoming). 
-  }
+\description{ \code{eco} is used to fit the parametric Bayesian model
+  (based on a Normal/Inverse-Wishart prior) for ecological inference
+  in \eqn{2 \times 2} tables via Markov chain Monte Carlo. It gives
+  the in-sample predictions as well as the estimates of the model
+  parameters. The model and algorithm are described in Imai, Lu and
+  Strauss (2008, 2011).  }
 
 \usage{
 eco(formula, data = parent.frame(), N = NULL, supplement = NULL, 
@@ -45,7 +44,7 @@ eco(formula, data = parent.frame(), N = NULL, supplement = NULL,
   \item{context}{Logical. If \code{TRUE}, the contextual effect is also
     modeled, that is to assume the row margin \eqn{X} and the unknown 
    \eqn{W_1} and \eqn{W_2} are correlated. See Imai, Lu and Strauss 
-   (2008, Forthcoming) for details. The default is \code{FALSE}. 
+   (2008, 2011) for details. The default is \code{FALSE}. 
   }
   \item{mu0}{A scalar or a numeric vector that specifies the prior mean 
     for the mean parameter \eqn{\mu} for \eqn{(W_1,W_2)} (or for 
@@ -143,7 +142,7 @@ eco(formula, data = parent.frame(), N = NULL, supplement = NULL,
 \dontrun{data(reg)
 
 ## NOTE: convergence has not been properly assessed for the following
-## examples. See Imai, Lu and Strauss (2008, Forthcoming) for more
+## examples. See Imai, Lu and Strauss (2008, 2011) for more
 ## complete analyses.
 
 ## fit the parametric model with the default prior specification
@@ -205,11 +204,10 @@ summary(out1)
   \email{ying.lu@Colorado.Edu}
   }
 
-  \references{
-  Imai, Kosuke, Ying Lu and Aaron Strauss. (Forthcoming).
+  \references{ Imai, Kosuke, Ying Lu and Aaron Strauss. (2011).
   \dQuote{eco: R Package for Ecological Inference in 2x2 Tables}
-  Journal of Statistical Software, available at
-  \url{http://imai.princeton.edu/research/eco.html}
+  Journal of Statistical Software, Vol. 42, No. 5, pp. 1-23. available
+  at \url{http://imai.princeton.edu/research/eco.html}
 
   Imai, Kosuke, Ying Lu and Aaron Strauss. (2008). \dQuote{Bayesian and
     Likelihood Inference for 2 x 2 Ecological Tables: An Incomplete Data

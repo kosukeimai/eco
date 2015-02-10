@@ -5,14 +5,12 @@
 \title{Fitting the Nonparametric Bayesian Models of Ecological Inference
   in 2x2 Tables}  
 
-\description{
-  \code{ecoNP} is used to fit the nonparametric Bayesian model (based on
-  a Dirichlet process prior) for ecological inference in \eqn{2 \times
-  2} tables via Markov chain Monte Carlo. It gives the in-sample
-  predictions as well as out-of-sample predictions for population
-  inference.  The models and algorithms are described in Imai, Lu and
-  Strauss (2008, Forthcoming). 
-}
+\description{ \code{ecoNP} is used to fit the nonparametric Bayesian
+  model (based on a Dirichlet process prior) for ecological inference
+  in \eqn{2 \times 2} tables via Markov chain Monte Carlo. It gives
+  the in-sample predictions as well as out-of-sample predictions for
+  population inference.  The models and algorithms are described in
+  Imai, Lu and Strauss (2008, 2011).  }
 
 \usage{
 ecoNP(formula, data = parent.frame(), N = NULL, supplement = NULL,
@@ -46,11 +44,11 @@ ecoNP(formula, data = parent.frame(), N = NULL, supplement = NULL,
   \item{context}{Logical. If \code{TRUE}, the contextual effect is also
     modeled, that is to assume the row margin \eqn{X} and the unknown 
    \eqn{W_1} and \eqn{W_2} are correlated. See Imai, Lu and Strauss
-   (2008, Forthcoming) for details. The default is \code{FALSE}. 
+   (2008, 2011) for details. The default is \code{FALSE}. 
   }
   \item{mu0}{A scalar or a numeric vector that specifies the prior mean 
     for the mean parameter \eqn{\mu} of the base prior distribution \eqn{G_0}
-    (see Imai, Lu and Strauss (2008, Forthcoming) for detailed 
+    (see Imai, Lu and Strauss (2008, 2011) for detailed 
     descriptions of Dirichlete prior and the normal base prior distribution) . 
     If it is a scalar, then its value will be repeated to yield a vector 
     of the length of \eqn{\mu}, otherwise,
@@ -201,11 +199,10 @@ summary(pres1)}
   \email{ying.lu@Colorado.Edu}
 }
 
-\references{
-  Imai, Kosuke, Ying Lu and Aaron Strauss. (Forthcoming).
+\references{ Imai, Kosuke, Ying Lu and Aaron Strauss. (2011).
   \dQuote{eco: R Package for Ecological Inference in 2x2 Tables}
-  Journal of Statistical Software, available at
-  \url{http://imai.princeton.edu/research/eco.html}
+  Journal of Statistical Software, Vol. 42, No. 5, pp. 1-23. available
+  at \url{http://imai.princeton.edu/research/eco.html}
 
   Imai, Kosuke, Ying Lu and Aaron Strauss. (2008).
   \dQuote{Bayesian and Likelihood Inference for 2 x 2 Ecological Tables:
