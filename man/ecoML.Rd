@@ -23,7 +23,7 @@
 \usage{
    ecoML(formula, data = parent.frame(), N = NULL, supplement = NULL, 
          theta.start = c(0,0,1,1,0), fix.rho = FALSE,
-         context = FALSE, sem = TRUE, epsilon = 10^(-10), 
+         context = FALSE, sem = TRUE, epsilon = 10^(-6), 
      maxit = 1000, loglik = TRUE, hyptest = FALSE, verbose = FALSE)  
 }
 
@@ -81,7 +81,7 @@
   }
   \item{epsilon}{A positive number that specifies the convergence criterion
     for EM algorithm. The square root of \code{epsilon} is the convergence 
-    criterion for SEM algorithm. The default is \code{10^(-10)}. 
+    criterion for SEM algorithm. The default is \code{10^(-6)}. 
   } 
   \item{maxit}{A positive integer specifies the maximum number of iterations
     before the convergence criterion is met. The default is \code{1000}.
