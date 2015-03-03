@@ -3,7 +3,7 @@ Version: 3.1-7
 Date: 2015-3-2
 Title: Ecological Inference in 2x2 Tables
 Author: Kosuke Imai <kimai@princeton.edu>,
-        Ying Lu <ying.lu@nyu.edu>,
+        Ying Lu <yl46@nyu.edu>,
 	Aaron Strauss <abstraus@Princeton.EDU>.
 Maintainer: Ying Lu <yl46@nyu.edu>
 Depends: R (>= 2.0), MASS, utils
