@@ -80,8 +80,8 @@
 \author{
   Kosuke Imai, Department of Politics, Princeton University,
   \email{kimai@Princeton.Edu}, \url{http://imai.princeton.edu};
-  Ying Lu, Department of Sociology, University of Colorado at Boulder, 
-  \email{ying.lu@Colorado.Edu}; Aaron Strauss, Department of Politics,
+  Ying Lu, Center for Promoting Research Involving Innovative Statistical Methodology (PRIISM), New York University
+  \email{ying.lu@nyu.Edu}; Aaron Strauss, Department of Politics,
   Princeton University, \email{abstraus@Princeton.Edu}
   }
 

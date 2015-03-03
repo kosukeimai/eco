@@ -231,8 +231,8 @@ surv <- 1:600
 \author{
   Kosuke Imai, Department of Politics, Princeton University,
   \email{kimai@Princeton.Edu}, \url{http://imai.princeton.edu};
-  Ying Lu, Department of Sociology, University of Colorado at Boulder, 
-  \email{ying.lu@Colorado.Edu};
+  Ying Lu, Center for Promoting Research Involving Innovative Statistical Methodology (PRIISM), New York University, 
+  \email{ying.lu@nyu.Edu};
   Aaron Strauss, Department of Politics, Princeton University,
  \email{abstraus@Princeton.Edu}.
 }
@@ -240,7 +240,7 @@ surv <- 1:600
 \references{ Imai, Kosuke, Ying Lu and Aaron Strauss. (2011).
   \dQuote{eco: R Package for Ecological Inference in 2x2 Tables}
   Journal of Statistical Software, Vol. 42, No. 5, pp. 1-23. available
-  at \url{http://imai.princeton.edu/research/eco.html}
+  at \url{http://imai.princeton.edu/software/eco.html}
   
   Imai, Kosuke, Ying Lu and Aaron Strauss. (2008).  \dQuote{Bayesian
   and Likelihood Inference for 2 x 2 Ecological Tables: An Incomplete
