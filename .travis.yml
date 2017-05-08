@@ -1,5 +1,10 @@
 language: r
+r:
+  - release
+  - devel
+
 cache: packages
+sudo: required
 
 notifications:
   email:
