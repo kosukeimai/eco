@@ -92,21 +92,25 @@
 #' @param verbose Logical. If \code{TRUE}, the progress of the Gibbs sampler is
 #' printed to the screen. The default is \code{FALSE}.
 #' @return An object of class \code{eco} containing the following elements:
-#' \item{call}{The matched call.} \item{X}{The row margin, \eqn{X}.}
-#' \item{Y}{The column margin, \eqn{Y}.} \item{N}{The size of each table,
-#' \eqn{N}.} \item{burnin}{The number of initial burnin draws.} \item{thin}{The
-#' thinning interval.} \item{nu0}{The prior degrees of freedom.}
-#' \item{tau0}{The prior scale parameter.} \item{mu0}{The prior mean.}
-#' \item{S0}{The prior scale matrix.} \item{W}{A three dimensional array
-#' storing the posterior in-sample predictions of \eqn{W}. The first dimension
-#' indexes the Monte Carlo draws, the second dimension indexes the columns of
-#' the table, and the third dimension represents the observations.}
+#' \item{call}{The matched call.} 
+#' \item{X}{The row margin, \eqn{X}.}
+#' \item{Y}{The column margin, \eqn{Y}.} 
+#' \item{N}{The size of each table, \eqn{N}.} 
+#' \item{burnin}{The number of initial burnin draws.} 
+#' \item{thin}{The thinning interval.} 
+#' \item{nu0}{The prior degrees of freedom.}
+#' \item{tau0}{The prior scale parameter.} 
+#' \item{mu0}{The prior mean.}
+#' \item{S0}{The prior scale matrix.} 
+#' \item{W}{A three dimensional array storing the posterior in-sample predictions of \eqn{W}. 
+#' The first dimension indexes the Monte Carlo draws, the second dimension indexes the 
+#' columns of the table, and the third dimension represents the observations.}
 #' \item{Wmin}{A numeric matrix storing the lower bounds of \eqn{W}.}
 #' \item{Wmax}{A numeric matrix storing the upper bounds of \eqn{W}.} The
 #' following additional elements are included in the output when
-#' \code{parameter = TRUE}.  \item{mu}{The posterior draws of the population
-#' mean parameter, \eqn{\mu}.} \item{Sigma}{The posterior draws of the
-#' population variance matrix, \eqn{\Sigma}.}
+#' \code{parameter = TRUE}.  
+#' \item{mu}{The posterior draws of the population mean parameter, \eqn{\mu}.} 
+#' \item{Sigma}{The posterior draws of the population variance matrix, \eqn{\Sigma}.}
 #' @author Kosuke Imai, Department of Politics, Princeton University,
 #' \email{kimai@@Princeton.Edu}, \url{http://imai.princeton.edu}; Ying
 #' Lu,Center for Promoting Research Involving Innovative Statistical

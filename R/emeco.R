@@ -88,17 +88,21 @@
 #' @param verbose Logical. If \code{TRUE}, the progress of the EM and SEM
 #' algorithms is printed to the screen. The default is \code{FALSE}.
 #' @return An object of class \code{ecoML} containing the following elements:
-#' \item{call}{The matched call.} \item{X}{The row margin, \eqn{X}.}
-#' \item{Y}{The column margin, \eqn{Y}.} \item{N}{The size of each table,
-#' \eqn{N}.} \item{context}{The assumption under which model is estimated. If
+#' \item{call}{The matched call.} 
+#' \item{X}{The row margin, \eqn{X}.}
+#' \item{Y}{The column margin, \eqn{Y}.} 
+#' \item{N}{The size of each table, \eqn{N}.} 
+#' \item{context}{The assumption under which model is estimated. If
 #' \code{context = FALSE}, CAR assumption is adopted and no contextual effect
 #' is modeled. If \code{context = TRUE}, NCAR assumption is adopted, and
 #' contextual effect is modeled.} \item{sem}{Whether SEM algorithm is used to
 #' estimate the standard errors and observed information matrix for the
-#' parameter estimates.} \item{fix.rho}{Whether the correlation or the partial
+#' parameter estimates.} 
+#' \item{fix.rho}{Whether the correlation or the partial
 #' correlation between \eqn{W_1} an \eqn{W_2} is fixed in the estimation.}
 #' \item{r12}{If \code{fix.rho = TRUE}, the value that \eqn{corr(W_1, W_2)} is
-#' fixed to.} \item{epsilon}{The precision criterion for EM convergence.
+#' fixed to.} 
+#' \item{epsilon}{The precision criterion for EM convergence.
 #' \eqn{\sqrt{\epsilon}} is the precision criterion for SEM convergence.}
 #' \item{theta.sem}{The ML estimates of \eqn{E(W_1)},\eqn{E(W_2)},
 #' \eqn{var(W_1)},\eqn{var(W_2)}, and \eqn{cov(W_1,W_2)}. If \code{context =
@@ -109,40 +113,45 @@
 #' \item{iters.sem}{Number of SEM iterations before convergence is achieved.}
 #' \item{loglik}{The log-likelihood of the model when convergence is achieved.}
 #' \item{loglik.log.em}{A vector saving the value of the log-likelihood
-#' function at each iteration of the EM algorithm.} \item{mu.log.em}{A matrix
-#' saving the unweighted mean estimation of the logit-transformed
-#' individual-level proportions (i.e., \eqn{W_1} and \eqn{W_2}) at each
-#' iteration of the EM process.} \item{Sigma.log.em}{A matrix saving the log of
-#' the variance estimation of the logit-transformed individual-level
+#' function at each iteration of the EM algorithm.} 
+#' \item{mu.log.em}{A matrix saving the unweighted mean estimation of the 
+#' logit-transformed individual-level proportions (i.e., \eqn{W_1} and \eqn{W_2}) 
+#' at each iteration of the EM process.} \item{Sigma.log.em}{A matrix saving the 
+#' log of the variance estimation of the logit-transformed individual-level
 #' proportions (i.e., \eqn{W_1} and \eqn{W_2}) at each iteration of EM process.
 #' Note, non-transformed variances are displayed on the screen (when
-#' \code{verbose = TRUE}).} \item{rho.fisher.em}{A matrix saving the fisher
+#' \code{verbose = TRUE}).} 
+#' \item{rho.fisher.em}{A matrix saving the fisher
 #' transformation of the estimation of the correlations between the
 #' logit-transformed individual-level proportions (i.e., \eqn{W_1} and
 #' \eqn{W_2}) at each iteration of EM process.  Note, non-transformed
 #' correlations are displayed on the screen (when \code{verbose = TRUE}).}
 #' Moreover, when \code{sem=TRUE}, \code{ecoML} also output the following
-#' values: \item{DM}{The matrix characterizing the rates of convergence of the
+#' values: 
+#' \item{DM}{The matrix characterizing the rates of convergence of the
 #' EM algorithms. Such information is also used to calculate the observed-data
-#' information matrix} \item{Icom}{The (expected) complete data information
+#' information matrix} 
+#' \item{Icom}{The (expected) complete data information
 #' matrix estimated via SEM algorithm. When \code{context=FALSE, fix.rho=TRUE},
 #' \code{Icom} is 4 by 4. When \code{context=FALSE, fix.rho=FALSE}, \code{Icom}
-#' is 5 by 5. When \code{context=TRUE}, \code{Icom} is 9 by 9.} \item{Iobs}{The
-#' observed information matrix. The dimension of \code{Iobs} is same as
-#' \code{Icom}.} \item{Imiss}{The difference between \code{Icom} and
-#' \code{Iobs}.  The dimension of \code{Imiss} is same as \code{miss}.}
+#' is 5 by 5. When \code{context=TRUE}, \code{Icom} is 9 by 9.} 
+#' \item{Iobs}{The observed information matrix. The dimension of \code{Iobs} 
+#' is same as \code{Icom}.} 
+#' \item{Imiss}{The difference between \code{Icom} and \code{Iobs}.  
+#' The dimension of \code{Imiss} is same as \code{miss}.}
 #' \item{Vobs}{The (symmetrized) variance-covariance matrix of the ML parameter
 #' estimates. The dimension of \code{Vobs} is same as \code{Icom}.}
 #' \item{Iobs}{The (expected) complete-data variance-covariance matrix.  The
-#' dimension of \code{Iobs} is same as \code{Icom}.} \item{Vobs.original}{The
-#' estimated variance-covariance matrix of the ML parameter estimates. The
-#' dimension of \code{Vobs} is same as \code{Icom}.} \item{Fmis}{The fraction
-#' of missing information associated with each parameter estimation. }
+#' dimension of \code{Iobs} is same as \code{Icom}.} 
+#' \item{Vobs.original}{The estimated variance-covariance matrix of the ML parameter 
+#' estimates. The dimension of \code{Vobs} is same as \code{Icom}.} 
+#' \item{Fmis}{The fraction of missing information associated with each parameter estimation. }
 #' \item{VFmis}{The proportion of increased variance associated with each
-#' parameter estimation due to observed data. } \item{Ieigen}{The largest eigen
-#' value of \code{Imiss}.} \item{Icom.trans}{The complete data information
-#' matrix for the fisher transformed parameters.} \item{Iobs.trans}{The
-#' observed data information matrix for the fisher transformed parameters.}
+#' parameter estimation due to observed data. } 
+#' \item{Ieigen}{The largest eigen value of \code{Imiss}.} 
+#' \item{Icom.trans}{The complete data information
+#' matrix for the fisher transformed parameters.} 
+#' \item{Iobs.trans}{The observed data information matrix for the fisher transformed parameters.}
 #' \item{Fmis.trans}{The fractions of missing information associated with the
 #' fisher transformed parameters.}
 #' @author Kosuke Imai, Department of Politics, Princeton University,

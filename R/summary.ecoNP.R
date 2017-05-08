@@ -4,13 +4,11 @@
 #' \code{summary} method for class \code{ecoNP}.
 #' 
 #' 
-#' @aliases summary.ecoNP print.summary.ecoNP
+#' @aliases summary.ecoNP
 #' @param object An output object from \code{ecoNP}.
 #' @param CI A vector of lower and upper bounds for the Bayesian credible
 #' intervals used to summarize the results. The default is the equal tail 95
 #' percent credible interval.
-#' @param x An object of class \code{summary.ecoNP}.
-#' @param digits the number of significant digits to use when printing.
 #' @param param Logical. If \code{TRUE}, the posterior estimates of the
 #' population parameters will be provided. The default value is \code{FALSE}.
 #' @param units Logical. If \code{TRUE}, the in-sample predictions for each
@@ -22,17 +20,19 @@
 #' will be provided.
 #' @param ... further arguments passed to or from other methods.
 #' @return \code{summary.ecoNP} yields an object of class \code{summary.ecoNP}
-#' containing the following elements: \item{call}{The call from \code{ecoNP}.}
-#' \item{n.obs}{The number of units.} \item{n.draws}{The number of Monte Carlo
-#' samples.} \item{agg.table}{Aggregate posterior estimates of the marginal
+#' containing the following elements: 
+#' \item{call}{The call from \code{ecoNP}.}
+#' \item{n.obs}{The number of units.} 
+#' \item{n.draws}{The number of Monte Carlo samples.} 
+#' \item{agg.table}{Aggregate posterior estimates of the marginal
 #' means of \eqn{W_1} and \eqn{W_2} using \eqn{X} and \eqn{N} as weights.} If
 #' \code{param = TRUE}, the following elements are also included:
 #' \item{param.table}{Posterior estimates of model parameters: population mean
 #' estimates of \eqn{W_1} and \eqn{W_2}. If \code{subset} is specified, only a
 #' subset of the population parameters are included.} If \code{unit = TRUE},
-#' the following elements are also included: \item{W1.table}{Unit-level
-#' posterior estimates for \eqn{W_1}.} \item{W2.table}{Unit-level posterior
-#' estimates for \eqn{W_2}.}
+#' the following elements are also included: 
+#' \item{W1.table}{Unit-level posterior estimates for \eqn{W_1}.} 
+#' \item{W2.table}{Unit-level posterior estimates for \eqn{W_2}.}
 #' 
 #' This object can be printed by \code{print.summary.ecoNP}
 #' @author Kosuke Imai, Department of Politics, Princeton University,

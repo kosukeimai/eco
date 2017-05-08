@@ -15,24 +15,18 @@
 #' the model parameters is used. In either case, setting \code{verbose = TRUE}
 #' may be helpful in monitoring the progress of the code.
 #' 
-#' @aliases predict.eco predict.ecoX
+#' @aliases predict.eco
 #' @param object An output object from \code{eco} or \code{ecoNP}.
 #' @param newdraw An optional list containing two matrices (or three
 #' dimensional arrays for the nonparametric model) of MCMC draws of \eqn{\mu}
 #' and \eqn{\Sigma}. Those elements should be named as \code{mu} and
 #' \code{Sigma}, respectively. The default is the original MCMC draws stored in
 #' \code{object}.
-#' @param newdata An optional data frame containing a new data set for which
-#' posterior predictions will be made. The new data set must have the same
-#' variable names as those in the original data.
 #' @param subset A scalar or numerical vector specifying the row number(s) of
 #' \code{mu} and \code{Sigma} in the output object from \code{eco}. If
 #' specified, the posterior draws of parameters for those rows are used for
 #' posterior prediction. The default is \code{NULL} where all the posterior
 #' draws are used.
-#' @param cond logical. If \code{TRUE}, then the conditional prediction will
-#' made for the parametric model with contextual effects. The default is
-#' \code{FALSE}.
 #' @param verbose logical. If \code{TRUE}, helpful messages along with a
 #' progress report on the Monte Carlo sampling from the posterior predictive
 #' distributions are printed on the screen. The default is \code{FALSE}.

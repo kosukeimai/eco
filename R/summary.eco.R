@@ -4,13 +4,11 @@
 #' \code{summary} method for class \code{eco}.
 #' 
 #' 
-#' @aliases summary.eco print.eco print.summary.eco
+#' @aliases summary.eco print.eco
 #' @param object An output object from \code{eco}.
 #' @param CI A vector of lower and upper bounds for the Bayesian credible
 #' intervals used to summarize the results. The default is the equal tail 95
 #' percent credible interval.
-#' @param x An object of class \code{summary.eco}.
-#' @param digits the number of significant digits to use when printing.
 #' @param param Logical. If \code{TRUE}, the posterior estimates of the
 #' population parameters will be provided. The default value is \code{TRUE}.
 #' @param units Logical. If \code{TRUE}, the in-sample predictions for each
@@ -22,9 +20,11 @@
 #' will be provided.
 #' @param ... further arguments passed to or from other methods.
 #' @return \code{summary.eco} yields an object of class \code{summary.eco}
-#' containing the following elements: \item{call}{The call from \code{eco}.}
-#' \item{n.obs}{The number of units.} \item{n.draws}{The number of Monte Carlo
-#' samples.} \item{agg.table}{Aggregate posterior estimates of the marginal
+#' containing the following elements: 
+#' \item{call}{The call from \code{eco}.}
+#' \item{n.obs}{The number of units.} 
+#' \item{n.draws}{The number of Monte Carlo samples.} 
+#' \item{agg.table}{Aggregate posterior estimates of the marginal
 #' means of \eqn{W_1} and \eqn{W_2} using \eqn{X} and \eqn{N} as weights.} If
 #' \code{param = TRUE}, the following elements are also included:
 #' \item{param.table}{Posterior estimates of model parameters: population mean

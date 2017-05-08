@@ -15,7 +15,7 @@
 #' Monte Carlo sample of the model parameters is used. In either case, setting
 #' \code{verbose = TRUE} may be helpful in monitoring the progress of the code.
 #' 
-#' @aliases predict.ecoNP predict.ecoNPX
+#' @aliases predict.ecoNP
 #' @param object An output object from \code{ecoNP}.
 #' @param newdraw An optional list containing two matrices (or three
 #' dimensional arrays for the nonparametric model) of MCMC draws of \eqn{\mu}
@@ -30,9 +30,6 @@
 #' @param obs An integer or vector of integers specifying the observation
 #' number(s) whose posterior draws will be used for predictions. The default is
 #' \code{NULL} where all the observations in the data set are selected.
-#' @param cond logical. If \code{TRUE}, then the conditional prediction will
-#' made for the parametric model with contextual effects. The default is
-#' \code{FALSE}.
 #' @param verbose logical. If \code{TRUE}, helpful messages along with a
 #' progress report on the Monte Carlo sampling from the posterior predictive
 #' distributions are printed on the screen. The default is \code{FALSE}.

@@ -61,17 +61,19 @@
 #' @return An object of class \code{ecoBD} containing the following elements
 #' (When three dimensional arrays are used, the first dimension indexes the
 #' observations, the second dimension indexes the row numbers, and the third
-#' dimension indexes the column numbers): \item{call}{The matched call.}
-#' \item{X}{A matrix of the observed row margin, \eqn{X}.} \item{Y}{A matrix of
-#' the observed column margin, \eqn{Y}.} \item{N}{A vector of the size of
-#' ecological tables, \eqn{N}.} \item{aggWmin}{A three dimensional array of
-#' aggregate lower bounds for proportions.} \item{aggWmax}{A three dimensional
-#' array of aggregate upper bounds for proportions.} \item{Wmin}{A three
-#' dimensional array of lower bounds for proportions.} \item{Wmax}{A three
-#' dimensional array of upper bounds for proportions.} \item{Nmin}{A three
-#' dimensional array of lower bounds for counts.} \item{Nmax}{A three
-#' dimensional array of upper bounds for counts.} The object can be printed
-#' through \code{print.ecoBD}.
+#' dimension indexes the column numbers): 
+#' \item{call}{The matched call.}
+#' \item{X}{A matrix of the observed row margin, \eqn{X}.} 
+#' \item{Y}{A matrix of the observed column margin, \eqn{Y}.} 
+#' \item{N}{A vector of the size of ecological tables, \eqn{N}.} 
+#' \item{aggWmin}{A three dimensional array of
+#' aggregate lower bounds for proportions.} 
+#' \item{aggWmax}{A three dimensional array of aggregate upper bounds for proportions.} 
+#' \item{Wmin}{A three dimensional array of lower bounds for proportions.} 
+#' \item{Wmax}{A three dimensional array of upper bounds for proportions.} 
+#' \item{Nmin}{A three dimensional array of lower bounds for counts.} 
+#' \item{Nmax}{A three dimensional array of upper bounds for counts.} The object 
+#' can be printed through \code{print.ecoBD}.
 #' @author Kosuke Imai, Department of Politics, Princeton University
 #' \email{kimai@@Princeton.Edu}, \url{http://imai.princeton.edu/}; Ying Lu,
 #' Center for Promoting Research Involving Innovative Statistical Methodology
