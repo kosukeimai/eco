@@ -6,6 +6,10 @@ r:
 cache: packages
 sudo: required
 
+script:
+    - Rscript -e 'devtools::install_github("HJ08003/eco", force = TRUE)'
+    - Rscript test.R
+
 notifications:
   email:
     on_success: change
