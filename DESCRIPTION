@@ -3,8 +3,8 @@ Version: 4.0-1
 Date: 2017-5-10
 Title: Ecological Inference in 2x2 Tables
 Authors@R: c(
-  person("Kosuke", "Imai", , "kimai@Princeton.Edu", c("aut", "cre")),
-  person("Ying", "Lu", , "yl146@nyu.edu", c("aut")),
+  person("Kosuke", "Imai", , "kimai@Princeton.Edu", c("aut")),
+  person("Ying", "Lu", , "yl146@nyu.edu", c("aut", "cre")),
   person("Aaron", "Strauss", , "aaronbstrauss@gmail.com", c("aut")),
   person("Hubert", "Jin", , "hubertj@princeton.edu", c("ctb"))
   )
