@@ -102,7 +102,7 @@ void cBaseecoX(
   double **InvSigma_w = doubleMatrix(n_dim,n_dim);
   
   /* misc variables */
-  int i, j, k, t, main_loop;   /* used for various loops */
+  int i, j, k, main_loop;   /* used for various loops */
   int itemp, itempS, itempC, itempA;
   int progress = 1, itempP = ftrunc((double) *n_gen/10);
   double dtemp, dtemp1;
