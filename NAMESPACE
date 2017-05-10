@@ -1,6 +1,8 @@
-useDynLib(eco)
+useDynLib(eco, .registration = TRUE)
 
 importFrom(MASS, mvrnorm)
+importFrom("stats", "as.formula", "coef", "model.frame", "model.matrix", "model.response", "predict", "quantile", "sd", "terms", "weighted.mean")
+importFrom("utils", "packageDescription")
 
 export(eco, 	
        ecoBD,

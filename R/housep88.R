@@ -1,0 +1,32 @@
+
+
+#' Electoral Results for the House and Presidential Races in 1988
+#' 
+#' This data set contains, on a House district level, the percentage of the
+#' vote for the Democratic House candidate, the percentage of the vote for the
+#' Democratic presidential candidate (Dukakis), the number of voters who voted
+#' for a major party candidate in the presidential race, and the ratio of
+#' voters in the House race versus the number who cast a ballot for President.
+#' Eleven (11) uncontested races are not included.  Dataset compiled and
+#' analyzed by Burden and Kimball (1988). Complete dataset and documentation
+#' available at ICSPR study number 1140.
+#' 
+#' 
+#' @name housep88
+#' @docType data
+#' @format A data frame containing 5 variables and 424 observations
+#' \tabular{lll}{ X \tab numeric \tab proportion voting for the Democrat in the
+#' presidential race \cr Y \tab numeric \tab proportion voting for the Democrat
+#' in the House race \cr N \tab numeric \tab number of major party voters in
+#' the presidential contest \cr HPCT \tab numeric \tab House election turnout
+#' divided by presidential election turnout (set to 1 if House turnout exceeds
+#' presidential turnout) \cr DIST \tab numeric \tab 4-digit ICPSR state and
+#' district code: first 2 digits for the state code, last two digits for the
+#' district number (e.g., 2106=IL 6th) }
+#' @references Burden, Barry C. and David C. Kimball (1988). ``A New Approach
+#' To Ticket- Splitting.'' The American Political Science Review. vol 92., no.
+#' 3, pp. 553-544.
+#' @keywords datasets
+NULL
+
+
