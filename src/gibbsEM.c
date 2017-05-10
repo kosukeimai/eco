@@ -1001,7 +1001,7 @@ void initCCAR(Param* params, double* pdTheta) {
     if (!setP_sem.semDone[i]) { //we're not done with this row
       //step 1: set phi^t_i
       if (verbose>=2) Rprintf("Theta(%d):",(i+1));
-      int switch_index_ir=0; int switch_index_it;
+      int switch_index_ir=0; int switch_index_it=0;
       for(j=0;j<param_len;j++) {
         if (!setP_sem.varParam[j]) //const
           phiTI[j]=optTheta[j];
