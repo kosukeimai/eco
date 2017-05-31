@@ -1,14 +1,14 @@
 Package: eco
 Version: 4.0-1
-Date: 2017-5-10
+Date: 2017-5-31
 Title: Ecological Inference in 2x2 Tables
 Authors@R: c(
   person("Kosuke", "Imai", , "kimai@Princeton.Edu", c("aut")),
-  person("Ying", "Lu", , "yl146@nyu.edu", c("aut", "cre")),
+  person("Ying", "Lu", , "ying.lu@nyu.edu", c("aut", "cre")),
   person("Aaron", "Strauss", , "aaronbstrauss@gmail.com", c("aut")),
   person("Hubert", "Jin", , "hubertj@princeton.edu", c("ctb"))
   )
-Maintainer: Ying Lu <yl46@nyu.edu>
+Maintainer: Ying Lu <ying.lu@nyu.edu>
 Depends: R (>= 2.0), MASS, utils
 Description: Implements the Bayesian and likelihood methods proposed 
   in Imai, Lu, and Strauss (2008, 2011) for ecological inference in 2 
