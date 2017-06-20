@@ -31,7 +31,7 @@ void preBaseX(
   double **Sigma = doubleMatrix(n_dim, n_dim);    /* The covariance matrix */
 
   /* misc variables */
-  int i, j, k, main_loop;   /* used for various loops */
+  int i, j, main_loop;   /* used for various loops */
   int itemp=0;
   int itempM=0;
   int itempS=0;

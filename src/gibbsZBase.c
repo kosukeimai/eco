@@ -118,7 +118,7 @@ void cBaseecoZ(
   double **R = doubleMatrix(n_dim, n_dim);      /* ee' */
  
   /* misc variables */
-  int i, j, k, t, l, main_loop;   /* used for various loops */
+  int i, j, k, l, main_loop;   /* used for various loops */
   int itemp;
   int itempA=0; /* counter for alpha */
   int itempB=0; 

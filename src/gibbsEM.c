@@ -356,7 +356,7 @@ void initTheta(double* pdTheta_in,Param* params, double* pdTheta) {
 
 void ecoEStep(Param* params, double* suff) {
 
-  int t_samp,n_samp,s_samp,x1_samp,x0_samp,i,j,temp0,temp1, verbose;
+  int t_samp,n_samp,s_samp,x1_samp,x0_samp,i,j, verbose;
   double loglik,testdens;
   Param* param; setParam* setP; caseParam* caseP;
   setP=params[0].setP;
@@ -1001,7 +1001,7 @@ void initCCAR(Param* params, double* pdTheta) {
     if (!setP_sem.semDone[i]) { //we're not done with this row
       //step 1: set phi^t_i
       if (verbose>=2) Rprintf("Theta(%d):",(i+1));
-      int switch_index_ir=0; int switch_index_it;
+      int switch_index_ir=0; int switch_index_it=0;
       for(j=0;j<param_len;j++) {
         if (!setP_sem.varParam[j]) //const
           phiTI[j]=optTheta[j];
@@ -1212,7 +1212,7 @@ void initCCAR(Param* params, double* pdTheta) {
  * finalTheta: 1 if this is for the final theta -- include static variables
  **/
 void printColumnHeader(int main_loop, int iteration_max, setParam* setP, int finalTheta) {
-  int i;
+
   int param_len;
   param_len = setP->param_len;
 

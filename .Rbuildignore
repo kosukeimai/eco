@@ -1,1 +1,4 @@
 ^\.travis\.yml$
+^.*\.Rproj$
+^README.md$
+^README.Rmd$
