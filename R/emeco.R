@@ -195,11 +195,6 @@
 #' ## summarize the results
 #' \dontrun{summary(res)}
 #' 
-#' ## obtain out-of-sample prediction
-#' \dontrun{out <- predict(res, verbose = TRUE)}
-#' ## summarize the results
-#' \dontrun{summary(out)}
-#' 
 #' ## fit the parametric model with some individual 
 #' ## level data using the default prior specification
 #' surv <- 1:600
