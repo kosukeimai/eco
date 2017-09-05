@@ -148,9 +148,9 @@ test_that("tests ecoNP on census data", {
   expect_that(round(x$W.table[2,1], 3), is_equivalent_to(0.814))
   
   # density plots of the out-of-sample predictions
-  # par(mfrow=c(2,1))
-  # plot(density(out[,1]), main = "W1")
-  # plot(density(out[,2]), main = "W2")
+  par(mfrow=c(2,1))
+  plot(density(out[,1]), main = "W1")
+  plot(density(out[,2]), main = "W2")
 })
 
 test_that("tests ecoNP on Robinson census data", {
