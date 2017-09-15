@@ -1,3 +1,4 @@
+#' @export
 coef.ecoNP <- function(object, subset = NULL, obs = NULL, ...) {
   mu <- object$mu
   if (is.null(subset))

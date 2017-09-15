@@ -1,3 +1,4 @@
+#' @export
 summary.predict.eco <- function(object, CI=c(2.5, 97.5), ...) {
 
   if (any(CI < 0) || any(CI > 100))

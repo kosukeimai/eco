@@ -29,6 +29,7 @@
 #' (PRIISM), New York University \email{ying.lu@@nyu.Edu}
 #' @seealso \code{eco}, \code{predict.eco}
 #' @keywords methods
+#' @export
 print.summary.eco <- function(x, digits=max(3, getOption("digits")-3), ...) {
     cat("\nCall: ") 
     cat(paste(deparse(x$call), sep="\n", collapse="\n"))
