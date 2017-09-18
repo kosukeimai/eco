@@ -1,4 +1,3 @@
-#' @export
 coef.eco <- function(object, subset = NULL, ...) {
   mu <- object$mu
   if (is.null(subset))

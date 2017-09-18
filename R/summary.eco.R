@@ -40,7 +40,6 @@
 #' (PRIISM), New York University \email{ying.lu@@nyu.Edu}
 #' @seealso \code{eco}, \code{predict.eco}
 #' @keywords methods
-#' @export
 summary.eco <- function(object, CI = c(2.5, 97.5), param = TRUE,
                         units = FALSE, subset = NULL,...) { 
 

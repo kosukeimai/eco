@@ -165,7 +165,6 @@
 #' pres1 <- predict(res1)
 #' summary(pres1)}
 #' 
-#' @export ecoNP
 ecoNP <- function(formula, data = parent.frame(), N = NULL, supplement = NULL,
                   context = FALSE, mu0 = 0, tau0 = 2, nu0 = 4, S0 = 10,
                   alpha = NULL, a0 = 1, b0 = 0.1, parameter = FALSE,

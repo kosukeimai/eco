@@ -58,7 +58,6 @@
 #' \email{abstraus@@Princeton.Edu}
 #' @seealso \code{ecoML}
 #' @keywords methods
-#' @export
 summary.ecoML <- function(object, CI = c(2.5, 97.5),  param = TRUE, units = FALSE, subset = NULL, ...) { 
 
 

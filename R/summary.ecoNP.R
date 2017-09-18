@@ -41,7 +41,6 @@
 #' (PRIISM), New York University \email{ying.lu@@nyu.Edu}
 #' @seealso \code{ecoNP}, \code{predict.eco}
 #' @keywords methods
-#' @export
 summary.ecoNP <- function(object, CI=c(2.5, 97.5), param=FALSE, units=FALSE, subset=NULL,...) {
 
 

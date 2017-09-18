@@ -27,7 +27,6 @@
 #' Approach} Political Analysis, Vol. 16, No. 1 (Winter), pp. 41-69. available
 #' at \url{http://imai.princeton.edu/research/eiall.html}
 #' @keywords models
-#' @export Qfun
 Qfun <- function(theta, suff.stat, n) {
   mu<-rep(0,2)
   Sigma<-matrix(0, 2,2)

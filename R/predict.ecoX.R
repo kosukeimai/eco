@@ -48,7 +48,6 @@
 #' (PRIISM), New York University \email{ying.lu@@nyu.Edu}
 #' @seealso \code{eco}, \code{predict.ecoNP}
 #' @keywords methods
-#' @export
 predict.ecoX <- function(object, newdraw = NULL, subset = NULL,
                          newdata = NULL, cond = FALSE, verbose = FALSE, ...){
 

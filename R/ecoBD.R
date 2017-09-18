@@ -100,7 +100,6 @@
 #' ## print the results
 #' print(res)
 #' 
-#' @export ecoBD
 ecoBD <- function(formula, data = parent.frame(), N=NULL){
   mf <- match.call()
   tt <- terms(formula)
