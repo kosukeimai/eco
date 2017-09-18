@@ -208,7 +208,6 @@ surv <- 1:600
 ## summarize the results
 \dontrun{summary(res1)}
 
-
 }
 \references{
 Imai, Kosuke, Ying Lu and Aaron Strauss. (2011).  \dQuote{eco: R

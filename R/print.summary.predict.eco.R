@@ -1,3 +1,4 @@
+#' @export
 print.summary.predict.eco <- function(x, digits=max(3, getOption("digits")
                                            -3), ...) {
   cat("\nOut-of-sample Prediction:\n")

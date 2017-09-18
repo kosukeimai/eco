@@ -126,6 +126,13 @@
 #' Approach} Political Analysis, Vol. 16, No. 1 (Winter), pp. 41-69. available
 #' at \url{http://imai.princeton.edu/research/eiall.html}
 #' @keywords models
+#' 
+#' @useDynLib eco, .registration = TRUE
+#' 
+#' @importFrom MASS mvrnorm
+#' @importFrom utils packageDescription
+#' @importFrom stats as.formula coef model.frame model.matrix model.response predict quantile sd terms weighted.mean
+#' 
 #' @examples
 #' 
 #' 
@@ -161,6 +168,7 @@
 #' summary(out1)
 #' }
 #' 
+#' @export eco
 eco <- function(formula, data = parent.frame(), N = NULL, supplement = NULL,
                 context = FALSE, mu0 = 0, tau0 = 2, nu0 = 4, S0 = 10,
                 mu.start = 0, Sigma.start = 10, parameter = TRUE,
