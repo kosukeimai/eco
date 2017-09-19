@@ -112,7 +112,7 @@ void Free3DMatrix(double ***Matrix, int index, int row) {
   int i;
   for (i = 0; i < index; i++)
     FreeMatrix(Matrix[i], row);
-  Free(Matrix);
+  free(Matrix);
 }
 
 

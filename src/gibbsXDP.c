@@ -464,7 +464,7 @@ if (*verbose)
   Free(vtemp);
   FreeMatrix(mtemp, n_dim+1);
   FreeMatrix(mtemp1, n_dim+1);
-  Free(onedata);
+  FreeMatrix(onedata, 1);
 } /* main */
 
 

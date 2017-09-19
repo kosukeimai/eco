@@ -476,7 +476,7 @@ void cDPeco(
   Free(vtemp);
   FreeMatrix(mtemp, n_dim);
   FreeMatrix(mtemp1, n_dim);
-  Free(onedata);
+  FreeMatrix(onedata, 1);
 } /* main */
 
 
