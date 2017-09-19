@@ -163,7 +163,7 @@ void rWish(
       for(k=0;k<size;k++)
 	Sample[i][j]+=mtemp[i][k]*C[j][k];
 
-  free(V);
+  Free(V);
   FreeMatrix(B, size);
   FreeMatrix(C, size);
   FreeMatrix(N, size);

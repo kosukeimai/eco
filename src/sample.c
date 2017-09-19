@@ -52,9 +52,9 @@ void rGrid(
   Sample[0]=W1gi[j];
   Sample[1]=W2gi[j];
 
-  free(vtemp);
-  free(prob_grid);
-  free(prob_grid_cum);
+  Free(vtemp);
+  Free(prob_grid);
+  Free(prob_grid_cum);
 
 }
 
@@ -106,7 +106,7 @@ void GridPrep(
     }
   }
 
-  free(resid);
+  Free(resid);
 }
 
 /* sample W via MH for 2x2 table */
@@ -132,6 +132,7 @@ void rMH(
     vtemp[j] = log(Sample[j])-log(1-Sample[j]);
     vtemp1[j] = log(W[j])-log(1-W[j]);
   }
+  
   /* acceptance ratio */
   dens1 = dMVN(vtemp, mu, InvSigma, n_dim, 1) -
     log(Sample[0])-log(Sample[1])-log(1-Sample[0])-log(1-Sample[1]);
@@ -144,9 +145,9 @@ void rMH(
     for (j=0; j<n_dim; j++) 
       W[j]=Sample[j];
   
-  free(Sample);
-  free(vtemp);
-  free(vtemp1);
+  Free(Sample);
+  Free(vtemp);
+  Free(vtemp1);
 }
 
 
@@ -228,10 +229,10 @@ void rMH2c(
     for (j = 0; j < n_dim; j++)
       W[j] = Sample[j];
   
-  free(Sample);
-  free(param);
-  free(vtemp);
-  free(vtemp1);
+  Free(Sample);
+  Free(param);
+  Free(vtemp);
+  Free(vtemp1);
 }
 
 

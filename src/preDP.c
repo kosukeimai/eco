@@ -69,8 +69,8 @@ void preDP(
   PutRNGstate();
 
   /* Freeing the memory */
-  free(mu);
-  free(Wstar);
+  Free(mu);
+  Free(Wstar);
   FreeMatrix(Sigma,n_dim);
   
 } /* main */
