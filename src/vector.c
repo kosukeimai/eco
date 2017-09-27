@@ -40,7 +40,7 @@ int** intMatrix(int row, int col) {
 }
 
 double* doubleArray(int num) {
-  // double *dArray = (double *)malloc(2 * num * sizeof(double));
+  //double *dArray = (double *)malloc(num * sizeof(double));
   double *dArray = Calloc(num,double);
   if (dArray)
     return dArray;
@@ -104,8 +104,8 @@ void FreeMatrix(double **Matrix, int row) {
 void FreeintMatrix(int **Matrix, int row) {
   int i;
   for (i = 0; i < row; i++)
-    Free(Matrix[i]);
-  Free(Matrix);
+    free(Matrix[i]);
+  free(Matrix);
 }
 
 void Free3DMatrix(double ***Matrix, int index, int row) {
