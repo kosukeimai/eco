@@ -3,8 +3,8 @@ library(eco)
 library(testthat)
 context("tests eco")
 
-# accuracy <- ifelse(capabilities("long.double"), sqrt(.Machine$double.eps), 0.1)
-accuracy <- ifelse(capabilities("long.double"), 0.001, 0.1)
+accuracy <- ifelse(capabilities("long.double"), sqrt(.Machine$double.eps), 0.1)
+# accuracy <- ifelse(capabilities("long.double"), 0.001, 0.1)
 
 # set random seed
 set.seed(12345)
