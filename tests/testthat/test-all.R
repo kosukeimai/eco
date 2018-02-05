@@ -6,6 +6,12 @@ context("tests eco")
 accuracy <- ifelse(capabilities("long.double"), sqrt(.Machine$double.eps), 0.1)
 # accuracy <- ifelse(capabilities("long.double"), 0.001, 0.1)
 
+print("============================")
+print(capabilities("long.double"))
+print(.Machine$double.eps)
+print(Sys.info()['sysname'])
+print("============================")
+
 # set random seed
 set.seed(12345)
 

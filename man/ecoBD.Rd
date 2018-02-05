@@ -96,6 +96,7 @@ data(reg)
 
 print(capabilities("long.double"))
 print(.Machine$double.eps)
+print(Sys.info()['sysname'])
 
 ## calculate the bounds
 res <- ecoBD(Y ~ X, N = N, data = reg)
