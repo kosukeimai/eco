@@ -95,6 +95,9 @@
 #' ## load the registration data
 #' data(reg)
 #' 
+#' print(capabilities("long.double"))
+#' print(.Machine$double.eps)
+#' 
 #' ## calculate the bounds
 #' res <- ecoBD(Y ~ X, N = N, data = reg)
 #' ## print the results
