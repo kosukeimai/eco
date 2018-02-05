@@ -143,6 +143,9 @@
 #' ## examples. See Imai, Lu and Strauss (2008, 2011) for more
 #' ## complete analyses.
 #' 
+#' print(capabilities("long.double"))
+#' print(.Machine$double.eps)
+#' 
 #' ## fit the parametric model with the default prior specification
 #' res <- eco(Y ~ X, data = reg, verbose = TRUE)
 #' ## summarize the results
