@@ -3,6 +3,8 @@ library(eco)
 library(testthat)
 context("tests eco")
 
+accuracy1 <- ifelse(capabilities("long.double"), 0.0005, 0.001)
+accuracy2 <- ifelse(capabilities("long.double"), 0.05, 0.1)
 
 # set random seed
 set.seed(12345)
@@ -18,8 +20,8 @@ test_that("tests eco on registration data", {
   x <- summary(res)
   expect_that(length(x), is_equivalent_to(8))
   expect_true("W2.table" %in% names(x))
-  expect_equal(x$param.table[2,1], 2.976173, tolerance = 0.001)
-  expect_equal(x$param.table[3,4], 8.238363, tolerance = 0.001)
+  expect_equal(x$param.table[2,1], 2.976173, tolerance = accuracy1)
+  expect_equal(x$param.table[3,4], 8.238363, tolerance = accuracy1)
 
   # obtain out-of-sample prediction
   out <- predict(res, verbose = TRUE)
@@ -27,8 +29,8 @@ test_that("tests eco on registration data", {
   x <- summary(out)
   expect_that(length(x), is_equivalent_to(2))
   expect_true("n.draws" %in% names(x))
-  expect_equal(x$W.table[1,1], 0.4896912, tolerance = 0.001)
-  expect_equal(x$W.table[2,3], 0.3071461, tolerance = 0.001)
+  expect_equal(x$W.table[1,1], 0.4896912, tolerance = accuracy1)
+  expect_equal(x$W.table[2,3], 0.3071461, tolerance = accuracy1)
 })  
   
 test_that("tests eco on Robinson census", {
@@ -42,8 +44,8 @@ test_that("tests eco on Robinson census", {
   x <- summary(res1)
   expect_that(length(x), is_equivalent_to(8))
   expect_true("W2.table" %in% names(x))
-  expect_equal(x$param.table[2,3], 2.068228, tolerance = 0.001)
-  expect_equal(x$agg.wtable[1,3], 0.6631372, tolerance = 0.001)
+  expect_equal(x$param.table[2,3], 2.068228, tolerance = accuracy1)
+  expect_equal(x$agg.wtable[1,3], 0.6631372, tolerance = accuracy1)
 
   # obtain out-of-sample prediction
   out1 <- predict(res1, verbose = TRUE)
@@ -51,8 +53,8 @@ test_that("tests eco on Robinson census", {
   x <- summary(out1)
   expect_that(length(x), is_equivalent_to(2))
   expect_true("n.draws" %in% names(x))
-  expect_equal(x$W.table[1,3], 0.4499757, tolerance = 0.001)
-  expect_equal(x$W.table[3,1], 0.3400277, tolerance = 0.001)
+  expect_equal(x$W.table[1,3], 0.4499757, tolerance = accuracy1)
+  expect_equal(x$W.table[3,1], 0.3400277, tolerance = accuracy1)
 })
 
 
@@ -66,7 +68,7 @@ test_that("tests ecoBD on registration data", {
   x <- ecoBD(Y ~ X, N = N, data = reg)
   expect_that(length(x), is_equivalent_to(12))
   expect_true("aggWmin" %in% names(x))
-  expect_equal(x$aggWmin[1,1], 0.216785, tolerance = 0.001)
+  expect_equal(x$aggWmin[1,1], 0.216785, tolerance = accuracy1)
   expect_that(x$aggNmax[2,2], is_equivalent_to(2046800))
 })
 
@@ -82,8 +84,8 @@ test_that("tests ecoML on census data", {
   x <- summary(res)
   expect_that(length(x), is_equivalent_to(13))
   expect_true("iters.sem" %in% names(x))
-  expect_equal(x$loglik, -70.80674, tolerance = 0.1)
-  expect_equal(x$param.table[2,3], 0.07192878, tolerance = 0.001)
+  expect_equal(x$loglik, -70.80674, tolerance = accuracy2)
+  expect_equal(x$param.table[2,3], 0.07192878, tolerance = accuracy1)
 
   #####################################################################################
   # NOTE: this example does not work! There is no predict.ecoML defined in the package. 
@@ -102,8 +104,8 @@ test_that("tests ecoML on census data", {
   x <- summary(res1)
   expect_that(length(x), is_equivalent_to(13))
   expect_true("iters.sem" %in% names(x))
-  expect_equal(x$loglik, -3481.877, tolerance = 0.1)
-  expect_equal(x$param.table[2,3], 0.006055498, tolerance = 0.001)
+  expect_equal(x$loglik, -3481.877, tolerance = accuracy2)
+  expect_equal(x$param.table[2,3], 0.006055498, tolerance = accuracy1)
   expect_true(is.na(x$param.table[2,2]))
   expect_true(is.na(x$param.table[2,5]))
   expect_false(is.na(x$param.table[2,6]))
@@ -129,8 +131,8 @@ test_that("tests ecoNP on census data", {
   x <- summary(res)
   expect_that(length(x), is_equivalent_to(8))
   expect_true(is.null(x$agg.wtable))
-  expect_equal(x$agg.table[1,2], 0.04059766, tolerance = 0.001)
-  expect_equal(x$agg.table[2,3], 0.8129786, tolerance = 0.001)
+  expect_equal(x$agg.table[1,2], 0.04059766, tolerance = accuracy1)
+  expect_equal(x$agg.table[2,3], 0.8129786, tolerance = accuracy1)
 
   # obtain out-of-sample prediction
   out <- predict(res, verbose = TRUE)
@@ -138,8 +140,8 @@ test_that("tests ecoNP on census data", {
   x <- summary(out)
   expect_that(length(x), is_equivalent_to(2))
   expect_true("n.draws" %in% names(x))
-  expect_equal(x$W.table[1,3], 0.02617743, tolerance = 0.001)
-  expect_equal(x$W.table[2,1], 0.8137116, tolerance = 0.001)
+  expect_equal(x$W.table[1,3], 0.02617743, tolerance = accuracy1)
+  expect_equal(x$W.table[2,1], 0.8137116, tolerance = accuracy1)
 
   # density plots of the out-of-sample predictions
   par(mfrow=c(2,1))
@@ -159,18 +161,18 @@ test_that("tests ecoNP on Robinson census data", {
   x <- summary(res1)
   expect_that(length(x), is_equivalent_to(8))
   expect_false(is.null(x$agg.wtable))
-  expect_equal(x$agg.table[1,2], 0.009952511, tolerance = 0.001)
-  expect_equal(x$agg.table[2,3], 0.8690776, tolerance = 0.001)
-  expect_equal(x$agg.wtable[1,2], 0.009508983, tolerance = 0.001)
-  expect_equal(x$agg.wtable[2,3], 0.9005222, tolerance = 0.001)
+  expect_equal(x$agg.table[1,2], 0.009952511, tolerance = accuracy1)
+  expect_equal(x$agg.table[2,3], 0.8690776, tolerance = accuracy1)
+  expect_equal(x$agg.wtable[1,2], 0.009508983, tolerance = accuracy1)
+  expect_equal(x$agg.wtable[2,3], 0.9005222, tolerance = accuracy1)
  
   # out-of sample prediction 
   pres1 <- predict(res1)
   x <- summary(pres1)
   expect_that(length(x), is_equivalent_to(2))
   expect_true("n.draws" %in% names(x))
-  expect_equal(x$W.table[1,3], 0.1333375, tolerance = 0.001)
-  expect_equal(x$W.table[2,1], 0.8434944, tolerance = 0.001)
+  expect_equal(x$W.table[1,3], 0.1333375, tolerance = accuracy1)
+  expect_equal(x$W.table[2,1], 0.8434944, tolerance = accuracy1)
 })
 
 
