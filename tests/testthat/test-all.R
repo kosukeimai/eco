@@ -9,6 +9,9 @@ accuracy2 <- ifelse(capabilities("long.double"), 0.2, 0.5)
 # set random seed
 set.seed(12345)
 
+# for the tests that may take a long time to finish, skip them
+donotrun = 1
+
 test_that("tests eco on registration data", {
   ## load the data
   data(reg)
@@ -33,7 +36,7 @@ test_that("tests eco on registration data", {
   expect_equal(x$W.table[2,3], 0.3071461, tolerance = accuracy1)
 })  
   
-test_that("tests eco on Robinson census", {
+if (!donotrun) test_that("tests eco on Robinson census", {
   # load the Robinson's census data
   data(census)
 
@@ -57,9 +60,6 @@ test_that("tests eco on Robinson census", {
   expect_equal(x$W.table[3,1], 0.3400277, tolerance = accuracy1)
 })
 
-
-
-
 # ecoBD
 test_that("tests ecoBD on registration data", {
   # load the registration data
@@ -72,9 +72,8 @@ test_that("tests ecoBD on registration data", {
   expect_that(x$aggNmax[2,2], is_equivalent_to(2046800))
 })
 
-
 # ecoML
-test_that("tests ecoML on census data", {
+if (!donotrun) test_that("tests ecoML on census data", {
   # load the census data
   data(census)
 
@@ -111,7 +110,6 @@ test_that("tests ecoML on census data", {
   expect_false(is.na(x$param.table[2,6]))
 })
 
-
 # set random seed
 set.seed(12345)
 
@@ -144,12 +142,12 @@ test_that("tests ecoNP on census data", {
   expect_equal(x$W.table[2,1], 0.8137116, tolerance = accuracy1)
 
   # density plots of the out-of-sample predictions
-  par(mfrow=c(2,1))
-  plot(density(out[,1]), main = "W1")
-  plot(density(out[,2]), main = "W2")
+  # par(mfrow=c(2,1))
+  # plot(density(out[,1]), main = "W1")
+  # plot(density(out[,2]), main = "W2")
 })
 
-test_that("tests ecoNP on Robinson census data", {
+if (!donotrun) test_that("tests ecoNP on Robinson census data", {
   # load the Robinson's census data
   data(census)
 
