@@ -47,6 +47,7 @@
 #' \email{abstraus@@Princeton.Edu}
 #' @seealso \code{ecoML}
 #' @keywords methods
+#' @export
 print.summary.ecoML <- function(x, digits=max(3,
                                      getOption("digits")-3), ...) {
 

@@ -463,20 +463,20 @@ void cDPeco(
   Free3DMatrix(Sigma, t_samp,n_dim);
   Free3DMatrix(InvSigma, t_samp, n_dim);
   free(C);
-  free(q);
-  free(qq);
+  Free(q);
+  Free(qq);
   FreeMatrix(S_bvt, n_dim);
   FreeMatrix(Wstarmix, t_samp);
-  free(mu_mix);
+  Free(mu_mix);
   FreeMatrix(Sigma_mix, n_dim);
   FreeMatrix(InvSigma_mix, n_dim);
   free(sortC);
   free(indexC);
   free(label);
-  free(vtemp);
+  Free(vtemp);
   FreeMatrix(mtemp, n_dim);
   FreeMatrix(mtemp1, n_dim);
-  free(onedata);
+  FreeMatrix(onedata, 1);
 } /* main */
 
 

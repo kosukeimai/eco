@@ -222,7 +222,6 @@ void cBaseeco(
       Wstar[i][0]=log(W[i][0])-log(1-W[i][0]);
       Wstar[i][1]=log(W[i][1])-log(1-W[i][1]);
     }
-
     
     /* update W2 given W1, mu and Sigma in x1 homeogeneous areas */
     if (*x1==1)
@@ -294,7 +293,7 @@ void cBaseeco(
   FreeMatrix(W1g, n_samp);
   FreeMatrix(W2g, n_samp);
   free(n_grid);
-  free(mu);
+  Free(mu);
   FreeMatrix(Sigma,n_dim);
   FreeMatrix(InvSigma, n_dim);
   

@@ -1505,7 +1505,11 @@ void gridEStep(Param* params, int n_samp, int s_samp, int x1_samp, int x0_samp, 
   for(j=0; j<5; j++)
     suff[j]=suff[j]/t_samp;
 
-  Free(n_grid);Free(vtemp);Free(mflag);Free(prob_grid);Free(prob_grid_cum);
+  free(n_grid);
+  Free(vtemp);
+  free(mflag);
+  Free(prob_grid);
+  Free(prob_grid_cum);
   FreeMatrix(W1g,n_samp);FreeMatrix(W2g,n_samp);FreeMatrix(X,n_samp);
   FreeMatrix(W,t_samp);FreeMatrix(Wstar,t_samp);
 

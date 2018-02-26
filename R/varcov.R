@@ -1,6 +1,15 @@
+#' Calculate the variance or covariance of the object
+#' 
+#' \code{varcov} returns the variance or covariance of the object.
+#' 
+#' @param object An object
+#' @param ... The rest of the input parameters if any
+#' @keywords methods
+#' @export
 varcov <- function(object, ...)
   UseMethod("varcov")
 
+#' @export
 varcov.eco <- function(object, subset = NULL, ...) {
   if (is.null(subset))
     subset <- 1:nrow(object$Sigma)
@@ -28,6 +37,7 @@ varcov.eco <- function(object, subset = NULL, ...) {
     return(Sigma[,,1])  
 }
 
+#' @export
 varcov.ecoNP <- function(object, subset = NULL, obs = NULL, ...) {
   if (is.null(subset))
     subset <- 1:nrow(object$Sigma)

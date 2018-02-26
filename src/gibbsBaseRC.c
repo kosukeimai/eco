@@ -279,7 +279,7 @@ void cBaseRC(
   FreeMatrix(mu, n_col);
   Free3DMatrix(Sigma, n_col, n_dim);
   Free3DMatrix(InvSigma, n_col, n_dim);
-  free(param);
-  free(dvtemp);
+  Free(param);
+  Free(dvtemp);
 } /* main */
 

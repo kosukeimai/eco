@@ -195,11 +195,6 @@
 #' ## summarize the results
 #' \dontrun{summary(res)}
 #' 
-#' ## obtain out-of-sample prediction
-#' \dontrun{out <- predict(res, verbose = TRUE)}
-#' ## summarize the results
-#' \dontrun{summary(out)}
-#' 
 #' ## fit the parametric model with some individual 
 #' ## level data using the default prior specification
 #' surv <- 1:600
@@ -208,7 +203,7 @@
 #' ## summarize the results
 #' \dontrun{summary(res1)}
 #' 
-#' 
+#' @export ecoML
 ecoML <- function(formula, data = parent.frame(), N=NULL, supplement = NULL, 
                   theta.start = c(0,0,1,1,0), fix.rho = FALSE,
                   context = FALSE, sem = TRUE, epsilon=10^(-6),
