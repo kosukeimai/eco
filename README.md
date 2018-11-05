@@ -1,4 +1,4 @@
-# R package eco [![Build Status](https://travis-ci.org/kosukeimai/eco.svg?branch=master)](https://travis-ci.org/kosukeimai/eco)  [![CRAN_Status_Badge](http://www.r-pkg.org/badges/version/eco)](https://cran.r-project.org/package=eco)
+# R package eco [![Build Status](https://travis-ci.org/kosukeimai/eco.svg?branch=master)](https://travis-ci.org/kosukeimai/eco)  [![CRAN_Status_Badge](http://www.r-pkg.org/badges/version/eco)](https://cran.r-project.org/package=eco) ![CRAN downloads](http://cranlogs.r-pkg.org/badges/grand-total/eco)
 ## eco: Ecological inference in 2 x 2 Tables
 
 We implement the Bayesian and likelihood methods proposed 
