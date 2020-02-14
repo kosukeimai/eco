@@ -347,7 +347,7 @@ double paramIntegration(integr_fn f, void *ex) {
     Param* p = (Param*) ex;
     Rprintf("Integration error %d: Sf %d X %5g Y %5g [%5g,%5g] -> %5g +- %5g\n",ier,p->caseP.suff,p->caseP.X,p->caseP.Y,p->caseP.Wbounds[0][0],p->caseP.Wbounds[0][1],result,anserr);
     char ch;
-    scanf("Hit enter to continue %c", &ch );
+    (void)scanf("Hit enter to continue %c", &ch );
     return result;
   }
 

@@ -414,7 +414,7 @@ void ecoEStep(Param* params, double* suff) {
       if (fabs(caseP->W[0]-getW1FromW2(caseP->X, caseP->Y,caseP->W[1]))>0.011) {
         Rprintf("E1 %d %5g %5g %5g %5g %5g %5g %5g %5g err:%5g\n", i, caseP->X, caseP->Y, caseP->mu[0], caseP->mu[1], caseP->normcT,Wstar[i][0],Wstar[i][1],Wstar[i][2],fabs(caseP->W[0]-getW1FromW2(caseP->X, caseP->Y,caseP->W[1])));
         char ch;
-        scanf("Hit enter to continue %c\n", &ch );
+        (void)scanf("Hit enter to continue %c\n", &ch );
       }
       //report error E2 if Jensen's inequality doesn't hold
       if (Wstar[i][4]<pow(Wstar[i][1],2) || Wstar[i][2]<pow(Wstar[i][0],2))
