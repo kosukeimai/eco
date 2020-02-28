@@ -568,9 +568,10 @@ void ecoMStepNCAR(double* Suff, double* pdTheta, Param* params) {
   //double[2][2] InvSigma=setP->InvSigma;
   //double[3][3] Sigma3=setP->Sigma3;   /* covariance matrix*/
   //double[3][3] InvSigma3=setP->Sigma3;   /* inverse covariance matrix*/
-  int ii,i,j,verbose,t_samp;
-  verbose=setP->verbose;
-  t_samp=setP->t_samp;
+  //int ii,i,j,verbose,t_samp;
+  int ii,i,j;
+  int verbose=setP->verbose;
+  int t_samp=setP->t_samp;
 
 
   //set E[XW*]
@@ -734,9 +735,10 @@ void ecoMStepNCAR(double* Suff, double* pdTheta, Param* params) {
 void ecoMStepCCAR(double* pdTheta, Param* params) {
   setParam* setP=params[0].setP;
   int k=setP->ccar_nvar;
-  int ii,i,j,verbose,t_samp;
-  verbose=setP->verbose;
-  t_samp=setP->t_samp;
+  //int ii,i,j,verbose,t_samp;
+  int ii,i,j;
+  int verbose=setP->verbose;
+  int t_samp=setP->t_samp;
   double **InvSigma=doubleMatrix(2,2);
   double **Z_i=doubleMatrix(k,2);
   double **Z_i_t=doubleMatrix(2,k);
