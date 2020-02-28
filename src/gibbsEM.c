@@ -357,7 +357,8 @@ void initTheta(double* pdTheta_in,Param* params, double* pdTheta) {
 void ecoEStep(Param* params, double* suff) {
 
   int t_samp,n_samp,s_samp,x1_samp,x0_samp,i,j, verbose;
-  double loglik,testdens;
+  // double loglik,testdens;
+  double loglik;
   Param* param; setParam* setP; caseParam* caseP;
   setP=params[0].setP;
   verbose=setP->verbose;
@@ -407,7 +408,7 @@ void ecoEStep(Param* params, double* suff) {
       caseP->suff=SS_W2;
       caseP->W[1]=paramIntegration(&SuffExp,param);
       caseP->suff=SS_Test;
-      testdens=paramIntegration(&SuffExp,param);
+      // testdens=paramIntegration(&SuffExp,param);
       if (setP->calcLoglik==1 && setP->iter>1) loglik+=getLogLikelihood(param);
 
       //report error E1 if E[W1],E[W2] is not on the tomography line
