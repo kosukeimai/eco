@@ -428,19 +428,19 @@ void cDPecoX(
     }
   } /*end of MCMC for DP*/
 
-if (*verbose)
-     Rprintf("100 percent done.\n");
-     
-     /** write out the random seed **/
-     PutRNGstate();
-    
-    /* Freeing the memory */
-     FreeMatrix(S0, n_dim+1);  
-     FreeMatrix(X, n_samp);
-     FreeMatrix(W, t_samp);
-     FreeMatrix(Wstar, t_samp);
-     FreeMatrix(S_W, s_samp);
-     FreeMatrix(S_Wstar, s_samp);
+  if (*verbose)
+    Rprintf("100 percent done.\n");
+  
+  /** write out the random seed **/
+  PutRNGstate();
+  
+  /* Freeing the memory */
+  FreeMatrix(S0, n_dim+1);  
+  FreeMatrix(X, n_samp);
+  FreeMatrix(W, t_samp);
+  FreeMatrix(Wstar, t_samp);
+  FreeMatrix(S_W, s_samp);
+  FreeMatrix(S_Wstar, s_samp);
   FreeMatrix(W1g, n_samp);
   FreeMatrix(W2g, n_samp);
   free(n_grid);
