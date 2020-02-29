@@ -192,7 +192,7 @@ data(census)
 
 ## fit the parametric model with the default model specifications
 \dontrun{res <- ecoML(Y ~ X, data = census[1:100,], N=census[1:100,3], 
-	     	  epsilon=10^(-6), verbose = TRUE)}
+	     	  epsilon=10^(-6), verbose = TRUE)
 ## summarize the results
 summary(res)
 
