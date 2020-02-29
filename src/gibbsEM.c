@@ -414,8 +414,8 @@ void ecoEStep(Param* params, double* suff) {
       //report error E1 if E[W1],E[W2] is not on the tomography line
       if (fabs(caseP->W[0]-getW1FromW2(caseP->X, caseP->Y,caseP->W[1]))>0.011) {
         Rprintf("E1 %d %5g %5g %5g %5g %5g %5g %5g %5g err:%5g\n", i, caseP->X, caseP->Y, caseP->mu[0], caseP->mu[1], caseP->normcT,Wstar[i][0],Wstar[i][1],Wstar[i][2],fabs(caseP->W[0]-getW1FromW2(caseP->X, caseP->Y,caseP->W[1])));
-        char ch;
-        (void)scanf("Hit enter to continue %c\n", &ch );
+        // char ch;
+        // scanf("Hit enter to continue %c\n", &ch );
       }
       //report error E2 if Jensen's inequality doesn't hold
       if (Wstar[i][4]<pow(Wstar[i][1],2) || Wstar[i][2]<pow(Wstar[i][0],2))
@@ -571,8 +571,10 @@ void ecoMStepNCAR(double* Suff, double* pdTheta, Param* params) {
   //int ii,i,j,verbose,t_samp;
   int ii,i,j;
   int verbose=0;
-  verbose=setP->verbose;
   int t_samp=0;
+  verbose=t_samp;
+  t_samp=verbose;
+  verbose=setP->verbose;
   t_samp=setP->t_samp;
 
 
@@ -740,8 +742,10 @@ void ecoMStepCCAR(double* pdTheta, Param* params) {
   //int ii,i,j,verbose,t_samp;
   int ii,i,j;
   int verbose=0;
-  verbose=setP->verbose;
   int t_samp=0;
+  verbose=t_samp;
+  t_samp=verbose;
+  verbose=setP->verbose;
   t_samp=setP->t_samp;
   double **InvSigma=doubleMatrix(2,2);
   double **Z_i=doubleMatrix(k,2);

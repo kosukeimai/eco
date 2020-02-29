@@ -181,8 +181,7 @@ double getLogLikelihood(Param* param) {
 
   } else if (param->caseP.dataType==DPT_Homog_X1 || param->caseP.dataType==DPT_Homog_X0) {
       //Homogenenous data: just do normal likelihood on one dimension
-      // double lik,sigma2,val,mu;
-      double sigma2,val,mu;
+      double lik,sigma2,val,mu;
       val = (param->caseP.dataType==DPT_Homog_X1) ? param->caseP.Wstar[0] : param->caseP.Wstar[1];
       if (!param->setP->ncar) {
         mu = (param->caseP.dataType==DPT_Homog_X1) ? param->setP->pdTheta[0] : param->setP->pdTheta[1];
@@ -191,9 +190,9 @@ double getLogLikelihood(Param* param) {
         mu = (param->caseP.dataType==DPT_Homog_X1) ? param->setP->pdTheta[1] : param->setP->pdTheta[2];
         sigma2 = (param->caseP.dataType==DPT_Homog_X1) ? param->setP->pdTheta[4] : param->setP->pdTheta[5];
       }
-      // lik=(1/(sqrt(2*M_PI*sigma2)))*exp(-(.5/sigma2)*(val - mu)*(val - mu));
-      //return log(lik);
-      return 0; //fix later
+      lik=(1/(sqrt(2*M_PI*sigma2)))*exp(-(.5/sigma2)*(val - mu)*(val - mu));
+      return log(lik);
+      // return 0; //fix later
 
   } else if (param->caseP.dataType==DPT_Survey || (param->caseP.Y>=.990 || param->caseP.Y<=.010)) {
     //Survey data (or v tight bounds): multi-variate normal
@@ -350,8 +349,8 @@ double paramIntegration(integr_fn f, void *ex) {
   else {
     Param* p = (Param*) ex;
     Rprintf("Integration error %d: Sf %d X %5g Y %5g [%5g,%5g] -> %5g +- %5g\n",ier,p->caseP.suff,p->caseP.X,p->caseP.Y,p->caseP.Wbounds[0][0],p->caseP.Wbounds[0][1],result,anserr);
-    char ch;
-    (void)scanf("Hit enter to continue %c", &ch );
+    // char ch;
+    // scanf("Hit enter to continue %c", &ch );
     return result;
   }
 
