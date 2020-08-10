@@ -4,7 +4,8 @@
 \name{housep88}
 \alias{housep88}
 \title{Electoral Results for the House and Presidential Races in 1988}
-\format{A data frame containing 5 variables and 424 observations
+\format{
+A data frame containing 5 variables and 424 observations
 \tabular{lll}{ X \tab numeric \tab proportion voting for the Democrat in the
 presidential race \cr Y \tab numeric \tab proportion voting for the Democrat
 in the House race \cr N \tab numeric \tab number of major party voters in
@@ -12,7 +13,8 @@ the presidential contest \cr HPCT \tab numeric \tab House election turnout
 divided by presidential election turnout (set to 1 if House turnout exceeds
 presidential turnout) \cr DIST \tab numeric \tab 4-digit ICPSR state and
 district code: first 2 digits for the state code, last two digits for the
-district number (e.g., 2106=IL 6th) }}
+district number (e.g., 2106=IL 6th) }
+}
 \description{
 This data set contains, on a House district level, the percentage of the
 vote for the Democratic House candidate, the percentage of the vote for the

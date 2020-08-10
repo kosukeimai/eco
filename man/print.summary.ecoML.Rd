@@ -5,8 +5,7 @@
 \title{Print the Summary of the Results for the Maximum Likelihood Parametric Model for
 Ecological Inference in 2x2 Tables}
 \usage{
-\method{print}{summary.ecoML}(x, digits = max(3, getOption("digits") - 3),
-  ...)
+\method{print}{summary.ecoML}(x, digits = max(3, getOption("digits") - 3), ...)
 }
 \arguments{
 \item{x}{An object of class \code{summary.ecoML}.}

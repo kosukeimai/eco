@@ -5,8 +5,14 @@
 \title{Summarizing the Results for the Maximum Likelihood Parametric Model for
 Ecological Inference in 2x2 Tables}
 \usage{
-\method{summary}{ecoML}(object, CI = c(2.5, 97.5), param = TRUE,
-  units = FALSE, subset = NULL, ...)
+\method{summary}{ecoML}(
+  object,
+  CI = c(2.5, 97.5),
+  param = TRUE,
+  units = FALSE,
+  subset = NULL,
+  ...
+)
 }
 \arguments{
 \item{object}{An output object from \code{eco}.}

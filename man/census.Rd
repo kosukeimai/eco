@@ -4,12 +4,14 @@
 \name{census}
 \alias{census}
 \title{Black Illiteracy Rates in 1910 US Census}
-\format{A data frame containing 5 variables and 1040 observations
+\format{
+A data frame containing 5 variables and 1040 observations
 \tabular{lll}{ X \tab numeric \tab the proportion of Black residents in each
 county\cr Y \tab numeric \tab the overall literacy rates in each county\cr N
 \tab numeric \tab the total number of residents in each county \cr W1 \tab
 numeric \tab the actual Black literacy rate \cr W2 \tab numeric \tab the
-actual White literacy rate }}
+actual White literacy rate }
+}
 \description{
 This data set contains the proportion of the residents who are black, the
 proportion of those who can read, the total population as well as the actual

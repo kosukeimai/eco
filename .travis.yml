@@ -1,7 +1,15 @@
 language: r
 
 cache: packages
-sudo: required
+dist: bionic
+os: linux
+
+warnings_are_errors: false
+
+r_packages:
+  - testthat
+  - MASS
+  - utils
 
 notifications:
   email:

@@ -5,8 +5,14 @@
 \title{Summarizing the Results for the Bayesian Nonparametric Model for Ecological
 Inference in 2x2 Tables}
 \usage{
-\method{summary}{ecoNP}(object, CI = c(2.5, 97.5), param = FALSE,
-  units = FALSE, subset = NULL, ...)
+\method{summary}{ecoNP}(
+  object,
+  CI = c(2.5, 97.5),
+  param = FALSE,
+  units = FALSE,
+  subset = NULL,
+  ...
+)
 }
 \arguments{
 \item{object}{An output object from \code{ecoNP}.}

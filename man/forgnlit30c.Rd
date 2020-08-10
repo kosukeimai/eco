@@ -4,7 +4,8 @@
 \name{forgnlit30c}
 \alias{forgnlit30c}
 \title{Foreign-born literacy in 1930, County Level}
-\format{A data frame containing 6 variables and 1976 observations
+\format{
+A data frame containing 6 variables and 1976 observations
 \tabular{lll}{ X \tab numeric \tab proportion of the white population at
 least 10 years of age that is foreign born \cr Y \tab numeric \tab
 proportion of the white population at least 10 years of age that is
@@ -12,7 +13,8 @@ illiterate \cr W1 \tab numeric \tab proportion of the foreign-born white
 population at least 10 years of age that is illiterate \cr W2 \tab numeric
 \tab proportion of the native-born white population at least 10 years of age
 that is illiterate \cr state \tab numeric \tab the ICPSR state code \cr
-county \tab numeric \tab the ICPSR (within state) county code }}
+county \tab numeric \tab the ICPSR (within state) county code }
+}
 \description{
 This data set contains, on a county level, the proportion of white residents
 ten years and older who are foreign born, and the proportion of those

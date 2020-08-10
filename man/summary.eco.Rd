@@ -6,8 +6,14 @@
 \title{Summarizing the Results for the Bayesian Parametric Model for Ecological
 Inference in 2x2 Tables}
 \usage{
-\method{summary}{eco}(object, CI = c(2.5, 97.5), param = TRUE,
-  units = FALSE, subset = NULL, ...)
+\method{summary}{eco}(
+  object,
+  CI = c(2.5, 97.5),
+  param = TRUE,
+  units = FALSE,
+  subset = NULL,
+  ...
+)
 }
 \arguments{
 \item{object}{An output object from \code{eco}.}

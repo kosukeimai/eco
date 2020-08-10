@@ -5,8 +5,15 @@
 \title{Out-of-Sample Posterior Prediction under the Parametric Bayesian Model for
 Ecological Inference in 2x2 Tables}
 \usage{
-\method{predict}{ecoX}(object, newdraw = NULL, subset = NULL,
-  newdata = NULL, cond = FALSE, verbose = FALSE, ...)
+\method{predict}{ecoX}(
+  object,
+  newdraw = NULL,
+  subset = NULL,
+  newdata = NULL,
+  cond = FALSE,
+  verbose = FALSE,
+  ...
+)
 }
 \arguments{
 \item{object}{An output object from \code{eco} or \code{ecoNP}.}
