@@ -27,7 +27,7 @@ Software, Vol. 42, No. 5, pp. 1-23.
 
 Imai, Kosuke, Ying Lu and Aaron Strauss. (2008). \dQuote{Bayesian and
 Likelihood Inference for 2 x 2 Ecological Tables: An Incomplete Data
-Approach} Political Analysis, Vol. 16, No. 1 (Winter), pp. 41-69. 
+Approach} Political Analysis, Vol. 16, No. 1 (Winter), pp. 41-69.
 }
 \seealso{
 \code{ecoML}

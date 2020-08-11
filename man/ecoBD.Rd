@@ -103,7 +103,7 @@ print(res)
 \references{
 Imai, Kosuke, Ying Lu and Aaron Strauss. (2011) \dQuote{eco: R
 Package for Ecological Inference in 2x2 Tables} Journal of Statistical
-Software, Vol. 42, No. 5, pp. 1-23. 
+Software, Vol. 42, No. 5, pp. 1-23.
 
 Imai, Kosuke, Ying Lu and Aaron Strauss. (2008) \dQuote{Bayesian and
 Likelihood Inference for 2 x 2 Ecological Tables: An Incomplete Data
@@ -111,11 +111,5 @@ Approach} Political Analysis, Vol. 16, No. 1, (Winter), pp. 41-69.
 }
 \seealso{
 \code{eco}, \code{ecoNP}
-}
-\author{
-Kosuke Imai, Department of Government and Department of Statistics, Harvard University
-\email{Imai@Harvard.Edu}, \url{https://imai.fas.harvard.edu/}; Ying Lu,
-Center for Promoting Research Involving Innovative Statistical Methodology
-(PRIISM), New York University \email{ying.lu@nyu.Edu}
 }
 \keyword{models}

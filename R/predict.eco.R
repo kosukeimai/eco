@@ -36,10 +36,6 @@
 #' of inner cells of ecological tables. \code{summary.predict.eco} will
 #' summarize the output, and \code{print.summary.predict.eco} will print the
 #' summary.
-#' @author Kosuke Imai, Department of Politics, Princeton University,
-#' \email{kimai@@Princeton.Edu}, \url{http://imai.princeton.edu}; Ying Lu,
-#' Center for Promoting Research Involving Innovative Statistical Methodology
-#' (PRIISM), New York University \email{ying.lu@@nyu.Edu}
 #' @seealso \code{eco}, \code{predict.ecoNP}
 #' @keywords methods
 #' @export

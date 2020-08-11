@@ -205,10 +205,4 @@ Approach} Political Analysis, Vol. 16, No. 1 (Winter), pp. 41-69.
 \seealso{
 \code{ecoML}, \code{ecoNP}, \code{predict.eco}, \code{summary.eco}
 }
-\author{
-Kosuke Imai, Department of Government and Department of Statistics, Harvard University,
-\email{Imai@Harvard.Edu}, \url{https://imai.fas.harvard.edu}; Ying
-Lu,Center for Promoting Research Involving Innovative Statistical
-Methodology (PRIISM), New York University, \email{ying.lu@nyu.Edu}
-}
 \keyword{models}

@@ -154,22 +154,14 @@
 #' \item{Iobs.trans}{The observed data information matrix for the fisher transformed parameters.}
 #' \item{Fmis.trans}{The fractions of missing information associated with the
 #' fisher transformed parameters.}
-#' @author Kosuke Imai, Department of Politics, Princeton University,
-#' \email{kimai@@Princeton.Edu}, \url{http://imai.princeton.edu}; Ying Lu,
-#' Center for Promoting Research Involving Innovative Statistical Methodology
-#' (PRIISM), New York University, \email{ying.lu@@nyu.Edu}; Aaron Strauss,
-#' Department of Politics, Princeton University,
-#' \email{abstraus@@Princeton.Edu}.
 #' @seealso \code{eco}, \code{ecoNP}, \code{summary.ecoML}
 #' @references Imai, Kosuke, Ying Lu and Aaron Strauss. (2011).  \dQuote{eco: R
 #' Package for Ecological Inference in 2x2 Tables} Journal of Statistical
-#' Software, Vol. 42, No. 5, pp. 1-23. available at
-#' \url{http://imai.princeton.edu/software/eco.html}
+#' Software, Vol. 42, No. 5, pp. 1-23.
 #' 
 #' Imai, Kosuke, Ying Lu and Aaron Strauss. (2008).  \dQuote{Bayesian and
 #' Likelihood Inference for 2 x 2 Ecological Tables: An Incomplete Data
-#' Approach} Political Analysis, Vol. 16, No. 1 (Winter), pp. 41-69. available
-#' at \url{http://imai.princeton.edu/research/eiall.html}
+#' Approach} Political Analysis, Vol. 16, No. 1 (Winter), pp. 41-69. 
 #' @keywords models
 #' @examples
 #' 
