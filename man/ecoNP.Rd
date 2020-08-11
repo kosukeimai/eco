@@ -5,10 +5,26 @@
 \title{Fitting the Nonparametric Bayesian Models of Ecological Inference in 2x2
 Tables}
 \usage{
-ecoNP(formula, data = parent.frame(), N = NULL, supplement = NULL,
-  context = FALSE, mu0 = 0, tau0 = 2, nu0 = 4, S0 = 10,
-  alpha = NULL, a0 = 1, b0 = 0.1, parameter = FALSE, grid = FALSE,
-  n.draws = 5000, burnin = 0, thin = 0, verbose = FALSE)
+ecoNP(
+  formula,
+  data = parent.frame(),
+  N = NULL,
+  supplement = NULL,
+  context = FALSE,
+  mu0 = 0,
+  tau0 = 2,
+  nu0 = 4,
+  S0 = 10,
+  alpha = NULL,
+  a0 = 1,
+  b0 = 0.1,
+  parameter = FALSE,
+  grid = FALSE,
+  n.draws = 5000,
+  burnin = 0,
+  thin = 0,
+  verbose = FALSE
+)
 }
 \arguments{
 \item{formula}{A symbolic description of the model to be fit, specifying the

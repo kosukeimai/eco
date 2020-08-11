@@ -5,8 +5,14 @@
 \title{Out-of-Sample Posterior Prediction under the Nonparametric Bayesian Model
 for Ecological Inference in 2x2 Tables}
 \usage{
-\method{predict}{ecoNP}(object, newdraw = NULL, subset = NULL, obs = NULL,
-  verbose = FALSE, ...)
+\method{predict}{ecoNP}(
+  object,
+  newdraw = NULL,
+  subset = NULL,
+  obs = NULL,
+  verbose = FALSE,
+  ...
+)
 }
 \arguments{
 \item{object}{An output object from \code{ecoNP}.}

@@ -5,8 +5,7 @@
 \title{Out-of-Sample Posterior Prediction under the Parametric Bayesian Model for
 Ecological Inference in 2x2 Tables}
 \usage{
-\method{predict}{eco}(object, newdraw = NULL, subset = NULL,
-  verbose = FALSE, ...)
+\method{predict}{eco}(object, newdraw = NULL, subset = NULL, verbose = FALSE, ...)
 }
 \arguments{
 \item{object}{An output object from \code{eco} or \code{ecoNP}.}

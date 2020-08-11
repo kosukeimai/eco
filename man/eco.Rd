@@ -4,10 +4,25 @@
 \alias{eco}
 \title{Fitting the Parametric Bayesian Model of Ecological Inference in 2x2 Tables}
 \usage{
-eco(formula, data = parent.frame(), N = NULL, supplement = NULL,
-  context = FALSE, mu0 = 0, tau0 = 2, nu0 = 4, S0 = 10,
-  mu.start = 0, Sigma.start = 10, parameter = TRUE, grid = FALSE,
-  n.draws = 5000, burnin = 0, thin = 0, verbose = FALSE)
+eco(
+  formula,
+  data = parent.frame(),
+  N = NULL,
+  supplement = NULL,
+  context = FALSE,
+  mu0 = 0,
+  tau0 = 2,
+  nu0 = 4,
+  S0 = 10,
+  mu.start = 0,
+  Sigma.start = 10,
+  parameter = TRUE,
+  grid = FALSE,
+  n.draws = 5000,
+  burnin = 0,
+  thin = 0,
+  verbose = FALSE
+)
 }
 \arguments{
 \item{formula}{A symbolic description of the model to be fit, specifying the

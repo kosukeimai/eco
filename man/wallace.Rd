@@ -4,12 +4,14 @@
 \name{wallace}
 \alias{wallace}
 \title{Black voting rates for Wallace for President, 1968}
-\format{A data frame containing 3 variables and 1009 observations
+\format{
+A data frame containing 3 variables and 1009 observations
 \tabular{lll}{ 
    X \tab numeric \tab proportion of the population that is Black \cr 
    Y \tab numeric \tab proportion presidential votes cast for Wallace \cr 
    FIPS \tab numeric \tab the FIPS county code 
-   }}
+   }
+}
 \description{
 This data set contains, on a county level, the proportion of county
 residents who are Black and the proportion of presidential votes cast for
