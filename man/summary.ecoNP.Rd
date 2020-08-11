@@ -59,10 +59,4 @@ This object can be printed by \code{print.summary.ecoNP}
 \seealso{
 \code{ecoNP}, \code{predict.eco}
 }
-\author{
-Kosuke Imai, Department of Politics, Princeton University,
-\email{kimai@Princeton.Edu}, \url{http://imai.princeton.edu}; Ying Lu,
-Center for Promoting Research Involving Innovative Statistical Methodology
-(PRIISM), New York University \email{ying.lu@nyu.Edu}
-}
 \keyword{methods}
