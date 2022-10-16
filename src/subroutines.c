@@ -86,9 +86,9 @@ void dinv(double **X,
   for (i = 0, j = 0; j < size; j++)
     for (k = 0; k <= j; k++)
       pdInv[i++] = X[k][j];
-  F77_CALL(dpptrf)("U", &size, pdInv, &errorM);
+  F77_CALL(dpptrf)("U", &size, pdInv, &errorM FCONE);
   if (!errorM) {
-    F77_CALL(dpptri)("U", &size, pdInv, &errorM);
+    F77_CALL(dpptri)("U", &size, pdInv, &errorM FCONE);
     if (errorM) {
       if (errorM>0) {
         Rprintf("The matrix being inverted is singular. Error code %d\n", errorM);
@@ -134,9 +134,9 @@ void dinv2D(double* X,
       pdInv[i++] = *(X+k*size+j);
 
 //Rprintf("test: %5g %5g %d",pdInv[0],pdInv[(size == 3) ? 5 : 2],i);
-  F77_CALL(dpptrf)("U", &size, pdInv, &errorM);
+  F77_CALL(dpptrf)("U", &size, pdInv, &errorM FCONE);
   if (!errorM) {
-    F77_CALL(dpptri)("U", &size, pdInv, &errorM);
+    F77_CALL(dpptri)("U", &size, pdInv, &errorM FCONE);
     if (errorM) {
       Rprintf(emsg);
     if (errorM>0) {
@@ -212,7 +212,7 @@ void dinv2D_sym(double* X,
 
   double *work0 = doubleArray(size2);
   int test=-1;
-  F77_CALL(dsysv)("U", &size, &size, pdInv, &size, factor_out, B, &size, work0, &test, &errorM);
+  F77_CALL(dsysv)("U", &size, &size, pdInv, &size, factor_out, B, &size, work0, &test, &errorM FCONE);
   int lwork=(int)work0[0];
   Free(work0);
 
@@ -220,7 +220,7 @@ void dinv2D_sym(double* X,
   double *work = doubleArray(lwork);
   //Rprintf("In A: %5g %5g %5g %5g\n",pdInv[0],pdInv[1],pdInv[2],pdInv[3]);
   //Rprintf("In B: %5g %5g %5g %5g\n",B[0],B[1],B[2],B[3]);
-  F77_CALL(dsysv)("U", &size, &size, pdInv, &size, factor_out, B, &size, work, &lwork, &errorM);
+  F77_CALL(dsysv)("U", &size, &size, pdInv, &size, factor_out, B, &size, work, &lwork, &errorM FCONE);
   Free(work);
   //Rprintf("Out1: %5g %5g %5g %5g %d\n",B[0],B[1],B[2],B[3],errorM);
 
@@ -256,7 +256,7 @@ void dcholdc(double **X, int size, double **L)
   for (j = 0, i = 0; j < size; j++)
     for (k = 0; k <= j; k++)
       pdTemp[i++] = X[k][j];
-  F77_CALL(dpptrf)("U", &size, pdTemp, &errorM);
+  F77_CALL(dpptrf)("U", &size, pdTemp, &errorM FCONE);
   if (errorM) {
     if (errorM>0) {
       Rprintf("The matrix being inverted was not positive definite. Error code %d\n", errorM);
@@ -343,7 +343,7 @@ void dcholdc2D(double *X, int size, double *L)
   for (j = 0, i = 0; j < size; j++)
     for (k = 0; k <= j; k++)
       pdTemp[i++] = *(X+size*k+j); //pdTemp[i++] = X[k][j];
-  F77_CALL(dpptrf)("U", &size, pdTemp, &errorM);
+  F77_CALL(dpptrf)("U", &size, pdTemp, &errorM FCONE);
   if (errorM) {
     if (errorM>0) {
       Rprintf("The matrix being inverted was not positive definite. Error code %d\n", errorM);
