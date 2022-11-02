@@ -10,12 +10,12 @@ citEntry(entry = "Article",
   volume       = "42",
   number       = "5",
   pages        = "1--23",
-  url          = "http://www.jstatsoft.org/v42/i05/",
+  url          = "https://doi.org/10.18637/jss.v042.i05",
 
   textVersion  =
   paste("Kosuke Imai, Ying Lu, and Aaron Strauss (2011).",
         "eco: R Package for Ecological Inference in 2 x 2 Tables.",
         "Journal of Statistical Software, Vol. 42, No. 5, pp. 1-23.",
-        "URL http://www.jstatsoft.org/v42/i05/")
+        "https://doi.org/10.18637/jss.v042.i05")
 )
 
