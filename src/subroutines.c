@@ -364,7 +364,3 @@ void dcholdc2D(double *X, int size, double *L)
   Free(pdTemp);
 }
 
-int main () {
-  Rprintf("hello world");
-  return 0;
-}
