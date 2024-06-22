@@ -242,7 +242,7 @@ double invLogit(double x) {
 
 double logit(double x,char* emsg) {
   if (x>=1 || x<=0) {
-    Rprintf(emsg);
+    Rprintf("%s", emsg);
     Rprintf(": %5g is out of logit range\n",x);
   }
   return log(x/(1-x));

@@ -138,7 +138,7 @@ void dinv2D(double* X,
   if (!errorM) {
     F77_CALL(dpptri)("U", &size, pdInv, &errorM FCONE);
     if (errorM) {
-      Rprintf(emsg);
+      Rprintf("%s", emsg);
     if (errorM>0) {
       Rprintf(": The matrix being inverted is singular. Error code %d\n", errorM);
     } else {
@@ -148,7 +148,7 @@ void dinv2D(double* X,
     }
   }
   else {
-    Rprintf(emsg);
+    Rprintf("%s", emsg);
     if (errorM>0) {
       /* The matrix is not positive definite.
        * This error does occur with proper data, when the likelihood curve is flat,
@@ -225,7 +225,7 @@ void dinv2D_sym(double* X,
   //Rprintf("Out1: %5g %5g %5g %5g %d\n",B[0],B[1],B[2],B[3],errorM);
 
   if (errorM) {
-    Rprintf(emsg);
+    Rprintf("%s", emsg);
     if (errorM>0) {
       Rprintf(": The matrix being inverted is singular. Error code %d\n", errorM);
     } else {
