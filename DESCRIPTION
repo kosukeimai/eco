@@ -1,6 +1,6 @@
 Package: eco
 Version: 4.0-4
-Date: 2024-06-23
+Date: 2025-09-25
 Title: Ecological Inference in 2x2 Tables
 Authors@R: c(
   person("Kosuke", "Imai", , "imai@Harvard.Edu", c("aut", "cre")),
@@ -8,7 +8,7 @@ Authors@R: c(
   person("Aaron", "Strauss", , "aaronbstrauss@gmail.com", c("aut")),
   person("Hubert", "Jin", , "hubertj@princeton.edu", c("ctb"))
   )
-Maintainer: Ying Lu <ying.lu@nyu.edu>
+Maintainer: Kosuke Imai <imai@Harvard.Edu>
 Depends: R (>= 2.0), MASS, utils
 Suggests: testthat
 Description: Implements the Bayesian and likelihood methods proposed 

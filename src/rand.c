@@ -163,7 +163,7 @@ void rWish(
       for(k=0;k<size;k++)
 	Sample[i][j]+=mtemp[i][k]*C[j][k];
 
-  Free(V);
+  free(V);
   FreeMatrix(B, size);
   FreeMatrix(C, size);
   FreeMatrix(N, size);
@@ -227,7 +227,7 @@ double dBVNtomo(double *Wstar,  /* Wstar values */
     char ch;
     scanf(" %c", &ch );*/
 
-  Free(MEAN);
+  free(MEAN);
   FreeMatrix(SIGMA,dim);
 
   return density;

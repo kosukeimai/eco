@@ -293,7 +293,7 @@ void cBaseeco(
   FreeMatrix(W1g, n_samp);
   FreeMatrix(W2g, n_samp);
   free(n_grid);
-  Free(mu);
+  free(mu);
   FreeMatrix(Sigma,n_dim);
   FreeMatrix(InvSigma, n_dim);
   

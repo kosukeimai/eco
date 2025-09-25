@@ -291,7 +291,7 @@ void cEMeco(
   PutRNGstate();
 
   /* Freeing the memory */
-  Free(pdTheta_old);
+  free(pdTheta_old);
   //FreeMatrix(Rmat_old,5);
   //FreeMatrix(Rmat,5);
   }
@@ -996,7 +996,12 @@ void initCCAR(Param* params, double* pdTheta) {
   double t_optTheta[param_len]; //transformed optimal
   double t_phiTI[param_len]; //transformed phi^t_i
   double t_phiTp1I[param_len]; //transformed phi^{t+1}_i
-  Param* params_sem=(Param*) Calloc(params->setP->t_samp,Param);
+  /* Param* params_sem=(Param*) Calloc(params->setP->t_samp,Param); */
+  int t = params->setP->t_samp;
+  if (t <= 0) {
+    error("gibbsEM: t_samp must be > 0 (got %d)", t);
+  }
+  Param *params_sem = (Param *) R_alloc((size_t)t, sizeof *params_sem);
   verbose=setP_sem.verbose;
   //determine length of R matrix
   len=0;
@@ -1129,8 +1134,8 @@ void initCCAR(Param* params, double* pdTheta) {
     }
     Rprintf("\n\n");
   }
-  Free(SuffSem);
-  Free(params_sem);
+  free(SuffSem);
+  /* free(params_sem); */
 }
 
 
@@ -1327,7 +1332,7 @@ void ncarFixedRhoUnTransform(double* pdTheta) {
   pdTheta[6]=(tmp[6]*sqrt(tmp[3]))/(sqrt(pdTheta[4]));
   pdTheta[7]=(tmp[7]*sqrt(tmp[3]))/(sqrt(pdTheta[5]));
   pdTheta[8]=(tmp[8]*sqrt(tmp[4]*tmp[5]) + tmp[6]*tmp[7]*tmp[3])/(sqrt(pdTheta[4]*pdTheta[5]));
-  Free(tmp);
+  free(tmp);
 }
 
 /**
@@ -1349,7 +1354,7 @@ void ncarFixedRhoTransform(double* pdTheta) {
   pdTheta[6]=tmp[6]*sqrt(tmp[4]/tmp[3]);
   pdTheta[7]=tmp[7]*sqrt(tmp[5]/tmp[3]);
   pdTheta[8]=(tmp[8] - tmp[6]*tmp[7])/(sqrt((1 - tmp[6]*tmp[6])*(1 - tmp[7]*tmp[7])));
-  Free(tmp);
+  free(tmp);
 }
 
 
@@ -1517,10 +1522,10 @@ void gridEStep(Param* params, int n_samp, int s_samp, int x1_samp, int x0_samp, 
     suff[j]=suff[j]/t_samp;
 
   free(n_grid);
-  Free(vtemp);
+  free(vtemp);
   free(mflag);
-  Free(prob_grid);
-  Free(prob_grid_cum);
+  free(prob_grid);
+  free(prob_grid_cum);
   FreeMatrix(W1g,n_samp);FreeMatrix(W2g,n_samp);FreeMatrix(X,n_samp);
   FreeMatrix(W,t_samp);FreeMatrix(Wstar,t_samp);
 

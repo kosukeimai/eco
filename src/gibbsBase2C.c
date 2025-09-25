@@ -198,7 +198,7 @@ void cBase2C(
   FreeMatrix(maxU, n_samp);
   FreeMatrix(Sigma, n_col);
   FreeMatrix(InvSigma, n_col);
-  Free(dvtemp);
-  Free(param);
+  free(dvtemp);
+  free(param);
 } /* main */
 

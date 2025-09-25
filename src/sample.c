@@ -52,9 +52,9 @@ void rGrid(
   Sample[0]=W1gi[j];
   Sample[1]=W2gi[j];
 
-  Free(vtemp);
-  Free(prob_grid);
-  Free(prob_grid_cum);
+  free(vtemp);
+  free(prob_grid);
+  free(prob_grid_cum);
 
 }
 
@@ -106,7 +106,7 @@ void GridPrep(
     }
   }
 
-  Free(resid);
+  free(resid);
 }
 
 /* sample W via MH for 2x2 table */
@@ -145,9 +145,9 @@ void rMH(
     for (j=0; j<n_dim; j++) 
       W[j]=Sample[j];
   
-  Free(Sample);
-  Free(vtemp);
-  Free(vtemp1);
+  free(Sample);
+  free(vtemp);
+  free(vtemp1);
 }
 
 
@@ -229,10 +229,10 @@ void rMH2c(
     for (j = 0; j < n_dim; j++)
       W[j] = Sample[j];
   
-  Free(Sample);
-  Free(param);
-  Free(vtemp);
-  Free(vtemp1);
+  free(Sample);
+  free(param);
+  free(vtemp);
+  free(vtemp1);
 }
 
 

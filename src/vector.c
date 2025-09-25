@@ -40,8 +40,8 @@ int** intMatrix(int row, int col) {
 }
 
 double* doubleArray(int num) {
-  //double *dArray = (double *)malloc(num * sizeof(double));
-  double *dArray = Calloc(num,double);
+  double *dArray = (double *)malloc(num * sizeof(double));
+  //double *dArray = (double *)Calloc(num,double);
   if (dArray)
     return dArray;
   else {
@@ -52,11 +52,12 @@ double* doubleArray(int num) {
 
 double** doubleMatrix(int row, int col) {
   int i;
-  //double **dMatrix = (double **)malloc((size_t)(row * sizeof(double *)));
-  double **dMatrix = Calloc(row,double*);
+  double **dMatrix = (double **)malloc((size_t)(row * sizeof(double *)));
+  //double **dMatrix = Calloc(row,double*);
   if (dMatrix) {
     for (i = 0; i < row; i++) {
-      dMatrix[i] = Calloc(col,double);
+      /* dMatrix[i] = Calloc(col,double); */
+      dMatrix[i] = (double *)malloc(col * sizeof(double));
       if (!dMatrix[i]) {
         error("Out of memory error in doubleMatrix\n");
         return NULL;
@@ -97,8 +98,8 @@ long* longArray(int num) {
 void FreeMatrix(double **Matrix, int row) {
   int i;
   for (i = 0; i < row; i++)
-    Free(Matrix[i]);
-  Free(Matrix);
+    free(Matrix[i]);
+  free(Matrix);
 }
 
 void FreeintMatrix(int **Matrix, int row) {

@@ -5,14 +5,14 @@
   Copyright: GPL version 2 or later.
 *******************************************************************/
 
-#include <stddef.h>
-#include <stdio.h>
-#include <math.h>
 #include <Rmath.h>
 #include <R.h>
 #include <Rinternals.h>
 #include <R_ext/Utils.h>
 #include <R_ext/PrtUtil.h>
+#include <stddef.h>
+#include <stdio.h>
+#include <math.h>
 #include "vector.h"
 #include "subroutines.h"
 #include "rand.h"
@@ -80,11 +80,11 @@ void NormConstT(double *t, int n, void *param)
       //scanf(" %c", &ch );
     }
   }
-  Free(W1);
-  Free(W1p);
-  Free(W2);
-  Free(W2p);
-  Free(mu);
+  free(W1);
+  free(W1p);
+  free(W2);
+  free(W2p);
+  free(mu);
   FreeMatrix(Sigma,dim);
 }
 
@@ -164,7 +164,7 @@ void SuffExp(double *t, int n, void *param)
       else if (suff!=SS_Test) Rprintf("Error Suff= %d",suff);
     }
   }
-  Free(W1);Free(W1p);Free(W2);Free(W2p);Free(mu);Free(vtemp);
+  free(W1);free(W1p);free(W2);free(W2p);free(mu);free(vtemp);
   FreeMatrix(Sigma,dim); FreeMatrix(InvSigma,dim);
 }
 
@@ -226,7 +226,7 @@ double getLogLikelihood(Param* param) {
     else {
       loglik=dMVN(vtemp,mu,InvSig,dim,1);
     }
-    Free(mu); Free(vtemp); FreeMatrix(InvSig,dim);
+    free(mu); free(vtemp); FreeMatrix(InvSig,dim);
     return loglik;
   }
   else { //Unknown type
@@ -337,14 +337,16 @@ double paramIntegration(integr_fn f, void *ex) {
   int limit=100;
   int last, neval, ier;
   int lenw=5*limit;
-  int *iwork=(int *) Calloc(limit, int);
-  double *work=(double *)Calloc(lenw, double);
+  /* int *iwork=(int *) Calloc(limit, int);
+     double *work=(double *)Calloc(lenw, double); */
+  int    *iwork = (int    *) R_alloc(limit, sizeof *iwork);
+  double *work  = (double *) R_alloc(lenw,  sizeof *work);
   double lb=0.00001; double ub=.99999;
   Rdqags(f, ex, &lb, &ub, &epsabs, &epsrel, &result,
     &anserr, &neval, &ier, &limit, &lenw, &last, iwork, work);
 
-  Free(iwork);
-  Free(work);
+  /* free(iwork);
+     free(work); */
   if (ier==0) return result;
   else {
     Param* p = (Param*) ex;

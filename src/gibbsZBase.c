@@ -379,8 +379,8 @@ void cBaseecoZ(
   FreeMatrix(Wstar, t_samp);
   FreeMatrix(S_W, s_samp);
   FreeMatrix(S_Wstar, s_samp);
-  Free(minW1);
-  Free(maxW1);
+  free(minW1);
+  free(maxW1);
   free(n_grid);
   FreeMatrix(S0, n_dim);
   FreeMatrix(W1g, n_samp);
@@ -390,18 +390,18 @@ void cBaseecoZ(
   FreeMatrix(InvSigma, n_dim);
   FreeMatrix(Z, t_samp*n_dim+n_cov);
   FreeMatrix(Zstar, t_samp*n_dim+n_cov);
-  Free(Wstar_bar);
-  Free(vtemp);
+  free(Wstar_bar);
+  free(vtemp);
   FreeMatrix(mtemp, n_dim);
   FreeMatrix(mtemp1, n_dim);
   FreeMatrix(mtemp2, n_cov);
-  Free(beta);
-  Free(beta0);
+  free(beta);
+  free(beta0);
   FreeMatrix(A0, n_cov);
   FreeMatrix(SS, n_cov+1);
-  Free(mbeta);
+  free(mbeta);
   FreeMatrix(Vbeta, n_cov);
-  Free(epsilon);
+  free(epsilon);
   FreeMatrix(R, n_dim);
   
 } /* main */

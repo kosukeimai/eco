@@ -289,10 +289,10 @@ void cBaseecoX(
   FreeMatrix(W2g, n_samp);
   FreeMatrix(S_W, s_samp);
   FreeMatrix(S_Wstar, s_samp);
-  Free(mu);
+  free(mu);
   FreeMatrix(Sigma, n_dim+1);
   FreeMatrix(InvSigma, n_dim+1);
-  Free(mu_w);
+  free(mu_w);
   FreeMatrix(Sigma_w, n_dim);
   FreeMatrix(InvSigma_w, n_dim);
 } /* main */

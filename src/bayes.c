@@ -70,8 +70,8 @@ void NIWupdate(
 
   rMVN(mu, mun, mtemp, n_dim);
 
-  Free(Ybar);
-  Free(mun);
+  free(Ybar);
+  free(mun);
   FreeMatrix(Sn, n_dim);
   FreeMatrix(mtemp, n_dim);
 }
