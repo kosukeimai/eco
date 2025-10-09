@@ -11,19 +11,7 @@ Authors@R: c(
 Maintainer: Kosuke Imai <imai@Harvard.Edu>
 Depends: R (>= 2.0), MASS, utils
 Suggests: testthat
-Description: Implements the Bayesian and likelihood methods proposed 
-  in Imai, Lu, and Strauss (2008 <DOI: 10.1093/pan/mpm017>) and 
-  (2011 <DOI:10.18637/jss.v042.i05>) for ecological inference in 2 
-  by 2 tables as well as the method of bounds introduced by Duncan and 
-  Davis (1953).  The package fits both parametric and nonparametric 
-  models using either the Expectation-Maximization algorithms (for 
-  likelihood models) or the Markov chain Monte Carlo algorithms (for 
-  Bayesian models).  For all models, the individual-level data can be 
-  directly incorporated into the estimation whenever such data are available.
-  Along with in-sample and out-of-sample predictions, the package also
-  provides a functionality which allows one to quantify the effect of data
-  aggregation on parameter estimation and hypothesis testing under the
-  parametric likelihood models.
+Description: Implements the Bayesian and likelihood methods proposed in Imai, Lu, and Strauss (2008 <doi:10.1093/pan/mpm017>) and (2011 <doi:10.18637/jss.v042.i05>) for ecological inference in 2 by 2 tables as well as the method of bounds introduced by Duncan and Davis (1953).  The package fits both parametric and nonparametric models using either the Expectation-Maximization algorithms (for likelihood models) or the Markov chain Monte Carlo algorithms (for Bayesian models).  For all models, the individual-level data can be directly incorporated into the estimation whenever such data are available. Along with in-sample and out-of-sample predictions, the package also provides a functionality which allows one to quantify the effect of data aggregation on parameter estimation and hypothesis testing under the parametric likelihood models.
 LazyLoad: yes
 LazyData: yes
 License: GPL (>= 2)
