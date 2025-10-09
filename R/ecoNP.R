@@ -126,7 +126,7 @@
 #' 
 #' ## fit the nonparametric model to give in-sample predictions
 #' ## store the parameters to make population inference later
-#' \dontrun{res <- ecoNP(Y ~ X, data = reg, n.draws = 50, param = TRUE, verbose = TRUE)
+#' \donttest{res <- ecoNP(Y ~ X, data = reg, n.draws = 50, param = TRUE, verbose = TRUE)
 #' 
 #' ##summarize the results
 #' summary(res)
@@ -138,7 +138,7 @@
 #' summary(out)
 #' 
 #' ## density plots of the out-of-sample predictions
-#' par(mfrow=c(2,1))
+#' oldpar <- par(mfrow=c(2,1))
 #' plot(density(out[,1]), main = "W1")
 #' plot(density(out[,2]), main = "W2")
 #' 
@@ -157,7 +157,8 @@
 #' 
 #' ## out-of sample prediction 
 #' pres1 <- predict(res1)
-#' summary(pres1)}
+#' summary(pres1)
+#' par(oldpar)}
 #' 
 #' @export ecoNP
 ecoNP <- function(formula, data = parent.frame(), N = NULL, supplement = NULL,

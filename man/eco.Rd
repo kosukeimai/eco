@@ -161,7 +161,7 @@ W_{1i}+(1-X_i)W_{2i}}.
 
 
 ## load the registration data
-\dontrun{data(reg)
+\donttest{data(reg)
 
 ## NOTE: convergence has not been properly assessed for the following
 ## examples. See Imai, Lu and Strauss (2008, 2011) for more

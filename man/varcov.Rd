@@ -11,6 +11,9 @@ varcov(object, ...)
 
 \item{...}{The rest of the input parameters if any}
 }
+\value{
+a variance-covariance matrix
+}
 \description{
 \code{varcov} returns the variance or covariance of the object.
 }

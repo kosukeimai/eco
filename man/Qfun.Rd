@@ -16,6 +16,9 @@ element \code{theta.em} of an object of class \code{ecoML}.}
 
 \item{n}{A integer representing the sample size.}
 }
+\value{
+A single numeric value: the complete-data log-likelihood.
+}
 \description{
 \code{Qfun} returns the complete log-likelihood that is used to calculate
 the fraction of missing information.

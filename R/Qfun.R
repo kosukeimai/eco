@@ -10,6 +10,7 @@
 #' @param suff.stat A vector of sufficient statistics of \eqn{E(W_1)},
 #' \eqn{E(W_2)}, \eqn{var(W_1)},\eqn{var(W_2)}, and \eqn{cov(W_1,W_2)}.
 #' @param n A integer representing the sample size.
+#' @return A single numeric value: the complete-data log-likelihood.
 #' @seealso \code{ecoML}
 #' @references Imai, Kosuke, Ying Lu and Aaron Strauss. (2011).  \dQuote{eco: R
 #' Package for Ecological Inference in 2x2 Tables} Journal of Statistical

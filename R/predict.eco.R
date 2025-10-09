@@ -61,7 +61,7 @@ predict.eco <- function(object, newdraw = NULL, subset = NULL,
   for (i in 1:n.draws) {
     Wstar[i,] <- mvrnorm(1, mu = mu[i,], Sigma = Sigma[,,i])
     if (i == inc*tmp & verbose) {
-      cat("", inc*10, "percent done.\n")
+        message(inc * 10, " percent done.")
       inc <- inc + 1
     }
   }

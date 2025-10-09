@@ -4,6 +4,7 @@
 #' 
 #' @param object An object
 #' @param ... The rest of the input parameters if any
+#' @return a variance-covariance matrix
 #' @keywords methods
 #' @export
 varcov <- function(object, ...)
