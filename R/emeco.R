@@ -182,18 +182,18 @@
 #' data(census)
 #' 
 #' ## fit the parametric model with the default model specifications
-#' \dontrun{res <- ecoML(Y ~ X, data = census[1:100,], N=census[1:100,3], 
+#' \donttest{res <- ecoML(Y ~ X, data = census[1:100,], N=census[1:100,3], 
 #' 	     	  epsilon=10^(-6), verbose = TRUE)}
 #' ## summarize the results
-#' \dontrun{summary(res)}
+#' \donttest{summary(res)}
 #' 
 #' ## fit the parametric model with some individual 
 #' ## level data using the default prior specification
 #' surv <- 1:600
-#' \dontrun{res1 <- ecoML(Y ~ X, context = TRUE, data = census[-surv,], 
+#' \donttest{res1 <- ecoML(Y ~ X, context = TRUE, data = census[-surv,], 
 #'                    supplement = census[surv,c(4:5,1)], maxit=100, verbose = TRUE)}
 #' ## summarize the results
-#' \dontrun{summary(res1)}
+#' \donttest{summary(res1)}
 #' 
 #' @export ecoML
 ecoML <- function(formula, data = parent.frame(), N=NULL, supplement = NULL, 
