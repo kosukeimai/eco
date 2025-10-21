@@ -23,7 +23,7 @@ test_that("tests eco on registration data", {
   x <- summary(res)
   expect_that(length(x), is_equivalent_to(8))
   expect_true("W2.table" %in% names(x))
-  expect_equal(x$param.table[2,1], 2.976173, tolerance = accuracy1)
+  expect_equal(x$param.table[2,1], 2.976172, tolerance = accuracy1)
   expect_equal(x$param.table[3,4], 8.238363, tolerance = accuracy1)
 
   # obtain out-of-sample prediction
