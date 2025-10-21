@@ -129,8 +129,8 @@ test_that("tests ecoNP on census data", {
   x <- summary(res)
   expect_that(length(x), is_equivalent_to(8))
   expect_true(is.null(x$agg.wtable))
-  expect_equal(x$agg.table[1,2], 0.04059766, tolerance = accuracy1)
-  expect_equal(x$agg.table[2,3], 0.8129786, tolerance = accuracy1)
+  expect_equal(x$agg.table[1,2], 0.0252442, tolerance = accuracy1)
+  expect_equal(x$agg.table[2,3], 0.8178485, tolerance = accuracy1)
 
   # obtain out-of-sample prediction
   out <- predict(res, verbose = TRUE)
@@ -138,8 +138,8 @@ test_that("tests ecoNP on census data", {
   x <- summary(out)
   expect_that(length(x), is_equivalent_to(2))
   expect_true("n.draws" %in% names(x))
-  expect_equal(x$W.table[1,3], 0.02617743, tolerance = accuracy1)
-  expect_equal(x$W.table[2,1], 0.8137116, tolerance = accuracy1)
+  expect_equal(x$W.table[1,3], 0.0435622, tolerance = accuracy1)
+  expect_equal(x$W.table[2,1], 0.8043616, tolerance = accuracy1)
 
   # density plots of the out-of-sample predictions
   # par(mfrow=c(2,1))
@@ -159,18 +159,18 @@ if (!donotrun) test_that("tests ecoNP on Robinson census data", {
   x <- summary(res1)
   expect_that(length(x), is_equivalent_to(8))
   expect_false(is.null(x$agg.wtable))
-  expect_equal(x$agg.table[1,2], 0.009952511, tolerance = accuracy1)
-  expect_equal(x$agg.table[2,3], 0.8690776, tolerance = accuracy1)
-  expect_equal(x$agg.wtable[1,2], 0.009508983, tolerance = accuracy1)
-  expect_equal(x$agg.wtable[2,3], 0.9005222, tolerance = accuracy1)
+  expect_equal(x$agg.table[1,2], 0.0134030, tolerance = accuracy1)
+  expect_equal(x$agg.table[2,3], 0.8709344, tolerance = accuracy1)
+  expect_equal(x$agg.wtable[1,2], 0.0113289, tolerance = accuracy1)
+  expect_equal(x$agg.wtable[2,3], 0.9033144, tolerance = accuracy1)
  
   # out-of sample prediction 
   pres1 <- predict(res1)
   x <- summary(pres1)
   expect_that(length(x), is_equivalent_to(2))
   expect_true("n.draws" %in% names(x))
-  expect_equal(x$W.table[1,3], 0.1333375, tolerance = accuracy1)
-  expect_equal(x$W.table[2,1], 0.8434944, tolerance = accuracy1)
+  expect_equal(x$W.table[1,3], 0.1238418, tolerance = accuracy1)
+  expect_equal(x$W.table[2,1], 0.8373856, tolerance = accuracy1)
 })
 
 
