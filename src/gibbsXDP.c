@@ -339,7 +339,7 @@ void cDPecoX(
   /** remixing step using effective sample**/
   for(i=0;i<t_samp;i++)
     indexC[i]=i;
-  R_qsort_int_I(sortC, indexC, 1, t_samp);
+  R_qsort_int_I(sortC, indexC, 0, t_samp-1);
 
   nstar=0;
   i=0;
@@ -348,7 +348,7 @@ void cDPecoX(
     nj=0; /* counter for a block of same values */
 
     /* get data for remixing */
-    while ((sortC[i]==j) && (i<t_samp)) {
+    while ((i<t_samp) && (sortC[i]==j)) {
       label[nj]=indexC[i];
       for (k=0; k<=n_dim; k++) {
 	Wstarmix[nj][k]=Wstar[label[nj]][k];
