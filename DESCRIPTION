@@ -1,6 +1,6 @@
 Package: eco
-Version: 4.0-4
-Date: 2025-10-09
+Version: 4.0-5
+Date: 2025-10-21
 Title: Ecological Inference in 2x2 Tables
 Authors@R: c(
   person("Kosuke", "Imai", , "imai@Harvard.Edu", c("aut", "cre")),
