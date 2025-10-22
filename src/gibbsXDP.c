@@ -339,7 +339,7 @@ void cDPecoX(
   /** remixing step using effective sample**/
   for(i=0;i<t_samp;i++)
     indexC[i]=i;
-  R_qsort_int_I(sortC, indexC, 0, t_samp-1);
+  R_qsort_int_I(sortC, indexC, 1, t_samp);
 
   nstar=0;
   i=0;
