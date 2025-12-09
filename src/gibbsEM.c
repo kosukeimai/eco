@@ -3,7 +3,7 @@
 #include <math.h>
 #include <R.h>
 #include <Rmath.h>
-#include <R_ext/PrtUtil.h>
+//#include <R_ext/PrtUtil.h>
 #include "vector.h"
 #include "subroutines.h"
 #include "rand.h"

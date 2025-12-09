@@ -9,7 +9,7 @@
 #include <assert.h>
 #include <stdio.h>
 #include <R_ext/Utils.h>
-#include <R_ext/PrtUtil.h>
+//#include <R_ext/PrtUtil.h>
 #include <R.h>
 
 int* intArray(int num) {

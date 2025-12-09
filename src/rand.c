@@ -10,7 +10,7 @@
 #include <math.h>
 #include <Rmath.h>
 #include <R_ext/Utils.h>
-#include <R_ext/PrtUtil.h>
+//#include <R_ext/PrtUtil.h>
 #include <R.h>
 #include "vector.h"
 #include "subroutines.h"

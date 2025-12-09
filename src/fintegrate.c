@@ -9,7 +9,7 @@
 #include <R.h>
 #include <Rinternals.h>
 #include <R_ext/Utils.h>
-#include <R_ext/PrtUtil.h>
+//#include <R_ext/PrtUtil.h>
 #include <stddef.h>
 #include <stdio.h>
 #include <math.h>
